@@ -114,7 +114,7 @@ function buildEvents(closed, dbap) {
     (p.groups && p.groups.length ? p.groups : Object.keys(by)).forEach(function (g) { push({ at: p.at, by: p.by, kind: 'send', group: g, line: '', pu: '', style: '', text: t('aDetailRows', [by[g] || 0]) }); });
   });
   (RS.actionsRaw || []).forEach(function (a) {          // actions against the shortage (every save is one entry)
-    push({ at: a.at, by: a.by, kind: 'action', group: a.group, line: '', pu: '', style: '', text: t('rsAt' + a.type) + (a.qty ? ' ' + a.qty : '') + (a.from ? ' · ' + d2(a.from) + (a.to && a.to !== a.from ? '–' + d2(a.to) : '') : '') + ' · ' + t('rsSt' + a.status) + (a.note ? ' · ' + a.note : '') });
+    push({ at: a.at, by: a.by, kind: 'action', group: a.group, line: '', pu: '', style: '', text: rsActText(a) + ' · ' + t('rsSt' + a.status) + (a.note ? ' · ' + a.note : '') });
   });
   (TS.reviews || []).forEach(function (r) {
     var k = String(r.key || '').split('|'), from = k[1] || '', parts = [];

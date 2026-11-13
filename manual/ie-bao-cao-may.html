@@ -31,7 +31,7 @@
 <tr><td><b>Dữ liệu</b></td><td>Chọn MC Report, Master plan, thư mục layout, thư mục <code>data</code> của Layout Check, nhập họ tên. Có dấu ✓ khi đã nạp đủ.</td></tr>
 <tr><td><b>Cập nhật CSDL</b></td><td>Quét layout, duyệt thay đổi, <b>Lưu MACHINE DATABASE</b> (thanh lưu chỉ hiện ở tab này). Số trên tab = mục cần duyệt.</td></tr>
 <tr><td><b>Thiếu máy &amp; chuẩn bị</b></td><td>Xếp hạng nguy cơ thiếu máy, chi tiết theo ngày, gửi IE Tech duyệt, chốt báo cáo, xuất Excel.</td></tr>
-<tr><td><b>Thiếu máy còn lại</b></td><td>Máy còn thiếu sau khi IE Tech duyệt, hành động xử lý (thuê, mua, mượn, dời kế hoạch) và thử dời kế hoạch (mục 6).</td></tr>
+<tr><td><b>Thiếu máy còn lại</b></td><td>Máy còn thiếu sau khi IE Tech duyệt (bảng ngang, chọn nhóm máy/PU), hành động xử lý (thuê, mua, mượn, dời kế hoạch) có tác dụng thật lên số liệu, thẻ tổng hợp và thử dời kế hoạch (mục 6).</td></tr>
 <tr><td><b>Báo sai lệch</b></td><td>Thông báo của IE Tech. Số trên tab = thông báo chưa xử lý.</td></tr>
 <tr><td><b>Nhật ký</b></td><td>Lịch sử thao tác chuẩn bị máy theo loại máy và theo chuyền.</td></tr></table>
 <p>Góc trên bên phải có ba nút <b>vai trò</b> (<b>IE Báo cáo máy</b> / <b>IE Tech</b> / <b>Giám sát</b>) và nút ngôn ngữ <b>VI / EN</b>. Vai trò IE Tech chỉ thấy màn hình “Duyệt chuẩn bị” (mục 5); vai trò Giám sát chỉ xem “Thiếu máy còn lại” (mục 6).</p>
@@ -168,34 +168,46 @@
 </section>
 
 <section id="resid"><h2>6. Thiếu máy còn lại, hành động và thử dời kế hoạch</h2>
-<p>Sau khi IE Tech duyệt, nhóm máy nào vẫn còn thiếu thì cần quyết định thuê, mua, mượn hoặc dời kế hoạch với PPC. Màn hình này tập hợp số liệu cho người quyết định (Giám sát) và cho IE Báo cáo máy.</p>
+<p>Sau khi IE Tech duyệt, nhóm máy nào vẫn còn thiếu thì cần quyết định thuê, mua, mượn hoặc dời kế hoạch với PPC. Màn hình này tập hợp số liệu cho người quyết định (Giám sát) và cho IE Báo cáo máy ghi lại hành động.</p>
 <h3>6.1 Mở màn hình</h3>
 <ul>
 <li><b>IE Báo cáo máy:</b> tab <b>Thiếu máy còn lại</b> (cần đã kết nối thư mục data; số trên tab = số nhóm máy còn thiếu).</li>
 <li><b>Giám sát (chỉ xem):</b> bấm vai trò <b>Giám sát</b> &rarr; <span class="btn">Chọn thư mục data…</span> (hoặc “🔁 Dùng lại”) &rarr; chọn thư mục <code>data</code> dùng chung. Không cần MC Report hay Master plan.</li></ul>
 <p>Số liệu lấy từ đề xuất mới nhất của từng nhóm máy và quyết định của IE Tech, bằng <b>đúng cách tính của bảng IE Tech</b>. Bấm <span class="btn">Làm mới</span> để đọc lại khi có người vừa lưu.</p>
-<figure><a href="img/ibm-24-residual.png"><img src="img/ibm-24-residual.png" alt="Thiếu máy còn lại" loading="lazy"></a><figcaption>Tab <b>Thiếu máy còn lại</b>: mỗi nhóm máy một dòng. Bấm một dòng để xem từng ngày và các chuyền dùng nhiều máy nhất vào ngày thiếu nhiều nhất.</figcaption></figure>
-<table><tr><th>Cột</th><th>Ý nghĩa</th></tr>
+<h3>6.2 Xem số liệu: bảng ngang theo ngày</h3>
+<figure><a href="img/ibm-24-residual.png"><img src="img/ibm-24-residual.png" alt="Thiếu máy còn lại" loading="lazy"></a><figcaption>Bảng tóm tắt từng nhóm máy ở trên; bên dưới là bảng <b>ngang</b> (ngày ở cột) của từng nhóm máy, giống bảng IE Tech. Khung đỏ: các nút chọn.</figcaption></figure>
+<ul>
+<li><b>Chọn nhóm máy và PU:</b> bấm một nhóm máy (hoặc PU) để chỉ xem nhóm đó; bấm thêm để thêm hoặc bỏ; <span class="btn">Tất cả nhóm máy</span> / <span class="btn">Tất cả PU</span> để bỏ lọc. Bấm một dòng ở bảng tóm tắt cũng chọn nhóm máy đó. <b>Chọn PU chỉ lọc các dòng PU</b>; “Máy có sẵn” và “Còn lại” luôn tính cho cả nhóm máy (số máy có sẵn không chia theo PU).</li>
+<li><span class="btn">Chỉ ngày thiếu</span> (mặc định): mỗi nhóm máy hiện từ <b>ngày thiếu đầu tiên đến ngày thiếu cuối cùng</b>. Nếu giữa hai đợt thiếu có một đợt đủ máy thì các <b>ngày đủ máy ở giữa vẫn được hiện</b>. <span class="btn">Cả kế hoạch</span>: hiện toàn bộ các ngày của đề xuất.</li>
+<li>Các dòng của mỗi nhóm máy: Sản xuất / Chuẩn bị / Tổng theo từng PU, <b>Tổng sử dụng</b>, <b>Máy có sẵn</b>, <b>Còn lại (hiện tại)</b>, các <b>hàng hành động</b>, rồi <b>Còn lại sau hành động đã chốt</b> và <b>Còn lại kể cả dự kiến</b> (hai dòng sau chỉ hiện khi đã có hành động).</li>
+<li><b>Số máy âm (thiếu) có nền đỏ nhạt và chữ đỏ</b> để dễ nhận biết; cách hiển thị này cũng áp dụng cho dòng “Còn lại” trong bảng của IE Tech.</li></ul>
+<table><tr><th>Cột của bảng tóm tắt</th><th>Ý nghĩa</th></tr>
 <tr><td><b>Ngày thiếu</b></td><td>Số ngày làm việc có “Còn lại” &lt; 0 trên tổng số ngày của đề xuất.</td></tr>
 <tr><td><b>Thiếu nhiều nhất</b></td><td>Số máy thiếu ở ngày tệ nhất (kèm ngày). <b>Từ – đến</b>: ngày thiếu đầu tiên và cuối cùng.</td></tr>
 <tr><td><b>Sau hành động đã chốt</b></td><td>Thiếu còn lại nếu chỉ tính các hành động đã chốt.</td></tr>
 <tr><td><b>Kể cả dự kiến</b></td><td>Thiếu còn lại nếu tính cả hành động dự kiến.</td></tr>
 <tr><td><b>Chưa duyệt</b></td><td>Số dòng chuẩn bị IE Tech chưa duyệt (số liệu có thể còn đổi).</td></tr></table>
-<h3>6.2 Hành động xử lý thiếu máy (do IE Báo cáo máy ghi)</h3>
-<p>Dưới bảng là danh sách hành động và biểu mẫu thêm mới (chỉ có ở IE Báo cáo máy; Giám sát chỉ xem danh sách). Nhập <b>Họ tên</b> ở tab Dữ liệu trước.</p>
-<figure><a href="img/ibm-25-action-form.png"><img src="img/ibm-25-action-form.png" alt="Biểu mẫu hành động" loading="lazy"></a><figcaption>Biểu mẫu: nhóm máy, loại, số máy, từ – đến ngày (mặc định là khoảng ngày thiếu), trạng thái, ghi chú.</figcaption></figure>
+<h3>6.3 Ghi hành động (do IE Báo cáo máy)</h3>
+<p>Biểu mẫu nằm dưới bảng (chỉ có ở IE Báo cáo máy; Giám sát chỉ xem). Nhập <b>Họ tên</b> ở tab Dữ liệu trước. Với thuê / mua / mượn, biểu mẫu tự điền số máy bằng mức thiếu lớn nhất và khoảng ngày thiếu của nhóm máy đang chọn.</p>
+<figure><a href="img/ibm-25-action-form.png"><img src="img/ibm-25-action-form.png" alt="Biểu mẫu hành động" loading="lazy"></a><figcaption>Thuê 9 máy cho BT1M, từ ngày thiếu đầu đến ngày thiếu cuối. Phần <b>Xem trước</b> ở dưới cho biết <b>thay đổi thực tế</b> theo từng ngày nếu chốt hành động này: “Còn lại (đã chốt hiện tại)”, “Thay đổi”, “Còn lại nếu chốt”.</figcaption></figure>
 <table><tr><th>Loại</th><th>Tác dụng lên số liệu</th></tr>
-<tr><td><b>Thuê</b>, <b>Mua</b>, <b>Mượn</b></td><td>Cộng thêm số máy trong khoảng ngày đã nhập. <b>Dự kiến</b> = chưa chắc chắn; <b>Đã chốt</b> = đã có máy. Hai trạng thái được tính ở hai cột riêng.</td></tr>
-<tr><td><b>Dời kế hoạch</b>, <b>Khác</b></td><td>Chỉ ghi nhận (ghi chú bắt buộc: chuyền, mã hàng, ngày mới…). Số liệu đổi khi có kế hoạch mới.</td></tr></table>
+<tr><td><b>Thuê</b>, <b>Mua</b>, <b>Mượn</b></td><td>Cộng thêm số máy của nhóm máy đã chọn trong khoảng ngày đã nhập. Có thể ghi <b>PU nhận</b> (không bắt buộc) để thẻ tổng hợp hiện theo PU.</td></tr>
+<tr><td><b>Dời kế hoạch</b></td><td>Chọn <b>chuyền</b>, <b>mã hàng</b> và số <b>ngày làm việc</b>: mã hàng đó và các mã sau nó trên chuyền vào chuyền muộn hơn, mã trước kéo dài trong khoảng trống, chuẩn bị dời theo. Tác dụng thật lên <b>mọi nhóm máy</b> có chuyền đó.</td></tr>
+<tr><td><b>Khác</b></td><td>Ghi chú bắt buộc. Nếu nhập số máy (+ hoặc −) và khoảng ngày thì cộng/trừ máy như trên; nếu không thì chỉ ghi nhận.</td></tr></table>
+<figure><a href="img/ibm-26-delay-preview.png"><img src="img/ibm-26-delay-preview.png" alt="Xem trước dời kế hoạch" loading="lazy"></a><figcaption>Dời kế hoạch: phần xem trước liệt kê từng nhóm máy bị thay đổi, kèm số máy thay đổi theo ngày (xanh = thêm máy, đỏ = thiếu thêm) và tóm tắt “thiếu nhiều nhất a → b, ngày thiếu a → b”.</figcaption></figure>
 <ul>
-<li><span class="btn">Sửa</span>, <span class="btn">Chốt</span> (Dự kiến &rarr; Đã chốt), <span class="btn">Hủy</span> trên từng dòng. Mỗi lần thay đổi ghi thành một file trong <code>data\prep\actions</code>; hành động đã hủy vẫn hiện (mờ) để có lịch sử.</li>
-<li>Mọi thay đổi cũng hiện ở tab <b>Nhật ký</b> (loại “Hành động thiếu máy”).</li></ul>
-<h3>6.3 Thử dời kế hoạch (không lưu)</h3>
-<p>Trước khi trao đổi với PPC, chọn <b>Chuyền</b>, <b>Mã hàng vào chuyền muộn</b> và số <b>ngày làm việc</b> rồi bấm <span class="btn">Tính</span>. Kết quả cho từng nhóm máy: số ngày thiếu, thiếu nhiều nhất và tổng máy-ngày thiếu, dạng “hiện tại → sau khi dời” (xanh = tốt hơn, đỏ = tệ hơn).</p>
-<figure><a href="img/ibm-26-action-and-whatif.png"><img src="img/ibm-26-action-and-whatif.png" alt="Hành động và thử dời kế hoạch" loading="lazy"></a><figcaption>Danh sách hành động và kết quả thử dời kế hoạch.</figcaption></figure>
-<div class="warn"><b>Chỉ là ước tính, không lưu gì.</b> Cách tính: mã hàng được chọn và các mã sau nó trên chuyền vào chuyền muộn hơn N ngày làm việc; mã trước kéo dài trong khoảng trống; chuẩn bị dời theo. Dời một chuyền có thể <b>không giảm</b> thiếu máy (ví dụ máy dùng nhiều nhất ở ngày khác), thậm chí tăng vì mã trước chạy lâu hơn; vì vậy nên thử trước khi đề nghị PPC.</div>
-<h3>6.4 Vai trò Giám sát</h3>
-<figure><a href="img/ibm-27-supervisor.png"><img src="img/ibm-27-supervisor.png" alt="Vai trò Giám sát" loading="lazy"></a><figcaption>Vai trò <b>Giám sát</b>: cùng bảng thiếu máy còn lại, danh sách hành động và thử dời kế hoạch, nhưng không có biểu mẫu thêm hoặc sửa hành động.</figcaption></figure>
+<li><b>Dự kiến</b> = chưa chắc chắn; <b>Đã chốt</b> = đã có máy / PPC đã đồng ý dời. Hai trạng thái được tính ở hai dòng riêng (“sau hành động đã chốt” và “kể cả dự kiến”).</li>
+<li>Mỗi hành động là một hàng trong bảng ngang, hiện <b>số thay đổi thực tế từng ngày</b> của riêng hành động đó. Nút <span class="btn">✎</span> sửa, <span class="btn">✔</span> chốt (Dự kiến &rarr; Đã chốt), <span class="btn">✖</span> hủy (hàng bị gạch, không còn tác dụng).</li>
+<li>Mỗi lần thay đổi ghi thành một file trong <code>data\prep\actions</code>, đồng thời hiện ở tab <b>Nhật ký</b> (loại “Hành động thiếu máy”).</li></ul>
+<h3>6.4 Thẻ tổng hợp hành động</h3>
+<p>Khi <b>mọi hành động đã được chốt</b> (không còn hành động Dự kiến) và có ít nhất một hành động, màn hình tự tạo thẻ <b>Tổng hợp hành động xử lý thiếu máy</b> gồm hai bảng: <b>theo nhóm máy</b> và <b>theo PU</b>. Nhóm máy hoặc PU không có hành động nào mà vẫn còn thiếu được ghi <b>“IE kiểm tra thêm”</b>; nhóm máy sau hành động vẫn thiếu cũng ghi “Còn thiếu −x: IE kiểm tra thêm”. Nút <span class="btn">Xuất Excel</span> lưu thẻ thành file.</p>
+<figure><a href="img/ibm-27-actions-and-card.png"><img src="img/ibm-27-actions-and-card.png" alt="Bảng ngang có hành động và thẻ tổng hợp" loading="lazy"></a><figcaption>Bảng ngang BT1M có hai hàng hành động (Thuê +9 và Dời kế hoạch) và hai dòng “Còn lại sau hành động”; bên dưới là thẻ tổng hợp theo nhóm máy và theo PU.</figcaption></figure>
+<h3>6.5 Thử dời kế hoạch (không lưu)</h3>
+<p>Dành cho người chỉ xem (Giám sát) hoặc để thử nhanh: chọn <b>Chuyền</b>, <b>Mã hàng vào chuyền muộn</b> và số <b>ngày làm việc</b> rồi bấm <span class="btn">Tính</span>. Kết quả theo từng nhóm máy: số ngày thiếu, thiếu nhiều nhất và tổng máy-ngày thiếu, dạng “hiện tại → sau khi dời” (xanh = tốt hơn, đỏ = tệ hơn). Không lưu gì; muốn ghi lại thì tạo hành động “Dời kế hoạch”.</p>
+<figure><a href="img/ibm-29-whatif.png"><img src="img/ibm-29-whatif.png" alt="Thử dời kế hoạch" loading="lazy"></a><figcaption>Ví dụ: dời một mã hàng của chuyền J thêm 2 ngày làm việc.</figcaption></figure>
+<div class="warn"><b>Chỉ là ước tính.</b> Dời một chuyền có thể <b>không giảm</b> thiếu máy (ví dụ máy dùng nhiều nhất ở ngày khác), thậm chí tăng vì mã trước chạy lâu hơn; vì vậy nên xem trước khi đề nghị PPC.</div>
+<h3>6.6 Vai trò Giám sát</h3>
+<figure><a href="img/ibm-28-supervisor.png"><img src="img/ibm-28-supervisor.png" alt="Vai trò Giám sát" loading="lazy"></a><figcaption>Vai trò <b>Giám sát</b>: cùng bảng ngang, thẻ tổng hợp và thử dời kế hoạch, nhưng không có biểu mẫu thêm hoặc sửa hành động.</figcaption></figure>
 </section>
 
 <section id="chot"><h2>7. Chốt báo cáo, xuất Excel</h2>
@@ -239,7 +251,7 @@
 <tr><td>So sánh layout – CSDL</td><td><b>Theo nhóm máy</b> (nhóm lấy từ sheet MACHINE GROUP): tổng số máy mỗi nhóm bằng nhau là khớp; khác mã máy trong cùng nhóm không tạo đề xuất và không làm mất “Đã kiểm tra”. Mã máy chưa có nhóm được so sánh riêng.</td></tr>
 <tr><td>Dữ liệu CSDL</td><td>Chỉ dùng các dòng có <b>ngày mới nhất</b> của mỗi mã hàng.</td></tr>
 <tr><td>Quyết định mới nhất có hiệu lực</td><td>Công cụ đọc lại đúng file và sheet của bản ghi Layout Check: máy trong file = bản ghi và CSDL = bản ghi → “Đã kiểm tra”; file đã được sửa sau lần kiểm tra → “Cần duyệt”, IE kiểm tra lại; file khác file IE đã kiểm tra → “Lỗi dữ liệu: File layout khác file IE đã kiểm tra”.</td></tr>
-<tr><td>Thiếu máy còn lại</td><td>Tính bằng đúng cách tính của bảng IE Tech (đề xuất mới nhất của từng nhóm máy + quyết định IE Tech). Hành động Thuê/Mua/Mượn cộng máy theo ngày (Đã chốt và Dự kiến tính riêng); chỉ IE Báo cáo máy ghi hành động, Giám sát chỉ xem.</td></tr>
+<tr><td>Thiếu máy còn lại</td><td>Tính bằng đúng cách tính của bảng IE Tech (đề xuất mới nhất của từng nhóm máy + quyết định IE Tech). Hành động Thuê/Mua/Mượn (và Khác có nhập số máy) cộng máy theo ngày, Dời kế hoạch dời mã hàng và các mã sau nó trên chuyền (Đã chốt và Dự kiến tính riêng); chỉ IE Báo cáo máy ghi hành động, Giám sát chỉ xem. Thẻ tổng hợp tạo khi mọi hành động đã chốt.</td></tr>
 <tr><td>Số liệu ngay sau khi lưu</td><td>Báo cáo thiếu máy tính cả các thay đổi vừa duyệt (có nhãn), dù MC Report chưa cập nhật.</td></tr>
 <tr><td>Mã băm</td><td><b>File Hash</b> (SHA-256 cả file): giống lần trước thì bỏ qua. <b>Content Hash</b> (chỉ máy và số lượng): đổi định dạng, ghi chú, tên sheet, ô mã hàng không tính là thay đổi.</td></tr></table>
 </section>
