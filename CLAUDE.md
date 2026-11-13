@@ -24,13 +24,12 @@ src/ie-bao-cao-may/      sources: core.js i18n.js worker.js logic.js prep.js app
 vendor/                  SheetJS (reads xlsx), ExcelJS (writes coloured xlsx) + licences
 tools/build_ie_bao_cao_may.py   python3 tools/build_ie_bao_cao_may.py   -> regenerates the HTML (inlines libs, version tag)
 tests/                   Playwright (python) harnesses, see section 7
-docs/                    Vietnamese user-guide deck (pptx) + its generator build_deck.js (pptxgenjs; needs the environment's pptx skill)
 index.html               landing page for GitHub Pages;  update.bat = `git pull` for the shared-folder option
 logo.png icon.png         Crystal logo (copied from the Time Study app) used by index.html and manual/*.html
-manual/                  GENERATED readable HTML guides (python3 tools/build_manuals.py) from the .txt guides; re-run after editing any HUONG_DAN/README_EN/CAP_NHAT .txt
+manual/                  User manuals (Vietnamese, HTML, hand-written) with screenshots in manual/img/ (taken from SYNTHETIC demo data by tools/manual_shots/, see its README); linked from index.html
 ```
 
-Release routine for IBM: edit `src/...` -> bump `src/ie-bao-cao-may/VERSION` -> `python3 tools/build_ie_bao_cao_may.py` -> `node --check` each src JS -> run smoke/regression tests -> update `ie-bao-cao-may/HUONG_DAN.txt`, `README_EN.txt`, `CAP_NHAT_SO_VOI_v7.4.txt` (Vietnamese manual of changes), `CHANGELOG.md`, `index.html` version tag, then `python3 tools/build_manuals.py` -> commit/push. For LC: edit the HTML, change the `#verTag` text, append a section to `layout-check/HUONG_DAN.txt`, update `CHANGELOG.md` and `index.html`.
+Release routine for IBM: edit `src/...` -> bump `src/ie-bao-cao-may/VERSION` -> `python3 tools/build_ie_bao_cao_may.py` -> `node --check` each src JS -> run smoke/regression tests -> update `manual/ie-bao-cao-may.html` (and retake screenshots if the UI changed, `tools/manual_shots/README.md`), `CHANGELOG.md`, `index.html` version tag -> commit/push. For LC: edit the HTML, change the `#verTag` text, update `manual/layout-check.html`, `CHANGELOG.md` and `index.html`.
 
 ## 3. Style of work the user expects
 
@@ -82,7 +81,6 @@ Browser-side state: IBM keeps folder/file handles in IndexedDB `iebaocaomay` (KV
 
 - Patching HTML/JS by exact-string replacement: assert match counts; never append a `// comment` to a line that also holds code that follows on the same line; python `"\""` becomes `"` (anchors differ from the file's escaped text).
 - Re-rendering by `innerHTML` resets scroll (fixed for IE Tech grid in `techRender`; keep the pattern for new grids).
-- pptxgenjs table cell `margin` is in inches (not points); fonts for Vietnamese: Calibri renders correctly, Cambria/Caladea did not in the renderer used.
 - The 52-byte `Open LayoutCheck.bat` only opens the HTML; nothing needs a server.
 - GitHub Pages sites are public even for private repos unless on Enterprise Cloud; the tools contain no data, but the logic is visible.
 
@@ -92,7 +90,7 @@ Browser-side state: IBM keeps folder/file handles in IndexedDB `iebaocaomay` (KV
 2. Alias table for non-standard style names (83 files had no parsable style).
 3. IE Tech loading-date edits are stored per row (machine group); end-date edits are per line/style. Consider making loading date per changeover. The planned end date shown comes from the machine group being viewed.
 4. IBM re-reading a PDF-based LC check shows a "file not found" note when a scanned candidate exists for that style.
-5. The user-guide deck covers v7.7; v7.8 (scroll fix, end date) and later changes need slides.
+5. Manuals describe v7.8 / V4.3.1. After UI changes retake the screenshots (tools/manual_shots/README.md) and update the text in manual/*.html.
 6. Consider backing up the shared `data` folder (check history lives only there).
 7. Optional: automated version display on `index.html` and a CI smoke test (page loads without errors, `node --check` on sources).
 

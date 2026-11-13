@@ -1,132 +1,152 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Layout Check: Hướng dẫn sử dụng</title><link rel="icon" href="../icon.png"><style>:root{--bg:#f1f1ef;--panel:#fff;--text:#091d36;--muted:#5f6670;--line:#e2e2e2;--accent:#0058a0;--red:#ed1c24}
-@media (prefers-color-scheme:dark){:root{--bg:#06142a;--panel:#0d2140;--text:#e8edf3;--muted:#9fb0c4;--line:#1f3858;--accent:#5e9fe0;--red:#ff5a5f}}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 "Segoe UI",Roboto,Arial,sans-serif}
-header{display:flex;gap:10px;align-items:center;padding:8px 16px;background:var(--panel);border-bottom:3px solid var(--accent);box-shadow:0 1px 0 var(--red);position:sticky;top:0}
-header img{height:28px;width:auto}header b{flex:1;font-size:16px}header a{color:var(--accent);font-weight:600;text-decoration:none}
-main{max-width:900px;margin:0 auto;padding:16px}
-article{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 18px}
-pre{margin:0;white-space:pre-wrap;word-wrap:break-word;font:inherit}
-h2{font-size:16px;margin:18px 0 4px;color:var(--accent);border-bottom:1px solid var(--line);padding-bottom:3px}
-h1{font-size:19px;margin:0 0 6px}.sub{color:var(--muted)}</style></head><body>
-<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>Layout Check: Hướng dẫn sử dụng</b><a href="../index.html">&larr; Trang chủ</a></header>
-<main><article>
-<h1>HƯỚNG DẪN SỬ DỤNG – KIỂM TRA MÁY THEO LAYOUT</h1>
-<pre>(Mở bằng Microsoft Edge hoặc Google Chrome)</pre>
-<h2>I. CÀI ĐẶT LẦN ĐẦU TRÊN MỖI MÁY TÍNH</h2>
-<pre>1. Mở file &quot;Open LayoutCheck.bat&quot; (hoặc mở LayoutCheck.html bằng Edge).
-2. Nhập Họ tên, chọn Vai trò và PU.
-3. Bấm &quot;Chọn…&quot; tại Thư mục dữ liệu, chọn thư mục &quot;data&quot;, bấm &quot;Cho phép / Allow&quot;.
-4. Bấm &quot;Chọn…&quot; tại CSDL máy, chọn file Machine Database.
-   Bấm &quot;Chọn…&quot; tại Thư mục layout, chọn thư mục chung nơi IE lưu layout (thư mục lớn nhất chứa tất cả layout).
-5. Bấm &quot;Bắt đầu&quot;.
-Từ lần sau: chỉ cần nhập tên (đã lưu sẵn) và bấm &quot;Bắt đầu&quot;, sau đó bấm &quot;Cho phép&quot; nếu trình duyệt hỏi.</pre>
-<h2>II. GIÁM SÁT – HẰNG TUẦN</h2>
-<pre>1. Đăng nhập với vai trò Giám sát.
-2. Bấm &quot;📥 Tải kế hoạch&quot;, chọn file kế hoạch tuần (sheet MasterPlan-Full).
-3. Nếu có thông báo chuyền chưa có PU: bổ sung vào data\Linemapping.xlsx, bấm &quot;⟳ Làm mới&quot;.
-4. Theo dõi tab &quot;📊 Tình trạng&quot; và &quot;🕘 Nhật ký thao tác&quot;.</pre>
-<h2>III. NHÂN VIÊN IE – KIỂM TRA MÃ HÀNG</h2>
-<pre>1. Đăng nhập với vai trò Nhân viên IE, chọn đúng PU.
-   Lần đầu: bấm nút &quot;Chuyền phụ trách&quot; ở cột trái, chọn các chuyền mình phụ trách, bấm &quot;Xong&quot;.
-   (Lựa chọn được lưu trên máy; bấm &quot;Bỏ lọc&quot; để xem tất cả chuyền của PU.)
-2. Chọn mã hàng ở cột bên trái.
-3. Tại bước 2, phần mềm tự liệt kê các file layout có tên chứa mã hàng: bấm &quot;Mở&quot; ở file đúng (nhãn &quot;Đúng mã hàng&quot;).
-   Nếu không thấy: nhập một phần tên file vào ô tìm kiếm, hoặc bấm &quot;⟳ Quét lại&quot; (khi có file mới lưu), hoặc bấm &quot;📂 Duyệt…&quot;.
-   Kiểm tra đúng sheet.
-4. Xem kết quả, nhập ghi chú nếu cần, bấm Đạt / Chấp nhận có ghi chú / Không đạt.</pre>
-<h2>IV. NGƯỜI TỔNG HỢP – XỬ LÝ SAI LỆCH</h2>
-<pre>1. Đăng nhập với vai trò Người tổng hợp; tab &quot;🛠 Nhật ký sai lệch&quot; mở sẵn.
-2. Nếu CSDL sai: bấm &quot;📋 Sao chép danh sách máy đã sửa&quot;, mở file Machine Database,
-   dán vào cuối sheet &quot;Machine Database&quot;, lưu và đóng file Excel,
-   sau đó bấm &quot;✅ Đã cập nhật CSDL — xác nhận&quot;. Sai lệch = 0 thì tự động đóng.
-3. Nếu layout sai: bấm &quot;↩ Cần sửa layout&quot;, ghi rõ nội dung cần sửa. Mã hàng quay lại danh sách của IE.
+<title>Layout Check: Hướng dẫn sử dụng</title><link rel="icon" href="../icon.png"><link rel="stylesheet" href="manual.css"></head><body>
+<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>Layout Check V4.3.1: Hướng dẫn sử dụng</b><a href="ie-bao-cao-may.html">IE Báo cáo máy ›</a><a href="../index.html">‹ Trang chủ</a></header>
+<div class="wrap">
+<nav class="toc"><b>Nội dung</b>
+<a href="#gioi-thieu">1. Giới thiệu</a>
+<a href="#cai-dat">2. Cài đặt lần đầu</a>
+<a href="#giam-sat">3. Giám sát: tải kế hoạch</a>
+<a href="#ie">4. Nhân viên IE: kiểm tra mã hàng</a>
+<a class="sub" href="#ie-chon">Chọn mã hàng và layout</a>
+<a class="sub" href="#ie-ketqua">Đọc kết quả, lưu Đạt / Không đạt</a>
+<a class="sub" href="#ie-pdf">Layout chỉ có file PDF</a>
+<a href="#tonghop">5. IE Báo cáo máy: xử lý sai lệch</a>
+<a href="#tech">6. IE Tech: sửa layout</a>
+<a href="#kiemtralai">7. IE kiểm tra lại</a>
+<a href="#theodoi">8. Theo dõi: Tình trạng, Nhật ký</a>
+<a href="#quytac">9. Quy tắc cần nhớ</a>
+<a href="#loi">10. Lỗi thường gặp</a>
+</nav>
+<main>
+<section id="gioi-thieu"><h1>Layout Check</h1>
+<p class="lead">Đối chiếu danh sách máy trên file layout với CSDL máy (Machine Database) trước khi mã hàng vào chuyền. Chạy trên Chrome hoặc Edge, không gửi dữ liệu đi đâu.</p>
+<h2>1. Giới thiệu</h2>
+<p>Mỗi mã hàng đi qua một vòng kiểm tra có 4 vai trò:</p>
+<table><tr><th>Vai trò</th><th>Việc phải làm</th></tr>
+<tr><td><b>Nhân viên IE</b></td><td>Mở layout, so với CSDL, lưu <span class="tag t-ok">Đạt</span>, <span class="tag t-warn">Chấp nhận có ghi chú</span> hoặc <span class="tag t-bad">Không đạt</span>. <b>Chỉ Nhân viên IE lưu Đạt mới hoàn tất mã hàng.</b></td></tr>
+<tr><td><b>IE Báo cáo máy</b></td><td>Quyết định sai lệch do CSDL hay do layout; sửa CSDL.</td></tr>
+<tr><td><b>IE Tech</b></td><td>Sửa file layout khi được yêu cầu, hoặc xác nhận layout đúng, CSDL sai.</td></tr>
+<tr><td><b>Giám sát</b></td><td>Tải kế hoạch hằng tuần, theo dõi từng bước, xử lý mã hàng quá 2 vòng.</td></tr></table>
+<div class="note">Các ảnh trong tài liệu dùng <b>dữ liệu mẫu giả</b> (mã hàng DMO26-…, chuyền A, B, K, J, D, E), không phải dữ liệu công ty.</div>
+</section>
 
-LƯU Ý
-- Không đổi tên, không xóa các thư mục trong &quot;data&quot; (activity, validations, variations).
-- Luôn nhập họ tên giống nhau mỗi lần đăng nhập.
-- Đóng file Machine Database trước khi bấm &quot;xác nhận&quot;.</pre>
-<h2>CẬP NHẬT V4 — QUY TRÌNH 4 VAI TRÒ VÀ LIÊN KẾT IE BÁO CÁO MÁY</h2>
-<pre>Vai trò
-  Nhân viên IE      Kiểm tra layout so với CSDL máy. Chỉ Nhân viên IE lưu Đạt mới hoàn tất mã hàng.
-  IE Báo cáo máy    (trước đây &quot;Người tổng hợp&quot;) Quyết định CSDL sai hay layout sai; sửa CSDL.
-  IE Tech           Màn hình mới &quot;Layout cần sửa&quot;: xử lý layout bị yêu cầu sửa của PU mình.
-  Giám sát          Tải kế hoạch, theo dõi từng bước, xử lý mã hàng quá 2 vòng.
+<section id="cai-dat"><h2>2. Cài đặt lần đầu trên mỗi máy tính</h2>
+<ol>
+<li>Mở file <code>LayoutCheck.html</code> (hoặc <code>Open LayoutCheck.bat</code>) bằng Microsoft Edge hoặc Google Chrome. Khi dùng bản trên mạng nội bộ/GitHub Pages: mở đường dẫn do nhóm cung cấp.</li>
+<li>Nhập <b>Họ tên</b> (luôn nhập giống nhau mỗi lần đăng nhập), chọn <b>Vai trò</b> và <b>PU</b>.</li>
+<li>Bấm <span class="btn">Chọn…</span> tại <b>Thư mục dữ liệu</b>, chọn thư mục <code>data</code> dùng chung, bấm <span class="btn">Cho phép / Allow</span>.</li>
+<li>Bấm <span class="btn">Chọn…</span> tại <b>CSDL máy</b>, chọn file Machine Database.</li>
+<li>(Không bắt buộc) bấm <span class="btn">Chọn…</span> tại <b>Thư mục layout</b>, chọn thư mục chung nơi IE lưu layout (thư mục lớn nhất chứa mọi layout).</li>
+<li>Bấm <span class="btn">Bắt đầu</span>.</li></ol>
+<figure><a href="img/lc-01-login.png"><img src="img/lc-01-login.png" alt="Màn hình đăng nhập" loading="lazy"></a><figcaption>Màn hình đăng nhập: tên, vai trò, PU và ba thư mục/file (được đánh dấu đỏ). Dấu ✅ nghĩa là đã chọn xong.</figcaption></figure>
+<div class="ok">Từ lần sau chỉ cần nhập tên (đã lưu sẵn) và bấm <span class="btn">Bắt đầu</span>, rồi bấm <span class="btn">Cho phép</span> nếu trình duyệt hỏi.</div>
+<p>Danh sách PU lấy từ cột <code>PU</code> của <code>data\Linemapping.xlsx</code> (cột <code>Line</code>, <code>PU</code>). Khi thêm hoặc tách PU, chỉ sửa file này, không cần sửa phần mềm. Tên PU phải viết giống nhau ở mọi dòng (ví dụ <code>PU2 SPORT</code>); sau khi sửa, chọn lại thư mục data hoặc mở lại trang.</p>
+</section>
 
-Các bước của một mã hàng (cột &quot;Đang ở&quot; trong tab Tình trạng)
-  1. Cần kiểm tra (Nhân viên IE)
-     - Đạt hoặc Chấp nhận -&gt; Hoàn tất.
-     - Không đạt có sai lệch máy -&gt; bước 2.
-     - Không đạt nhưng không có sai lệch máy (nghi ngờ chính layout) -&gt; bước 3.
-  2. Chờ IE Báo cáo máy
-     - CSDL sai: sửa CSDL trong công cụ IE Báo cáo máy, dán vào Table1. Khi CSDL khớp layout, mã hàng tự
-       chuyển sang bước 4 (bấm &quot;Đã cập nhật CSDL — xác nhận&quot; để kiểm tra ngay).
-     - Layout sai: bấm &quot;Cần sửa layout&quot; và ghi lý do -&gt; bước 3.
-  3. Chờ IE Tech
-     - &quot;Layout đúng — CSDL sai&quot; (bắt buộc ghi chú) -&gt; quay lại bước 2.
-     - Sửa file layout, mở lại, bấm &quot;Đã sửa layout — kiểm tra ngay&quot;: hệ thống so sánh ngay.
-       Không còn sai lệch -&gt; bước 4. Còn sai lệch -&gt; sửa tiếp hoặc chọn &quot;Layout đúng — CSDL sai&quot;.
-  4. Đã sửa — kiểm tra lại (Nhân viên IE)
-     - Mã hàng nằm đầu danh sách. File layout lần trước tự mở lại, máy sai trước đó được tô màu.
-     - Đạt -&gt; Hoàn tất. Không đạt -&gt; quay lại bước 2 (vòng tiếp theo).
+<section id="giam-sat"><h2>3. Giám sát: tải kế hoạch hằng tuần</h2>
+<ol>
+<li>Đăng nhập với vai trò <b>Giám sát</b>.</li>
+<li>Bấm <span class="btn">📥 Tải kế hoạch</span>, chọn file kế hoạch tuần (sheet <code>MasterPlan-Full</code>, cột <code>Line</code>, <code>Style No</code>, <code>Date</code>).</li>
+<li>Nếu có thông báo chuyền chưa có PU: bổ sung vào <code>data\Linemapping.xlsx</code>, bấm <span class="btn">⟳ Làm mới</span>.</li>
+<li>Theo dõi tab <b>Tình trạng</b> và <b>Nhật ký thao tác</b>.</li></ol>
+<figure><a href="img/lc-02-supervisor-status.png"><img src="img/lc-02-supervisor-status.png" alt="Giám sát tải kế hoạch" loading="lazy"></a><figcaption>Sau khi tải kế hoạch, tab Tình trạng hiện tiến độ từng PU và danh sách mã hàng vào chuyền trong tuần. Hộp thông báo cho biết số mã hàng và mã mới.</figcaption></figure>
+</section>
 
-Nhãn trong danh sách
-  &quot;IE Báo cáo máy đã duyệt&quot;   CSDL đã được cập nhật từ layout; Nhân viên IE vẫn kiểm tra.
-  &quot;Đã sửa — chờ IE kiểm tra lại&quot;
-  &quot;Gấp&quot;                       vào chuyền trong 3 ngày tới.
-  &quot;2 vòng — báo Giám sát&quot;     đã Không đạt 2 lần liên tiếp.
-Số trên mỗi tab = số mã hàng đang chờ người dùng đó.
+<section id="ie"><h2>4. Nhân viên IE: kiểm tra mã hàng</h2>
+<h3 id="ie-chon">4.1 Chọn mã hàng và layout</h3>
+<ol>
+<li>Đăng nhập vai trò <b>Nhân viên IE</b>, chọn đúng PU. Cột trái <b>Cần kiểm tra</b> liệt kê các mã hàng vào chuyền đầu tiên trong tuần của PU; nhãn <span class="tag t-bad">Gấp</span> = vào chuyền trong 3 ngày tới.</li>
+<li>Lần đầu: bấm nút <b>Chuyền phụ trách</b> ở cột trái, tích các chuyền mình phụ trách, bấm <span class="btn">Xong</span>. Lựa chọn lưu trên máy; <span class="btn">Bỏ lọc</span> để xem mọi chuyền của PU.</li>
+<li>Bấm một mã hàng. Ở bước <b>1. CSDL máy</b>, danh sách máy trong CSDL tự hiện (bấm “Xem danh sách máy”).</li>
+<li>Ở bước <b>2. File layout</b>, phần mềm tự liệt kê file có tên chứa mã hàng: bấm <span class="btn">Mở</span> ở file đúng (nhãn “Đúng mã hàng”). Nếu không thấy: gõ một phần tên file vào ô tìm, bấm <span class="btn">⟳ Quét lại</span> (khi vừa lưu file mới) hoặc <span class="btn">📂 Duyệt…</span>.</li>
+<li>Kiểm tra đúng sheet: các sheet có bảng máy được tích sẵn, tổng các sheet đã chọn hiển thị bên dưới. Có thể <span class="btn">＋ Thêm file khác</span> nếu layout chia thành nhiều file.</li></ol>
+<figure><a href="img/lc-03-ie-list.png"><img src="img/lc-03-ie-list.png" alt="Danh sách cần kiểm tra" loading="lazy"></a><figcaption>Danh sách <b>Cần kiểm tra</b> của PU1 với nhãn “Mới trong tuần” và “Gấp”.</figcaption></figure>
+<figure><a href="img/lc-04-lines.png"><img src="img/lc-04-lines.png" alt="Lọc chuyền phụ trách" loading="lazy"></a><figcaption>Chọn các chuyền mình phụ trách để danh sách chỉ hiện mã hàng của các chuyền đó.</figcaption></figure>
+<figure><a href="img/lc-05-style-step2.png"><img src="img/lc-05-style-step2.png" alt="Bước 1 và 2" loading="lazy"></a><figcaption>Bước 1 (CSDL máy) và bước 2 (File layout). Bấm <b>Mở</b> ở file đúng mã hàng.</figcaption></figure>
 
-Giám sát kiểm soát
-  - Tab Tình trạng: số mã hàng Chờ IE Báo cáo máy / Chờ IE Tech / Chờ IE kiểm tra lại / Quá 2 vòng,
-    cột &quot;Đang ở&quot; cho từng mã hàng.
-  - Mã hàng quá 2 vòng: trao đổi với các bên; Giám sát có thể thực hiện thao tác của IE Báo cáo máy và IE Tech.
+<h3 id="ie-ketqua">4.2 Đọc kết quả và lưu</h3>
+<p>Layout Check so sánh <b>theo nhóm máy</b> (CSDL ghi theo nhóm, layout ghi theo mã máy):</p>
+<ul>
+<li><span class="tag t-ok">Khớp theo nhóm máy</span>: mọi nhóm có tổng số máy bằng nhau, dù mã máy trong nhóm khác nhau. <b>Được lưu Đạt.</b> Các mã máy khác nhau vẫn được liệt kê để tham khảo.</li>
+<li><span class="tag t-bad">Có … nhóm máy sai lệch</span>: có nhóm khác tổng số. <b>Không chọn được Đạt.</b> Kết quả liệt kê nhóm sai lệch và từng mã máy.</li>
+<li>Mã máy chưa có nhóm trong CSDL được so sánh riêng từng mã.</li>
+<li>Cảnh báo “bảng máy cuối layout khác bảng công đoạn” (layout lớn chia thành nhiều layout nhỏ) chỉ là cảnh báo, <b>không chặn Đạt</b>.</li></ul>
+<figure><a href="img/lc-06-pass-by-group.png"><img src="img/lc-06-pass-by-group.png" alt="Khớp theo nhóm máy" loading="lazy"></a><figcaption>Ví dụ khớp theo nhóm máy: 1NLB và 1NLS lệch nhau nhưng cùng nhóm 1NLM nên tổng bằng nhau (30 = 30). Nút <b>Đạt</b> sáng lên.</figcaption></figure>
+<figure><a href="img/lc-07-fail-differences.png"><img src="img/lc-07-fail-differences.png" alt="Sai lệch" loading="lazy"></a><figcaption>Ví dụ sai lệch: 4OLM và BT1M thừa 1 máy so với CSDL. Nút <b>Đạt</b> bị khóa; ghi chú rồi bấm <b>Không đạt</b>.</figcaption></figure>
+<p>Ở bước <b>4. Quyết định</b>:</p>
+<table><tr><th>Nút</th><th>Dùng khi</th><th>Ghi chú</th></tr>
+<tr><td><span class="tag t-ok">✅ Đạt</span></td><td>Layout = CSDL theo nhóm máy</td><td>Không bắt buộc ghi chú. Mã hàng hoàn tất.</td></tr>
+<tr><td><span class="tag t-warn">⚠ Chấp nhận có ghi chú</span></td><td>Sai lệch đã biết; IE Báo cáo máy sẽ cập nhật CSDL</td><td><b>Bắt buộc</b> ghi chú.</td></tr>
+<tr><td><span class="tag t-bad">❌ Không đạt</span></td><td>Cần sửa layout hoặc CSDL</td><td><b>Bắt buộc</b> ghi chú (cần sửa gì, đã báo cho ai).</td></tr></table>
+<div class="note">Mã hàng Đạt hoặc Chấp nhận biến mất khỏi danh sách. Mã hàng Không đạt vẫn ở lại cho đến khi được sửa và kiểm tra lại. Mọi sai lệch được chuyển cho IE Báo cáo máy ở tab <b>Nhật ký sai lệch</b>.</div>
 
-Dữ liệu
-  data\approvals\   ghi chú &quot;Đã duyệt&quot; do công cụ IE Báo cáo máy ghi. Không được tính là kiểm tra.
-  Các kết quả Đạt đã có trong data\validations giữ nguyên.
-  Máy dùng phiên bản cũ của LayoutCheck.html vẫn chạy bình thường (không hiển thị nhãn mới).</pre>
-<h2>V4.1 — ĐẠT THEO NHÓM MÁY; CẢNH BÁO LAYOUT CHIA NHỎ</h2>
-<pre>1. So sánh theo NHÓM MÁY: CSDL máy ghi theo nhóm máy, layout ghi theo mã máy (một nhóm có nhiều mã).
-   - Mọi nhóm máy có tổng số máy bằng nhau -&gt; được lưu Đạt, kể cả khi mã máy trong cùng nhóm khác nhau.
-     Kết quả hiển thị màu xanh &quot;Khớp theo nhóm máy&quot; và liệt kê các mã máy khác nhau để tham khảo.
-   - Có nhóm máy khác tổng số -&gt; không chọn được Đạt; kết quả liệt kê nhóm máy sai lệch.
-   - Sai lệch gửi IE Báo cáo máy chỉ gồm các mã máy thuộc nhóm sai lệch, và tự đóng khi tổng nhóm trong CSDL
-     bằng layout (kể cả khi sửa bằng mã máy khác cùng nhóm).
-   - Mã máy chưa có nhóm trong CSDL được so sánh riêng từng mã.
-2. Bảng máy cuối layout khác bảng công đoạn (ví dụ layout lớn chia thành nhiều layout nhỏ do SMV nhỏ):
-   vẫn hiển thị cảnh báo ở bước 2 và bước 3 nhưng KHÔNG chặn Đạt. Cảnh báo được lưu kèm kết quả (selfCheck).</pre>
-<h2>V4.2 — PU TÁCH (ví dụ PU2 SPORT, PU2 INTIMATE)</h2>
-<pre>Danh sách PU (màn hình đăng nhập, danh sách kiểm tra, nhật ký, trạng thái) lấy từ cột PU của Linemapping.xlsx.
-Khi thêm hoặc tách PU, chỉ cần sửa Linemapping.xlsx trong thư mục data; không cần sửa phần mềm.
-Lưu ý:
-- Tên PU phải giống nhau ở mọi dòng (VD: &quot;PU2 SPORT&quot; và &quot;PU2 INTIMATE&quot;; không dùng &quot;PU2 Sport&quot; ở dòng này và &quot;PU2 SPORT&quot; ở dòng khác).
-- Sau khi sửa Linemapping.xlsx, chọn lại thư mục data (hoặc đóng và mở lại trang) để danh sách PU được cập nhật.
-- Danh sách PU hiển thị chữ in hoa.</pre>
-<h2>V4.3 — LAYOUT CHỈ CÒN FILE PDF (KIỂM TRA THỦ CÔNG)</h2>
-<pre>Dùng khi layout cũ không còn file Excel mà chỉ có PDF.
-1. Mở file PDF ở bước 2 &quot;File layout&quot;:
-   - Bấm &quot;Duyệt…&quot; và chọn file .pdf, hoặc chọn file .pdf trong danh sách gợi ý (thư mục layout được quét cả file PDF;
-     lần đầu sau khi nâng cấp, danh sách tự quét lại).
-   - Trang web hiện PDF ở cột bên phải để vừa xem vừa nhập. Nút &quot;Xem PDF tại đây&quot; mở lại khung PDF, &quot;Mở tab mới&quot; mở PDF ở tab riêng,
-     dấu X đóng khung.
-2. Nhập danh sách máy của layout:
-   - Nhập &quot;Mã máy&quot; và &quot;SL&quot; rồi bấm &quot;Thêm&quot; (hoặc nhấn Enter ở ô SL). Ô mã máy gợi ý các mã đang có trong CSDL.
-   - Hoặc mở &quot;Dán danh sách máy (copy từ PDF)&quot;, dán các dòng &quot;mã máy  số lượng&quot; rồi bấm &quot;Đọc danh sách&quot;.
-     Dòng Tổng, tiêu đề được bỏ qua; kết quả báo số dòng đã thêm và số dòng bỏ qua. PDF dạng ảnh scan không copy được chữ thì nhập tay.
-   - Mỗi dòng sửa được SL hoặc xóa bằng dấu X. Mã máy chưa có nhóm trong CSDL được đánh dấu &quot;Chưa có nhóm&quot;.
-3. So sánh và kết quả giống layout Excel: so theo nhóm máy với CSDL; nhóm máy khớp thì được lưu Đạt.
-4. Bắt buộc tích &quot;Tôi đã đối chiếu từng dòng với file PDF&quot; trước khi lưu Đạt hoặc Chấp nhận (Không đạt không cần tích).
-   Nếu thay đổi danh sách, dấu tích tự bỏ và phải tích lại.
-5. Kết quả lưu có nhãn PDF trong tab Tình trạng. Nếu để trống ghi chú khi lưu Đạt, hệ thống tự ghi
-   &quot;Layout PDF, kiểm tra thủ công: &lt;tên file&gt;&quot;. Danh sách máy đã nhập được lưu kèm kết quả; khi kiểm tra lại cùng file PDF,
-   danh sách cũ tự điền sẵn để người kiểm tra đối chiếu lại.
-Các chức năng khác (Kiểm tra lại, IE Tech, sai lệch) không đổi.</pre>
-<h2>V4.3.1 — SỬA NHẬT KÝ SAI LỆCH THEO PU (PU TÁCH)</h2>
-<pre>1. Nhật ký sai lệch, thẻ KPI sai lệch ở tab Tình trạng và file Excel nhật ký sai lệch dùng PU của mã hàng theo Linemapping HIỆN TẠI
-   (theo chuyền vào đầu tiên của mã hàng), không dùng PU đã ghi lúc kiểm tra. Nhờ đó các kiểm tra đã lưu trước khi tách PU2
-   (ghi &quot;PU2&quot;) vẫn hiện đúng ở PU2 SPORT hoặc PU2 INTIMATE theo chuyền của mã hàng. Mã hàng không còn trong kế hoạch dùng PU đã ghi.
-2. Bộ lọc PU của tab Nhật ký sai lệch và tab Tình trạng có lại lựa chọn &quot;Tất cả PU&quot; và mặc định là Tất cả PU
-   (trước đó mặc định là PU đăng nhập gần nhất và không có &quot;Tất cả PU&quot;).</pre>
-</article></main></body></html>
+<h3 id="ie-pdf">4.3 Layout chỉ còn file PDF (kiểm tra thủ công)</h3>
+<p>Dùng khi layout cũ không còn file Excel mà chỉ có PDF.</p>
+<ol>
+<li>Ở bước 2, bấm <span class="btn">📂 Duyệt…</span> chọn file <code>.pdf</code> (hoặc chọn file PDF trong danh sách gợi ý). PDF hiện ở cột bên phải để vừa xem vừa nhập; <span class="btn">Xem PDF tại đây</span> mở lại khung, “Mở tab mới” mở PDF ở tab riêng, dấu ✕ đóng khung.</li>
+<li>Nhập danh sách máy: gõ <b>Mã máy</b> và <b>SL</b> rồi bấm <span class="btn">Thêm</span> (hoặc Enter ở ô SL; ô mã máy gợi ý các mã đang có trong CSDL). Hoặc mở <b>Dán danh sách máy (copy từ PDF)</b>, dán các dòng “mã máy  số lượng” rồi bấm <span class="btn">Đọc danh sách</span>. Dòng Tổng và tiêu đề được bỏ qua. PDF dạng ảnh scan không copy được chữ thì nhập tay.</li>
+<li><b>Bắt buộc</b> tích “Tôi đã đối chiếu từng dòng với file PDF” trước khi lưu Đạt hoặc Chấp nhận.</li></ol>
+<figure><a href="img/lc-19-pdf-card.png"><img src="img/lc-19-pdf-card.png" alt="Thẻ nhập thủ công PDF" loading="lazy"></a><figcaption>Thẻ nhập tay từ PDF: ô Mã máy / SL / Thêm, PDF hiện bên phải. <i>(Ảnh chụp bằng trình duyệt không có bộ xem PDF nên khung PDF để trống.)</i></figcaption></figure>
+<figure><a href="img/lc-20-pdf-entered.png"><img src="img/lc-20-pdf-entered.png" alt="Danh sách đã nhập" loading="lazy"></a><figcaption>Sau khi dán danh sách: bảng máy đã nhập, tổng số máy và kết quả so sánh; kết quả có nhãn “Layout nhập tay từ PDF”.</figcaption></figure>
+</section>
+
+<section id="tonghop"><h2>5. IE Báo cáo máy: xử lý sai lệch</h2>
+<p>Đăng nhập vai trò <b>IE Báo cáo máy</b>; tab <b>🛠 Nhật ký sai lệch</b> hiện các mã hàng Không đạt. Mỗi thẻ ghi: ai phát hiện, ghi chú của IE, bảng máy sai lệch (CSDL lúc kiểm tra, Layout, CSDL hiện tại, Còn lệch) và “Đang ở” bước nào.</p>
+<figure><a href="img/lc-09-variation-card.png"><img src="img/lc-09-variation-card.png" alt="Nhật ký sai lệch" loading="lazy"></a><figcaption>Thẻ sai lệch với ba nút xử lý (đánh dấu đỏ).</figcaption></figure>
+<ol>
+<li><b>CSDL sai</b> (layout đúng): sửa CSDL trong công cụ <b>IE Báo cáo máy</b> (xem tài liệu của công cụ đó), hoặc bấm <span class="btn">📋 Sao chép danh sách máy đã sửa</span>, mở file Machine Database, dán vào cuối sheet <code>Machine Database</code>, lưu và <b>đóng</b> file Excel; sau đó bấm <span class="btn">✅ Đã cập nhật CSDL — xác nhận</span>. Khi CSDL khớp layout (sai lệch = 0), mã hàng tự chuyển sang bước IE kiểm tra lại.</li>
+<li><b>Layout sai</b>: bấm <span class="btn">↩ Cần sửa layout</span> và ghi rõ nội dung cần sửa. Mã hàng chuyển cho IE Tech.</li></ol>
+<div class="warn">Luôn <b>đóng file Machine Database</b> trước khi bấm “xác nhận”. Không đổi tên, không xóa các thư mục trong <code>data</code> (activity, validations, variations).</div>
+</section>
+
+<section id="tech"><h2>6. IE Tech: sửa layout</h2>
+<p>Đăng nhập vai trò <b>IE Tech</b>; tab đầu tiên đổi thành <b>🔧 Layout cần sửa</b> và chỉ hiện các mã hàng của PU mình bị yêu cầu sửa layout. Đầu trang hiện yêu cầu của IE Báo cáo máy và các máy đang sai lệch.</p>
+<figure><a href="img/lc-12-tech-style.png"><img src="img/lc-12-tech-style.png" alt="Màn hình IE Tech" loading="lazy"></a><figcaption>Màn hình IE Tech: yêu cầu sửa layout (khung vàng), máy sai lệch theo lần kiểm tra trước (đánh dấu “trước đó sai”) và hai nút quyết định.</figcaption></figure>
+<p>Có hai cách trả lời:</p>
+<ul>
+<li><span class="btn">✔ Layout đúng — CSDL sai</span> (ghi chú bắt buộc): chuyển trả IE Báo cáo máy để sửa CSDL.</li>
+<li><b>Sửa file layout</b> trong thư mục chung, mở lại file (bấm <span class="btn">Bỏ</span> file cũ rồi <span class="btn">📂 Duyệt…</span> hoặc chọn lại trong danh sách), rồi bấm <span class="btn">✔ Đã sửa layout — kiểm tra ngay</span>. Hệ thống so sánh ngay: hết sai lệch thì mã hàng chuyển cho IE kiểm tra lại; còn sai lệch thì sửa tiếp hoặc chọn “Layout đúng — CSDL sai”.</li></ul>
+<figure><a href="img/lc-13-tech-fixed.png"><img src="img/lc-13-tech-fixed.png" alt="Layout đã sửa" loading="lazy"></a><figcaption>Sau khi mở file layout đã sửa: không còn sai lệch, bấm “Đã sửa layout — kiểm tra ngay”.</figcaption></figure>
+<div class="note">Khi mở file mới, nhớ <b>bỏ file layout cũ</b> khỏi danh sách; nếu để cả hai, số máy của hai file bị cộng lại và sẽ hiện sai lệch lớn.</div>
+</section>
+
+<section id="kiemtralai"><h2>7. Nhân viên IE: kiểm tra lại</h2>
+<p>Mã hàng đã được sửa nằm <b>đầu danh sách</b> với nhãn <span class="tag t-ok">Đã sửa — chờ IE kiểm tra lại</span>. File layout lần trước tự mở lại, máy sai trước đó được tô màu. Lưu <b>Đạt</b> thì hoàn tất; Không đạt thì quay lại bước IE Báo cáo máy (vòng tiếp theo).</p>
+<figure><a href="img/lc-14-recheck-list.png"><img src="img/lc-14-recheck-list.png" alt="Chờ kiểm tra lại" loading="lazy"></a><figcaption>Mã hàng đã được IE Tech sửa quay lại danh sách của Nhân viên IE.</figcaption></figure>
+<figure><a href="img/lc-15-recheck-pass.png"><img src="img/lc-15-recheck-pass.png" alt="Kiểm tra lại đạt" loading="lazy"></a><figcaption>Kiểm tra lại: layout đã khớp CSDL, bấm Đạt.</figcaption></figure>
+<h3>Các bước của một mã hàng</h3>
+<table><tr><th>Bước</th><th>Ai giữ</th><th>Chuyển sang</th></tr>
+<tr><td>1. Cần kiểm tra</td><td>Nhân viên IE</td><td>Đạt/Chấp nhận → <b>Hoàn tất</b>. Không đạt có sai lệch máy → bước 2. Không đạt nhưng không có sai lệch máy (nghi ngờ chính layout) → bước 3.</td></tr>
+<tr><td>2. Chờ IE Báo cáo máy</td><td>IE Báo cáo máy</td><td>CSDL sai: sửa CSDL, khi khớp → bước 4. Layout sai: “Cần sửa layout” → bước 3.</td></tr>
+<tr><td>3. Chờ IE Tech</td><td>IE Tech</td><td>“Layout đúng — CSDL sai” → bước 2. Đã sửa layout hết sai lệch → bước 4.</td></tr>
+<tr><td>4. Đã sửa — kiểm tra lại</td><td>Nhân viên IE</td><td>Đạt → Hoàn tất. Không đạt → bước 2 (vòng tiếp theo).</td></tr></table>
+<p>Nhãn khác: <span class="tag t-ok">IE Báo cáo máy đã duyệt</span> (CSDL đã cập nhật từ layout; Nhân viên IE vẫn kiểm tra), <span class="tag t-bad">2 vòng — báo Giám sát</span> (đã Không đạt 2 lần liên tiếp). Số trên mỗi tab = số mã hàng đang chờ người dùng đó.</p>
+</section>
+
+<section id="theodoi"><h2>8. Theo dõi: Tình trạng, Nhật ký</h2>
+<figure><a href="img/lc-16-status.png"><img src="img/lc-16-status.png" alt="Tình trạng" loading="lazy"></a><figcaption>Tab <b>Tình trạng</b> (Giám sát): tiến độ từng PU, số mã hàng chờ IE Báo cáo máy / IE Tech / IE kiểm tra lại / quá 2 vòng, cột “Đang ở” cho từng mã hàng. <b>Xuất Excel</b> để lưu báo cáo.</figcaption></figure>
+<figure><a href="img/lc-17-activity.png"><img src="img/lc-17-activity.png" alt="Nhật ký thao tác" loading="lazy"></a><figcaption>Tab <b>Nhật ký thao tác</b>: ai làm gì, lúc nào, trên mã hàng nào; lọc theo người và loại thao tác.</figcaption></figure>
+<figure><a href="img/lc-18-variation-closed.png"><img src="img/lc-18-variation-closed.png" alt="Sai lệch đã đóng" loading="lazy"></a><figcaption>Tab <b>Nhật ký sai lệch</b> với bộ lọc trạng thái (Chưa đóng / Đã đóng) để xem các sai lệch đã xử lý.</figcaption></figure>
+<p>Mã hàng quá 2 vòng: Giám sát trao đổi với các bên; Giám sát có thể thực hiện thao tác của IE Báo cáo máy và IE Tech.</p>
+</section>
+
+<section id="quytac"><h2>9. Quy tắc cần nhớ</h2>
+<ul>
+<li>Chỉ Nhân viên IE lưu Đạt/Chấp nhận mới hoàn tất mã hàng. Công cụ IE Báo cáo máy chỉ ghi ghi chú “Đã duyệt” (không tính là kiểm tra).</li>
+<li>CSDL chỉ dùng các dòng có <b>ngày mới nhất</b> của mỗi mã hàng.</li>
+<li>Kết quả Đạt đã có trong <code>data\validations</code> không bị ghi lại.</li>
+<li>Máy dùng bản Layout Check cũ vẫn chạy bình thường (chỉ không hiển thị các nhãn mới).</li>
+<li>Không đổi tên, không xóa thư mục <code>activity</code>, <code>validations</code>, <code>variations</code>, <code>approvals</code> trong <code>data</code>.</li></ul>
+</section>
+
+<section id="loi"><h2>10. Lỗi thường gặp</h2>
+<table><tr><th>Hiện tượng</th><th>Cách xử lý</th></tr>
+<tr><td>Không thấy file layout của mã hàng</td><td>Gõ một phần tên file vào ô tìm, bấm “⟳ Quét lại”, hoặc “📂 Duyệt…”.</td></tr>
+<tr><td>“Mã hàng không có trong CSDL”</td><td>Kiểm tra mã hàng trong sheet <code>Machine Database</code>; gợi ý các mã cùng 11 ký tự đầu được hiển thị.</td></tr>
+<tr><td>Trình duyệt hỏi lại quyền thư mục</td><td>Bấm “Cho phép / Allow”.</td></tr>
+<tr><td>Danh sách PU không đúng</td><td>Sửa <code>Linemapping.xlsx</code> trong thư mục data, chọn lại thư mục data hoặc mở lại trang.</td></tr>
+<tr><td>Sau khi cập nhật phiên bản trang web, giao diện cũ</td><td>Nhấn Ctrl+F5.</td></tr>
+<tr><td>Chuyền chưa có PU</td><td>Thêm chuyền vào <code>Linemapping.xlsx</code>, bấm “⟳ Làm mới”.</td></tr></table>
+</section>
+</main></div></body></html>
