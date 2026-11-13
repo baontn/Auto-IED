@@ -9,7 +9,7 @@ Two **static, offline, single-file web tools** (Chrome/Edge only, File System Ac
 | Tool | File | Version | Who uses it |
 |---|---|---|---|
 | **Layout Check** (LC) | `layout-check/LayoutCheck.html` (+ `xlsx.full.min.js` next to it) | V4.3.1 | IE officers check a style's layout machine list against the MACHINE DATABASE; IE Báo cáo máy (consolidator) fixes the database; IE Tech fixes layouts; Supervisor tracks |
-| **IE Báo cáo máy** (IBM) | `ie-bao-cao-may/IE_BaoCaoMay.html` (built from `src/ie-bao-cao-may`) | v7.8 | (a) updates MACHINE DATABASE from scanned layouts + costing, (b) machine shortage analysis by day, (c) prep (changeover) machines: proposal -> IE Tech review -> close report, activity log |
+| **IE Báo cáo máy** (IBM) | `ie-bao-cao-may/IE_BaoCaoMay.html` (built from `src/ie-bao-cao-may`) | v7.9 | (a) updates MACHINE DATABASE from scanned layouts + costing, (b) machine shortage analysis by day, (c) prep (changeover) machines: proposal -> IE Tech review -> close report, activity log |
 
 Weekly process: layouts sit in share folders; `MC_report.xlsx` runs Power Query over `TransformedMasterPlan.xlsx` (sheet `MasterPlan-Full`) plus the MACHINE DATABASE (an Excel table that **must stay named `Table1`**) via MACHINE GROUP, producing MACHINE BY LINE and MISSING STYLES. Costing is used for styles with no layout. Only D lines run 48HC (the suffix is part of the style name).
 
@@ -43,6 +43,7 @@ Release routine for IBM: edit `src/...` -> bump `src/ie-bao-cao-may/VERSION` -> 
 Written by LC: `validations/*.json` (one per check: `valId, style, status PASS|ACCEPTED|FAIL, pu, user, role, savedAt, layoutFiles, layoutSheets, layoutType, selfCheck, details[{machine,group,db,lay,diff,result}], groupDiffCount, comment, manualPdf, manualRows`), `variations/*.json` (actions such as `LAYOUT_TO_FIX, TECH_LAYOUT_FIXED, TECH_DB_WRONG`), `activity/*.jsonl` (daily lines), `stylePlan.json` (plan snapshot), `Linemapping.xlsx` (columns Line, PU; **the only source of PU names in LC**).
 Written by IBM: `approvals/*.json` ("Đã duyệt" notes, `status:'APPROVED'`, never counted as an IE check) and everything under `prep/`:
 `proposals` (`{at,by,groups,from,rows[],grid{group:{days,avail,parts,lines}},groupMap}`), `reviews` (IE Tech decisions; **key = `line|fromStyle|toStyle|group`**, no date; fields `decision KEEP|ADJUST|REMOVE, qty, qtyBActual, loadDateActual, prepDays, reason, loadDate, qtyB, proposedQty, by, at`), `shared` (style pairs sharing a layout `{styles:[A,B]}`), `notices` + `noticeres` (IE Tech variation notices and answers), `complete` (IE Tech "Hoàn tất duyệt"), `closed` (Consolidator close records), `lineends` (`{line,style,endDate,planEnd,by,at}`), `rules.json` (`{ratios,days,daysBy}`).
+Also written by IBM: `machinedb/scanstate.json` (layout hashes) and `machinedb/keeps.json` (`{version:1, items:{styleKey:{name,by,at,fps[]}}}`: "keep current data" confirmations of the Cập nhật CSDL tab; `fps` = content fingerprints (`type:machine:qty;...`) of every scanned layout/costing option at confirmation time; without the data folder the same JSON lives in localStorage `mdb_keeps`).
 Browser-side state: IBM keeps folder/file handles in IndexedDB `iebaocaomay` (KV) and small settings in localStorage (`mdb_name, mdb_role, mdb_lang, mdb_tpu, mdb_tlines, mdb_tgroup, mdb_pus, mdb_laypath`). LC keeps handles in IndexedDB `layoutcheck`/`kv`. These are per browser origin (file:// vs github.io differ: users re-pick folders once).
 
 ## 5. Architecture notes
@@ -60,6 +61,7 @@ Browser-side state: IBM keeps folder/file handles in IndexedDB `iebaocaomay` (KV
 - Style names: parsed from layout cells B3, D3, D4, B11 and file name; combined forms expanded (`3801.3802.3803`, `3901.04`, `00115_116_117`, line breaks). Variant (48HC/16HC/ln) from layout text, file name/folder, else the plan. Special customer codes (SP..., S2xxx, F2xxx, DS...) kept as written. Compare styles ignoring size suffix `(XX)` only where code says so (`baseKey`).
 - Source priority: layout first (Bulk before Initial, higher OBD, newer file); costing only for styles with no layout and no data (48 / total SAM x operation SAM, operations 31-97, 100, 103, 116; rounding: decimal <= 0.20 down else up, min 1; 24 variant for non-48HC); manual data (REMARK other than `sx`: IETL, SMS, PDF, tt, E) is locked. **The REMARK `sx` = layout data assumption is not confirmed by the user.**
 - Only the rows with the LATEST DATE per style in MACHINE DATABASE are used (both tools).
+- "Giữ dữ liệu hiện tại" in Cập nhật CSDL can be **confirmed** (✓ then "Xác nhận giữ", or ticked when pressing Lưu): the style moves to the card "Đã xác nhận giữ" and comes back under "Cần duyệt" **only when the content (machines and quantities) of its layout/costing options changes** (new modified time or formatting alone does not); it shows a note with who confirmed and when. "Hủy xác nhận" undoes it. Not possible for a style with no current data; not applied to Layout Check driven items (`fromLc`, hold).
 - Layout vs database is decided **by machine group** (database lists groups, layouts list machine codes). Matching group totals may be saved Đạt. Layout whose bottom machine list differs from its operation table (big layout split into small ones) is a warning only.
 - A style is confirmed only when an IE officer saves Đạt/Chấp nhận in LC. IBM never writes Đạt; it writes "Đã duyệt" notes. Fail loop: IE Fail -> IE Báo cáo máy (database or layout?) -> IE Tech (layout to fix) -> IE re-check; after 2 rounds flagged to Supervisor. Existing "Đạt" records are never rewritten.
 - PDF-only layouts: typed/pasted list + mandatory tick "đã đối chiếu từng dòng" for Đạt/Chấp nhận.
@@ -76,6 +78,7 @@ Browser-side state: IBM keeps folder/file handles in IndexedDB `iebaocaomay` (KV
 - Some old LC scenarios assume a plan week that is "this week" and fail later because of the date, not because of the code.
 - Headless Chromium has no PDF viewer: the docked PDF column stays blank in tests.
 - `node tests/ie-bao-cao-may/tprep*.js` check the pure prep logic against the real MC Report.
+- `python3 tests/ie-bao-cao-may/keep_confirm.py` is a **turnkey** test (synthetic demo data from `tools/manual_shots/make_demo_data.py`, harness `tests/sim/simlib.py`: shared "network drive" on disk, one browser per person, faked clock): checks the "Xác nhận giữ" flow of v7.9. Needs `pip install playwright openpyxl`, and the built `ie-bao-cao-may/IE_BaoCaoMay.html`.
 
 ## 8. Pitfalls learned (save yourself time)
 
@@ -90,12 +93,12 @@ Browser-side state: IBM keeps folder/file handles in IndexedDB `iebaocaomay` (KV
 2. Alias table for non-standard style names (83 files had no parsable style).
 3. IE Tech loading-date edits are stored per row (machine group); end-date edits are per line/style. Consider making loading date per changeover. The planned end date shown comes from the machine group being viewed.
 4. IBM re-reading a PDF-based LC check shows a "file not found" note when a scanned candidate exists for that style.
-5. Manuals describe v7.8 / V4.3.1. After UI changes retake the screenshots (tools/manual_shots/README.md) and update the text in manual/*.html.
+5. Manuals describe v7.9 / V4.3.1. After UI changes retake the screenshots (tools/manual_shots/README.md) and update the text in manual/*.html.
 6. Consider backing up the shared `data` folder (check history lives only there).
 7. Optional: automated version display on `index.html` and a CI smoke test (page loads without errors, `node --check` on sources).
 
 ## 10. First steps in Claude Code
 
 1. `python3 tools/build_ie_bao_cao_may.py` and confirm it reproduces `ie-bao-cao-may/IE_BaoCaoMay.html` without a diff.
-2. Open both HTML files in Chrome (from the repo folder) and check the version tags (`v7.8`, `V4.3.1`).
+2. Open both HTML files in Chrome (from the repo folder) and check the version tags (`v7.9`, `V4.3.1`).
 3. Ask the user for the sample data and set up the test harness paths before changing behaviour.

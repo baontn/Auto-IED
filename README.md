@@ -3,7 +3,7 @@
 | Công cụ | Đường dẫn | Phiên bản |
 |---|---|---|
 | Layout Check | `layout-check/LayoutCheck.html` | V4.3.1 |
-| IE Báo cáo máy | `ie-bao-cao-may/IE_BaoCaoMay.html` | v7.8 |
+| IE Báo cáo máy | `ie-bao-cao-may/IE_BaoCaoMay.html` | v7.9 |
 
 Dữ liệu (layout, MC Report, kế hoạch, thư mục `data` chứa kết quả kiểm tra) **không nằm trong kho này**. Hai công cụ chạy trong Chrome/Edge và chỉ đọc, ghi thư mục do người dùng chọn; không gửi dữ liệu đi đâu.
 
@@ -22,8 +22,8 @@ Lưu ý: gói miễn phí chỉ dùng Pages cho kho công khai; kho riêng tư c
 
 ## Đẩy lần đầu (GitHub Desktop)
 1. Cài GitHub Desktop, File > Add local repository (chọn thư mục này) hoặc Create repository.
-2. Commit "v7.8", rồi Publish repository (chọn Public hoặc Private theo quy định công ty).
-3. Dòng lệnh: `git init`, `git add .`, `git commit -m "v7.8"`, `git branch -M main`, `git remote add origin <url>`, `git push -u origin main`.
+2. Commit "v7.9", rồi Publish repository (chọn Public hoặc Private theo quy định công ty).
+3. Dòng lệnh: `git init`, `git add .`, `git commit -m "v7.9"`, `git branch -M main`, `git remote add origin <url>`, `git push -u origin main`.
 
 ## Mỗi lần cập nhật
 - IE Báo cáo máy: sửa mã trong `src/ie-bao-cao-may/`, tăng số trong `VERSION`, chạy `python3 tools/build_ie_bao_cao_may.py`.

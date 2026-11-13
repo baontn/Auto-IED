@@ -1,6 +1,9 @@
 // ===================== TEXTS (VI / EN) =====================
 var I18N = {
   vi: {
+    vKept: 'Đã xác nhận giữ', vKeptHint: 'Bạn đã xác nhận giữ dữ liệu hiện tại cho các mã hàng này. Chỉ hiện lại ở "Cần duyệt" khi layout thay đổi.', colKeptBy: 'Xác nhận bởi', keepUndo: 'Hủy xác nhận',
+    keepBtn: 'Xác nhận giữ ({0})', keepTip: 'Xác nhận giữ dữ liệu hiện tại: mã hàng chỉ hiện lại khi layout thay đổi', keepsSel: '{0} xác nhận giữ', keepSaved: 'Đã xác nhận giữ {0} mã hàng; chỉ hiện lại khi layout thay đổi.', keepLocal: ' (lưu trên máy này vì chưa kết nối thư mục data)', keepErr: 'Không ghi được xác nhận giữ: {0}',
+    n_keepChanged: 'Layout đã thay đổi sau khi {0} xác nhận giữ dữ liệu hiện tại ({1})',
     eAsk: 'Ngày kết thúc của mã đang chạy {0} trên chuyền {1} (dd/mm/yyyy). Theo kế hoạch: {2}. Để trống = theo kế hoạch.', eEnd: 'kết thúc {0}', eBtn: 'Sửa ngày kết thúc của mã đang chạy',
     pf_endSet: 'ngày kết thúc mã trước do IE Tech chỉnh', ak_end: 'Đổi ngày kết thúc', aDetailEnd: 'kết thúc {0} → {1}', aDetailEndReset: 'về theo kế hoạch ({0})',
     tabAct: 'Nhật ký', cBtn: '🔒 Chốt báo cáo…', cTitle: 'Chốt báo cáo chuẩn bị máy', cRefresh: 'Làm mới', cHide: 'Đóng', cDo: '🔒 Chốt báo cáo', cNotePh: 'Ghi chú khi chốt (không bắt buộc)',
@@ -150,6 +153,9 @@ var I18N = {
     c_Added: 'Mới', c_Changed: 'Thay đổi', c_Unchanged: 'Không đổi'
   },
   en: {
+    vKept: 'Confirmed to keep', vKeptHint: 'You confirmed keeping the current data for these styles. They come back under "To review" only when the layout changes.', colKeptBy: 'Confirmed by', keepUndo: 'Undo',
+    keepBtn: 'Confirm keep ({0})', keepTip: 'Confirm keeping the current data: the style comes back only when the layout changes', keepsSel: '{0} keep confirmations', keepSaved: 'Confirmed keeping {0} styles; they come back only when the layout changes.', keepLocal: ' (stored on this computer because the data folder is not connected)', keepErr: 'Could not save the keep confirmation: {0}',
+    n_keepChanged: 'The layout changed after {0} confirmed keeping the current data ({1})',
     eAsk: 'End date of the running style {0} on line {1} (dd/mm/yyyy). Per plan: {2}. Empty = per plan.', eEnd: 'ends {0}', eBtn: 'Edit the end date of the running style',
     pf_endSet: 'end date of the previous style set by IE Tech', ak_end: 'End date changed', aDetailEnd: 'ends {0} → {1}', aDetailEndReset: 'back to plan ({0})',
     tabAct: 'Activity', cBtn: '🔒 Close report…', cTitle: 'Close the machine prep report', cRefresh: 'Refresh', cHide: 'Close', cDo: '🔒 Close report', cNotePh: 'Note when closing (optional)',

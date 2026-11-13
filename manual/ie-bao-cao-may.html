@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>IE Báo cáo máy: Hướng dẫn sử dụng</title><link rel="icon" href="../icon.png"><link rel="stylesheet" href="manual.css"></head><body>
-<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>IE Báo cáo máy v7.8: Hướng dẫn sử dụng</b><a href="layout-check.html">Layout Check ›</a><a href="../index.html">‹ Trang chủ</a></header>
+<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>IE Báo cáo máy v7.9: Hướng dẫn sử dụng</b><a href="layout-check.html">Layout Check ›</a><a href="../index.html">‹ Trang chủ</a></header>
 <div class="wrap">
 <nav class="toc"><b>Nội dung</b>
 <a href="#gioi-thieu">1. Giới thiệu</a>
@@ -10,6 +10,7 @@
 <a class="sub" href="#b1">Bước 1: Dữ liệu đầu vào</a>
 <a class="sub" href="#b2">Bước 2: Quét layout</a>
 <a class="sub" href="#b3">Bước 3: Duyệt và lưu</a>
+<a class="sub" href="#keep">Xác nhận giữ dữ liệu hiện tại</a>
 <a class="sub" href="#b4">Bước 4: Đưa vào MC Report</a>
 <a href="#thieu-may">4. Thiếu máy và chuẩn bị</a>
 <a href="#tech">5. IE Tech: duyệt chuẩn bị</a>
@@ -64,6 +65,7 @@
 <tr><td><b>Còn thiếu dữ liệu</b></td><td>Mã hàng trong kế hoạch chưa có layout, chưa có costing và chưa có trong database. Cách xử lý ghi ở cột cuối.</td></tr>
 <tr><td><b>Lỗi dữ liệu</b></td><td>Cần sửa tại nguồn (ví dụ mã máy chưa có trong MACHINE GROUP, dòng bị dán trùng trong database có thể đánh dấu để giữ một bản).</td></tr>
 <tr><td><b>Không thay đổi</b></td><td>Layout trùng khớp database (so theo nhóm máy).</td></tr>
+<tr><td><b>Đã xác nhận giữ</b></td><td>Mã hàng bạn đã chọn “Giữ dữ liệu hiện tại” và xác nhận (xem bên dưới). Thẻ chỉ hiện khi có mục đã xác nhận.</td></tr>
 <tr><td><b>Đã kiểm tra (Layout Check)</b></td><td>Nhân viên IE đã Đạt/Chấp nhận, layout không đổi, CSDL đã khớp: không duyệt lại.</td></tr>
 <tr><td><b>Nhật ký quét</b></td><td>Kết quả từng file.</td></tr></table>
 <figure><a href="img/ibm-03-review.png"><img src="img/ibm-03-review.png" alt="Duyệt thay đổi" loading="lazy"></a><figcaption>Thẻ <b>Cần duyệt</b>: mỗi mã hàng có <b>Nguồn dữ liệu</b> (chọn layout khác, costing, hoặc giữ dữ liệu hiện tại), cột <b>Máy</b> và <b>Ghi chú</b>. Chip xanh = thêm, vàng = đổi số lượng (cũ→mới), đỏ gạch = bỏ.</figcaption></figure>
@@ -76,6 +78,19 @@
 <p>Khi đã chọn xong, bấm <span class="btn">Lưu MACHINE DATABASE</span> ở thanh dưới cùng. File lưu tên <code>MACHINE_DATABASE_yyyymmdd_hhmm.xlsx</code>.</p>
 <figure><a href="img/ibm-07-approve-all.png"><img src="img/ibm-07-approve-all.png" alt="Duyệt tất cả" loading="lazy"></a><figcaption>Sau “Duyệt tất cả mục đang hiển thị”: thanh dưới báo số thay đổi đã chọn.</figcaption></figure>
 <figure><a href="img/ibm-08-saved.png"><img src="img/ibm-08-saved.png" alt="Đã lưu" loading="lazy"></a><figcaption>Sau khi lưu: thông báo số thay đổi, số dòng database, trạng thái quét đã ghi vào Layout Check, số ghi chú “Đã duyệt” đã ghi, và bước tiếp theo.</figcaption></figure>
+<h3 id="keep">Giữ dữ liệu hiện tại và xác nhận giữ</h3>
+<p>Khi layout mới hoặc khác nhưng bạn muốn <b>giữ nguyên database</b> (ví dụ dữ liệu nhập tay do IE đã kiểm tra, hoặc layout chưa chốt), làm như sau:</p>
+<ol>
+<li>Ở cột <b>Nguồn dữ liệu</b> của mã hàng, chọn <b>Giữ dữ liệu hiện tại</b> (dòng cuối của danh sách).</li>
+<li>Tích ô ✓ ở đầu dòng. Thanh dưới hiện “<b>1 xác nhận giữ</b>” và nút <span class="btn">Xác nhận giữ (1)</span>.</li>
+<li>Bấm <span class="btn">Xác nhận giữ</span>. Cũng có thể bấm <span class="btn">Lưu MACHINE DATABASE</span>: các mục đã tích giữ được ghi nhớ cùng lúc.</li></ol>
+<figure><a href="img/ibm-22-keep-select.png"><img src="img/ibm-22-keep-select.png" alt="Xác nhận giữ" loading="lazy"></a><figcaption>Đã chọn “Giữ dữ liệu hiện tại” cho DMO26-00105-1201, ô ✓ được tích, nút <b>Xác nhận giữ (1)</b> hiện ở thanh dưới.</figcaption></figure>
+<p>Mã hàng chuyển sang thẻ <b>Đã xác nhận giữ</b> và <b>không hiện lại ở “Cần duyệt”</b> trong các lần quét sau. Mã hàng chỉ hiện lại khi <b>nội dung layout thay đổi</b> (mã máy hoặc số lượng khác); khi đó dòng ghi chú cho biết “Layout đã thay đổi sau khi … xác nhận giữ dữ liệu hiện tại”. Chỉ lưu lại file, đổi ngày sửa hoặc định dạng layout thì <b>không</b> làm mã hàng hiện lại.</p>
+<figure><a href="img/ibm-23-keep-list.png"><img src="img/ibm-23-keep-list.png" alt="Đã xác nhận giữ" loading="lazy"></a><figcaption>Thẻ <b>Đã xác nhận giữ</b>: ai xác nhận, lúc nào và các máy đang giữ. Nút <b>Hủy xác nhận</b> đưa mã hàng về “Cần duyệt”.</figcaption></figure>
+<ul>
+<li>Xác nhận được lưu trong <code>data\machinedb\keeps.json</code> (dùng chung với những người cùng thư mục data). Nếu chưa kết nối thư mục data, xác nhận chỉ lưu trên trình duyệt của máy này.</li>
+<li>Không xác nhận giữ được khi mã hàng chưa có dữ liệu hiện tại (mã hàng mới): ô ✓ bị khóa vì không có gì để giữ.</li>
+<li>“Duyệt tất cả mục đang hiển thị” <b>không</b> tự xác nhận giữ; phải tích từng mã hàng.</li></ul>
 <h3 id="b4">Bước 4: Đưa dữ liệu vào MC Report</h3>
 <p>Chọn một cách:</p>
 <ol type="a"><li>Dán sheet <code>MACHINE DATABASE</code> của file vừa lưu vào bảng <code>Table1</code> (thay toàn bộ dòng); hoặc</li>

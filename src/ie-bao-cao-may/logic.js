@@ -157,6 +157,7 @@ function buildReview(files, ref) {
       opts.push({ type: 'costing', set: c.set, factor: c.factor, ied: c.ied, notes: cn, blocked: c.status !== 'OK' || unk.length > 0 || !Object.keys(c.set).length });
     }
     opts.push({ type: 'keep', set: e ? e.set : null, notes: [], blocked: false });
+    opts.forEach(function (o) { o.fp0 = o.type === 'keep' ? '' : o.type + ':' + fp(o.set); });          // content fingerprint of the proposal as scanned (for "keep" confirmations)
     var hasLayout = list.length > 0, costOk = c && !opts.filter(function (o) { return o.type === 'costing'; })[0].blocked;
     var info = plan.info[k];
     if (!hasLayout && !e && !costOk) {                    // nothing usable -> still missing
@@ -311,6 +312,18 @@ function applyLayoutCheck(rv, lc, files) {
     var o = it.opts[it.sel];
     it.bucket = o.type !== 'keep' && sameGroups(o.set, it.current, it.groups) ? 'same' : 'review';
     it.kind0 = itemKind(it);
+  });
+}
+// ---------- "keep current data" confirmations: remembered by layout CONTENT (machines and quantities), shown again only when it changes ----------
+function keepFps(it) { return it.opts.filter(function (o) { return o.type !== 'keep'; }).map(function (o) { return o.fp0; }); }
+function keepRecord(it, user, now) { return { name: it.name, by: user || '', at: now.toISOString(), fps: keepFps(it) }; }
+function applyKeeps(rv, keeps) {
+  rv.items.forEach(function (it) {
+    var r = keeps && keeps[it.key]; if (!r || it.bucket !== 'review' || it.fromLc || it.kind0 === 'hold' || !it.current) return;
+    var fps = keepFps(it), known = r.fps || [];
+    if (fps.length && fps.every(function (f) { return known.indexOf(f) >= 0; })) {      // nothing new or changed since the confirmation
+      it.bucketBefore = it.bucket; it.bucket = 'kept'; it.keptRec = r; it.apply = false; it.sel = it.opts.length - 1;
+    } else it.notes.push(['keepChanged', r.by || '-', r.at ? String(r.at).slice(0, 10) : '']);
   });
 }
 // one Layout Check record per style (status PASS: database = layout), written by the Builder
