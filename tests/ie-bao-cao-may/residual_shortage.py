@@ -117,7 +117,7 @@ with sync_playwright() as p:
     print('  group cards:', [(c['g'], c['cls'], c['acts']) for c in cards])
     bt = [c for c in cards if c['g'] == 'BT1M'][0]; zz = [c for c in cards if c['g'] == 'ZZM'][0]
     check('BT1M card lists its two confirmed actions with before / after numbers', bt['acts'] == 2 and 'Ban đầu' in bt['txt'] and 'Sau hành động' in bt['txt'], bt['txt'][:140])
-    check('ZZM card: no action, still short -> red card with "IE kiểm tra thêm"', 'more' in zz['cls'] and zz['acts'] == 0 and 'IE kiểm tra thêm' in zz['txt'] and 'Không có hành động' in zz['txt'], zz['txt'][:140])
+    check('ZZM card: still short (only the shared date move) -> red card with "IE kiểm tra thêm"', 'more' in zz['cls'] and 'IE kiểm tra thêm' in zz['txt'] and 'Còn thiếu' in zz['txt'], zz['cls'] + ' ' + str(zz['acts']) + ' ' + zz['txt'][100:])
     pus = mp.evaluate("[...document.querySelectorAll('#rsCS .sc-grid[data-rs-card=pu] .sc-card')].map(c=>c.innerText.replace(/\\n/g,' | '))"); print('  PU cards:', pus)
     check('PU cards: every PU has a card with a conclusion', len(pus) >= 3 and any('IE kiểm tra thêm' in x for x in pus) and any('Đã có hành động' in x for x in pus))
     with mp.expect_download(timeout=20000) as dl_: mp.click('#rsCS [data-rs-export]')
