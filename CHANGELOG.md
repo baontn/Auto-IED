@@ -24,6 +24,7 @@ Dates are the build dates in the working sessions (Nov 2026). "LC" = Layout Chec
 - **v1 – v2.2 (MachineDB Builder)** Replacement of the VBA CollectMachineData scanner: layout scan, costing fallback, review cards, exports, Layout Check connection.
 
 ## LC
+- **V4.3.3** A style search box in every tab (Check, Variation, Status, Activity). The line picker search works like IE Báo cáo máy: comma/space separated starts (`J, K` shows every line starting with J or K), and "Tick all shown" selects the lines shown. Test `tests/layout-check/search_bars.py`.
 - **V4.3.2** The Machine Database file is re-read automatically when it changed (opening a style or a layout, window focus): no false "Không đạt" because the window still holds an old copy; a message tells that the file was reloaded (kept as is when the file is busy in Excel).
 - **V4.3.1** Variation log, status KPI and export use the style's PU from the current Linemapping (records saved as "PU2" before the split now show under PU2 Sport / Intimate); "Tất cả PU" restored in PU filters.
 - **V4.3** Layouts that exist only as PDF: docked PDF viewer, typed/pasted machine list, required confirmation before Đạt/Chấp nhận, PDF tag in Status.

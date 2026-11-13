@@ -107,6 +107,7 @@ details summary{cursor:pointer;color:var(--accent)}
 .vact{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .linebar{padding:6px 12px;border-bottom:1px solid var(--line);display:flex;gap:6px;align-items:center}
 .linebar button{flex:1;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stbar{padding:6px 12px;border-bottom:1px solid var(--line)}.stbar input{width:100%;box-sizing:border-box}
 .linepanel{border-bottom:1px solid var(--line);padding:8px 12px;display:flex;flex-direction:column;gap:6px}
 .linegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:2px 6px;max-height:240px;overflow:auto}
 .linegrid label{display:flex;gap:4px;align-items:center;font-size:13px;cursor:pointer}
@@ -157,7 +158,7 @@ tr.tot td{font-weight:700;border-top:2px solid var(--text);border-bottom:none;ba
 
 <!-- ============ TOP BAR ============ -->
 <header>
-  <h1 data-i18n="appTitle"></h1><span class="tag t-info" id="verTag" title="Version">V4.3.2</span>
+  <h1 data-i18n="appTitle"></h1><span class="tag t-info" id="verTag" title="Version">V4.3.3</span>
   <nav class="tabs">
     <button data-tab="check" data-i18n="tabCheck"></button>
     <button data-tab="variation" data-i18n="tabVar"></button>
@@ -192,6 +193,7 @@ tr.tot td{font-weight:700;border-top:2px solid var(--text);border-bottom:none;ba
       <div class="linegrid" id="lineGrid"></div>
       <button id="lnDone" class="primary" data-i18n="done"></button>
     </div>
+    <div class="stbar"><input id="stSearch" data-i18n-ph="searchStyle" autocomplete="off"></div>
     <div class="list" id="list"></div>
   </aside>
   <div class="work" id="work"></div>
@@ -219,6 +221,7 @@ tr.tot td{font-weight:700;border-top:2px solid var(--text);border-bottom:none;ba
     <b data-i18n="styles"></b>
     <select id="fPU"><option value="" data-i18n="allPU"></option></select>
     <select id="fSt"><option value="" data-i18n="allResults"></option><option value="PENDING" data-i18n="PENDING"></option><option value="FAIL" data-i18n="FAIL"></option><option value="PASS" data-i18n="PASS"></option><option value="ACCEPTED" data-i18n="ACCEPTED"></option></select>
+    <input id="fSearch" data-i18n-ph="searchStyle" size="18" autocomplete="off">
     <span class="muted" id="stCount"></span>
     <button id="btnExpStatus" style="margin-left:auto" data-i18n="exportXl"></button>
   </div>
@@ -231,6 +234,7 @@ tr.tot td{font-weight:700;border-top:2px solid var(--text);border-bottom:none;ba
     <b data-i18n="whoWhat"></b>
     <select id="aUser"></select>
     <select id="aAct"></select>
+    <input id="aSearch" data-i18n-ph="searchStyle" size="18" autocomplete="off">
     <span class="muted" id="aCount"></span>
     <button id="btnExpAct" style="margin-left:auto" data-i18n="exportXl"></button>
   </div>
@@ -346,7 +350,7 @@ const I18N = {
     verifyAllOk: '✅ {0}: all variations closed — variation = 0.', verifySome: '⚠ {0}: {1} variation(s) still different:\n{2}',
     askLayoutNote: 'What must the IE change in the layout?', sentBack: '{0} sent back to IE to fix the layout.',
     thFoundAt: 'Found at', thFoundBy: 'Found by', thType: 'Type', thClosedBy: 'Closed by', thClosedAt: 'Closed at', thLastAction: 'Last action',
-    lineFilter: 'My lines:', allLines: 'All lines', linesN: '{0} lines', pickLines: 'Tick the lines you are in charge of', searchLine: 'Search line…',
+    lineFilter: 'My lines:', allLines: 'All lines', linesN: '{0} lines', pickLines: 'Tick the lines you are in charge of', searchLine: 'Search line… (e.g. J, K)', searchStyle: 'Search style…', noMatch: 'No style matches the search.',
     selectAll: '✓ Tick all shown', selectNone: 'Clear (show all lines)', done: 'Done', toCheckOf: 'To check ({0} of {1})',
     noLinesForPU: 'No line of this PU in the plan.', aSET_LINES: 'Set my lines',
     layoutFolder: 'Layout folder', layoutFolderOpt: 'optional — the big folder where IEs save layouts', notSetOpt: 'not set (optional)',
@@ -445,7 +449,7 @@ const I18N = {
     verifyAllOk: '✅ {0}: tất cả sai lệch đã đóng — sai lệch = 0.', verifySome: '⚠ {0}: còn {1} sai lệch:\n{2}',
     askLayoutNote: 'IE cần sửa gì trên layout?', sentBack: '{0} đã trả lại IE để sửa layout.',
     thFoundAt: 'Ngày phát hiện', thFoundBy: 'Người phát hiện', thType: 'Loại', thClosedBy: 'Người đóng', thClosedAt: 'Ngày đóng', thLastAction: 'Thao tác cuối',
-    lineFilter: 'Chuyền phụ trách:', allLines: 'Tất cả chuyền', linesN: '{0} chuyền', pickLines: 'Chọn các chuyền bạn phụ trách', searchLine: 'Tìm chuyền…',
+    lineFilter: 'Chuyền phụ trách:', allLines: 'Tất cả chuyền', linesN: '{0} chuyền', pickLines: 'Chọn các chuyền bạn phụ trách', searchLine: 'Tìm chuyền… (vd: J, K)', searchStyle: 'Tìm mã hàng…', noMatch: 'Không có mã hàng nào khớp.',
     selectAll: '✓ Chọn tất cả đang hiển thị', selectNone: 'Bỏ lọc (hiện tất cả chuyền)', done: 'Xong', toCheckOf: 'Cần kiểm tra ({0}/{1})',
     noLinesForPU: 'Không có chuyền nào của PU này trong kế hoạch.', aSET_LINES: 'Chọn chuyền phụ trách',
     layoutFolder: 'Thư mục layout', layoutFolderOpt: 'không bắt buộc — thư mục chung nơi IE lưu layout', notSetOpt: 'chưa chọn (không bắt buộc)',
@@ -501,6 +505,11 @@ function toSerial(v) {
 const weekStart = s => s - ((dateOf(s).getUTCDay() + 6) % 7);   // Monday
 function num(v) { if (typeof v === 'number') return v; const n = parseFloat(v); return isNaN(n) ? 0 : n; }
 
+/* search rules (same as IE Bao cao may): lines = comma/space separated starts (J, K -> every line starting with J or K); styles = text contained in the style name, ignoring case, spaces and - _ . ( ) */
+function lineQ(v) { return String(v || '').split(/[,;\s]+/).map(K).filter(Boolean); }
+function lineHit(l, qs) { if (!qs.length) return true; const L = K(l); return qs.some(p => L.indexOf(p) === 0); }
+const styleNorm = v => K(v).replace(/[^A-Z0-9]/g, '');
+function styleHit(name, v) { const q = styleNorm(v); return !q || styleNorm(name).includes(q); }
 function baseLine(s) { s = K(s); const m = s.match(/^[^\-_ (]+/); return m ? m[0] : s; }
 function lookupPU(map, ln) { const k = K(ln); if (map[k]) return map[k]; return map[baseLine(k)] || 'UNMAPPED'; }
 function pusOf(map, lines) { return [...new Set(lines.map(l => lookupPU(map, l)))]; }
@@ -1187,7 +1196,7 @@ function renderAll() { renderWeek(); renderList(); paintBadges(); renderWork(); 
 function paintBadges() {
   if (!S.user || !S.sp) return;
   const b = (tab, n) => { const el = document.querySelector('.tabs [data-tab="' + tab + '"]'); if (!el) return; el.innerHTML = esc(t(el.dataset.i18n)) + (n ? '<span class="cnt">' + n + '</span>' : ''); };
-  b('check', S.list.length);
+  b('check', (S.listAll || S.list).length);
   const nVar = new Set(S.vars.filter(v => isActiveVar(v) && (S.stages[v.styleKey] || {}).stage === 'CONS').map(v => v.styleKey)).size;
   b('variation', canCons() ? nVar : 0);
 }
@@ -1221,7 +1230,7 @@ function puLines() {   // lines of the selected PU that appear in the plan
   return [...set].filter(l => lookupPU(S.lineMap, l) === pu).sort();
 }
 function renderLineGrid() {
-  const q = K($('lineSearch').value), lines = puLines().filter(l => !q || l.includes(q));
+  const q = lineQ($('lineSearch').value), lines = puLines().filter(l => lineHit(l, q));
   $('lineGrid').innerHTML = lines.length ? lines.map(l => '<label><input type="checkbox" value="' + esc(l) + '"' + (S.myLines && S.myLines.has(l) ? ' checked' : '') + '>' + esc(l) + '</label>').join('')
     : '<span class="muted small">' + t('noLinesForPU') + '</span>';
   $('lineGrid').querySelectorAll('input').forEach(cb => cb.onchange = () => {
@@ -1246,11 +1255,12 @@ function renderList() {
   const all = styleList(S.sp, S.lineMap, vIdx, pu, S.wkS, S.inclBase).map(r => Object.assign(r, { stg: st(r.key) }));
   const full = all.filter(r => tech ? r.stg.stage === 'TECH' : (r.stg.stage === 'CHECK' || r.stg.stage === 'RECHECK'))
     .sort((a, b) => (b.stg.stage === 'RECHECK') - (a.stg.stage === 'RECHECK') || a.firstDate - b.firstDate || a.style.localeCompare(b.style));
-  S.list = mine ? full.filter(r => r.firstLines.some(l => mine.has(l) || mine.has(baseLine(l)))) : full;
-  $('listTitle').textContent = tech ? t('techTitle', S.list.length) : mine ? t('toCheckOf', S.list.length, full.length) : t('toCheck', S.list.length);
+  S.listAll = mine ? full.filter(r => r.firstLines.some(l => mine.has(l) || mine.has(baseLine(l)))) : full;
+  const sq = $('stSearch').value; S.list = sq ? S.listAll.filter(r => styleHit(r.style, sq)) : S.listAll;
+  $('listTitle').textContent = tech ? t('techTitle', S.listAll.length) : mine ? t('toCheckOf', S.listAll.length, full.length) : t('toCheck', S.listAll.length);
   const nCons = all.filter(r => r.stg.stage === 'CONS').length, nTech = all.filter(r => r.stg.stage === 'TECH').length;
   const info = !tech && (nCons || nTech) ? '<div class="item muted small">' + esc(t('inProgress', nCons, nTech)) + '</div>' : '';
-  if (!S.list.length) { $('list').innerHTML = '<div class="item muted">' + esc(t(tech ? 'techNone' : 'nothingLeft', pu)) + '</div>' + info; return; }
+  if (!S.list.length) { $('list').innerHTML = '<div class="item muted">' + esc(sq && S.listAll.length ? t('noMatch') : t(tech ? 'techNone' : 'nothingLeft', pu)) + '</div>' + info; return; }
   $('list').innerHTML = S.list.map((r, i) => {
     const badge = r.cat === 'New' ? '<span class="tag t-info">' + t('catNew') + '</span>' : r.cat === 'Carry-over' ? '<span class="tag t-warn">' + t('catCarry') + '</span>' : '<span class="tag t-ok">' + t('catBase') + '</span>';
     const g = r.stg, ap = S.approvals[r.key];
@@ -1597,8 +1607,8 @@ function varPUs(v) {
   return cur.length ? cur : [v.pu].filter(Boolean);
 }
 function filteredVars() {
-  const st = $('vSt').value, pu = $('vPU').value, q = K($('vSearch').value);
-  return S.vars.filter(v => (st === '' || (st === 'ACTIVE' ? isActiveVar(v) : v.status === st)) && (!pu || varPUs(v).includes(pu) || v.pu === pu) && (!q || v.styleKey.includes(q)));
+  const st = $('vSt').value, pu = $('vPU').value;
+  return S.vars.filter(v => (st === '' || (st === 'ACTIVE' ? isActiveVar(v) : v.status === st)) && (!pu || varPUs(v).includes(pu) || v.pu === pu) && (!$('vSearch').value.trim() || styleHit(v.styleKey, $('vSearch').value)));
 }
 function renderVariations() {
   if (!S.sp) return;
@@ -1728,7 +1738,7 @@ function renderStatus() {
   data.rows.forEach(r => { const g = S.stages[r.key]; if (!g) return; if (cntSt[g.stage] !== undefined) cntSt[g.stage]++; if (g.escalate) cntSt.ESC++; });
   $('kpis').insertAdjacentHTML('beforeend', '<div class="kpi"><div class="small">' + t('kWaitCons') + ': <b>' + cntSt.CONS + '</b></div><div class="small">' + t('kWaitTech') + ': <b>' + cntSt.TECH + '</b></div>' +
     '<div class="small">' + t('kRecheck') + ': <b>' + cntSt.RECHECK + '</b></div><div class="small" style="color:var(--' + (cntSt.ESC ? 'bad' : 'ok') + ')">' + t('kRounds') + ': <b>' + cntSt.ESC + '</b></div></div>');
-  const rows = data.rows.filter(r => (!fp || r.pu === fp) && (!fs || r.status === fs));
+  const rows = data.rows.filter(r => (!fp || r.pu === fp) && (!fs || r.status === fs) && styleHit(r.style, $('fSearch').value));
   $('stCount').textContent = t('stylesN', rows.length);
   $('stTable').innerHTML = '<table><thead><tr><th>' + t('thPU') + '</th><th>' + t('thStyle') + '</th><th>' + t('thLoadsFirst') + '</th><th>' + t('thWhen') + '</th><th>' + t('thResult') + '</th><th>' + t('thNow') + '</th><th>' +
     t('thCheckedBy') + '</th><th>' + t('thSavedAt') + '</th><th class="n">' + t('thDiffs') + '</th><th>' + t('thComment') + '</th></tr></thead><tbody>' +
@@ -1747,7 +1757,7 @@ async function renderActivity() {
   const keepU = $('aUser').value, keepA = $('aAct').value;
   $('aUser').innerHTML = '<option value="">' + t('everyone') + '</option>' + users.map(u => '<option' + (u === keepU ? ' selected' : '') + '>' + esc(u) + '</option>').join('');
   $('aAct').innerHTML = '<option value="">' + t('allActions') + '</option>' + acts.map(a => '<option value="' + a + '"' + (a === keepA ? ' selected' : '') + '>' + esc(t('a' + a)) + '</option>').join('');
-  const rows = S.acts.filter(a => (!keepU || a.name === keepU) && (!keepA || a.action === keepA));
+  const rows = S.acts.filter(a => (!keepU || a.name === keepU) && (!keepA || a.action === keepA) && styleHit(a.style, $('aSearch').value));
   $('aCount').textContent = t('actionsN', rows.length);
   const cls = a => a === 'SAVE_FAIL' ? 't-bad' : a.startsWith('SAVE') || a === 'VAR_DB_UPDATED' ? 't-ok' : a === 'LOAD_PLAN' ? 't-info' : a.startsWith('VAR') ? 't-warn' : '';
   $('aTable').innerHTML = '<table><thead><tr><th>' + t('thTime') + '</th><th>' + t('thName') + '</th><th>' + t('thRole') + '</th><th>' + t('thAction') + '</th><th>' + t('thStyle') + '</th><th>' + t('thDetail') + '</th></tr></thead><tbody>' +
@@ -1814,6 +1824,8 @@ function exportActivity() {
   $('pu').onchange = () => { S.sel = null; loadMyLines(); renderList(); renderWork(); if (!$('linePanel').hidden) renderLineGrid(); };
   $('btnLines').onclick = toggleLinePanel; $('lnDone').onclick = toggleLinePanel;
   $('lineSearch').oninput = renderLineGrid;
+  $('stSearch').oninput = () => { renderList(); };
+  $('fSearch').oninput = renderStatus; $('aSearch').oninput = () => guard(renderActivity);
   $('lnAll').onclick = () => { const s = new Set(S.myLines || []); $('lineGrid').querySelectorAll('input').forEach(cb => s.add(cb.value)); S.myLines = s.size ? s : null; renderLineGrid(); paintLineBtn(); };
   $('lnNone').onclick = () => { S.myLines = null; renderLineGrid(); paintLineBtn(); };
   $('vSt').onchange = renderVariations; $('vPU').onchange = renderVariations; $('vSearch').oninput = renderVariations;
