@@ -6,6 +6,7 @@ Dates are the build dates in the working sessions (Nov 2026). "LC" = Layout Chec
 - **Manuals** New illustrated HTML manuals for both tools (`manual/`), screenshots taken from synthetic demo data (`tools/manual_shots/`); Crystal logo on the home page. Old text guides, slide deck (v7.7) and the English guide removed.
 
 ## IBM
+- **v7.9 (added)** (1) After "Lưu MACHINE DATABASE" the shortage report counts the approved changes at once (label "gồm N thay đổi vừa duyệt"; the proposal records it and IE Tech sees a note). (2) New tab "Thiếu máy còn lại" and a read-only **Giám sát** role: residual shortage per machine group after IE Tech's decisions (same numbers as the IE Tech grid), daily detail, who uses the machines on the worst day, **action log** recorded by the Consolidator in `data\prep\actions` (Thuê / Mua / Mượn / Dời kế hoạch / Khác; Dự kiến vs Đã chốt; also in the Nhật ký tab) and a what-if "Thử dời kế hoạch" (estimate, nothing saved).
 - **v7.9** "Giữ dữ liệu hiện tại" in Cập nhật CSDL can now be confirmed (the ✓ box is no longer greyed out): button "Xác nhận giữ" (or tick + Lưu MACHINE DATABASE) moves the style to the new card "Đã xác nhận giữ"; it returns to "Cần duyệt" only when the layout content (machines/quantities) or the style's database data changes (the confirmation is then cleared), with a note who confirmed and when. "Hủy xác nhận" undoes it. Stored in `data\machinedb\keeps.json` (browser storage when the data folder is not connected).
 - **v7.8** Grid of IE Tech keeps its scroll position after Keep/Remove/Save (was jumping to the top). IE Tech can edit the end date of the style running on a line; next style loads the next working day, prep days follow, applies to all machine groups; logged in Nhật ký (`prep/lineends`).
 - **v7.7** "Chốt báo cáo" (per-PU check, warns but allows closing, flags changes after closing, `prep/closed`), Excel export gets STATUS sheet and `CHOT` file name; tab "Nhật ký" (by machine group and line, filters, Excel export); completion/notices refresh when the tab opens.
@@ -23,6 +24,7 @@ Dates are the build dates in the working sessions (Nov 2026). "LC" = Layout Chec
 - **v1 – v2.2 (MachineDB Builder)** Replacement of the VBA CollectMachineData scanner: layout scan, costing fallback, review cards, exports, Layout Check connection.
 
 ## LC
+- **V4.3.2** The Machine Database file is re-read automatically when it changed (opening a style or a layout, window focus): no false "Không đạt" because the window still holds an old copy; a message tells that the file was reloaded (kept as is when the file is busy in Excel).
 - **V4.3.1** Variation log, status KPI and export use the style's PU from the current Linemapping (records saved as "PU2" before the split now show under PU2 Sport / Intimate); "Tất cả PU" restored in PU filters.
 - **V4.3** Layouts that exist only as PDF: docked PDF viewer, typed/pasted machine list, required confirmation before Đạt/Chấp nhận, PDF tag in Status.
 - **V4.2** PU list read from Linemapping.xlsx (no fixed PU1/PU2/PU3).

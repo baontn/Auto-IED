@@ -421,6 +421,8 @@ $('save').onclick = function () {
   var user = $('uName').value.trim();
   if (lcItems.length && !user) { $('uName').focus(); alert(t('lcNeedName')); return; }
   XLSX.writeFile(wb, name);
+  var apprNow = RV.items.filter(function (it) { var o = it.opts[it.sel]; return it.apply && o.type !== 'keep' && !o.blocked; });
+  if (apprNow.length) addDbOverlay(apprNow, user);                           // the shortage report counts the approved changes at once (labelled: not yet in the MC Report)
   SAVED = [name, ex.nApproved, ex.db.length - 1, '']; renderSave();
   confirmKeeps().then(function (r) { if (r && SAVED) SAVED.k = t('keepSaved', [r.n]) + (r.where === 'local' ? t('keepLocal') : ''); renderAll(); });
   if (!LCDIR) return;

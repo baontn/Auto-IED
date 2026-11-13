@@ -8,7 +8,7 @@ Two **static, offline, single-file web tools** (Chrome/Edge only, File System Ac
 
 | Tool | File | Version | Who uses it |
 |---|---|---|---|
-| **Layout Check** (LC) | `layout-check/LayoutCheck.html` (+ `xlsx.full.min.js` next to it) | V4.3.1 | IE officers check a style's layout machine list against the MACHINE DATABASE; IE Báo cáo máy (consolidator) fixes the database; IE Tech fixes layouts; Supervisor tracks |
+| **Layout Check** (LC) | `layout-check/LayoutCheck.html` (+ `xlsx.full.min.js` next to it) | V4.3.2 | IE officers check a style's layout machine list against the MACHINE DATABASE; IE Báo cáo máy (consolidator) fixes the database; IE Tech fixes layouts; Supervisor tracks |
 | **IE Báo cáo máy** (IBM) | `ie-bao-cao-may/IE_BaoCaoMay.html` (built from `src/ie-bao-cao-may`) | v7.9 | (a) updates MACHINE DATABASE from scanned layouts + costing, (b) machine shortage analysis by day, (c) prep (changeover) machines: proposal -> IE Tech review -> close report, activity log |
 
 Weekly process: layouts sit in share folders; `MC_report.xlsx` runs Power Query over `TransformedMasterPlan.xlsx` (sheet `MasterPlan-Full`) plus the MACHINE DATABASE (an Excel table that **must stay named `Table1`**) via MACHINE GROUP, producing MACHINE BY LINE and MISSING STYLES. Costing is used for styles with no layout. Only D lines run 48HC (the suffix is part of the style name).
@@ -20,7 +20,7 @@ Weekly process: layouts sit in share folders; `MC_report.xlsx` runs Power Query 
 ```
 layout-check/            LayoutCheck.html is edited DIRECTLY (single file, no build)
 ie-bao-cao-may/          IE_BaoCaoMay.html is GENERATED (do not hand-edit) + guides + PowerQuery/*.pq
-src/ie-bao-cao-may/      sources: core.js i18n.js worker.js logic.js prep.js app.js prepui.js techui.js closeact.js tabs.js tpl.html VERSION
+src/ie-bao-cao-may/      sources: core.js i18n.js worker.js logic.js prep.js app.js prepui.js techui.js residui.js closeact.js tabs.js tpl.html VERSION
 vendor/                  SheetJS (reads xlsx), ExcelJS (writes coloured xlsx) + licences
 tools/build_ie_bao_cao_may.py   python3 tools/build_ie_bao_cao_may.py   -> regenerates the HTML (inlines libs, version tag)
 tests/                   Playwright (python) harnesses, see section 7
@@ -42,14 +42,14 @@ Release routine for IBM: edit `src/...` -> bump `src/ie-bao-cao-may/VERSION` -> 
 
 Written by LC: `validations/*.json` (one per check: `valId, style, status PASS|ACCEPTED|FAIL, pu, user, role, savedAt, layoutFiles, layoutSheets, layoutType, selfCheck, details[{machine,group,db,lay,diff,result}], groupDiffCount, comment, manualPdf, manualRows`), `variations/*.json` (actions such as `LAYOUT_TO_FIX, TECH_LAYOUT_FIXED, TECH_DB_WRONG`), `activity/*.jsonl` (daily lines), `stylePlan.json` (plan snapshot), `Linemapping.xlsx` (columns Line, PU; **the only source of PU names in LC**).
 Written by IBM: `approvals/*.json` ("Đã duyệt" notes, `status:'APPROVED'`, never counted as an IE check) and everything under `prep/`:
-`proposals` (`{at,by,groups,from,rows[],grid{group:{days,avail,parts,lines}},groupMap}`), `reviews` (IE Tech decisions; **key = `line|fromStyle|toStyle|group`**, no date; fields `decision KEEP|ADJUST|REMOVE, qty, qtyBActual, loadDateActual, prepDays, reason, loadDate, qtyB, proposedQty, by, at`), `shared` (style pairs sharing a layout `{styles:[A,B]}`), `notices` + `noticeres` (IE Tech variation notices and answers), `complete` (IE Tech "Hoàn tất duyệt"), `closed` (Consolidator close records), `lineends` (`{line,style,endDate,planEnd,by,at}`), `rules.json` (`{ratios,days,daysBy}`).
+`proposals` (`{at,by,groups,from,rows[],grid{group:{days,avail,parts,lines}},groupMap}`), `reviews` (IE Tech decisions; **key = `line|fromStyle|toStyle|group`**, no date; fields `decision KEEP|ADJUST|REMOVE, qty, qtyBActual, loadDateActual, prepDays, reason, loadDate, qtyB, proposedQty, by, at`), `shared` (style pairs sharing a layout `{styles:[A,B]}`), `notices` + `noticeres` (IE Tech variation notices and answers), `complete` (IE Tech "Hoàn tất duyệt"), `closed` (Consolidator close records), `lineends` (`{line,style,endDate,planEnd,by,at}`), `rules.json` (`{ratios,days,daysBy}`). `actions` (shortage actions of the Consolidator, **one file per change, latest per `id` wins**: `{id,group,type RENT|BUY|BORROW|DELAY|OTHER,qty,from,to,status PLANNED|CONFIRMED|CANCELLED,note,by,at}`). `proposals` also carry `dbBasis` (`{overlay,at,by,styles[]}` when the demand included changes approved but not yet in the MC Report).
 Also written by IBM: `machinedb/scanstate.json` (layout hashes) and `machinedb/keeps.json` (`{version:1, items:{styleKey:{name,by,at,fps[]}}}`: "keep current data" confirmations of the Cập nhật CSDL tab; `fps` = content fingerprints (`type:machine:qty;...`) of every scanned layout/costing option at confirmation time, `dbFp` = fingerprint of the style's database data; without the data folder the same JSON lives in localStorage `mdb_keeps`).
 Browser-side state: IBM keeps folder/file handles in IndexedDB `iebaocaomay` (KV) and small settings in localStorage (`mdb_name, mdb_role, mdb_lang, mdb_tpu, mdb_tlines, mdb_tgroup, mdb_pus, mdb_laypath`). LC keeps handles in IndexedDB `layoutcheck`/`kv`. These are per browser origin (file:// vs github.io differ: users re-pick folders once).
 
 ## 5. Architecture notes
 
 **IBM** is plain ES5-style global functions concatenated into one HTML by `tools/build_ie_bao_cao_may.py` (no bundler/modules). `tpl.html` has `/*__NAME__*/` placeholders; `core.js` is also embedded as text to build the Web Worker (`worker.js`) that scans layout files in parallel.
-- `core.js` workbook extraction (layout machine tables, Man-Machine files, style name parsing, hidden sheets and sheets named like `F T S C`/`F-S-T-C` are skipped), `logic.js` review items/costing/Layout Check link (`loadLayoutCheck`, `applyLayoutCheck`, comparison **by machine group totals** `sameGroups`), `app.js` Data tab + scan + review UI + save/export + remembered connections, `prep.js` pure prep/demand logic (`buildDemand` = plan x MACHINE DATABASE per group, `rankGroups`, `buildPrep`, `applyReviews`, `groupGrid`, `shiftProduction`, line-end helpers), `prepui.js` Shortage & prep tab + Excel export (ExcelJS), `techui.js` IE Tech role (grid, drawer, layout viewer/finder, notices, completion), `closeact.js` close report + Activity tab, `tabs.js` tab controller, `i18n.js` dictionaries.
+- `core.js` workbook extraction (layout machine tables, Man-Machine files, style name parsing, hidden sheets and sheets named like `F T S C`/`F-S-T-C` are skipped), `logic.js` review items/costing/Layout Check link (`loadLayoutCheck`, `applyLayoutCheck`, comparison **by machine group totals** `sameGroups`), `app.js` Data tab + scan + review UI + save/export + remembered connections, `prep.js` pure prep/demand logic (`buildDemand` = plan x MACHINE DATABASE per group, `rankGroups`, `buildPrep`, `applyReviews`, `groupGrid`, `shiftProduction`, line-end helpers), `prepui.js` Shortage & prep tab + Excel export (ExcelJS), `techui.js` IE Tech role (grid, drawer, layout viewer/finder, notices, completion), `residui.js` residual shortage after IE Tech's review (Consolidator tab "Thiếu máy còn lại" + read-only Supervisor role): summary per machine group, daily detail, action log, what-if delay (calculation = `groupModel`/`shortSummary`/`actionCover`/`delayModel` in `prep.js`, shared with the IE Tech grid), `closeact.js` close report + Activity tab, `tabs.js` tab controller, `i18n.js` dictionaries.
 - Role switch (Consolidator / IE Tech) in the header; IE Tech sees only its screen.
 - **i18n pitfall:** within a language block, a key defined later in the block overrides an earlier one; new keys were inserted at the top of the block, so never reuse an existing key name (grep first).
 - **Script-order pitfall:** the main script runs before DOM that appears after it; elements must be above the script or be initialised after load.
@@ -66,6 +66,9 @@ Browser-side state: IBM keeps folder/file handles in IndexedDB `iebaocaomay` (KV
 - A style is confirmed only when an IE officer saves Đạt/Chấp nhận in LC. IBM never writes Đạt; it writes "Đã duyệt" notes. Fail loop: IE Fail -> IE Báo cáo máy (database or layout?) -> IE Tech (layout to fix) -> IE re-check; after 2 rounds flagged to Supervisor. Existing "Đạt" records are never rewritten.
 - PDF-only layouts: typed/pasted list + mandatory tick "đã đối chiếu từng dòng" for Đạt/Chấp nhận.
 - Prep (changeover) machines: only for machine groups the Consolidator picks as potentially short; prep = ROUNDUP(ratio x next style's machines of that group) on the N working days (default 3, Sundays skipped) before loading; default ratios BT1M 50 %, others 0; no prep when both styles share a layout file, the pair is in the "same layout" list, or IE Tech removes it; first plan day of a line = already running (no prep). Grids and totals show working days only (no Sundays); export writes removed prep as 0 (no strikethrough).
+- After "Lưu MACHINE DATABASE" the shortage report **counts the approved changes at once** (overlay `REF.dbOver` / `effDb()`, not written anywhere; label "gồm N thay đổi vừa duyệt"); a proposal sent meanwhile records `dbBasis` and IE Tech sees a note. The overlay disappears when the MC Report (pasted Table1 + Refresh All) is loaded again.
+- "Thiếu máy còn lại" (decided with the user): residual shortage per machine group after IE Tech's decisions, same numbers as the IE Tech grid footer; **actions are recorded by the Consolidator** in `data\prep\actions` (Thuê/Mua/Mượn add machines per day, Đã chốt vs Dự kiến shown separately; Dời kế hoạch/Khác are only recorded); the **Supervisor role is read-only**; the what-if delay (that style and the following ones on the line move N working days, the previous style keeps running, prep moves) is an estimate and saves nothing.
+- Layout Check re-reads the Machine Database file when its modified time/size changed (opening a style or layout, window focus): no false Fail from an old copy.
 - Availability = MC STATUS column "MC used for PDN" summed per machine group; the formula's own signs (+ in house/rent/borrow, - broken/lend/TRA/PDC/strapline...) are read from the cell formula and shown as detail.
 - IE Tech may keep/adjust/remove, change the loading date (production on the line moves with it), set prep days, set layout quantity (notifies the Consolidator), change the end date of the running style (applies to all groups of the line), mark "same layout" (remembered by style pair, applied to all groups/lines), and press "Hoàn tất duyệt". Decisions carry to next week when the line's style sequence is unchanged.
 - PU2 was split into "PU2 Sport" (lines K, J, B) and "PU2 Intimate" (G, H); PU names must come from data (Linemapping / PU LIST), never hard-coded.
@@ -78,6 +81,7 @@ Browser-side state: IBM keeps folder/file handles in IndexedDB `iebaocaomay` (KV
 - Some old LC scenarios assume a plan week that is "this week" and fail later because of the date, not because of the code.
 - Headless Chromium has no PDF viewer: the docked PDF column stays blank in tests.
 - `node tests/ie-bao-cao-may/tprep*.js` check the pure prep logic against the real MC Report.
+- `node tests/ie-bao-cao-may/tresid.js` (pure shortage functions, hand-calculated), `python3 tests/ie-bao-cao-may/overlay_demand.py`, `python3 tests/ie-bao-cao-may/residual_shortage.py`, `python3 tests/layout-check/db_refresh.py` are **turnkey** (synthetic demo data, harness `tests/sim/simlib.py`).
 - `python3 tests/ie-bao-cao-may/keep_confirm.py` is a **turnkey** test (synthetic demo data from `tools/manual_shots/make_demo_data.py`, harness `tests/sim/simlib.py`: shared "network drive" on disk, one browser per person, faked clock): checks the "Xác nhận giữ" flow of v7.9. Needs `pip install playwright openpyxl`, and the built `ie-bao-cao-may/IE_BaoCaoMay.html`.
 
 ## 8. Pitfalls learned (save yourself time)
@@ -93,12 +97,13 @@ Browser-side state: IBM keeps folder/file handles in IndexedDB `iebaocaomay` (KV
 2. Alias table for non-standard style names (83 files had no parsable style).
 3. IE Tech loading-date edits are stored per row (machine group); end-date edits are per line/style. Consider making loading date per changeover. The planned end date shown comes from the machine group being viewed.
 4. IBM re-reading a PDF-based LC check shows a "file not found" note when a scanned candidate exists for that style.
-5. Manuals describe v7.9 / V4.3.1. After UI changes retake the screenshots (tools/manual_shots/README.md) and update the text in manual/*.html.
+5. Manuals describe v7.9 / V4.3.2. After UI changes retake the screenshots (tools/manual_shots/README.md) and update the text in manual/*.html.
 6. Consider backing up the shared `data` folder (check history lives only there).
-7. Optional: automated version display on `index.html` and a CI smoke test (page loads without errors, `node --check` on sources).
+7. Deferred by the user: consistency of IE Tech approvals after a mid-week plan change (Consolidator screen shows "Đã giữ, ngày thay đổi" while IE Tech's screen shows pending/overdue; "Hoàn tất duyệt" is not re-opened when a proposal is re-sent; close report counts differ). See the week simulation notes in the conversation history.
+8. Optional: automated version display on `index.html` and a CI smoke test (page loads without errors, `node --check` on sources).
 
 ## 10. First steps in Claude Code
 
 1. `python3 tools/build_ie_bao_cao_may.py` and confirm it reproduces `ie-bao-cao-may/IE_BaoCaoMay.html` without a diff.
-2. Open both HTML files in Chrome (from the repo folder) and check the version tags (`v7.9`, `V4.3.1`).
+2. Open both HTML files in Chrome (from the repo folder) and check the version tags (`v7.9`, `V4.3.2`).
 3. Ask the user for the sample data and set up the test harness paths before changing behaviour.

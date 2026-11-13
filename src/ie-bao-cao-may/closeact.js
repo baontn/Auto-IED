@@ -113,6 +113,9 @@ function buildEvents(closed, dbap) {
     var by = {}; (p.rows || []).forEach(function (r) { by[r.group] = (by[r.group] || 0) + 1; });
     (p.groups && p.groups.length ? p.groups : Object.keys(by)).forEach(function (g) { push({ at: p.at, by: p.by, kind: 'send', group: g, line: '', pu: '', style: '', text: t('aDetailRows', [by[g] || 0]) }); });
   });
+  (RS.actionsRaw || []).forEach(function (a) {          // actions against the shortage (every save is one entry)
+    push({ at: a.at, by: a.by, kind: 'action', group: a.group, line: '', pu: '', style: '', text: t('rsAt' + a.type) + (a.qty ? ' ' + a.qty : '') + (a.from ? ' · ' + d2(a.from) + (a.to && a.to !== a.from ? '–' + d2(a.to) : '') : '') + ' · ' + t('rsSt' + a.status) + (a.note ? ' · ' + a.note : '') });
+  });
   (TS.reviews || []).forEach(function (r) {
     var k = String(r.key || '').split('|'), from = k[1] || '', parts = [];
     var kind = r.decision === 'REMOVE' ? (sameReason(r.reason) ? 'same' : 'remove') : (r.decision === 'ADJUST' ? 'adjust' : 'keep');
@@ -149,7 +152,7 @@ async function actLoad() {
   if (!LCDIR) { $('actEmpty').hidden = false; $('actCard').hidden = true; return; }
   $('actEmpty').hidden = true; $('actCard').hidden = false;
   var since = new Date(Date.now() - 90 * 864e5).toISOString();
-  await tLoadAll(LCDIR); var closed = await pReadDir(LCDIR, 'prep/closed'), dbap = await readDbApproved(LCDIR, since);
+  await tLoadAll(LCDIR); RS.actionsRaw = await pReadDir(LCDIR, 'prep/actions'); var closed = await pReadDir(LCDIR, 'prep/closed'), dbap = await readDbApproved(LCDIR, since);
   ACT.ev = buildEvents(closed, dbap); ACT.loaded = true;
   if (!$('aFrom').value) { var d0 = new Date(Date.now() - 30 * 864e5); $('aFrom').value = d0.toISOString().slice(0, 10); }
   fillActSelects(); renderActivity();

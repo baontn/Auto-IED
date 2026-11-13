@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Layout Check: Hướng dẫn sử dụng</title><link rel="icon" href="../icon.png"><link rel="stylesheet" href="manual.css"></head><body>
-<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>Layout Check V4.3.1: Hướng dẫn sử dụng</b><a href="ie-bao-cao-may.html">IE Báo cáo máy ›</a><a href="../index.html">‹ Trang chủ</a></header>
+<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>Layout Check V4.3.2: Hướng dẫn sử dụng</b><a href="ie-bao-cao-may.html">IE Báo cáo máy ›</a><a href="../index.html">‹ Trang chủ</a></header>
 <div class="wrap">
 <nav class="toc"><b>Nội dung</b>
 <a href="#gioi-thieu">1. Giới thiệu</a>
@@ -61,6 +61,7 @@
 <li>Bấm một mã hàng. Ở bước <b>1. CSDL máy</b>, danh sách máy trong CSDL tự hiện (bấm “Xem danh sách máy”).</li>
 <li>Ở bước <b>2. File layout</b>, phần mềm tự liệt kê file có tên chứa mã hàng: bấm <span class="btn">Mở</span> ở file đúng (nhãn “Đúng mã hàng”). Nếu không thấy: gõ một phần tên file vào ô tìm, bấm <span class="btn">⟳ Quét lại</span> (khi vừa lưu file mới) hoặc <span class="btn">📂 Duyệt…</span>.</li>
 <li>Kiểm tra đúng sheet: các sheet có bảng máy được tích sẵn, tổng các sheet đã chọn hiển thị bên dưới. Có thể <span class="btn">＋ Thêm file khác</span> nếu layout chia thành nhiều file.</li></ol>
+<div class="ok" id="dbauto"><b>CSDL tự cập nhật (V4.3.2):</b> khi IE Báo cáo máy dán CSDL mới vào file Machine Database, Layout Check tự đọc lại file khi bạn mở mã hàng, mở layout hoặc quay lại cửa sổ, và báo “File CSDL máy đã thay đổi (…): đã tải lại”. Không cần bấm “Làm mới” và không còn “Không đạt” giả do CSDL cũ. Nếu file đang mở hoặc đang lưu trong Excel, Layout Check giữ dữ liệu cũ, báo một lần và thử lại sau.</div>
 <figure><a href="img/lc-03-ie-list.png"><img src="img/lc-03-ie-list.png" alt="Danh sách cần kiểm tra" loading="lazy"></a><figcaption>Danh sách <b>Cần kiểm tra</b> của PU1 với nhãn “Mới trong tuần” và “Gấp”.</figcaption></figure>
 <figure><a href="img/lc-04-lines.png"><img src="img/lc-04-lines.png" alt="Lọc chuyền phụ trách" loading="lazy"></a><figcaption>Chọn các chuyền mình phụ trách để danh sách chỉ hiện mã hàng của các chuyền đó.</figcaption></figure>
 <figure><a href="img/lc-05-style-step2.png"><img src="img/lc-05-style-step2.png" alt="Bước 1 và 2" loading="lazy"></a><figcaption>Bước 1 (CSDL máy) và bước 2 (File layout). Bấm <b>Mở</b> ở file đúng mã hàng.</figcaption></figure>
@@ -144,6 +145,7 @@
 <table><tr><th>Hiện tượng</th><th>Cách xử lý</th></tr>
 <tr><td>Không thấy file layout của mã hàng</td><td>Gõ một phần tên file vào ô tìm, bấm “⟳ Quét lại”, hoặc “📂 Duyệt…”.</td></tr>
 <tr><td>“Mã hàng không có trong CSDL”</td><td>Kiểm tra mã hàng trong sheet <code>Machine Database</code>; gợi ý các mã cùng 11 ký tự đầu được hiển thị.</td></tr>
+<tr><td>Layout báo sai lệch dù CSDL vừa được cập nhật</td><td>Từ V4.3.2 tự tải lại khi file đổi; nếu vẫn còn, bấm “⟳ Làm mới”. Kiểm tra file Machine Database đã được lưu (không còn mở ở chế độ chưa lưu trong Excel).</td></tr>
 <tr><td>Trình duyệt hỏi lại quyền thư mục</td><td>Bấm “Cho phép / Allow”.</td></tr>
 <tr><td>Danh sách PU không đúng</td><td>Sửa <code>Linemapping.xlsx</code> trong thư mục data, chọn lại thư mục data hoặc mở lại trang.</td></tr>
 <tr><td>Sau khi cập nhật phiên bản trang web, giao diện cũ</td><td>Nhấn Ctrl+F5.</td></tr>

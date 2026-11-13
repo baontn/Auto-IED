@@ -125,10 +125,10 @@ input.lq.diff{border-color:var(--warn);background:var(--warnbg);color:var(--warn
 <body>
 <header>
   <h1 data-t="title"></h1><span class="tag t-info" id="verTag" title="Version">v{{VERSION}}</span><span class="sub" data-t="subtitle"></span>
-  <div role="group" aria-label="Role" id="roleSeg" style="margin-left:auto;display:flex;gap:4px"><button data-role="cons" data-t="roleCons"></button><button data-role="tech" data-t="roleTech"></button></div>
+  <div role="group" aria-label="Role" id="roleSeg" style="margin-left:auto;display:flex;gap:4px"><button data-role="cons" data-t="roleCons"></button><button data-role="tech" data-t="roleTech"></button><button data-role="sup" data-t="roleSup"></button></div>
   <div class="lang" role="group" aria-label="Language" style="margin-left:8px"><button data-lang="vi">VI</button><button data-lang="en">EN</button></div>
 </header>
-<nav class="mtabs" id="mainTabs"><button data-tab="data" data-t="tabData"></button><button data-tab="db" data-t="tabDb"></button><button data-tab="prep" data-t="tabPrep"></button><button data-tab="notice" data-t="tabNotice"></button><button data-tab="activity" data-t="tabAct"></button></nav>
+<nav class="mtabs" id="mainTabs"><button data-tab="data" data-t="tabData"></button><button data-tab="db" data-t="tabDb"></button><button data-tab="prep" data-t="tabPrep"></button><button data-tab="resid" data-t="tabResid"></button><button data-tab="notice" data-t="tabNotice"></button><button data-tab="activity" data-t="tabAct"></button></nav>
 <main id="techView" hidden>
   <div class="card">
     <h3><span class="num">1</span> <span data-t="tTitle"></span></h3>
@@ -166,6 +166,14 @@ input.lq.diff{border-color:var(--warn);background:var(--warnbg);color:var(--warn
     <h3><span class="num">3</span> <span data-t="tMyNotices"></span></h3>
     <div class="tw"><table id="tNotices"></table></div>
   </div>
+</main>
+<main id="supView" hidden>
+  <div class="card">
+    <h3><span class="num">1</span> <span data-t="roleSup"></span></h3>
+    <div class="muted small" data-t="rsSupHint"></div>
+    <div class="row" style="margin-top:10px"><button class="pick" id="sConnect" type="button" data-t="tDataPick"></button><button id="sReuse" type="button" hidden></button><span id="sInfo" class="muted small"></span></div>
+  </div>
+  <div id="rsS"></div>
 </main>
 <aside id="tDrawer" hidden>
   <div class="row"><b id="dTitle"></b><button id="dClose" style="margin-left:auto">✕</button></div>
@@ -300,6 +308,7 @@ input.lq.diff{border-color:var(--warn);background:var(--warnbg);color:var(--warn
     <div id="pDetail"></div>
   </div>
 </section>
+<section data-pane="resid" hidden><div id="rsC"></div></section>
 <section data-pane="activity" hidden>
   <div class="card" id="actEmpty"><div class="empty" data-t="nNeedLc"></div></div>
   <div class="card" id="actCard" hidden>
@@ -331,6 +340,7 @@ input.lq.diff{border-color:var(--warn);background:var(--warnbg);color:var(--warn
 <script>/*__APP__*/</script>
 <script>/*__PREPUI__*/</script>
 <script>/*__TECHUI__*/</script>
+<script>/*__RESIDUI__*/</script>
 <script>/*__CLOSEACT__*/</script>
 <script>/*__TABS__*/</script>
 </body>

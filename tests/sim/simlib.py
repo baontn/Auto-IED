@@ -86,8 +86,8 @@ class IBM:
                 for f in files: p = pathlib.Path(root) / f; fs[rel + '/' + str(p.relative_to(base)).replace(os.sep, '/')] = b64(p)
         init = "window.__FS={};" + "".join(f"window.__FS[{json.dumps(k)}]=Uint8Array.from(atob('{v}'),c=>c.charCodeAt(0));" for k, v in fs.items()) + (HERE / 'fsmock.js').read_text()
         self.pg.add_init_script(init)
-    def open(self, when):
-        self.pg.clock.set_system_time(when); self.pg.goto('file://' + str(ROOT / 'ie-bao-cao-may/IE_BaoCaoMay.html')); self.pg.evaluate("localStorage.clear()"); self.pg.reload(); self.pg.wait_for_timeout(500)
+    def open(self, when, html=None):
+        self.pg.clock.set_system_time(when); self.pg.goto('file://' + str(html or (ROOT / 'ie-bao-cao-may/IE_BaoCaoMay.html'))); self.pg.evaluate("localStorage.clear()"); self.pg.reload(); self.pg.wait_for_timeout(500)
         self.pg.clock.set_system_time(when)
     def push(self):             # whatever IBM wrote into the shared data folder goes back to the share
         files = self.pg.evaluate("Object.keys(window.__FS).filter(k=>k.startsWith('data/')).map(k=>{const b=window.__FS[k];let s='';for(let i=0;i<b.length;i+=8192)s+=String.fromCharCode.apply(null,b.subarray(i,i+8192));return [k,btoa(s)]})")
@@ -96,6 +96,11 @@ class IBM:
             f = SHARE / k; raw = base64.b64decode(d)
             if not f.exists() or f.read_bytes() != raw: f.parent.mkdir(parents=True, exist_ok=True); f.write_bytes(raw); n += 1
         return n
+    def pull(self):             # a shared drive shows what the others saved: copy the share's data/ into this page's in-memory folder
+        files = {}
+        for root, _, fs_ in os.walk(SHARE / 'data'):
+            for f in fs_: pp = pathlib.Path(root) / f; files['data/' + str(pp.relative_to(SHARE / 'data')).replace(os.sep, '/')] = b64(pp)
+        self.pg.evaluate("fs=>{for(const k in fs) window.__FS[k]=Uint8Array.from(atob(fs[k]),c=>c.charCodeAt(0));}", files)
     def load(self):
         pg = self.pg
         pg.set_input_files('#fFiles', [str(SHARE / 'MC_report.xlsx'), str(SHARE / 'TransformedMasterPlan.xlsx')])

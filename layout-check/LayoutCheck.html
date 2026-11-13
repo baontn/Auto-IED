@@ -157,7 +157,7 @@ tr.tot td{font-weight:700;border-top:2px solid var(--text);border-bottom:none;ba
 
 <!-- ============ TOP BAR ============ -->
 <header>
-  <h1 data-i18n="appTitle"></h1><span class="tag t-info" id="verTag" title="Version">V4.3.1</span>
+  <h1 data-i18n="appTitle"></h1><span class="tag t-info" id="verTag" title="Version">V4.3.2</span>
   <nav class="tabs">
     <button data-tab="check" data-i18n="tabCheck"></button>
     <button data-tab="variation" data-i18n="tabVar"></button>
@@ -318,7 +318,7 @@ const I18N = {
     PASS: 'Pass', ACCEPTED: 'Accepted with remark', FAIL: 'Fail', PENDING: 'Not checked yet',
     needName: 'Please type your name.', needFiles: 'Please choose the data folder and the Machine Database file first.',
     needComment: 'Please write a comment for "{0}".', welcome: 'Welcome {0}!', savedMsg: '{0} saved as {1}.', varsSent: '{0} variation(s) sent to the Variation log.',
-    noPlan: 'No plan loaded yet. A supervisor must click "📥 Load plan".', latestLoaded: 'Latest data loaded.', reading: 'Reading {0}…',
+    noPlan: 'No plan loaded yet. A supervisor must click "📥 Load plan".', latestLoaded: 'Latest data loaded.', dbReloaded: 'The Machine Database file changed ({0}): it was reloaded.', dbBusy: 'Cannot read the Machine Database file right now (is it open or being saved in Excel?). The previous data is kept; it is checked again next time.', reading: 'Reading {0}…',
     planLoaded: 'Plan loaded: {0} – {1}\n{2} styles, {3} new.', unmappedMsg: 'These lines have no PU in {0}:\n{1}\nAdd them, then click ⟳ Refresh.',
     onlySupPlan: 'Only a supervisor can load the plan.', noLayoutSheet: '{0}: no layout sheet found.',
     // status
@@ -420,7 +420,7 @@ const I18N = {
     PASS: 'Đạt', ACCEPTED: 'Chấp nhận có ghi chú', FAIL: 'Không đạt', PENDING: 'Chưa kiểm tra',
     needName: 'Vui lòng nhập họ tên.', needFiles: 'Vui lòng chọn thư mục dữ liệu và file CSDL máy trước.',
     needComment: 'Vui lòng nhập ghi chú cho "{0}".', welcome: 'Xin chào {0}!', savedMsg: '{0} đã lưu: {1}.', varsSent: 'Đã chuyển {0} sai lệch vào Nhật ký sai lệch.',
-    noPlan: 'Chưa có kế hoạch. Giám sát cần bấm "📥 Tải kế hoạch".', latestLoaded: 'Đã tải dữ liệu mới nhất.', reading: 'Đang đọc {0}…',
+    noPlan: 'Chưa có kế hoạch. Giám sát cần bấm "📥 Tải kế hoạch".', latestLoaded: 'Đã tải dữ liệu mới nhất.', dbReloaded: 'File CSDL máy đã thay đổi ({0}): đã tải lại.', dbBusy: 'Chưa đọc được file CSDL máy (đang mở hoặc đang lưu trong Excel?). Giữ dữ liệu cũ, sẽ kiểm tra lại sau.', reading: 'Đang đọc {0}…',
     planLoaded: 'Đã tải kế hoạch: {0} – {1}\n{2} mã hàng, {3} mã mới.', unmappedMsg: 'Các chuyền sau chưa có PU trong {0}:\n{1}\nBổ sung rồi bấm ⟳ Làm mới.',
     onlySupPlan: 'Chỉ Giám sát được tải kế hoạch.', noLayoutSheet: '{0}: không tìm thấy sheet layout.',
     styles: 'Mã hàng', allPU: 'Tất cả PU', allResults: 'Tất cả kết quả', stylesN: '{0} mã hàng', exportXl: 'Xuất Excel',
@@ -1144,7 +1144,7 @@ async function connect() {
 }
 async function loadDb() {
   const f = await S.dbHandle.getFile();
-  S.db = parseDb(sheetRows(await readSheetCI(f, CONFIG.dbSheet))); S.dbName = f.name;
+  S.db = parseDb(sheetRows(await readSheetCI(f, CONFIG.dbSheet))); S.dbName = f.name; S.dbMeta = { lm: f.lastModified, size: f.size };     // remembered to notice a newer file later
 }
 async function loadChecks() {
   const all = await readJsonDir(CONFIG.validationDir), appr = await readJsonDir('approvals');
@@ -1264,13 +1264,28 @@ function renderList() {
   }).join('') + info;
   $('list').querySelectorAll('.item[data-i]').forEach(el => el.onclick = () => selectStyle(S.list[+el.dataset.i]));
 }
+function recalcDbRes(r) {
+  const res = dbForStyle(S.db, r.key);
+  S.dbRes = Object.assign(res, { found: Object.keys(res.machines).length > 0, similar: dbSuggestions(S.db, r.key) });
+}
+// the Machine Database file may have been replaced since it was read (IE Báo cáo máy pasted a new Table1): read it again when something is opened or the window gets focus
+async function freshDb() {
+  if (!S.dbHandle || !S.db) return false;
+  try {
+    const f = await S.dbHandle.getFile();
+    if (S.dbMeta && f.lastModified === S.dbMeta.lm && f.size === S.dbMeta.size) return false;
+    await loadDb(); computeVars(); S.dbWarn = false;
+    if (S.sel) recalcDbRes(S.sel);
+    toast(t('dbReloaded', new Date(f.lastModified).toLocaleString()), 'ok'); return true;
+  } catch (e) { if (!S.dbWarn) { S.dbWarn = true; toast(t('dbBusy'), 'warn'); } return false; }
+}
 function selectStyle(r) {
   closePdfPane();
   S.sel = r; S.layouts = []; S.cmp = null; S.onlyDiff = true; S.showSuggest = true; S.laySearch = '';
-  const res = dbForStyle(S.db, r.key);
-  S.dbRes = Object.assign(res, { found: Object.keys(res.machines).length > 0, similar: dbSuggestions(S.db, r.key) });
+  recalcDbRes(r);
   act('OPEN_STYLE', r.style, r.firstLines.join(', '));
   renderList(); renderWork();
+  freshDb().then(ch => { if (ch) { renderList(); renderWork(); } });
   const g = r.stg || {};
   if ((g.stage === 'RECHECK' || g.stage === 'TECH') && g.check) guard(() => autoOpenLayouts(r, g));
 }
@@ -1515,6 +1530,7 @@ function wirePdf(w) {
   w.querySelectorAll('[data-pconf]').forEach(el => el.onchange = () => { L(el.dataset.pconf).confirmed = el.checked; redo(); });
 }
 async function openLayoutHandles(hs) {
+  await freshDb();
   for (const h of hs) {
     if (/\.pdf$/i.test(h.name || '')) { await openPdfHandle(h); continue; }
     const f = await h.getFile();
@@ -1792,6 +1808,7 @@ function exportActivity() {
   $('wkNext').onclick = () => { S.wkS += 7; renderAll(); };
   $('wkToday').onclick = () => { S.wkS = weekStart(todaySerial()); renderAll(); };
   $('btnReload').onclick = () => guard(async () => { await reloadData(); renderAll(); toast(t('latestLoaded'), 'ok'); });
+  window.addEventListener('focus', () => { if (S.user) freshDb().then(ch => { if (ch) renderAll(); }); });
   $('btnPlan').onclick = () => guard(loadPlan);
   $('btnLogout').onclick = () => guard(logout);
   $('pu').onchange = () => { S.sel = null; loadMyLines(); renderList(); renderWork(); if (!$('linePanel').hidden) renderLineGrid(); };

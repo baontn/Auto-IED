@@ -82,6 +82,18 @@ with sync_playwright() as p:
     for tab, name in [('notice', 'ibm-20-notices'), ('activity', 'ibm-21-activity')]:
         el = pg.query_selector(f'#mainTabs [data-tab="{tab}"]')
         if el: el.click(); pg.wait_for_timeout(1200); shot(pg, name, full=True)
+    # 5b. residual shortage after IE Tech's review: Consolidator tab (actions) and the read-only Supervisor role
+    pg.click('#mainTabs [data-tab="resid"]'); pg.wait_for_timeout(2000)
+    shot(pg, 'ibm-24-residual', full=True, hl='#rsC tr[data-rs-g] >> nth=0')
+    pg.fill('#rsC [data-f="note"]', 'Thuê thêm từ nhà cung cấp'); pg.fill('#rsC [data-f="qty"]', '4')
+    shot(pg, 'ibm-25-action-form', hl=['#rsC [data-f="type"]', '#rsC [data-f="qty"]', '#rsC [data-f="from"]', '#rsC [data-f="status"]', '#rsC [data-rs-save]'])
+    pg.click('#rsC [data-rs-save]'); pg.wait_for_timeout(1200)
+    pg.select_option('#rsC [data-wi=line]', 'K'); pg.wait_for_timeout(300)
+    styles = pg.evaluate("[...document.querySelectorAll('#rsC [data-wi=style] option')].map(o=>o.value)"); pg.select_option('#rsC [data-wi=style]', styles[1] if len(styles) > 1 else styles[0])
+    pg.fill('#rsC [data-wi=n]', '3'); pg.dispatch_event('#rsC [data-wi=n]', 'change'); pg.wait_for_timeout(300); pg.click('#rsC [data-rs-wigo]'); pg.wait_for_timeout(600)
+    shot(pg, 'ibm-26-action-and-whatif', full=True, hl='#rsC [data-rs-wigo]')
+    pg.click('#roleSeg [data-role="sup"]'); pg.wait_for_timeout(400); pg.click('#sConnect'); pg.wait_for_timeout(2000)
+    shot(pg, 'ibm-27-supervisor', full=True, hl='#sConnect')
     # 6. "keep current data" can be confirmed (fresh session, same demo data)
     pg = b.new_page(viewport={'width': 1450, 'height': 950}); pg.on('pageerror', lambda e: errs.append(str(e)))
     pg.add_init_script(INIT); pg.goto('file://' + str(HTML)); pg.evaluate("localStorage.clear()"); pg.reload(); pg.wait_for_timeout(500)

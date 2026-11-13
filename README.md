@@ -2,7 +2,7 @@
 
 | Công cụ | Đường dẫn | Phiên bản |
 |---|---|---|
-| Layout Check | `layout-check/LayoutCheck.html` | V4.3.1 |
+| Layout Check | `layout-check/LayoutCheck.html` | V4.3.2 |
 | IE Báo cáo máy | `ie-bao-cao-may/IE_BaoCaoMay.html` | v7.9 |
 
 Dữ liệu (layout, MC Report, kế hoạch, thư mục `data` chứa kết quả kiểm tra) **không nằm trong kho này**. Hai công cụ chạy trong Chrome/Edge và chỉ đọc, ghi thư mục do người dùng chọn; không gửi dữ liệu đi đâu.

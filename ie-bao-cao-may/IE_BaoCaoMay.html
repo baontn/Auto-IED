@@ -391,10 +391,10 @@ input.lq.diff{border-color:var(--warn);background:var(--warnbg);color:var(--warn
 <body>
 <header>
   <h1 data-t="title"></h1><span class="tag t-info" id="verTag" title="Version">v7.9</span><span class="sub" data-t="subtitle"></span>
-  <div role="group" aria-label="Role" id="roleSeg" style="margin-left:auto;display:flex;gap:4px"><button data-role="cons" data-t="roleCons"></button><button data-role="tech" data-t="roleTech"></button></div>
+  <div role="group" aria-label="Role" id="roleSeg" style="margin-left:auto;display:flex;gap:4px"><button data-role="cons" data-t="roleCons"></button><button data-role="tech" data-t="roleTech"></button><button data-role="sup" data-t="roleSup"></button></div>
   <div class="lang" role="group" aria-label="Language" style="margin-left:8px"><button data-lang="vi">VI</button><button data-lang="en">EN</button></div>
 </header>
-<nav class="mtabs" id="mainTabs"><button data-tab="data" data-t="tabData"></button><button data-tab="db" data-t="tabDb"></button><button data-tab="prep" data-t="tabPrep"></button><button data-tab="notice" data-t="tabNotice"></button><button data-tab="activity" data-t="tabAct"></button></nav>
+<nav class="mtabs" id="mainTabs"><button data-tab="data" data-t="tabData"></button><button data-tab="db" data-t="tabDb"></button><button data-tab="prep" data-t="tabPrep"></button><button data-tab="resid" data-t="tabResid"></button><button data-tab="notice" data-t="tabNotice"></button><button data-tab="activity" data-t="tabAct"></button></nav>
 <main id="techView" hidden>
   <div class="card">
     <h3><span class="num">1</span> <span data-t="tTitle"></span></h3>
@@ -432,6 +432,14 @@ input.lq.diff{border-color:var(--warn);background:var(--warnbg);color:var(--warn
     <h3><span class="num">3</span> <span data-t="tMyNotices"></span></h3>
     <div class="tw"><table id="tNotices"></table></div>
   </div>
+</main>
+<main id="supView" hidden>
+  <div class="card">
+    <h3><span class="num">1</span> <span data-t="roleSup"></span></h3>
+    <div class="muted small" data-t="rsSupHint"></div>
+    <div class="row" style="margin-top:10px"><button class="pick" id="sConnect" type="button" data-t="tDataPick"></button><button id="sReuse" type="button" hidden></button><span id="sInfo" class="muted small"></span></div>
+  </div>
+  <div id="rsS"></div>
 </main>
 <aside id="tDrawer" hidden>
   <div class="row"><b id="dTitle"></b><button id="dClose" style="margin-left:auto">✕</button></div>
@@ -566,6 +574,7 @@ input.lq.diff{border-color:var(--warn);background:var(--warnbg);color:var(--warn
     <div id="pDetail"></div>
   </div>
 </section>
+<section data-pane="resid" hidden><div id="rsC"></div></section>
 <section data-pane="activity" hidden>
   <div class="card" id="actEmpty"><div class="empty" data-t="nNeedLc"></div></div>
   <div class="card" id="actCard" hidden>
@@ -593,6 +602,21 @@ input.lq.diff{border-color:var(--warn);background:var(--warnbg);color:var(--warn
 <script>// ===================== TEXTS (VI / EN) =====================
 var I18N = {
   vi: {
+    roleSup: 'Giám sát', tabResid: 'Thiếu máy còn lại', ak_action: 'Hành động thiếu máy',
+    rsTitle: 'Thiếu máy còn lại sau khi IE Tech duyệt', rsHint: 'Tính từ đề xuất mới nhất của IE Báo cáo máy và quyết định của IE Tech (cùng số liệu với bảng của IE Tech). Bấm một nhóm máy để xem từng ngày. Hành động (thuê, mua, mượn) do IE Báo cáo máy ghi lại.',
+    rsSupHint: 'Màn hình chỉ xem: chọn thư mục data dùng chung để xem thiếu máy còn lại, hành động đã ghi và thử dời kế hoạch.', rsConnected: 'Đã kết nối thư mục {0}', rsNeedConn: 'Chọn thư mục data để xem.', rsNoData: 'Chưa kết nối thư mục data (tab Dữ liệu, mục Layout Check).',
+    rsNone: 'Chưa có đề xuất nào. IE Báo cáo máy gửi đề xuất ở tab Thiếu máy & chuẩn bị.', rsInfo: 'Đề xuất mới nhất: {0}, {1}', rsDone: 'IE Tech hoàn tất: {0}', rsNoDone: 'IE Tech chưa hoàn tất',
+    rsThGroup: 'Nhóm máy', rsThAvail: 'Máy có sẵn', rsThDays: 'Ngày thiếu', rsThWorst: 'Thiếu nhiều nhất', rsThRange: 'Từ – đến', rsThAfterConf: 'Sau hành động đã chốt', rsThAfterPlan: 'Kể cả dự kiến', rsThPend: 'Chưa duyệt', rsEnough: 'Đủ máy',
+    rsDetail: 'Chi tiết nhóm {0}', rsThDay: 'Ngày', rsThProd: 'Sản xuất', rsThPrep: 'Chuẩn bị', rsThTotal: 'Tổng', rsThBal: 'Còn lại', rsThAct: 'Hành động', rsThAfter: 'Sau hành động',
+    rsDrivers: 'Ngày thiếu nhiều nhất {0} (thiếu {1}): các chuyền dùng nhiều máy', rsThLine: 'Chuyền', rsThNeed: 'Máy dùng', rsThStyles: 'Mã hàng',
+    rsActTitle: 'Hành động xử lý thiếu máy', rsActHint: 'Thuê, mua, mượn cộng thêm máy theo từng ngày; Dời kế hoạch và Khác chỉ ghi nhận (số liệu đổi khi có kế hoạch mới). Dự kiến = chưa chắc chắn; Đã chốt = đã có máy.',
+    rsAtRENT: 'Thuê', rsAtBUY: 'Mua', rsAtBORROW: 'Mượn', rsAtDELAY: 'Dời kế hoạch', rsAtOTHER: 'Khác', rsStPLANNED: 'Dự kiến', rsStCONFIRMED: 'Đã chốt', rsStCANCELLED: 'Đã hủy',
+    rsFType: 'Loại', rsFQty: 'SL máy', rsFFrom: 'Từ ngày', rsFTo: 'Đến ngày', rsFNote: 'Ghi chú', rsFStatus: 'Trạng thái', rsFSave: 'Lưu hành động', rsFAdd: 'Thêm hành động', rsFCancelEdit: 'Bỏ sửa', rsActNone: 'Chưa có hành động nào.',
+    rsThBy: 'Người ghi', rsEditBtn: 'Sửa', rsConfirmBtn: 'Chốt', rsCancelBtn: 'Hủy', rsErrGroup: 'Chọn nhóm máy.', rsErrQty: 'Nhập số máy lớn hơn 0.', rsErrDates: 'Nhập khoảng ngày hợp lệ (từ ≤ đến).', rsErrNote: 'Loại này cần ghi chú (ví dụ chuyền, mã hàng, ngày mới).',
+    rsWiTitle: 'Thử dời kế hoạch (không lưu)', rsWiHint: 'Ước tính: mã hàng được chọn và các mã sau nó trên chuyền vào chuyền muộn hơn N ngày làm việc, mã trước kéo dài trong khoảng trống, chuẩn bị dời theo. Chỉ để tham khảo trước khi trao đổi với PPC; không thay đổi dữ liệu.',
+    rsWiStyle: 'Mã hàng vào chuyền muộn', rsWiN: 'Dời (ngày làm việc)', rsWiGo: 'Tính', rsWiResult: 'Dời {0} trên chuyền {1} thêm {2} ngày làm việc (hiện tại → sau khi dời):', rsWiDays: 'Ngày thiếu', rsWiGap: 'Thiếu nhiều nhất', rsWiSum: 'Tổng máy-ngày thiếu', rsWiNone: 'Mã hàng này không có trong nhóm máy nào của đề xuất.',
+    srcOverlay: ' · gồm {0} thay đổi vừa duyệt (database trong MC Report chưa cập nhật)', ovRecalc: 'Đã tính lại nhu cầu theo thay đổi vừa duyệt. Bấm "Mở chi tiết" để xem số mới.',
+    tBasis: 'Đề xuất dựa trên database gồm {0} thay đổi vừa duyệt (lúc {1}, bởi {2}); các thay đổi này chưa được dán vào MC Report.',
     n_keepDbChanged: 'Database đã thay đổi sau khi {0} xác nhận giữ dữ liệu hiện tại ({1}): xác nhận đã bị xóa',
     vKept: 'Đã xác nhận giữ', vKeptHint: 'Bạn đã xác nhận giữ dữ liệu hiện tại cho các mã hàng này. Chỉ hiện lại ở "Cần duyệt" khi layout hoặc dữ liệu của mã hàng trong database thay đổi.', colKeptBy: 'Xác nhận bởi', keepUndo: 'Hủy xác nhận',
     keepBtn: 'Xác nhận giữ ({0})', keepTip: 'Xác nhận giữ dữ liệu hiện tại: mã hàng chỉ hiện lại khi layout hoặc database của mã hàng thay đổi', keepsSel: '{0} xác nhận giữ', keepSaved: 'Đã xác nhận giữ {0} mã hàng; chỉ hiện lại khi layout hoặc database thay đổi.', keepLocal: ' (lưu trên máy này vì chưa kết nối thư mục data)', keepErr: 'Không ghi được xác nhận giữ: {0}',
@@ -746,6 +770,21 @@ var I18N = {
     c_Added: 'Mới', c_Changed: 'Thay đổi', c_Unchanged: 'Không đổi'
   },
   en: {
+    roleSup: 'Supervisor', tabResid: 'Remaining shortage', ak_action: 'Shortage action',
+    rsTitle: 'Remaining shortage after IE Tech review', rsHint: 'Calculated from the latest proposal of the Consolidator and the IE Tech decisions (same numbers as the IE Tech grid). Click a machine group for the daily detail. Actions (rent, buy, borrow) are recorded by the Consolidator.',
+    rsSupHint: 'View only: choose the shared data folder to see the remaining shortage, the recorded actions and to try a plan delay.', rsConnected: 'Connected to folder {0}', rsNeedConn: 'Choose the data folder to view.', rsNoData: 'The data folder is not connected (Data tab, Layout Check section).',
+    rsNone: 'No proposal yet. The Consolidator sends one in the Shortage & preparation tab.', rsInfo: 'Latest proposal: {0}, {1}', rsDone: 'IE Tech completed: {0}', rsNoDone: 'IE Tech has not completed',
+    rsThGroup: 'Machine group', rsThAvail: 'Available', rsThDays: 'Days short', rsThWorst: 'Worst gap', rsThRange: 'From – to', rsThAfterConf: 'After confirmed actions', rsThAfterPlan: 'Incl. planned', rsThPend: 'Not reviewed', rsEnough: 'Enough',
+    rsDetail: 'Detail of group {0}', rsThDay: 'Day', rsThProd: 'Production', rsThPrep: 'Preparation', rsThTotal: 'Total', rsThBal: 'Left', rsThAct: 'Actions', rsThAfter: 'After actions',
+    rsDrivers: 'Worst day {0} (short {1}): lines using most machines', rsThLine: 'Line', rsThNeed: 'Machines used', rsThStyles: 'Styles',
+    rsActTitle: 'Actions against the shortage', rsActHint: 'Rent, buy and borrow add machines per day; Delay plan and Other are only recorded (numbers change when a new plan arrives). Planned = not sure yet; Confirmed = machines secured.',
+    rsAtRENT: 'Rent', rsAtBUY: 'Buy', rsAtBORROW: 'Borrow', rsAtDELAY: 'Delay plan', rsAtOTHER: 'Other', rsStPLANNED: 'Planned', rsStCONFIRMED: 'Confirmed', rsStCANCELLED: 'Cancelled',
+    rsFType: 'Type', rsFQty: 'Machines', rsFFrom: 'From', rsFTo: 'To', rsFNote: 'Note', rsFStatus: 'Status', rsFSave: 'Save action', rsFAdd: 'Add action', rsFCancelEdit: 'Cancel edit', rsActNone: 'No action recorded yet.',
+    rsThBy: 'Recorded by', rsEditBtn: 'Edit', rsConfirmBtn: 'Confirm', rsCancelBtn: 'Cancel', rsErrGroup: 'Choose a machine group.', rsErrQty: 'Enter a number of machines above 0.', rsErrDates: 'Enter a valid date range (from ≤ to).', rsErrNote: 'This type needs a note (for example line, style, new date).',
+    rsWiTitle: 'Try a plan delay (not saved)', rsWiHint: 'Estimate: the chosen style and every style after it on the line load N working days later, the style before it keeps running through the gap, preparation moves with them. For reference before talking to PPC; nothing is changed.',
+    rsWiStyle: 'Style loaded later', rsWiN: 'Delay (working days)', rsWiGo: 'Calculate', rsWiResult: 'Delaying {0} on line {1} by {2} working days (now → after delay):', rsWiDays: 'Days short', rsWiGap: 'Worst gap', rsWiSum: 'Total machine-days short', rsWiNone: 'This style is not in any machine group of the proposal.',
+    srcOverlay: ' · includes {0} changes just approved (not yet in the MC Report database)', ovRecalc: 'Demand recalculated with the changes just approved. Click "Open details" to see the new numbers.',
+    tBasis: 'This proposal is based on a database that includes {0} changes just approved (at {1}, by {2}); they are not pasted into the MC Report yet.',
     n_keepDbChanged: 'The database changed after {0} confirmed keeping the current data ({1}): the confirmation was cleared',
     vKept: 'Confirmed to keep', vKeptHint: 'You confirmed keeping the current data for these styles. They come back under "To review" only when the layout or the database data of the style changes.', colKeptBy: 'Confirmed by', keepUndo: 'Undo',
     keepBtn: 'Confirm keep ({0})', keepTip: 'Confirm keeping the current data: the style comes back only when its layout or database data changes', keepsSel: '{0} keep confirmations', keepSaved: 'Confirmed keeping {0} styles; they come back only when the layout or the database changes.', keepLocal: ' (stored on this computer because the data folder is not connected)', keepErr: 'Could not save the keep confirmation: {0}',
@@ -1647,6 +1686,77 @@ function groupGrid(mbl, group, prepRows, avail, fromKey, toKey, puMap, ends) {
   days.forEach(function (d) { tot[d] = (prodTot[d] || 0) + (prepTot[d] || 0); bal[d] = a == null ? null : a - tot[d]; });
   return { days: days, lines: lines, order: order, prod: prodTot, prep: prepTot, total: tot, avail: a, bal: bal };
 }
+
+// ===================== RESIDUAL SHORTAGE after IE Tech's decisions, actions, what-if (pure functions) =====================
+function isoMs(d) { return Date.parse(d + 'T00:00:00Z'); }
+function msIso(ms) { return new Date(ms).toISOString().slice(0, 10); }
+// Step 1: production per line/style after IE Tech's loading dates and end dates (the same adjustments as the IE Tech grid).
+// G0 = latest proposal grid of the machine group (days as ISO strings), rows = prep rows of the group (decisions applied, dates as ISO), ends = latestEnds(...)
+function adjustLines(G0, rows, ends) {
+  var days = G0.days, dms = days.map(isoMs), G = { lines: {} }, runInfo = {};
+  Object.keys(G0.lines).forEach(function (l) { var st = {}; Object.keys(G0.lines[l].styles).forEach(function (s) { st[s] = Object.assign({}, G0.lines[l].styles[s]); }); G.lines[l] = Object.assign({}, G0.lines[l], { styles: st }); });
+  rows.forEach(function (x) { if (x.loadActual && G.lines[x.line]) shiftProduction(G.lines[x.line].styles, x, isoMs(x.load), isoMs(x.loadActual), dms, msIso); });
+  Object.keys(G0.lines).forEach(function (l) {
+    var run = runningStyle(G0.lines[l].styles, days); if (!run) return;
+    var pe = runEnd(G0.lines[l].styles, run, days), e = ends && ends[l + '|' + run];
+    runInfo[l] = { style: run, plan: pe, eff: e && e.endDate ? e.endDate : pe, edited: !!(e && e.endDate && e.endDate !== pe) };
+    if (e && e.endDate) adjustRunningEnd(G.lines[l].styles, run, isoMs(e.endDate), days, isoMs);
+  });
+  return { G: G, runInfo: runInfo };
+}
+// Step 2: totals per day: production + prep (eff of the rows) against the machines available
+function totalsOf(G, rows, days, avail) {
+  var prodPu = {}, prepPu = {}, prod = {}, prep = {}, total = {}, bal = {};
+  Object.keys(G.lines).forEach(function (l) { var L = G.lines[l]; Object.keys(L.styles).forEach(function (s) { Object.keys(L.styles[s]).forEach(function (d) { var k = L.pu + '|' + d; prodPu[k] = (prodPu[k] || 0) + L.styles[s][d]; prod[d] = (prod[d] || 0) + L.styles[s][d]; }); }); });
+  rows.forEach(function (x) { if (!x.eff) return; (x.days || []).forEach(function (d) { var k = x.pu + '|' + d; prepPu[k] = (prepPu[k] || 0) + x.eff; prep[d] = (prep[d] || 0) + x.eff; }); });
+  days.forEach(function (d) { total[d] = (prod[d] || 0) + (prep[d] || 0); bal[d] = avail == null ? null : avail - total[d]; });
+  return { days: days, avail: avail, G: G, prodPu: prodPu, prepPu: prepPu, prod: prod, prep: prep, total: total, bal: bal };
+}
+function groupModel(G0, rows, ends) { var A = adjustLines(G0, rows, ends), M = totalsOf(A.G, rows, G0.days, G0.avail); M.runInfo = A.runInfo; return M; }
+// shortage summary of a model: days below zero, the worst day, first and last short day
+function shortSummary(bal, days) {
+  var neg = days.filter(function (d) { return bal[d] != null && bal[d] < 0; }), worst = null;
+  neg.forEach(function (d) { if (!worst || bal[d] < bal[worst]) worst = d; });
+  return { n: neg.length, of: days.length, days: neg, worst: worst, gap: worst ? -bal[worst] : 0, first: neg[0] || null, last: neg[neg.length - 1] || null, sum: neg.reduce(function (s, d) { return s - bal[d]; }, 0) };
+}
+// actions of the Consolidator (one record per change, latest per id wins)
+var ACTION_TYPES = ['RENT', 'BUY', 'BORROW', 'DELAY', 'OTHER'], ACTION_QTY = ['RENT', 'BUY', 'BORROW'];
+function latestActions(list) {
+  var m = {}; (list || []).slice().sort(function (a, b) { return String(a.at).localeCompare(String(b.at)); }).forEach(function (r) { if (r && r.id) m[r.id] = r; });
+  return Object.keys(m).map(function (k) { return m[k]; });
+}
+// machines added per day by the actions of a group (cancelled ignored; delay / other carry no quantity): confirmed and still planned
+function actionCover(actions, group, days) {
+  var c = {}, p = {}; days.forEach(function (d) { c[d] = 0; p[d] = 0; });
+  (actions || []).forEach(function (a) {
+    if (a.group !== group || a.status === 'CANCELLED' || !(+a.qty > 0) || ACTION_QTY.indexOf(a.type) < 0) return;
+    days.forEach(function (d) { if ((!a.from || d >= a.from) && (!a.to || d <= a.to)) { if (a.status === 'CONFIRMED') c[d] += +a.qty; else p[d] += +a.qty; } });
+  });
+  return { confirmed: c, planned: p };
+}
+// What-if: line `line` loads `style` n working days later. That style and every style after it on the line move, the style before it keeps running through the gap, their prep moves with them.
+// Nothing is saved. Returns the totals of the scenario (same shape as groupModel) or null when the line / style is not in this group.
+function delayModel(G0, rows, ends, line, style, n) {
+  var A = adjustLines(G0, rows, ends), days = G0.days, idx = {}; days.forEach(function (d, i) { idx[d] = i; });
+  var L = A.G.lines[line]; if (!L || !L.styles[style]) return null;
+  var first = function (s) { var k = Object.keys(L.styles[s]).sort()[0]; return k || '9'; };
+  var order = Object.keys(L.styles).sort(function (a, b) { return first(a).localeCompare(first(b)); }), at = order.indexOf(style), moved = order.slice(at), prev = at > 0 ? order[at - 1] : null;
+  var old = {}; moved.forEach(function (s) { old[s] = L.styles[s]; });
+  var gapStart = idx[first(style)];
+  moved.forEach(function (s) {
+    var q = {}; Object.keys(old[s]).forEach(function (d) { var j = idx[d] + n; if (idx[d] != null && j < days.length) q[days[j]] = old[s][d]; });
+    if (Object.keys(q).length) L.styles[s] = q; else delete L.styles[s];
+  });
+  if (prev && L.styles[prev]) {
+    var ks = Object.keys(L.styles[prev]).sort(), lastK = ks[ks.length - 1], v = L.styles[prev][lastK];
+    for (var i = idx[lastK] + 1; i < gapStart + n && i < days.length; i++) L.styles[prev][days[i]] = v;
+  }
+  var rows2 = rows.map(function (x) {
+    if (x.line !== line || moved.indexOf(x.to) < 0) return x;
+    var y = Object.assign({}, x); y.days = (x.days || []).map(function (d) { return idx[d] != null && idx[d] + n < days.length ? days[idx[d] + n] : null; }).filter(Boolean); return y;
+  });
+  return totalsOf(A.G, rows2, days, G0.avail);
+}
 </script>
 <script>// ===================== APP =====================
 var $ = function (id) { return document.getElementById(id); };
@@ -2071,6 +2181,8 @@ $('save').onclick = function () {
   var user = $('uName').value.trim();
   if (lcItems.length && !user) { $('uName').focus(); alert(t('lcNeedName')); return; }
   XLSX.writeFile(wb, name);
+  var apprNow = RV.items.filter(function (it) { var o = it.opts[it.sel]; return it.apply && o.type !== 'keep' && !o.blocked; });
+  if (apprNow.length) addDbOverlay(apprNow, user);                           // the shortage report counts the approved changes at once (labelled: not yet in the MC Report)
   SAVED = [name, ex.nApproved, ex.db.length - 1, '']; renderSave();
   confirmKeeps().then(function (r) { if (r && SAVED) SAVED.k = t('keepSaved', [r.n]) + (r.where === 'local' ? t('keepLocal') : ''); renderAll(); });
   if (!LCDIR) return;
@@ -2105,7 +2217,22 @@ loadKeeps(null);
 renderAll();
 </script>
 <script>// ===================== STEP 4 UI: machine group analysis + prep =====================
-function SRC() { if (!REF.demand && REF.planRows && REF.db) REF.demand = buildDemand(REF.planRows, REF.db, REF.groups || {}); return REF.demand || REF.mbl; }
+function SRC() { if (!REF.demand && REF.planRows && REF.db) REF.demand = buildDemand(REF.planRows, effDb(), REF.groups || {}); return REF.demand || REF.mbl; }
+// Database used for the demand: the MC Report's MACHINE DATABASE plus the changes approved and saved in this session (not yet pasted into Table1 / refreshed in the MC Report).
+function effDb() {
+  var O = REF.dbOver; if (!O || !Object.keys(O.items).length) return REF.db;
+  var by = Object.assign({}, REF.db.byKey);
+  Object.keys(O.items).forEach(function (k) { by[k] = Object.assign({}, by[k] || { name: O.names[k] }, { set: O.items[k] }); });
+  return Object.assign({}, REF.db, { byKey: by });
+}
+function addDbOverlay(items, user) {
+  var O = REF.dbOver = REF.dbOver || { items: {}, names: {}, at: null, by: '' };
+  items.forEach(function (it) { O.items[it.key] = Object.assign({}, it.opts[it.sel].set); O.names[it.key] = it.name; });
+  O.at = new Date().toISOString(); O.by = user || '';
+  REF.demand = null; PS.changes = null;
+  if (PS.rows) { PS.rows = null; PS.open = []; $('pDetail').innerHTML = ''; $('pMsg').textContent = t('ovRecalc'); }
+  if (window.prepRender && !$('step4').hidden) prepRender();
+}
 var PS = { rules: JSON.parse(JSON.stringify(PREP_DEFAULT)), shared: [], reviews: [], sel: {}, rows: null, onlyPrep: true, groups: [] };
 function pDay(k, wd) { var d = new Date(k), p = function (x) { return String(x).padStart(2, '0'); }; return (wd ? ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'][d.getUTCDay()] + ' ' : '') + p(d.getUTCDate()) + '/' + p(d.getUTCMonth() + 1); }
 function pIso(k) { var d = new Date(k); return d.toISOString().slice(0, 10); }
@@ -2265,7 +2392,8 @@ async function prepSend() {
   });
   var d = await (await LCDIR.getDirectoryHandle('prep', { create: true })).getDirectoryHandle('proposals', { create: true });
   var h = await d.getFileHandle(st + '_' + user.replace(/[^\w\-]+/g, '_') + '.json', { create: true }), w = await h.createWritable();
-  await w.write(JSON.stringify({ at: now.toISOString(), by: user, groups: PS.open, from: pIso(pRange().from), rows: rows, grid: grid, groupMap: REF.groups || {} })); await w.close();
+  await w.write(JSON.stringify({ at: now.toISOString(), by: user, groups: PS.open, from: pIso(pRange().from), rows: rows, grid: grid, groupMap: REF.groups || {},
+    dbBasis: REF.dbOver && Object.keys(REF.dbOver.items).length ? { overlay: Object.keys(REF.dbOver.items).length, at: REF.dbOver.at, by: REF.dbOver.by, styles: Object.keys(REF.dbOver.names).map(function (k) { return REF.dbOver.names[k]; }).slice(0, 40) } : null })); await w.close();
   $('pMsg2').textContent = t('pSent', [rows.filter(function (x) { return !x.same; }).length]);
 }
 async function prepExport() {
@@ -2337,9 +2465,10 @@ function partRows(g, G) {
 var SRCVIEW = null;
 function renderSource() {
   var M = SRC(), info = REF.planRows && REF.db ? t('srcPlanTxt', [REF.planFile || '', REF.planAt ? REF.planAt.toLocaleString() : '']) : t('srcMblTxt');
-  $('srcInfo').textContent = info;
+  var nOv = REF.dbOver ? Object.keys(REF.dbOver.items).length : 0;
+  $('srcInfo').textContent = info + (nOv ? t('srcOverlay', [nOv]) : '');
   var ch = [], miss = (M && M.missing) || [];
-  if (REF.mbl && REF.demand) ch = PS.changes = PS.changes || planChanges(REF.mbl, REF.demand, pRange().from, function (s) { return !!REF.db.byKey[skey(s)]; });
+  if (REF.mbl && REF.demand) ch = PS.changes = PS.changes || planChanges(REF.mbl, REF.demand, pRange().from, function (s) { return !!effDb().byKey[skey(s)]; });
   var nl = Object.keys(ch.reduce(function (a, c) { a[c.line] = 1; return a; }, {})).length;
   $('srcDiff').textContent = REF.mbl && REF.demand ? (ch.length ? t('srcDiff', [ch.length, nl]) : t('srcSame')) : '';
   $('srcDiff').className = ch.length ? 'st-bad' : 'st-ok';
@@ -2369,9 +2498,11 @@ var TS = { dir: null, lay: null, props: [], reviews: [], notices: [], res: [], r
 function setRole(r) {
   ROLE = r; try { localStorage.setItem('mdb_role', r); } catch (e) { }
   [].forEach.call(document.querySelectorAll('#roleSeg [data-role]'), function (b) { b.classList.toggle('on', b.dataset.role === r); });
-  $('techView').hidden = r !== 'tech'; $('consView').hidden = r === 'tech'; $('consView2').hidden = r === 'tech';
+  var cons = r !== 'tech' && r !== 'sup';
+  $('techView').hidden = r !== 'tech'; $('supView').hidden = r !== 'sup'; $('consView').hidden = !cons; $('consView2').hidden = !cons;
   if (r !== 'tech') $('tDrawer').hidden = true;
   if (r === 'tech') techRender();
+  if (r === 'sup' && window.supRender) supRender();
 }
 $('roleSeg').onclick = function (e) { var b = e.target.closest('[data-role]'); if (b) setRole(b.dataset.role); };
 function tSave(k, v) { try { localStorage.setItem(k, v); } catch (e) { } }
@@ -2493,7 +2624,7 @@ function latestGrid(g) {
   var ps = TS.props.filter(function (p) { return p.grid && p.grid[g]; }).sort(function (a, b) { return String(b.at).localeCompare(String(a.at)); });
   if (!ps.length) return null;
   var G = ps[0].grid[g], sun = function (d) { return new Date(typeof d === 'number' ? d : d + 'T00:00:00Z').getUTCDay() === 0; };
-  return Object.assign({}, G, { days: (G.days || []).filter(function (d) { return !sun(d); }) });      // no Sundays (also in proposals sent before this version)
+  return Object.assign({}, G, { days: (G.days || []).filter(function (d) { return !sun(d); }), basis: ps[0].dbBasis || null });      // no Sundays (also in proposals sent before this version)
 }
 function noticeStatus(n) { var r = TS.res.concat(PS.noticeRes || []).filter(function (x) { return x.id === n.id; }).sort(function (a, b) { return String(a.at).localeCompare(String(b.at)); }).pop(); return r || null; }
 function puSort(p) { return !p || p === '?' ? 1 : 0; }
@@ -2536,16 +2667,8 @@ function techRender() {
   if (!G) { $('tGrid').innerHTML = '<div class="empty">' + esc(t('tNoProposal')) + '</div>'; renderMyNotices(); return; }
   var days = G.days, allRows = TS.rows.filter(function (x) { return x.group === g; });
   var ms = function (d) { return Date.parse(d + 'T00:00:00Z'); }, iso = function (d) { return new Date(d).toISOString().slice(0, 10); }, dms = days.map(ms);
-  G = Object.assign({}, G, { lines: {} }); var G0 = latestGrid(g);
-  Object.keys(G0.lines).forEach(function (l) { var st = {}; Object.keys(G0.lines[l].styles).forEach(function (s) { st[s] = Object.assign({}, G0.lines[l].styles[s]); }); G.lines[l] = Object.assign({}, G0.lines[l], { styles: st }); });
-  allRows.forEach(function (x) { if (x.loadActual && G.lines[x.line]) shiftProduction(G.lines[x.line].styles, x, ms(x.load), ms(x.loadActual), dms, iso); });
-  var TE = latestEnds(TS.ends), runInfo = {};
-  Object.keys(G0.lines).forEach(function (l) {                              // running style of each line (from the unadjusted plan), its planned and effective end
-    var run = runningStyle(G0.lines[l].styles, days); if (!run) return;
-    var pe = runEnd(G0.lines[l].styles, run, days), e = TE[l + '|' + run];
-    runInfo[l] = { style: run, plan: pe, eff: e && e.endDate ? e.endDate : pe, edited: !!(e && e.endDate && e.endDate !== pe) };
-    if (e && e.endDate) adjustRunningEnd(G.lines[l].styles, run, ms(e.endDate), days, ms);
-  });
+  var G0 = latestGrid(g), M = groupModel(G0, allRows, latestEnds(TS.ends)), runInfo = M.runInfo;          // same calculation as the supervisor's residual-shortage view
+  G = Object.assign({}, G, { lines: M.G.lines });
   var endTag = function (l, s) {
     var r = runInfo[l]; if (!r || r.style !== s || !r.eff) return '';
     return ' <span class="muted small">' + esc(t('eEnd', [d2(r.eff)])) + '</span>' + (r.edited ? ' <span class="tag t-info">' + esc(d2(r.plan)) + '→' + esc(d2(r.eff)) + '</span>' : '') +
@@ -2583,9 +2706,7 @@ function techRender() {
   });
   // totals per PU (all lines of the group), then total, available and balance
   var pus = {}; Object.keys(G.lines).forEach(function (l) { pus[G.lines[l].pu] = 1; });
-  var prod = {}, prep = {}, totP = {}, totR = {};
-  Object.keys(G.lines).forEach(function (l) { var L = G.lines[l]; Object.keys(L.styles).forEach(function (s) { Object.keys(L.styles[s]).forEach(function (d) { var k = L.pu + '|' + d; prod[k] = (prod[k] || 0) + L.styles[s][d]; totP[d] = (totP[d] || 0) + L.styles[s][d]; }); }); });
-  allRows.forEach(function (x) { if (!x.eff) return; (x.days || []).forEach(function (d) { var k = x.pu + '|' + d; prep[k] = (prep[k] || 0) + x.eff; totR[d] = (totR[d] || 0) + x.eff; }); });
+  var prod = M.prodPu, prep = M.prepPu, totP = M.prod, totR = M.prep;
   var trow = function (label, f, cls, neg) { return '<tr class="' + cls + '"><td class="s1"></td><td class="s2"></td><td class="l s3">' + esc(label) + '</td>' + days.map(function (d) { var v = f(d); return '<td class="' + (neg && v != null && v < 0 ? 'neg' : '') + '">' + (v == null ? '' : v) + '</td>'; }).join('') + '</tr>'; };
   Object.keys(pus).sort(function (a, b) { return puSort(a) - puSort(b) || a.localeCompare(b); }).forEach(function (p) {
     h += trow(t('pgPuSum', [puName(p), t('pgProd')]), function (d) { return prod[p + '|' + d] || 0; }, 'pusum') + trow(t('pgPuSum', [puName(p), t('pgPrep')]), function (d) { return prep[p + '|' + d] || 0; }, 'pusum') +
@@ -2596,7 +2717,8 @@ function techRender() {
   h += trow(t('pgBal'), function (d) { return G.avail == null ? null : G.avail - (totP[d] || 0) - (totR[d] || 0); }, 'tot', true) + '</table></div>';
   var tw0 = $('tGrid').querySelector('.tw'), gk = g + '|' + pu + '|' + $('tLines').value, keep = TS.gridKey === gk && !!tw0;
   var sT = keep ? tw0.scrollTop : 0, sL = keep ? tw0.scrollLeft : 0, pY = window.scrollY, pX = window.scrollX;     // approving a row must not throw the user back to the top
-  $('tGrid').innerHTML = h; TS.gridKey = gk;
+  var basisNote = G0.basis && G0.basis.overlay ? '<div class="muted small" style="margin:0 0 6px;padding:6px 10px;border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:6px">' + esc(t('tBasis', [G0.basis.overlay, String(G0.basis.at || '').slice(0, 16).replace('T', ' '), G0.basis.by || '-'])) + '</div>' : '';
+  $('tGrid').innerHTML = basisNote + h; TS.gridKey = gk;
   var tw1 = $('tGrid').querySelector('.tw'); if (tw1) { tw1.scrollTop = sT; tw1.scrollLeft = sL; }
   if (keep) window.scrollTo(pX, pY);
   [].forEach.call($('tGrid').querySelectorAll('[data-te]'), function (b) { b.onclick = function (e) { e.stopPropagation(); techSetEnd(b.dataset.te); }; });
@@ -2856,6 +2978,165 @@ $('nSt').onchange = renderNotices;
 window.techRender = techRender; window.renderNotices = renderNotices;
 
 </script>
+<script>// ===================== RESIDUAL SHORTAGE (after IE Tech's decisions) + actions + what-if =====================
+// Used by the Consolidator (tab "Thiếu máy còn lại": can record actions) and by the Supervisor role (read-only).
+// Numbers come from the data folder only (latest proposal per machine group + IE Tech decisions): the same calculation as the IE Tech grid (groupModel).
+var RS = { root: null, actions: [], sel: '', edit: null, wi: { line: '', style: '', n: 3 }, wiRes: null, cache: [], at: null };
+async function rsLoad(root) {
+  RS.root = root; await tLoadAll(root); RS.actions = latestActions(await pReadDir(root, 'prep/actions')); RS.at = new Date();
+}
+function rsCompute() {
+  var rows = techRows(), ends = latestEnds(TS.ends), groups = {}, out = [];
+  TS.props.forEach(function (p) { (p.groups || []).forEach(function (g) { groups[g] = 1; }); });
+  Object.keys(groups).sort().forEach(function (g) {
+    var G0 = latestGrid(g); if (!G0) return;
+    var rg = rows.filter(function (x) { return x.group === g; }), M = groupModel(G0, rg, ends), cov = actionCover(RS.actions, g, M.days), b2 = {}, b3 = {};
+    M.days.forEach(function (d) { b2[d] = M.bal[d] == null ? null : M.bal[d] + cov.confirmed[d]; b3[d] = b2[d] == null ? null : b2[d] + cov.planned[d]; });
+    out.push({ g: g, G0: G0, rows: rg, M: M, s: shortSummary(M.bal, M.days), s2: shortSummary(b2, M.days), s3: shortSummary(b3, M.days), cov: cov, b2: b2, b3: b3, pending: rg.filter(function (x) { return x.status === 'PENDING'; }).length });
+  });
+  return out.sort(function (a, b) { return b.s.gap - a.s.gap || a.g.localeCompare(b.g); });
+}
+function rsShortCount() { try { return TS.props && TS.props.length ? rsCompute().filter(function (x) { return x.s.gap > 0; }).length : 0; } catch (e) { return 0; } }
+function rsRange(s) { return s.first ? d2(s.first) + (s.last !== s.first ? ' – ' + d2(s.last) : '') : ''; }
+function rsGapCell(s, ok) { return s.gap > 0 ? '<span class="st-bad"><b>−' + s.gap + '</b> (' + esc(d2(s.worst)) + ')</span>' : '<span class="st-ok">' + esc(ok || t('rsEnough')) + '</span>'; }
+function rsHtml(edit) {
+  var M = RS.cache = rsCompute();
+  if (!M.length) return '<div class="empty">' + esc(t('rsNone')) + '</div>';
+  if (!RS.sel || !M.some(function (x) { return x.g === RS.sel; })) RS.sel = M[0].g;
+  var props = TS.props.slice().sort(function (a, b) { return String(b.at).localeCompare(String(a.at)); }), p0 = props[0], h = '';
+  var done = {}; (TS.done || []).slice().sort(function (a, b) { return String(b.at).localeCompare(String(a.at)); }).forEach(function (c) { var k = c.by + '|' + c.pu + '|' + c.lines; if (!done[k]) done[k] = c; });
+  var dl = Object.keys(done).map(function (k) { var c = done[k]; return c.by + ' · ' + (c.pu || t('tAll')) + ' · ' + String(c.at).slice(5, 16).replace('T', ' ') + (c.pending ? ' (' + t('pDonePend', [c.pending]) + ')' : ''); });
+  h += '<div class="muted small" style="margin:4px 0 8px">' + esc(t('rsInfo', [p0.by || '-', String(p0.at).slice(0, 16).replace('T', ' ')])) + ' · ' + esc(dl.length ? t('rsDone', [dl.join('; ')]) : t('rsNoDone')) +
+    (p0.dbBasis && p0.dbBasis.overlay ? ' · <span class="st-bad">' + esc(t('tBasis', [p0.dbBasis.overlay, String(p0.dbBasis.at || '').slice(0, 16).replace('T', ' '), p0.dbBasis.by || '-'])) + '</span>' : '') + '</div>';
+  // summary per machine group
+  h += '<div class="tw"><table class="pg"><tr><th class="l">' + t('rsThGroup') + '</th><th>' + t('rsThAvail') + '</th><th>' + t('rsThDays') + '</th><th>' + t('rsThWorst') + '</th><th>' + t('rsThRange') + '</th><th>' + t('rsThAfterConf') + '</th><th>' + t('rsThAfterPlan') + '</th><th>' + t('rsThPend') + '</th></tr>' +
+    M.map(function (x) {
+      return '<tr class="' + (x.g === RS.sel ? 'sel' : '') + '" data-rs-g="' + esc(x.g) + '" style="cursor:pointer"><td class="l"><b>' + esc(x.g) + '</b></td><td>' + (x.M.avail == null ? '' : x.M.avail) + '</td><td>' + x.s.n + ' / ' + x.s.of + '</td><td>' + rsGapCell(x.s) + '</td><td>' + esc(rsRange(x.s)) + '</td><td>' + rsGapCell(x.s2) + '</td><td>' + rsGapCell(x.s3) + '</td><td>' + (x.pending ? '<span class="st-bad">' + x.pending + '</span>' : '0') + '</td></tr>';
+    }).join('') + '</table></div>';
+  // detail of the selected group
+  var X = M.filter(function (x) { return x.g === RS.sel; })[0], m = X.M;
+  h += '<h4 style="margin:14px 0 4px">' + esc(t('rsDetail', [X.g])) + '</h4><div class="tw" style="max-height:46vh"><table class="pg"><tr><th class="l">' + t('rsThDay') + '</th><th>' + t('rsThProd') + '</th><th>' + t('rsThPrep') + '</th><th>' + t('rsThTotal') + '</th><th>' + t('rsThAvail') + '</th><th>' + t('rsThBal') + '</th><th>' + t('rsThAct') + '</th><th>' + t('rsThAfter') + '</th></tr>' +
+    m.days.map(function (d) {
+      var cc = X.cov.confirmed[d], pl = X.cov.planned[d], neg = m.bal[d] != null && m.bal[d] < 0, a3 = X.b3[d];
+      return '<tr><td class="l">' + esc(dw(d)) + '</td><td>' + (m.prod[d] || 0) + '</td><td>' + (m.prep[d] || 0) + '</td><td>' + m.total[d] + '</td><td>' + (m.avail == null ? '' : m.avail) + '</td><td class="' + (neg ? 'neg' : '') + '">' + (m.bal[d] == null ? '' : m.bal[d]) + '</td><td>' + (cc || pl ? (cc ? '+' + cc : '') + (pl ? ' <span class="muted">(+' + pl + ')</span>' : '') : '') + '</td><td class="' + (a3 != null && a3 < 0 ? 'neg' : '') + '">' + (a3 == null ? '' : a3) + '</td></tr>';
+    }).join('') + '</table></div>';
+  if (X.s.worst) {                                                       // who uses the machines on the worst day
+    var w = X.s.worst, per = {};
+    Object.keys(m.G.lines).forEach(function (l) { var L = m.G.lines[l], e = per[l] = { pu: L.pu, prod: 0, prep: 0, styles: [] }; Object.keys(L.styles).forEach(function (s) { var q = L.styles[s][w]; if (q) { e.prod += q; e.styles.push(s + ' ' + q); } }); });
+    X.rows.forEach(function (r) { if (r.eff && (r.days || []).indexOf(w) >= 0) { var e = per[r.line] = per[r.line] || { pu: r.pu, prod: 0, prep: 0, styles: [] }; e.prep += r.eff; e.styles.push('↳ ' + r.to + ' ' + r.eff); } });
+    var top = Object.keys(per).map(function (l) { return { l: l, e: per[l], n: per[l].prod + per[l].prep }; }).filter(function (x) { return x.n > 0; }).sort(function (a, b) { return b.n - a.n; }).slice(0, 8);
+    h += '<h4 style="margin:12px 0 4px">' + esc(t('rsDrivers', [d2(w), X.s.gap])) + '</h4><div class="tw"><table class="pg"><tr><th class="l">PU</th><th class="l">' + t('rsThLine') + '</th><th>' + t('rsThNeed') + '</th><th class="l">' + t('rsThStyles') + '</th></tr>' +
+      top.map(function (x) { return '<tr><td class="l">' + esc(puName(x.e.pu)) + '</td><td class="l"><b>' + esc(x.l) + '</b></td><td>' + x.n + (x.e.prep ? ' <span class="muted">(' + t('rsThPrep').toLowerCase() + ' ' + x.e.prep + ')</span>' : '') + '</td><td class="l">' + esc(x.e.styles.join(' · ')) + '</td></tr>'; }).join('') + '</table></div>';
+  }
+  return h;
+}
+function rsActionsHtml(edit) {
+  var gs = RS.cache.map(function (x) { return x.g; }), E = RS.edit ? RS.actions.filter(function (a) { return a.id === RS.edit; })[0] : null, X = RS.cache.filter(function (x) { return x.g === (E ? E.group : RS.sel); })[0];
+  var h = '<h3 style="margin-top:0">' + esc(t('rsActTitle')) + '</h3><div class="muted small">' + esc(t('rsActHint')) + '</div>';
+  var list = RS.actions.slice().sort(function (a, b) { return (a.status === 'CANCELLED') - (b.status === 'CANCELLED') || String(b.at).localeCompare(String(a.at)); });
+  h += list.length ? '<div class="tw" style="margin-top:6px"><table class="pg"><tr><th class="l">' + t('rsThGroup') + '</th><th class="l">' + t('rsFType') + '</th><th>' + t('rsFQty') + '</th><th>' + t('rsThRange') + '</th><th class="l">' + t('rsFStatus') + '</th><th class="l">' + t('rsThBy') + '</th><th class="l">' + t('rsFNote') + '</th>' + (edit ? '<th></th>' : '') + '</tr>' +
+    list.map(function (a) {
+      var cx = a.status === 'CANCELLED';
+      return '<tr style="' + (cx ? 'opacity:.55' : '') + '"><td class="l"><b>' + esc(a.group) + '</b></td><td class="l">' + esc(t('rsAt' + a.type)) + '</td><td>' + (a.qty || '') + '</td><td>' + esc(a.from ? d2(a.from) + (a.to && a.to !== a.from ? ' – ' + d2(a.to) : '') : '') + '</td><td class="l"><span class="tag ' + (a.status === 'CONFIRMED' ? 't-ok' : cx ? 't-bad' : 't-warn') + '">' + esc(t('rsSt' + a.status)) + '</span></td><td class="l">' + esc(a.by || '') + '<div class="muted small">' + esc(String(a.at).slice(5, 16).replace('T', ' ')) + '</div></td><td class="l">' + esc(a.note || '') + '</td>' +
+        (edit ? '<td style="white-space:nowrap">' + (cx ? '' : '<button class="qa" data-rs-edit="' + esc(a.id) + '">' + esc(t('rsEditBtn')) + '</button>' + (a.status === 'PLANNED' ? '<button class="qa" data-rs-conf="' + esc(a.id) + '">' + esc(t('rsConfirmBtn')) + '</button>' : '') + '<button class="qa" data-rs-cancel="' + esc(a.id) + '">' + esc(t('rsCancelBtn')) + '</button>') + '</td>' : '') + '</tr>';
+    }).join('') + '</table></div>' : '<div class="muted small" style="margin:6px 0">' + esc(t('rsActNone')) + '</div>';
+  if (!edit) return h;
+  var s = X ? X.s : null, from = E ? E.from : (s && s.first) || '', to = E ? E.to : (s && s.last) || '';
+  var opt = function (arr, cur, lab) { return arr.map(function (v) { return '<option value="' + esc(v) + '"' + (v === cur ? ' selected' : '') + '>' + esc(lab ? lab(v) : v) + '</option>'; }).join(''); };
+  h += '<div class="row" style="margin-top:10px;flex-wrap:wrap;gap:8px;align-items:flex-end">' +
+    '<label class="small">' + t('rsThGroup') + '<br><select data-f="group">' + opt(gs, E ? E.group : RS.sel) + '</select></label>' +
+    '<label class="small">' + t('rsFType') + '<br><select data-f="type">' + opt(ACTION_TYPES, E ? E.type : 'RENT', function (v) { return t('rsAt' + v); }) + '</select></label>' +
+    '<label class="small">' + t('rsFQty') + '<br><input data-f="qty" type="number" min="1" style="width:80px" value="' + (E && E.qty ? E.qty : (s && s.gap ? s.gap : '')) + '"></label>' +
+    '<label class="small">' + t('rsFFrom') + '<br><input data-f="from" type="date" value="' + esc(from) + '"></label>' +
+    '<label class="small">' + t('rsFTo') + '<br><input data-f="to" type="date" value="' + esc(to) + '"></label>' +
+    '<label class="small">' + t('rsFStatus') + '<br><select data-f="status">' + opt(['PLANNED', 'CONFIRMED'], E && E.status !== 'CANCELLED' ? E.status : 'PLANNED', function (v) { return t('rsSt' + v); }) + '</select></label>' +
+    '<label class="small" style="flex:1;min-width:200px">' + t('rsFNote') + '<br><input data-f="note" type="text" style="width:100%" value="' + esc(E ? E.note || '' : '') + '"></label>' +
+    '<button class="primary" data-rs-save="1">' + esc(E ? t('rsFSave') : t('rsFAdd')) + '</button>' + (E ? '<button data-rs-canceledit="1">' + esc(t('rsFCancelEdit')) + '</button>' : '') + '<span class="small st-bad" data-rs-err></span></div>';
+  return h;
+}
+function rsWhatIfHtml() {
+  var lines = {}, W = RS.wi; RS.cache.forEach(function (x) { Object.keys(x.G0.lines).forEach(function (l) { lines[l] = lines[l] || x.G0.lines[l]; }); });
+  var ls = Object.keys(lines).sort(); if (!ls.length) return '';
+  if (ls.indexOf(W.line) < 0) { W.line = ls[0]; W.style = ''; }
+  var L = lines[W.line], first = function (s) { var k = Object.keys(L.styles[s]).sort()[0]; return k || '9'; }, st = Object.keys(L.styles).sort(function (a, b) { return first(a).localeCompare(first(b)); });
+  if (st.indexOf(W.style) < 0) W.style = st[1] || st[0] || '';
+  var h = '<h3 style="margin-top:0">' + esc(t('rsWiTitle')) + '</h3><div class="muted small">' + esc(t('rsWiHint')) + '</div>' +
+    '<div class="row" style="margin-top:8px;flex-wrap:wrap;gap:8px;align-items:flex-end">' +
+    '<label class="small">' + t('rsThLine') + '<br><select data-wi="line">' + ls.map(function (l) { return '<option' + (l === W.line ? ' selected' : '') + '>' + esc(l) + '</option>'; }).join('') + '</select></label>' +
+    '<label class="small">' + t('rsWiStyle') + '<br><select data-wi="style">' + st.map(function (s) { return '<option' + (s === W.style ? ' selected' : '') + '>' + esc(s) + '</option>'; }).join('') + '</select></label>' +
+    '<label class="small">' + t('rsWiN') + '<br><input data-wi="n" type="number" min="1" max="15" style="width:70px" value="' + W.n + '"></label><button data-rs-wigo="1">' + esc(t('rsWiGo')) + '</button></div>';
+  if (RS.wiRes) {
+    var R = RS.wiRes;
+    h += '<div class="muted small" style="margin-top:8px"><b>' + esc(t('rsWiResult', [R.style, R.line, R.n])) + '</b></div>' + (R.rows.length ? '<div class="tw"><table class="pg"><tr><th class="l">' + t('rsThGroup') + '</th><th>' + t('rsWiDays') + '</th><th>' + t('rsWiGap') + '</th><th>' + t('rsWiSum') + '</th></tr>' +
+      R.rows.map(function (r) {
+        var cell = function (a, b, unit) { return a + ' → <b class="' + (b < a ? 'st-ok' : b > a ? 'st-bad' : '') + '">' + b + '</b>' + (unit || ''); };
+        return '<tr><td class="l"><b>' + esc(r.g) + '</b></td><td>' + cell(r.a.n, r.b.n) + '</td><td>' + cell(r.a.gap, r.b.gap) + '</td><td>' + cell(r.a.sum, r.b.sum) + '</td></tr>';
+      }).join('') + '</table></div>' : '<div class="muted small">' + esc(t('rsWiNone')) + '</div>');
+  }
+  return h;
+}
+function rsPaint(cid, edit) {
+  var c = $(cid); if (!c) return;
+  c.innerHTML = '<div class="card"><div class="row"><b>' + esc(t('rsTitle')) + '</b><button data-rs-refresh="1" style="margin-left:auto">' + esc(t('cRefresh')) + '</button><span class="muted small">' + esc(RS.at ? RS.at.toLocaleString() : '') + '</span></div><div class="muted small">' + esc(t('rsHint')) + '</div><div id="' + cid + 'A">' + rsHtml(edit) + '</div></div>' +
+    (RS.cache.length ? '<div class="card" id="' + cid + 'B">' + rsActionsHtml(edit) + '</div><div class="card" id="' + cid + 'C">' + rsWhatIfHtml() + '</div>' : '');
+  c.onclick = function (e) { rsClick(e, cid, edit); };
+  c.onchange = function (e) {
+    var w = e.target.dataset.wi; if (!w) return;
+    if (w === 'line') { RS.wi.line = e.target.value; RS.wi.style = ''; RS.wiRes = null; } else if (w === 'style') { RS.wi.style = e.target.value; RS.wiRes = null; } else if (w === 'n') RS.wi.n = Math.max(1, Math.min(15, +e.target.value || 1));
+    rsPaint(cid, edit);
+  };
+}
+function rsRepaint() { if ($('rsC') && !$('rsC').closest('[data-pane]').hidden) rsPaint('rsC', true); if ($('rsS') && !$('supView').hidden) rsPaint('rsS', false); }
+async function rsWrite(rec) {
+  var user = rec.by, name = tStamp() + '_' + String(user).replace(/[^\w\-]+/g, '_') + '_' + String(rec.id).slice(-4) + '.json';
+  await tWrite(RS.root, 'prep/actions', name, rec);
+  RS.actions = latestActions(await pReadDir(RS.root, 'prep/actions'));
+}
+async function rsClick(e, cid, edit) {
+  var b = e.target.closest('[data-rs-g],[data-rs-refresh],[data-rs-edit],[data-rs-conf],[data-rs-cancel],[data-rs-save],[data-rs-canceledit],[data-rs-wigo]'); if (!b) return;
+  var c = $(cid), d = b.dataset, byId = function (id) { return RS.actions.filter(function (a) { return a.id === id; })[0]; };
+  try {
+    if (d.rsG != null) { RS.sel = d.rsG; rsPaint(cid, edit); return; }
+    if (d.rsRefresh != null) { await rsLoad(RS.root); rsPaint(cid, edit); paintTabs(); return; }
+    if (d.rsWigo != null) {
+      var W = RS.wi, rows = [], ends = latestEnds(TS.ends);
+      RS.cache.forEach(function (x) { var S2 = delayModel(x.G0, x.rows, ends, W.line, W.style, W.n); if (S2) rows.push({ g: x.g, a: x.s, b: shortSummary(S2.bal, S2.days) }); });
+      RS.wiRes = { line: W.line, style: W.style, n: W.n, rows: rows }; rsPaint(cid, edit); return;
+    }
+    if (!edit) return;
+    if (d.rsEdit != null) { RS.edit = d.rsEdit; rsPaint(cid, edit); return; }
+    if (d.rsCanceledit != null) { RS.edit = null; rsPaint(cid, edit); return; }
+    var user = $('uName').value.trim();
+    if (d.rsConf != null || d.rsCancel != null) {
+      var a = byId(d.rsConf != null ? d.rsConf : d.rsCancel); if (!a) return; if (!user) { alert(t('lcNeedName')); return; }
+      await rsWrite(Object.assign({}, a, { status: d.rsConf != null ? 'CONFIRMED' : 'CANCELLED', by: user, at: new Date().toISOString() })); rsPaint(cid, edit); paintTabs(); return;
+    }
+    if (d.rsSave != null) {
+      var f = function (n) { return c.querySelector('[data-f="' + n + '"]'); }, err = c.querySelector('[data-rs-err]'), type = f('type').value, qty = +f('qty').value, from = f('from').value, to = f('to').value, note = f('note').value.trim(), hasQty = ACTION_QTY.indexOf(type) >= 0;
+      var bad = !f('group').value ? t('rsErrGroup') : (hasQty && !(qty > 0)) ? t('rsErrQty') : (hasQty && (!from || !to || from > to)) ? t('rsErrDates') : (!hasQty && !note) ? t('rsErrNote') : '';
+      if (bad) { err.textContent = bad; return; }
+      if (!user) { alert(t('lcNeedName')); return; }
+      var rec = { id: RS.edit || (tStamp() + '-' + Math.random().toString(36).slice(2, 6)), group: f('group').value, type: type, qty: hasQty ? qty : null, from: from || '', to: to || '', status: f('status').value, note: note, by: user, at: new Date().toISOString() };
+      await rsWrite(rec); RS.edit = null; RS.sel = rec.group; rsPaint(cid, edit); paintTabs();
+    }
+  } catch (er) { alert(er.message || String(er)); }
+}
+// ---- Consolidator tab
+window.rsOpen = function () {
+  var c = $('rsC'); if (!c) return;
+  if (!LCDIR) { c.innerHTML = '<div class="card"><div class="empty">' + esc(t('rsNoData')) + '</div></div>'; return; }
+  rsLoad(LCDIR).then(function () { rsPaint('rsC', true); paintTabs(); }).catch(function (e) { c.innerHTML = '<div class="card st-bad">' + esc(e.message) + '</div>'; });
+};
+// ---- Supervisor role (read-only)
+async function supUse(d) {
+  await rsLoad(d); $('sInfo').className = 'small st-ok'; $('sInfo').textContent = '✓ ' + t('rsConnected', [d.name]); rsPaint('rsS', false);
+}
+$('sConnect').onclick = async function () { try { await supUse(await chooseDir('tdata', 'lcdata', 'read')); paintSupReuse(); } catch (e) { if (e.name !== 'AbortError') { $('sInfo').className = 'small st-bad'; $('sInfo').textContent = e.message; } } };
+$('sReuse').onclick = async function () { try { var d = await reuseDir('tdata', 'read'); if (d) await supUse(d); else $('sInfo').textContent = t('tReuseNone'); } catch (e) { $('sInfo').textContent = e.message; } };
+async function paintSupReuse() { var d = await KV.get('tdata'); $('sReuse').hidden = !d; if (d) $('sReuse').textContent = t('tReuseBtn', [d.name]); }
+paintSupReuse();
+window.supRender = function () { if (RS.root && !$('supView').hidden) rsPaint('rsS', false); else if (!RS.root) $('rsS').innerHTML = '<div class="empty">' + esc(t('rsNeedConn')) + '</div>'; };
+</script>
 <script>// ===================== CLOSE REPORT + ACTIVITY (IE Báo cáo máy) =====================
 function stamp16(iso) { return String(iso || '').slice(5, 16).replace('T', ' '); }
 function safeName(s) { return String(s || '').replace(/[^\w\-]+/g, '_'); }
@@ -2971,6 +3252,9 @@ function buildEvents(closed, dbap) {
     var by = {}; (p.rows || []).forEach(function (r) { by[r.group] = (by[r.group] || 0) + 1; });
     (p.groups && p.groups.length ? p.groups : Object.keys(by)).forEach(function (g) { push({ at: p.at, by: p.by, kind: 'send', group: g, line: '', pu: '', style: '', text: t('aDetailRows', [by[g] || 0]) }); });
   });
+  (RS.actionsRaw || []).forEach(function (a) {          // actions against the shortage (every save is one entry)
+    push({ at: a.at, by: a.by, kind: 'action', group: a.group, line: '', pu: '', style: '', text: t('rsAt' + a.type) + (a.qty ? ' ' + a.qty : '') + (a.from ? ' · ' + d2(a.from) + (a.to && a.to !== a.from ? '–' + d2(a.to) : '') : '') + ' · ' + t('rsSt' + a.status) + (a.note ? ' · ' + a.note : '') });
+  });
   (TS.reviews || []).forEach(function (r) {
     var k = String(r.key || '').split('|'), from = k[1] || '', parts = [];
     var kind = r.decision === 'REMOVE' ? (sameReason(r.reason) ? 'same' : 'remove') : (r.decision === 'ADJUST' ? 'adjust' : 'keep');
@@ -3007,7 +3291,7 @@ async function actLoad() {
   if (!LCDIR) { $('actEmpty').hidden = false; $('actCard').hidden = true; return; }
   $('actEmpty').hidden = true; $('actCard').hidden = false;
   var since = new Date(Date.now() - 90 * 864e5).toISOString();
-  await tLoadAll(LCDIR); var closed = await pReadDir(LCDIR, 'prep/closed'), dbap = await readDbApproved(LCDIR, since);
+  await tLoadAll(LCDIR); RS.actionsRaw = await pReadDir(LCDIR, 'prep/actions'); var closed = await pReadDir(LCDIR, 'prep/closed'), dbap = await readDbApproved(LCDIR, since);
   ACT.ev = buildEvents(closed, dbap); ACT.loaded = true;
   if (!$('aFrom').value) { var d0 = new Date(Date.now() - 30 * 864e5); $('aFrom').value = d0.toISOString().slice(0, 10); }
   fillActSelects(); renderActivity();
@@ -3085,7 +3369,8 @@ function setTab(tb) {
   TAB = tb; try { localStorage.setItem('mdb_tab', tb); } catch (e) { }
   [].forEach.call(document.querySelectorAll('[data-pane]'), function (p) { p.hidden = p.dataset.pane !== tb; });
   [].forEach.call(document.querySelectorAll('#mainTabs [data-tab]'), function (b) { b.classList.toggle('on', b.dataset.tab === tb); });
-  $('savebar').hidden = !(tb === 'db' && RV && ROLE !== 'tech');
+  $('savebar').hidden = !(tb === 'db' && RV && ROLE !== 'tech' && ROLE !== 'sup');
+  if (tb === 'resid' && window.rsOpen) rsOpen();
   if (tb === 'prep') { ensurePrep(); if (window.refreshPrepData) refreshPrepData(); }
   if (tb === 'activity') { applyPh(); actLoad(); }
   if (tb === 'notice') { $('noticeEmpty').hidden = !!LCDIR; if (LCDIR) renderNotices(); }
@@ -3103,6 +3388,7 @@ function paintTabs() {
   var nRev = RV ? RV.items.filter(function (it) { return it.bucket === 'review'; }).length : 0;
   lbl('db', nRev ? '<span class="cnt">' + nRev + '</span>' : '');
   lbl('prep', '');
+  var nS = window.rsShortCount && RS.root ? rsShortCount() : 0; lbl('resid', nS ? '<span class="cnt">' + nS + '</span>' : '');
   lbl('activity', '');
   var nN = (PS.notices || []).filter(function (n) { return !(PS.noticeRes || []).some(function (r) { return r.id === n.id; }); }).length;
   lbl('notice', nN ? '<span class="cnt">' + nN + '</span>' : '');
@@ -3111,7 +3397,7 @@ $('mainTabs').onclick = function (e) { var b = e.target.closest('[data-tab]'); i
 window.setTabMain = setTab; window.paintTabs = paintTabs;
 // role switch: IE Tech sees only "Duyệt chuẩn bị"
 var _setRole = setRole;
-setRole = function (r) { _setRole(r); $('mainTabs').hidden = r === 'tech'; if (r !== 'tech') setTab(TAB); };
+setRole = function (r) { _setRole(r); $('mainTabs').hidden = r === 'tech' || r === 'sup'; if (r !== 'tech' && r !== 'sup') setTab(TAB); };
 setRole(ROLE);
 
 if (window.paintRemember) paintRemember();

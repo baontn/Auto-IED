@@ -245,3 +245,74 @@ function groupGrid(mbl, group, prepRows, avail, fromKey, toKey, puMap, ends) {
   days.forEach(function (d) { tot[d] = (prodTot[d] || 0) + (prepTot[d] || 0); bal[d] = a == null ? null : a - tot[d]; });
   return { days: days, lines: lines, order: order, prod: prodTot, prep: prepTot, total: tot, avail: a, bal: bal };
 }
+
+// ===================== RESIDUAL SHORTAGE after IE Tech's decisions, actions, what-if (pure functions) =====================
+function isoMs(d) { return Date.parse(d + 'T00:00:00Z'); }
+function msIso(ms) { return new Date(ms).toISOString().slice(0, 10); }
+// Step 1: production per line/style after IE Tech's loading dates and end dates (the same adjustments as the IE Tech grid).
+// G0 = latest proposal grid of the machine group (days as ISO strings), rows = prep rows of the group (decisions applied, dates as ISO), ends = latestEnds(...)
+function adjustLines(G0, rows, ends) {
+  var days = G0.days, dms = days.map(isoMs), G = { lines: {} }, runInfo = {};
+  Object.keys(G0.lines).forEach(function (l) { var st = {}; Object.keys(G0.lines[l].styles).forEach(function (s) { st[s] = Object.assign({}, G0.lines[l].styles[s]); }); G.lines[l] = Object.assign({}, G0.lines[l], { styles: st }); });
+  rows.forEach(function (x) { if (x.loadActual && G.lines[x.line]) shiftProduction(G.lines[x.line].styles, x, isoMs(x.load), isoMs(x.loadActual), dms, msIso); });
+  Object.keys(G0.lines).forEach(function (l) {
+    var run = runningStyle(G0.lines[l].styles, days); if (!run) return;
+    var pe = runEnd(G0.lines[l].styles, run, days), e = ends && ends[l + '|' + run];
+    runInfo[l] = { style: run, plan: pe, eff: e && e.endDate ? e.endDate : pe, edited: !!(e && e.endDate && e.endDate !== pe) };
+    if (e && e.endDate) adjustRunningEnd(G.lines[l].styles, run, isoMs(e.endDate), days, isoMs);
+  });
+  return { G: G, runInfo: runInfo };
+}
+// Step 2: totals per day: production + prep (eff of the rows) against the machines available
+function totalsOf(G, rows, days, avail) {
+  var prodPu = {}, prepPu = {}, prod = {}, prep = {}, total = {}, bal = {};
+  Object.keys(G.lines).forEach(function (l) { var L = G.lines[l]; Object.keys(L.styles).forEach(function (s) { Object.keys(L.styles[s]).forEach(function (d) { var k = L.pu + '|' + d; prodPu[k] = (prodPu[k] || 0) + L.styles[s][d]; prod[d] = (prod[d] || 0) + L.styles[s][d]; }); }); });
+  rows.forEach(function (x) { if (!x.eff) return; (x.days || []).forEach(function (d) { var k = x.pu + '|' + d; prepPu[k] = (prepPu[k] || 0) + x.eff; prep[d] = (prep[d] || 0) + x.eff; }); });
+  days.forEach(function (d) { total[d] = (prod[d] || 0) + (prep[d] || 0); bal[d] = avail == null ? null : avail - total[d]; });
+  return { days: days, avail: avail, G: G, prodPu: prodPu, prepPu: prepPu, prod: prod, prep: prep, total: total, bal: bal };
+}
+function groupModel(G0, rows, ends) { var A = adjustLines(G0, rows, ends), M = totalsOf(A.G, rows, G0.days, G0.avail); M.runInfo = A.runInfo; return M; }
+// shortage summary of a model: days below zero, the worst day, first and last short day
+function shortSummary(bal, days) {
+  var neg = days.filter(function (d) { return bal[d] != null && bal[d] < 0; }), worst = null;
+  neg.forEach(function (d) { if (!worst || bal[d] < bal[worst]) worst = d; });
+  return { n: neg.length, of: days.length, days: neg, worst: worst, gap: worst ? -bal[worst] : 0, first: neg[0] || null, last: neg[neg.length - 1] || null, sum: neg.reduce(function (s, d) { return s - bal[d]; }, 0) };
+}
+// actions of the Consolidator (one record per change, latest per id wins)
+var ACTION_TYPES = ['RENT', 'BUY', 'BORROW', 'DELAY', 'OTHER'], ACTION_QTY = ['RENT', 'BUY', 'BORROW'];
+function latestActions(list) {
+  var m = {}; (list || []).slice().sort(function (a, b) { return String(a.at).localeCompare(String(b.at)); }).forEach(function (r) { if (r && r.id) m[r.id] = r; });
+  return Object.keys(m).map(function (k) { return m[k]; });
+}
+// machines added per day by the actions of a group (cancelled ignored; delay / other carry no quantity): confirmed and still planned
+function actionCover(actions, group, days) {
+  var c = {}, p = {}; days.forEach(function (d) { c[d] = 0; p[d] = 0; });
+  (actions || []).forEach(function (a) {
+    if (a.group !== group || a.status === 'CANCELLED' || !(+a.qty > 0) || ACTION_QTY.indexOf(a.type) < 0) return;
+    days.forEach(function (d) { if ((!a.from || d >= a.from) && (!a.to || d <= a.to)) { if (a.status === 'CONFIRMED') c[d] += +a.qty; else p[d] += +a.qty; } });
+  });
+  return { confirmed: c, planned: p };
+}
+// What-if: line `line` loads `style` n working days later. That style and every style after it on the line move, the style before it keeps running through the gap, their prep moves with them.
+// Nothing is saved. Returns the totals of the scenario (same shape as groupModel) or null when the line / style is not in this group.
+function delayModel(G0, rows, ends, line, style, n) {
+  var A = adjustLines(G0, rows, ends), days = G0.days, idx = {}; days.forEach(function (d, i) { idx[d] = i; });
+  var L = A.G.lines[line]; if (!L || !L.styles[style]) return null;
+  var first = function (s) { var k = Object.keys(L.styles[s]).sort()[0]; return k || '9'; };
+  var order = Object.keys(L.styles).sort(function (a, b) { return first(a).localeCompare(first(b)); }), at = order.indexOf(style), moved = order.slice(at), prev = at > 0 ? order[at - 1] : null;
+  var old = {}; moved.forEach(function (s) { old[s] = L.styles[s]; });
+  var gapStart = idx[first(style)];
+  moved.forEach(function (s) {
+    var q = {}; Object.keys(old[s]).forEach(function (d) { var j = idx[d] + n; if (idx[d] != null && j < days.length) q[days[j]] = old[s][d]; });
+    if (Object.keys(q).length) L.styles[s] = q; else delete L.styles[s];
+  });
+  if (prev && L.styles[prev]) {
+    var ks = Object.keys(L.styles[prev]).sort(), lastK = ks[ks.length - 1], v = L.styles[prev][lastK];
+    for (var i = idx[lastK] + 1; i < gapStart + n && i < days.length; i++) L.styles[prev][days[i]] = v;
+  }
+  var rows2 = rows.map(function (x) {
+    if (x.line !== line || moved.indexOf(x.to) < 0) return x;
+    var y = Object.assign({}, x); y.days = (x.days || []).map(function (d) { return idx[d] != null && idx[d] + n < days.length ? days[idx[d] + n] : null; }).filter(Boolean); return y;
+  });
+  return totalsOf(A.G, rows2, days, G0.avail);
+}
