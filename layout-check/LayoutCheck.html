@@ -1,0 +1,1814 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Layout Machine Check</title>
+<!-- SheetJS: local copy first (xlsx.full.min.js next to this file), CDN as fallback -->
+<script src="xlsx.full.min.js"></script>
+<script>if(!window.XLSX){document.write('<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"><\/script>');}</script>
+<style>
+:root{--bg:#f3f4f6;--panel:#fff;--text:#1d2330;--muted:#6b7280;--line:#e2e5ea;--accent:#1f6feb;--accent-tx:#fff;
+--ok:#15803d;--okbg:#e7f6ec;--warn:#9a6700;--warnbg:#fff5d6;--bad:#c4202b;--badbg:#fde8e8;--info:#0b5cad;--infobg:#e6f0ff;--sel:#eaf1ff}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1218;--panel:#181c24;--text:#e6e9ef;--muted:#9aa3b2;--line:#2b313d;--accent:#4c8dff;--accent-tx:#0b0f17;
+--ok:#56d364;--okbg:#12301b;--warn:#e3b341;--warnbg:#3a2d0b;--bad:#ff7b72;--badbg:#3d1416;--info:#79b8ff;--infobg:#132a46;--sel:#1c2a40;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 "Segoe UI",Roboto,Arial,sans-serif}
+button{font:inherit;padding:6px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--text);cursor:pointer}
+button:hover:not(:disabled){border-color:var(--accent)}
+button.primary{background:var(--accent);color:var(--accent-tx);border-color:var(--accent)}
+button:disabled{opacity:.4;cursor:not-allowed}
+input,select,textarea{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--text)}
+.muted{color:var(--muted)} .small{font-size:12px}
+.tag{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;white-space:nowrap}
+.t-ok{background:var(--okbg);color:var(--ok)}.t-warn{background:var(--warnbg);color:var(--warn)}
+.t-bad{background:var(--badbg);color:var(--bad)}.t-info{background:var(--infobg);color:var(--info)}
+table{border-collapse:collapse;width:100%}
+th,td{border-bottom:1px solid var(--line);padding:5px 8px;text-align:left;vertical-align:top}
+th{position:sticky;top:0;background:var(--panel);color:var(--muted);font-weight:600;font-size:12px}
+td.n,th.n{text-align:right}
+/* top bar */
+header{background:var(--panel);border-bottom:1px solid var(--line);padding:8px 16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;position:sticky;top:0;z-index:5}
+header h1{font-size:16px;margin:0 8px 0 0}
+.tabs{display:flex;gap:4px}
+.tabs button{border:none;border-radius:8px}
+.tabs button.on{background:var(--sel);color:var(--accent);font-weight:600}
+.week{display:flex;gap:4px;align-items:center;margin-left:auto}
+.week b{min-width:170px;text-align:center}
+.user{display:flex;gap:6px;align-items:center}
+.chip{background:var(--sel);border-radius:16px;padding:4px 10px;font-weight:600}
+/* check tab */
+.check{display:grid;grid-template-columns:340px 1fr;gap:14px;padding:14px 16px;align-items:start}
+@media (max-width:900px){.check{grid-template-columns:1fr}}
+.side{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;position:sticky;top:64px}
+.side .head{padding:10px 12px;border-bottom:1px solid var(--line);display:flex;gap:8px;align-items:center}
+.side .head h2{font-size:15px;margin:0}
+.side .list{max-height:calc(100vh - 150px);overflow:auto}
+.item{padding:9px 12px;border-bottom:1px solid var(--line);cursor:pointer}
+.item:hover{background:var(--sel)}
+.item.on{background:var(--sel);box-shadow:inset 3px 0 0 var(--accent)}
+.item .st{font-weight:600;word-break:break-all}
+.work{display:flex;flex-direction:column;gap:12px;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.card h3{margin:0 0 8px;font-size:14px;display:flex;gap:8px;align-items:center}
+.num{display:inline-flex;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--accent-tx);align-items:center;justify-content:center;font-size:12px}
+.title{font-size:20px;font-weight:700;word-break:break-all}
+.banner{border-radius:10px;padding:12px 14px;font-size:16px;font-weight:600;margin-bottom:8px}
+.banner.ok{background:var(--okbg);color:var(--ok)} .banner.bad{background:var(--badbg);color:var(--bad)} .banner.warn{background:var(--warnbg);color:var(--warn)}
+.diffs{margin:0 0 8px;padding-left:20px}
+.decide{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+@media (max-width:700px){.decide{grid-template-columns:1fr}}
+.decide button{padding:10px;text-align:left}
+.decide button b{display:block;font-size:15px}
+.decide .p{border-color:var(--ok)} .decide .a{border-color:var(--warn)} .decide .f{border-color:var(--bad)}
+.file{border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-bottom:8px}
+.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+details summary{cursor:pointer;color:var(--accent)}
+.howto{line-height:1.9}
+/* status/activity */
+.page{padding:14px 16px;display:flex;flex-direction:column;gap:12px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px}
+.kpi .big{font-size:28px;font-weight:700}
+.bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin:6px 0}
+.bar i{display:block;height:100%;background:var(--ok)}
+.tablewrap{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:auto;max-height:65vh}
+/* modal + toasts */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:20;padding:16px}
+.modal{background:var(--panel);border-radius:12px;padding:20px;width:440px;max-width:100%;display:flex;flex-direction:column;gap:12px}
+.modal h2{margin:0}
+.modal label{display:flex;flex-direction:column;gap:4px;font-weight:600}
+.seg{display:flex;gap:6px}.seg button{flex:1}.seg button.on{background:var(--accent);color:var(--accent-tx);border-color:var(--accent)}
+.setup{border:1px dashed var(--line);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:6px}
+.setup div{display:flex;gap:8px;align-items:center;justify-content:space-between}
+#log{position:fixed;right:16px;bottom:16px;max-width:440px;display:flex;flex-direction:column;gap:6px;z-index:30}
+.msg{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:8px;padding:8px 12px;box-shadow:0 2px 10px rgba(0,0,0,.15);white-space:pre-wrap}
+.msg.err{border-left-color:var(--bad)}.msg.warn{border-left-color:var(--warn)}.msg.ok{border-left-color:var(--ok)}
+[hidden]{display:none!important}
+.check.withpdf{grid-template-columns:340px minmax(0,1fr) minmax(340px,42vw)}
+@media (max-width:900px){.check.withpdf{grid-template-columns:1fr}}
+#pdfPane{position:sticky;top:64px;height:calc(100vh - 80px);min-height:320px;display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+#pdfPane[hidden]{display:none}
+#pdfPane .ph{display:flex;gap:8px;align-items:center;padding:6px 10px;border-bottom:1px solid var(--line);background:var(--bg)}
+#pdfPane .ph b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+#pdfPane iframe{flex:1;border:0;width:100%;background:#fff}
+.pdfrows td input{width:100%}
+.pdfadd{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px}
+</style>
+<style>
+.lang{display:flex;gap:2px}.lang button{padding:3px 8px;font-size:12px}.lang button.on{background:var(--accent);color:var(--accent-tx);border-color:var(--accent)}
+.seg3 button{font-size:13px;padding:6px 4px}
+.tabs .cnt{display:inline-block;min-width:18px;padding:0 5px;margin-left:4px;border-radius:9px;background:var(--bad);color:#fff;font-size:11px;font-weight:600}
+.prevbad td{background:var(--warnbg)}
+.vcard{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.vcard.done{opacity:.75}
+.vhead{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:6px}
+.vhead .title{font-size:16px}
+.vact{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.linebar{padding:6px 12px;border-bottom:1px solid var(--line);display:flex;gap:6px;align-items:center}
+.linebar button{flex:1;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.linepanel{border-bottom:1px solid var(--line);padding:8px 12px;display:flex;flex-direction:column;gap:6px}
+.linegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:2px 6px;max-height:240px;overflow:auto}
+.linegrid label{display:flex;gap:4px;align-items:center;font-size:13px;cursor:pointer}
+.sugg{border:1px solid var(--line);border-radius:8px;max-height:260px;overflow:auto;margin:6px 0}
+.sugg .r{display:flex;gap:8px;align-items:center;padding:5px 8px;border-bottom:1px solid var(--line)}
+.sugg .r:last-child{border-bottom:none}
+.sugg .r .nm{font-weight:600;word-break:break-all}
+tr.tot td{font-weight:700;border-top:2px solid var(--text);border-bottom:none;background:var(--sel)}
+.note{background:var(--warnbg);color:var(--warn);border-radius:8px;padding:6px 10px;margin-top:6px}
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<div class="overlay" id="login">
+  <div class="modal">
+    <div class="row"><h2 data-i18n="appTitle"></h2><div class="lang" style="margin-left:auto"><button data-lang="vi">VI</button><button data-lang="en">EN</button></div></div>
+    <div class="muted small" data-i18n="appSub"></div>
+    <label><span data-i18n="yourName"></span><input id="lgName" data-i18n-ph="namePh" autocomplete="name"></label>
+    <div><b data-i18n="iAm"></b><div class="seg seg3" style="margin-top:4px">
+      <button data-role="IE" data-i18n="roleIE"></button><button data-role="Tech" data-i18n="roleTech"></button><button data-role="Consolidator" data-i18n="roleCons"></button><button data-role="Supervisor" data-i18n="roleSup"></button></div></div>
+    <label><span id="lgPuLbl"></span><select id="lgPU"></select></label>
+    <div class="setup">
+      <b data-i18n="filesOnce"></b>
+      <div><span id="lgDir"></span><button id="lgDirBtn"></button></div>
+      <div><span id="lgDb"></span><button id="lgDbBtn"></button></div>
+      <div><span id="lgLay"></span><button id="lgLayBtn"></button></div>
+      <div class="muted small" data-i18n="layoutFolderOpt"></div>
+    </div>
+    <button class="primary" id="lgStart" data-i18n="start"></button>
+    <div class="muted small" data-i18n="nameNote"></div>
+  </div>
+</div>
+
+<!-- ============ SETTINGS ============ -->
+<div class="overlay" id="settings" hidden>
+  <div class="modal">
+    <h2 data-i18n="settings"></h2>
+    <div class="setup">
+      <div><span id="stDir"></span><button id="stDirBtn" data-i18n="change"></button></div>
+      <div><span id="stDb"></span><button id="stDbBtn" data-i18n="change"></button></div>
+      <div><span id="stLay"></span><button id="stLayBtn" data-i18n="change"></button></div>
+    </div>
+    <label style="flex-direction:row;align-items:center;font-weight:normal;gap:6px"><input type="checkbox" id="stBase"><span data-i18n="inclBase"></span></label>
+    <button class="primary" id="stClose" data-i18n="close"></button>
+  </div>
+</div>
+
+<!-- ============ TOP BAR ============ -->
+<header>
+  <h1 data-i18n="appTitle"></h1><span class="tag t-info" id="verTag" title="Version">V4.3.1</span>
+  <nav class="tabs">
+    <button data-tab="check" data-i18n="tabCheck"></button>
+    <button data-tab="variation" data-i18n="tabVar"></button>
+    <button data-tab="status" data-i18n="tabStatus"></button>
+    <button data-tab="activity" data-i18n="tabAct"></button>
+  </nav>
+  <div class="week">
+    <button id="wkPrev" data-i18n-title="prevWeek">◀</button>
+    <b id="wkText"></b>
+    <button id="wkNext" data-i18n-title="nextWeek">▶</button>
+    <button id="wkToday" data-i18n="thisWeek"></button>
+  </div>
+  <div class="user">
+    <span class="chip" id="userChip"></span>
+    <div class="lang"><button data-lang="vi">VI</button><button data-lang="en">EN</button></div>
+    <button id="btnReload" data-i18n="refresh" data-i18n-title="refreshTip"></button>
+    <button id="btnPlan" data-i18n="loadPlan" data-i18n-title="loadPlanTip"></button>
+    <button id="btnSettings" data-i18n-title="settings">⚙</button>
+    <button id="btnLogout" data-i18n="logout"></button>
+  </div>
+</header>
+
+<!-- ============ TAB: CHECK ============ -->
+<section id="tab-check" class="check">
+  <aside class="side">
+    <div class="head"><h2 id="listTitle"></h2><select id="pu" style="margin-left:auto"></select></div>
+    <div class="linebar"><span class="muted small" data-i18n="lineFilter"></span><button id="btnLines"></button></div>
+    <div class="linepanel" id="linePanel" hidden>
+      <b class="small" data-i18n="pickLines"></b>
+      <input id="lineSearch" data-i18n-ph="searchLine">
+      <div class="row"><button id="lnAll" data-i18n="selectAll"></button><button id="lnNone" data-i18n="selectNone"></button></div>
+      <div class="linegrid" id="lineGrid"></div>
+      <button id="lnDone" class="primary" data-i18n="done"></button>
+    </div>
+    <div class="list" id="list"></div>
+  </aside>
+  <div class="work" id="work"></div>
+  <aside id="pdfPane" hidden><div class="ph"><b id="pdfTitle"></b><a id="pdfNew" target="_blank" rel="noopener"></a><button id="pdfClose">✕</button></div><iframe id="pdfFrame" title="PDF"></iframe></aside>
+</section>
+
+<!-- ============ TAB: VARIATION LOG ============ -->
+<section id="tab-variation" class="page" hidden>
+  <div class="kpis" id="vKpis"></div>
+  <div class="row">
+    <select id="vSt"><option value="ACTIVE" data-i18n="fActive"></option><option value="OPEN" data-i18n="vOpen"></option><option value="STILL_DIFF" data-i18n="vStill"></option>
+      <option value="WAITING_LAYOUT" data-i18n="vWait"></option><option value="CLOSED" data-i18n="vClosed"></option><option value="" data-i18n="fAll"></option></select>
+    <select id="vPU"><option value="" data-i18n="allPU"></option></select>
+    <input id="vSearch" data-i18n-ph="search" size="18">
+    <div class="seg" style="width:220px"><button id="vViewCards" class="on" data-i18n="viewCards"></button><button id="vViewTable" data-i18n="viewTable"></button></div>
+    <button id="btnExpVar" style="margin-left:auto" data-i18n="exportLog"></button>
+  </div>
+  <div id="vBody" style="display:flex;flex-direction:column;gap:10px"></div>
+</section>
+
+<!-- ============ TAB: STATUS ============ -->
+<section id="tab-status" class="page" hidden>
+  <div class="kpis" id="kpis"></div>
+  <div class="row">
+    <b data-i18n="styles"></b>
+    <select id="fPU"><option value="" data-i18n="allPU"></option></select>
+    <select id="fSt"><option value="" data-i18n="allResults"></option><option value="PENDING" data-i18n="PENDING"></option><option value="FAIL" data-i18n="FAIL"></option><option value="PASS" data-i18n="PASS"></option><option value="ACCEPTED" data-i18n="ACCEPTED"></option></select>
+    <span class="muted" id="stCount"></span>
+    <button id="btnExpStatus" style="margin-left:auto" data-i18n="exportXl"></button>
+  </div>
+  <div class="tablewrap" id="stTable"></div>
+</section>
+
+<!-- ============ TAB: ACTIVITY ============ -->
+<section id="tab-activity" class="page" hidden>
+  <div class="row">
+    <b data-i18n="whoWhat"></b>
+    <select id="aUser"></select>
+    <select id="aAct"></select>
+    <span class="muted" id="aCount"></span>
+    <button id="btnExpAct" style="margin-left:auto" data-i18n="exportXl"></button>
+  </div>
+  <div class="tablewrap" id="aTable"></div>
+</section>
+
+<div id="log"></div>
+
+<script>
+/* ================= CONFIG ================= */
+const CONFIG = {
+  planSheet: 'MasterPlan-Full',          // sheet in the weekly plan file
+  dbSheet: 'Machine Database',           // sheet in the Machine DB file
+  lineMapFile: 'Linemapping.xlsx',       // must sit inside the data folder (Line | PU)
+  stylePlanFile: 'stylePlan.json',       // written by "Load plan"
+  validationDir: 'validations',          // one JSON file per saved check
+  variationDir: 'variations',            // one JSON file per Consolidator action
+  activityDir: 'activity',               // one log file per person per day
+  pus: ['PU1', 'PU2', 'PU3'],          // fallback only; the real list is read from Linemapping.xlsx (column PU)
+  excludeSheets: /template|obd|sam|strap|summary|get_data|needle|machine code|calculation|arrange|^sheet/i,
+  ignoreStyles: /^(not set up|n\/a|-)$/i,
+  scanRows: 2000, scanCols: 60
+};
+
+/* ================= LANGUAGE (EN / VI) ================= */
+const I18N = {
+  en: {
+    roleTech: 'IE Tech', APPROVED: 'Approved', tabTech: '🔧 Layouts to fix',
+    stCHECK: 'To check', stRECHECK: 'Fixed — re-check', stCONS: 'With Consolidator', stTECH: 'With IE Tech', stDONE: 'Done',
+    ownIE: 'IE officer', ownCONS: 'Consolidator', ownTECH: 'IE Tech', ownDONE: 'Done', withWho: 'Now with: {0}',
+    tagApproved: 'Approved by Consolidator', tagRecheck: 'Fixed — waiting for IE re-check', tagUrgent: 'Urgent', tagRounds: '{0} rounds — to Supervisor',
+    inProgress: 'In progress elsewhere: {0} with Consolidator, {1} with IE Tech', techTitle: 'Layouts to fix ({0})', techNone: '🎉 No layout to fix for {0}.',
+    techAsk: 'Layout fix requested by {0} on {1}', techDisputed: 'Machines in dispute (from the IE check)', techPrev: 'Your last result: {0} difference(s) left',
+    techStep4: 'Your decision (IE Tech)', techDbWrong: '✔ Layout is correct — database is wrong', techDbWrongSub: 'Goes to the Consolidator', techFixed: '✔ I fixed the layout — check now',
+    techFixedSub: 'The system compares the layout with the database', techNeedLayout: 'Open the corrected layout file first (step 2).',
+    techSentCons: '{0}: sent to the Consolidator (database to fix).', techOk: '✅ {0}: layout = database. Sent to the IE officer for re-check.',
+    techLeft: '⚠ {0}: still {1} difference(s). Fix the layout further, or choose "Layout is correct — database is wrong".',
+    techOnly: 'Only IE Tech or Supervisor can do this.', recheckNote: 'Fixed: {0} — please check again. Machines that were wrong are highlighted.',
+    prevWrong: 'was wrong', autoOpened: 'Opened the same layout file as last time: {0}', howTech: 'Pick a style on the left. Open the layout, then confirm the layout is correct or that you fixed it.',
+    techDbWrongNote: 'IE Tech: layout is correct — {0}', techFixedNote: 'IE Tech fixed the layout — {0} difference(s) left',
+    kWaitCons: 'With Consolidator', kWaitTech: 'With IE Tech', kRecheck: 'Waiting for IE re-check', kRounds: 'Over 2 rounds',
+    thNow: 'Now with', crLAYOUT_FIXED: 'layout fixed', aVAR_TECH_DB_WRONG: 'IE Tech: layout correct, database wrong', aVAR_TECH_LAYOUT_FIXED: 'IE Tech: layout fixed', aDB_APPROVED: 'Approved in Consolidator tool',
+    consHint: 'Fix the database in the Consolidator tool (approval + log), paste into Table1, then click verify.',
+    appTitle: 'Layout Machine Check', appSub: 'Compare the machine list in the layout with the Machine Database before the style loads.',
+    yourName: 'Your name', namePh: 'e.g. Nguyen Van A', iAm: 'I am', roleIE: 'IE officer', roleCons: 'Consolidator', roleSup: 'Supervisor',
+    myPU: 'My PU', puFirst: 'PU to open first', filesOnce: 'Files (set once on this computer)', dataFolder: 'Data folder', machineDb: 'Machine Database',
+    notChosen: 'not chosen', choose: 'Choose…', change: 'Change…', start: 'Start', nameNote: 'Your name is saved with every check and action so everyone can see who did what.',
+    settings: 'Settings', inclBase: 'Also show styles that were already running when the first plan was loaded', close: 'Close', language: 'Language',
+    tabCheck: '✔ Check styles', tabVar: '🛠 Variation log', tabStatus: '📊 Status', tabAct: '🕘 Activity log',
+    prevWeek: 'Previous week', nextWeek: 'Next week', thisWeek: 'This week', weekLbl: 'Week {0} · {1} – {2}',
+    refresh: '⟳ Refresh', refreshTip: 'Get the latest data from the share folder', loadPlan: '📥 Load plan', loadPlanTip: 'Supervisor: load the new weekly plan', logout: 'Log out',
+    toCheck: 'To check ({0})', nothingLeft: '🎉 Nothing left to check for {0} this week.',
+    catNew: 'New this week', catCarry: 'From earlier week', catBase: 'Already running', lastFail: 'Last check: FAIL', layoutToFix: 'Layout to fix',
+    loadsFirst: 'Loads first on', then: 'Then',
+    howTitle: 'How to check a style', how1: 'Click a style on the left (styles that load first on your PU\'s lines).',
+    how2: 'The machines from the <b>Machine Database</b> appear automatically.', how3: 'Click <b>Open layout file</b> and choose the layout of that style.',
+    how4: 'Read the result, then click <b>Pass</b>, <b>Accept with remark</b> or <b>Fail</b>.',
+    howNote: 'A style disappears from the list once it is Passed or Accepted. A Failed style stays until it is fixed and checked again. Every difference is sent to the Consolidator in the Variation log.',
+    lastCheck: 'last check', consAsks: 'Consolidator asks to correct the layout', step1: 'Machine Database',
+    dbFound: '✅ Found: <b>{0} machines</b> ({1} types)', updated: 'updated {0}', olderIgnored: '(older versions ignored)', showList: 'Show machine list',
+    thMachine: 'Machine', thGroup: 'Group', thQty: 'Qty', thRemark: 'Remark', notInDb: '❌ This style is not in the Machine Database.',
+    similar: 'Similar styles in the database:', canStillFail: 'You can still open the layout and save FAIL with a comment.',
+    step2: 'Layout file', openLayout: '📂 Open layout file', addFile: '📂 Add another file',
+    layoutHint: 'Open the layout file of this style. If Bra and Pan are in different files, open both — they are added together.',
+    sheet: 'Sheet:', remove: 'Remove', noPane: 'No machine list (M/C table) found on this sheet — choose another sheet', machinesN: '{0} machines',
+    consistent: '✓ Layout is consistent', consistentTip: 'Machine list at the bottom = machines in the operation table', notConsistent: '✗ Layout is not consistent',
+    notConsistentTxt: 'The machine list at the bottom of the layout is different from the operation table (normal when a big layout is split into smaller layouts because of a small SMV). Check it:',
+    paneVsTable: '{0}: machine list {1} / operation table {2}',
+    step3: 'Result', allMatch: '✅ Layout matches the Machine Database — {0} machines, {1} types.',
+    diffFound: '❌ {0} difference(s) found (database {1} machines, layout {2})', groupOk: '✅ Matches by machine group — only machine codes differ inside the same group. You can save Pass.', grpDiffFound: '❌ {0} machine group(s) differ (database {1} machines, layout {2})', grpLine: 'database {0}, layout {1} ({2})',
+    pdfTag: 'PDF', pdfNote: 'PDF file: it cannot be read automatically. Open the PDF and type the machine lines below.', pdfView: 'View PDF here', pdfNewTab: 'Open in new tab',
+    pdfCode: 'Machine code', pdfQty: 'Qty', pdfAdd: 'Add', pdfPasteTitle: 'Paste a machine list (copied from the PDF)', pdfPasteBtn: 'Read list', pdfPasteDone: '{0} lines added, {1} lines ignored.',
+    pdfNoGroup: 'No group', pdfTotal: 'Typed total: {0} machines', pdfConfirm: 'I compared every line with the PDF file', pdfEmpty: 'No line yet. Type a machine code and quantity, or paste a list.',
+    pdfConfirmNeed: 'Tick "I compared every line with the PDF file" before saving Pass or Accepted.', pdfWarn3: 'Layout typed by hand from a PDF: the numbers come from the checker, compare every line with the PDF.',
+    pdfPassTip: 'Tick the PDF comparison confirmation first', pdfAutoComment: 'PDF layout, checked manually: {0}', pdfPh: 'e.g. 1SLM', pdfBrowseTip: 'Excel or PDF layout',
+    selfBad: '⚠ The machine list and the operation table of the layout differ (see step 2). If this layout is split from a bigger layout, you can still save Pass; the warning is recorded with the check.', onlyDiff: 'Show only differences in the table',
+    thDb: 'Database', thLayout: 'Layout', thDiff: 'Difference', thResult: 'Result',
+    rMATCH: 'Same', rQTY: 'Different qty', rDBONLY: 'Only in database', rLAYONLY: 'Only in layout',
+    exMore: 'Layout needs {0}, database has {1} → {2} more in layout', exLess: 'Layout needs {0}, database has {1} → {2} fewer in layout',
+    exDbOnly: 'In database ({0}) but not used in layout', exLayOnly: 'Used in layout ({0}) but not in database',
+    step4: 'Your decision', commentPh: 'Comment — needed for Accept with remark and Fail (e.g. what must be fixed, who was informed)',
+    bPass: '✅ Pass', bPassSub: 'Layout = database (by machine group)', bPassTip: 'Only possible when every machine group matches',
+    bAcc: '⚠ Accept with remark', bAccSub: 'Differences are known — Consolidator will align the database',
+    bFail: '❌ Fail', bFailSub: 'Layout or database must be corrected', savedAs: 'Saved as <b>{0}</b>.',
+    PASS: 'Pass', ACCEPTED: 'Accepted with remark', FAIL: 'Fail', PENDING: 'Not checked yet',
+    needName: 'Please type your name.', needFiles: 'Please choose the data folder and the Machine Database file first.',
+    needComment: 'Please write a comment for "{0}".', welcome: 'Welcome {0}!', savedMsg: '{0} saved as {1}.', varsSent: '{0} variation(s) sent to the Variation log.',
+    noPlan: 'No plan loaded yet. A supervisor must click "📥 Load plan".', latestLoaded: 'Latest data loaded.', reading: 'Reading {0}…',
+    planLoaded: 'Plan loaded: {0} – {1}\n{2} styles, {3} new.', unmappedMsg: 'These lines have no PU in {0}:\n{1}\nAdd them, then click ⟳ Refresh.',
+    onlySupPlan: 'Only a supervisor can load the plan.', noLayoutSheet: '{0}: no layout sheet found.',
+    // status
+    styles: 'Styles', allPU: 'All PU', allResults: 'All results', stylesN: '{0} style(s)', exportXl: 'Export to Excel',
+    pctDone: '{0}% done', checkedThisWeek: 'styles checked this week', openEarlier: '+ {0} still open from earlier weeks',
+    kpiLine: '✅ Pass {0} · ⚠ Accepted {1} · ❌ Fail {2} · ⏳ Not checked {3}', openVarsKpi: '🛠 Open variations: {0}', noStyles: 'No styles for this week.',
+    thPU: 'PU', thStyle: 'Style', thLoadsFirst: 'Loads first', thWhen: 'When', thCheckedBy: 'Checked by', thSavedAt: 'Saved at', thDiffs: 'Diff.', thComment: 'Comment',
+    earlierWeek: 'Earlier week',
+    // activity
+    whoWhat: 'Who did what this week', everyone: 'Everyone', allActions: 'All actions', actionsN: '{0} action(s)',
+    thTime: 'Time', thName: 'Name', thRole: 'Role', thAction: 'Action', thDetail: 'Detail',
+    aLOGIN: 'Logged in', aLOGOUT: 'Logged out', aLOAD_PLAN: 'Loaded weekly plan', aOPEN_STYLE: 'Opened style', aOPEN_LAYOUT: 'Opened layout file',
+    aCHANGE_SHEET: 'Changed layout sheet', aSAVE_PASS: 'Saved PASS', aSAVE_ACCEPTED: 'Saved ACCEPTED', aSAVE_FAIL: 'Saved FAIL', aEXPORT: 'Exported to Excel',
+    aSETTINGS: 'Changed settings', aVAR_DB_UPDATED: 'Updated database (verified)', aVAR_LAYOUT_TO_FIX: 'Sent back: layout to fix', aVAR_REOPEN: 'Re-opened variation', aCOPY_LIST: 'Copied correction list',
+    // variations
+    vOpen: 'Open', vStill: 'Updated but still different', vWait: 'Waiting for IE to fix layout', vClosed: 'Closed',
+    crDB_FIXED: 'database corrected', crRECHECKED: 're-checked',
+    kOpen: 'Open variations', kWait: 'Waiting for layout fix', kClosed: 'Closed', kStyles: 'Styles with open variation',
+    fActive: 'Not closed', fAll: 'All', viewCards: 'By style', viewTable: 'Table', search: 'Search style…', exportLog: 'Export variation log',
+    varNone: '🎉 No variation here — everything is at 0.', remainingN: 'Still to fix: {0}', varZero: '✅ Variation = 0 for this check',
+    foundBy: 'Found by {0} on {1}', ieComment: 'IE comment', thDbCheck: 'DB at check', thDbNow: 'DB now', thToFix: 'Still to fix', thStatus: 'Status',
+    copyList: '📋 Copy corrected machine list', copyTip: 'Full machine list of this style (layout qty, today\'s date) to paste into the Machine Database',
+    verify: '✅ Database updated — verify', layoutFix: '↩ Layout must be fixed', reopen: 'Undo', consOnly: 'Only the Consolidator or Supervisor can do this.',
+    copied: 'Copied {0} rows. Paste them into the "Machine Database" sheet (as new rows with today\'s date, or replace the old rows of this style). Then click "verify".',
+    verifyAllOk: '✅ {0}: all variations closed — variation = 0.', verifySome: '⚠ {0}: {1} variation(s) still different:\n{2}',
+    askLayoutNote: 'What must the IE change in the layout?', sentBack: '{0} sent back to IE to fix the layout.',
+    thFoundAt: 'Found at', thFoundBy: 'Found by', thType: 'Type', thClosedBy: 'Closed by', thClosedAt: 'Closed at', thLastAction: 'Last action',
+    lineFilter: 'My lines:', allLines: 'All lines', linesN: '{0} lines', pickLines: 'Tick the lines you are in charge of', searchLine: 'Search line…',
+    selectAll: '✓ Tick all shown', selectNone: 'Clear (show all lines)', done: 'Done', toCheckOf: 'To check ({0} of {1})',
+    noLinesForPU: 'No line of this PU in the plan.', aSET_LINES: 'Set my lines',
+    layoutFolder: 'Layout folder', layoutFolderOpt: 'optional — the big folder where IEs save layouts', notSetOpt: 'not set (optional)',
+    suggestTitle: 'Layout files found for this style', sameStyle: 'Same style', sameBase: 'Same style, other suffix', sameArt: 'Same article, other colour',
+    noSuggest: 'No file name contains this style code. Type part of the name below, or Browse.', searchLayout: 'Search file name…',
+    browse: '📂 Browse…', rescan: '⟳ Rescan', indexed: '{0} files in "{1}" · indexed {2}', scanning: '⏳ Scanning layout folder… {0} files',
+    open: 'Open', noLayoutRoot: 'Tip: set the Layout folder in ⚙ Settings — the tool will then find the layout files for you.',
+    allowLayRoot: '🔓 Allow access to layout folder', addAnother: '＋ Add another file', hideList: 'Hide list', searchResults: 'Search results',
+    permAgain: 'Click "{0}" again to allow access to: {1}', aSCAN_LAYOUTS: 'Indexed layout folder'
+,
+    sheetsUsed: 'Sheets with a machine table (ticked sheets are added together):', noPaneFile: 'No machine table (M/C) found in this file', totalSays: 'Total row says {0}', aTICK_SHEET: 'Changed layout sheets', totalRow: 'Total ({0} machine types)', totalDiff: 'Total differs', fileTotal: 'Total of ticked sheets: {0} machines'
+  },
+  vi: {
+    roleTech: 'IE Tech', APPROVED: 'Đã duyệt', tabTech: '🔧 Layout cần sửa',
+    stCHECK: 'Cần kiểm tra', stRECHECK: 'Đã sửa — kiểm tra lại', stCONS: 'Chờ IE Báo cáo máy', stTECH: 'Chờ IE Tech', stDONE: 'Hoàn tất',
+    ownIE: 'Nhân viên IE', ownCONS: 'IE Báo cáo máy', ownTECH: 'IE Tech', ownDONE: 'Hoàn tất', withWho: 'Đang ở: {0}',
+    tagApproved: 'IE Báo cáo máy đã duyệt', tagRecheck: 'Đã sửa — chờ IE kiểm tra lại', tagUrgent: 'Gấp', tagRounds: '{0} vòng — báo Giám sát',
+    inProgress: 'Đang xử lý ở bước khác: {0} chờ IE Báo cáo máy, {1} chờ IE Tech', techTitle: 'Layout cần sửa ({0})', techNone: '🎉 Không có layout cần sửa cho {0}.',
+    techAsk: 'Yêu cầu sửa layout của {0} ngày {1}', techDisputed: 'Các máy đang sai lệch (theo lần kiểm tra của IE)', techPrev: 'Kết quả lần trước của bạn: còn {0} sai lệch',
+    techStep4: 'Quyết định (IE Tech)', techDbWrong: '✔ Layout đúng — CSDL sai', techDbWrongSub: 'Chuyển cho IE Báo cáo máy', techFixed: '✔ Đã sửa layout — kiểm tra ngay',
+    techFixedSub: 'Hệ thống so sánh layout với CSDL', techNeedLayout: 'Hãy mở file layout đã sửa trước (bước 2).',
+    techSentCons: '{0}: đã chuyển IE Báo cáo máy (cần sửa CSDL).', techOk: '✅ {0}: layout = CSDL. Đã chuyển Nhân viên IE kiểm tra lại.',
+    techLeft: '⚠ {0}: còn {1} sai lệch. Tiếp tục sửa layout, hoặc chọn "Layout đúng — CSDL sai".',
+    techOnly: 'Chỉ IE Tech hoặc Giám sát được thực hiện.', recheckNote: 'Đã sửa: {0} — vui lòng kiểm tra lại. Các máy sai trước đó được tô màu.',
+    prevWrong: 'trước đó sai', autoOpened: 'Đã mở lại file layout lần trước: {0}', howTech: 'Chọn mã hàng ở cột trái. Mở layout, sau đó xác nhận layout đúng hoặc đã sửa.',
+    techDbWrongNote: 'IE Tech: layout đúng — {0}', techFixedNote: 'IE Tech đã sửa layout — còn {0} sai lệch',
+    kWaitCons: 'Chờ IE Báo cáo máy', kWaitTech: 'Chờ IE Tech', kRecheck: 'Chờ IE kiểm tra lại', kRounds: 'Quá 2 vòng',
+    thNow: 'Đang ở', crLAYOUT_FIXED: 'đã sửa layout', aVAR_TECH_DB_WRONG: 'IE Tech: layout đúng, CSDL sai', aVAR_TECH_LAYOUT_FIXED: 'IE Tech: đã sửa layout', aDB_APPROVED: 'Đã duyệt trong IE Báo cáo máy',
+    consHint: 'Sửa CSDL trong công cụ IE Báo cáo máy (có duyệt và nhật ký), dán vào Table1, sau đó bấm xác nhận.',
+    appTitle: 'Kiểm tra máy theo Layout', appSub: 'Đối chiếu danh sách máy trên layout với Cơ sở dữ liệu máy (Machine Database) trước khi mã hàng vào chuyền.',
+    yourName: 'Họ tên', namePh: 'VD: Nguyễn Văn A', iAm: 'Vai trò', roleIE: 'Nhân viên IE', roleCons: 'IE Báo cáo máy', roleSup: 'Giám sát',
+    myPU: 'PU của tôi', puFirst: 'PU hiển thị trước', filesOnce: 'Tệp dữ liệu (chỉ cài đặt 1 lần trên máy này)', dataFolder: 'Thư mục dữ liệu', machineDb: 'CSDL máy',
+    notChosen: 'chưa chọn', choose: 'Chọn…', change: 'Đổi…', start: 'Bắt đầu', nameNote: 'Họ tên được lưu kèm mỗi lần kiểm tra và thao tác để mọi người biết ai đã làm gì.',
+    settings: 'Cài đặt', inclBase: 'Hiển thị cả các mã hàng đang chạy khi tải kế hoạch lần đầu', close: 'Đóng', language: 'Ngôn ngữ',
+    tabCheck: '✔ Kiểm tra mã hàng', tabVar: '🛠 Nhật ký sai lệch', tabStatus: '📊 Tình trạng', tabAct: '🕘 Nhật ký thao tác',
+    prevWeek: 'Tuần trước', nextWeek: 'Tuần sau', thisWeek: 'Tuần này', weekLbl: 'Tuần {0} · {1} – {2}',
+    refresh: '⟳ Làm mới', refreshTip: 'Lấy dữ liệu mới nhất từ thư mục chung', loadPlan: '📥 Tải kế hoạch', loadPlanTip: 'Giám sát: tải kế hoạch tuần mới', logout: 'Đăng xuất',
+    toCheck: 'Cần kiểm tra ({0})', nothingLeft: '🎉 Đã kiểm tra xong tất cả mã hàng của {0} trong tuần này.',
+    catNew: 'Mới trong tuần', catCarry: 'Tồn tuần trước', catBase: 'Đang chạy', lastFail: 'Lần trước: KHÔNG ĐẠT', layoutToFix: 'Cần sửa layout',
+    loadsFirst: 'Vào chuyền đầu tiên tại', then: 'Tiếp theo',
+    howTitle: 'Cách kiểm tra một mã hàng', how1: 'Chọn mã hàng ở cột bên trái (mã hàng vào chuyền đầu tiên tại chuyền thuộc PU của bạn).',
+    how2: 'Danh sách máy trong <b>CSDL máy</b> hiển thị tự động.', how3: 'Bấm <b>Mở file layout</b> và chọn file layout của mã hàng.',
+    how4: 'Xem kết quả, sau đó bấm <b>Đạt</b>, <b>Chấp nhận có ghi chú</b> hoặc <b>Không đạt</b>.',
+    howNote: 'Mã hàng Đạt hoặc Chấp nhận sẽ không còn trong danh sách. Mã hàng Không đạt vẫn giữ lại đến khi được sửa và kiểm tra lại. Mọi sai lệch được chuyển cho Người tổng hợp tại Nhật ký sai lệch.',
+    lastCheck: 'lần kiểm tra trước', consAsks: 'Người tổng hợp yêu cầu sửa layout', step1: 'CSDL máy',
+    dbFound: '✅ Tìm thấy: <b>{0} máy</b> ({1} loại)', updated: 'cập nhật {0}', olderIgnored: '(bỏ qua phiên bản cũ)', showList: 'Xem danh sách máy',
+    thMachine: 'Máy', thGroup: 'Nhóm máy', thQty: 'SL', thRemark: 'Ghi chú', notInDb: '❌ Mã hàng này chưa có trong CSDL máy.',
+    similar: 'Mã hàng tương tự trong CSDL:', canStillFail: 'Vẫn có thể mở layout và lưu Không đạt kèm ghi chú.',
+    step2: 'File layout', openLayout: '📂 Mở file layout', addFile: '📂 Thêm file khác',
+    layoutHint: 'Mở file layout của mã hàng. Nếu Bra và Pan nằm ở hai file khác nhau, mở cả hai — số máy sẽ được cộng lại.',
+    sheet: 'Sheet:', remove: 'Bỏ', noPane: 'Không tìm thấy bảng máy (M/C) trên sheet này — hãy chọn sheet khác', machinesN: '{0} máy',
+    consistent: '✓ Layout thống nhất', consistentTip: 'Bảng máy cuối layout = số máy trong bảng công đoạn', notConsistent: '✗ Layout không thống nhất',
+    notConsistentTxt: 'Bảng máy cuối layout khác với bảng công đoạn (bình thường khi layout lớn được chia thành các layout nhỏ do SMV nhỏ). Vui lòng kiểm tra:',
+    paneVsTable: '{0}: bảng máy {1} / bảng công đoạn {2}',
+    step3: 'Kết quả', allMatch: '✅ Layout khớp với CSDL máy — {0} máy, {1} loại.',
+    diffFound: '❌ Có {0} sai lệch (CSDL {1} máy, layout {2} máy)', groupOk: '✅ Khớp theo nhóm máy — chỉ khác mã máy trong cùng nhóm. Có thể lưu Đạt.', grpDiffFound: '❌ Có {0} nhóm máy sai lệch (CSDL {1} máy, layout {2} máy)', grpLine: 'CSDL {0}, layout {1} ({2})',
+    pdfTag: 'PDF', pdfNote: 'File PDF không đọc tự động được. Mở PDF và nhập các dòng máy bên dưới.', pdfView: 'Xem PDF tại đây', pdfNewTab: 'Mở tab mới',
+    pdfCode: 'Mã máy', pdfQty: 'SL', pdfAdd: 'Thêm', pdfPasteTitle: 'Dán danh sách máy (copy từ PDF)', pdfPasteBtn: 'Đọc danh sách', pdfPasteDone: 'Đã thêm {0} dòng, bỏ qua {1} dòng.',
+    pdfNoGroup: 'Chưa có nhóm', pdfTotal: 'Tổng đã nhập: {0} máy', pdfConfirm: 'Tôi đã đối chiếu từng dòng với file PDF', pdfEmpty: 'Chưa có dòng nào. Nhập mã máy và số lượng, hoặc dán danh sách.',
+    pdfConfirmNeed: 'Cần tích "Tôi đã đối chiếu từng dòng với file PDF" trước khi lưu Đạt hoặc Chấp nhận.', pdfWarn3: 'Layout nhập tay từ PDF: số liệu do người kiểm tra nhập, cần đối chiếu từng dòng với file PDF.',
+    pdfPassTip: 'Cần tích xác nhận đã đối chiếu PDF', pdfAutoComment: 'Layout PDF, kiểm tra thủ công: {0}', pdfPh: 'VD: 1SLM', pdfBrowseTip: 'Layout Excel hoặc PDF',
+    selfBad: '⚠ Bảng máy và bảng công đoạn của layout khác nhau (xem bước 2). Nếu đây là layout chia từ layout lớn, vẫn có thể lưu Đạt; cảnh báo được ghi kèm kết quả kiểm tra.', onlyDiff: 'Chỉ hiển thị các dòng sai lệch',
+    thDb: 'CSDL', thLayout: 'Layout', thDiff: 'Chênh lệch', thResult: 'Kết quả',
+    rMATCH: 'Khớp', rQTY: 'Lệch số lượng', rDBONLY: 'Chỉ có trong CSDL', rLAYONLY: 'Chỉ có trong layout',
+    exMore: 'Layout cần {0}, CSDL có {1} → layout nhiều hơn {2}', exLess: 'Layout cần {0}, CSDL có {1} → layout ít hơn {2}',
+    exDbOnly: 'Có trong CSDL ({0}) nhưng layout không dùng', exLayOnly: 'Layout dùng ({0}) nhưng CSDL không có',
+    step4: 'Quyết định', commentPh: 'Ghi chú — bắt buộc khi Chấp nhận có ghi chú hoặc Không đạt (VD: cần sửa gì, đã báo cho ai)',
+    bPass: '✅ Đạt', bPassSub: 'Layout = CSDL (theo nhóm máy)', bPassTip: 'Chỉ chọn được khi mọi nhóm máy đều khớp',
+    bAcc: '⚠ Chấp nhận có ghi chú', bAccSub: 'Sai lệch đã biết — Người tổng hợp sẽ cập nhật CSDL',
+    bFail: '❌ Không đạt', bFailSub: 'Cần sửa layout hoặc CSDL', savedAs: 'Lưu với tên <b>{0}</b>.',
+    PASS: 'Đạt', ACCEPTED: 'Chấp nhận có ghi chú', FAIL: 'Không đạt', PENDING: 'Chưa kiểm tra',
+    needName: 'Vui lòng nhập họ tên.', needFiles: 'Vui lòng chọn thư mục dữ liệu và file CSDL máy trước.',
+    needComment: 'Vui lòng nhập ghi chú cho "{0}".', welcome: 'Xin chào {0}!', savedMsg: '{0} đã lưu: {1}.', varsSent: 'Đã chuyển {0} sai lệch vào Nhật ký sai lệch.',
+    noPlan: 'Chưa có kế hoạch. Giám sát cần bấm "📥 Tải kế hoạch".', latestLoaded: 'Đã tải dữ liệu mới nhất.', reading: 'Đang đọc {0}…',
+    planLoaded: 'Đã tải kế hoạch: {0} – {1}\n{2} mã hàng, {3} mã mới.', unmappedMsg: 'Các chuyền sau chưa có PU trong {0}:\n{1}\nBổ sung rồi bấm ⟳ Làm mới.',
+    onlySupPlan: 'Chỉ Giám sát được tải kế hoạch.', noLayoutSheet: '{0}: không tìm thấy sheet layout.',
+    styles: 'Mã hàng', allPU: 'Tất cả PU', allResults: 'Tất cả kết quả', stylesN: '{0} mã hàng', exportXl: 'Xuất Excel',
+    pctDone: 'Hoàn thành {0}%', checkedThisWeek: 'mã hàng đã kiểm tra trong tuần', openEarlier: '+ {0} mã còn tồn từ tuần trước',
+    kpiLine: '✅ Đạt {0} · ⚠ Chấp nhận {1} · ❌ Không đạt {2} · ⏳ Chưa kiểm tra {3}', openVarsKpi: '🛠 Sai lệch chưa đóng: {0}', noStyles: 'Không có mã hàng trong tuần này.',
+    thPU: 'PU', thStyle: 'Mã hàng', thLoadsFirst: 'Vào chuyền đầu', thWhen: 'Thời điểm', thCheckedBy: 'Người kiểm tra', thSavedAt: 'Thời gian lưu', thDiffs: 'Sai lệch', thComment: 'Ghi chú',
+    earlierWeek: 'Tuần trước',
+    whoWhat: 'Ai đã làm gì trong tuần', everyone: 'Tất cả mọi người', allActions: 'Tất cả thao tác', actionsN: '{0} thao tác',
+    thTime: 'Thời gian', thName: 'Họ tên', thRole: 'Vai trò', thAction: 'Thao tác', thDetail: 'Chi tiết',
+    aLOGIN: 'Đăng nhập', aLOGOUT: 'Đăng xuất', aLOAD_PLAN: 'Tải kế hoạch tuần', aOPEN_STYLE: 'Mở mã hàng', aOPEN_LAYOUT: 'Mở file layout',
+    aCHANGE_SHEET: 'Đổi sheet layout', aSAVE_PASS: 'Lưu ĐẠT', aSAVE_ACCEPTED: 'Lưu CHẤP NHẬN', aSAVE_FAIL: 'Lưu KHÔNG ĐẠT', aEXPORT: 'Xuất Excel',
+    aSETTINGS: 'Đổi cài đặt', aVAR_DB_UPDATED: 'Cập nhật CSDL (đã xác nhận)', aVAR_LAYOUT_TO_FIX: 'Trả lại: cần sửa layout', aVAR_REOPEN: 'Mở lại sai lệch', aCOPY_LIST: 'Sao chép danh sách sửa',
+    vOpen: 'Chưa xử lý', vStill: 'Đã cập nhật nhưng vẫn lệch', vWait: 'Chờ IE sửa layout', vClosed: 'Đã đóng',
+    crDB_FIXED: 'đã sửa CSDL', crRECHECKED: 'đã kiểm tra lại',
+    kOpen: 'Sai lệch chưa xử lý', kWait: 'Chờ sửa layout', kClosed: 'Đã đóng', kStyles: 'Mã hàng còn sai lệch',
+    fActive: 'Chưa đóng', fAll: 'Tất cả', viewCards: 'Theo mã hàng', viewTable: 'Dạng bảng', search: 'Tìm mã hàng…', exportLog: 'Xuất nhật ký sai lệch',
+    varNone: '🎉 Không có sai lệch — tất cả đã về 0.', remainingN: 'Còn phải sửa: {0}', varZero: '✅ Sai lệch = 0 cho lần kiểm tra này',
+    foundBy: 'Phát hiện bởi {0} lúc {1}', ieComment: 'Ghi chú của IE', thDbCheck: 'CSDL lúc KT', thDbNow: 'CSDL hiện tại', thToFix: 'Còn lệch', thStatus: 'Trạng thái',
+    copyList: '📋 Sao chép danh sách máy đã sửa', copyTip: 'Toàn bộ danh sách máy của mã hàng (SL theo layout, ngày hôm nay) để dán vào CSDL máy',
+    verify: '✅ Đã cập nhật CSDL — xác nhận', layoutFix: '↩ Cần sửa layout', reopen: 'Hoàn tác', consOnly: 'Chỉ Người tổng hợp hoặc Giám sát được thực hiện.',
+    copied: 'Đã sao chép {0} dòng. Dán vào sheet "Machine Database" (thêm dòng mới với ngày hôm nay, hoặc thay các dòng cũ của mã hàng). Sau đó bấm "xác nhận".',
+    verifyAllOk: '✅ {0}: tất cả sai lệch đã đóng — sai lệch = 0.', verifySome: '⚠ {0}: còn {1} sai lệch:\n{2}',
+    askLayoutNote: 'IE cần sửa gì trên layout?', sentBack: '{0} đã trả lại IE để sửa layout.',
+    thFoundAt: 'Ngày phát hiện', thFoundBy: 'Người phát hiện', thType: 'Loại', thClosedBy: 'Người đóng', thClosedAt: 'Ngày đóng', thLastAction: 'Thao tác cuối',
+    lineFilter: 'Chuyền phụ trách:', allLines: 'Tất cả chuyền', linesN: '{0} chuyền', pickLines: 'Chọn các chuyền bạn phụ trách', searchLine: 'Tìm chuyền…',
+    selectAll: '✓ Chọn tất cả đang hiển thị', selectNone: 'Bỏ lọc (hiện tất cả chuyền)', done: 'Xong', toCheckOf: 'Cần kiểm tra ({0}/{1})',
+    noLinesForPU: 'Không có chuyền nào của PU này trong kế hoạch.', aSET_LINES: 'Chọn chuyền phụ trách',
+    layoutFolder: 'Thư mục layout', layoutFolderOpt: 'không bắt buộc — thư mục chung nơi IE lưu layout', notSetOpt: 'chưa chọn (không bắt buộc)',
+    suggestTitle: 'File layout tìm thấy cho mã hàng này', sameStyle: 'Đúng mã hàng', sameBase: 'Đúng mã, khác hậu tố', sameArt: 'Cùng mã gốc, khác màu',
+    noSuggest: 'Không có tên file nào chứa mã hàng này. Nhập một phần tên file bên dưới hoặc bấm Duyệt.', searchLayout: 'Tìm tên file…',
+    browse: '📂 Duyệt…', rescan: '⟳ Quét lại', indexed: '{0} file trong "{1}" · quét lúc {2}', scanning: '⏳ Đang quét thư mục layout… {0} file',
+    open: 'Mở', noLayoutRoot: 'Gợi ý: chọn Thư mục layout trong ⚙ Cài đặt — phần mềm sẽ tự tìm file layout.',
+    allowLayRoot: '🔓 Cho phép truy cập thư mục layout', addAnother: '＋ Thêm file khác', hideList: 'Ẩn danh sách', searchResults: 'Kết quả tìm kiếm',
+    permAgain: 'Bấm "{0}" thêm một lần để cấp quyền truy cập: {1}', aSCAN_LAYOUTS: 'Quét thư mục layout',
+    sheetsUsed: 'Các sheet có bảng máy (sheet được đánh dấu sẽ được cộng lại):', noPaneFile: 'Không tìm thấy bảng máy (M/C) trong file này', totalSays: 'Dòng Total ghi {0}', aTICK_SHEET: 'Đổi sheet layout', totalRow: 'Tổng cộng ({0} loại máy)', totalDiff: 'Tổng lệch', fileTotal: 'Tổng các sheet đã chọn: {0} máy'
+  }
+};
+let LANG = localStorage.getItem('lcLang') || 'vi';
+const MISSING = new Set();
+function t(key, ...a) {
+  let s = (I18N[LANG] && I18N[LANG][key]) ?? I18N.en[key];
+  if (s === undefined) { MISSING.add(key); return key; }
+  return s.replace(/\{(\d)\}/g, (_, i) => a[+i] ?? '');
+}
+function applyStatic() {
+  document.querySelectorAll('[data-i18n]').forEach(el => el.innerHTML = t(el.dataset.i18n));
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => el.placeholder = t(el.dataset.i18nPh));
+  document.querySelectorAll('[data-i18n-title]').forEach(el => el.title = t(el.dataset.i18nTitle));
+  document.documentElement.lang = LANG;
+  document.querySelectorAll('.lang button').forEach(b => b.classList.toggle('on', b.dataset.lang === LANG));
+}
+
+/*CORE-START*/
+/* ================= PURE LOGIC (no browser APIs) ================= */
+const K = v => (v === null || v === undefined) ? '' : String(v).trim().toUpperCase();
+const NM = v => K(v).replace(/\s+/g, '');                 // machine-code / header normaliser
+const EPOCH = Date.UTC(1899, 11, 30);
+const serOf = (y, m, d) => Math.round((Date.UTC(y, m - 1, d) - EPOCH) / 864e5);
+const dateOf = s => new Date(EPOCH + s * 864e5);
+const pad = n => String(n).padStart(2, '0');
+function fmt(s, year = true) {
+  if (s === null || s === undefined) return '';
+  const d = dateOf(s);
+  return pad(d.getUTCDate()) + '/' + pad(d.getUTCMonth() + 1) + (year ? '/' + d.getUTCFullYear() : '');
+}
+function toSerial(v) {
+  if (typeof v === 'number' && isFinite(v)) return Math.floor(v);
+  if (v instanceof Date && !isNaN(v)) return serOf(v.getFullYear(), v.getMonth() + 1, v.getDate());
+  if (typeof v === 'string' && v.trim()) {
+    const s = v.trim(); let m;
+    if ((m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/))) return serOf(+m[1], +m[2], +m[3]);
+    if ((m = s.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{4})/))) return serOf(+m[3], +m[2], +m[1]); // d/m/y
+    const t = Date.parse(s);
+    if (!isNaN(t)) { const d = new Date(t); return serOf(d.getFullYear(), d.getMonth() + 1, d.getDate()); }
+  }
+  return null;
+}
+const weekStart = s => s - ((dateOf(s).getUTCDay() + 6) % 7);   // Monday
+function num(v) { if (typeof v === 'number') return v; const n = parseFloat(v); return isNaN(n) ? 0 : n; }
+
+function baseLine(s) { s = K(s); const m = s.match(/^[^\-_ (]+/); return m ? m[0] : s; }
+function lookupPU(map, ln) { const k = K(ln); if (map[k]) return map[k]; return map[baseLine(k)] || 'UNMAPPED'; }
+function pusOf(map, lines) { return [...new Set(lines.map(l => lookupPU(map, l)))]; }
+
+// sheet -> array of rows (absolute positions from A1)
+function sheetRows(ws, maxR = Infinity, maxC = Infinity) {
+  if (!ws || !ws['!ref']) return [];
+  const r = XLSX.utils.decode_range(ws['!ref']);
+  r.s.r = 0; r.s.c = 0;
+  r.e.r = Math.min(r.e.r, maxR - 1); r.e.c = Math.min(r.e.c, maxC - 1);
+  return XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: null, range: r, blankrows: true });
+}
+// find header row containing all required names (exact, case-insensitive)
+function findHeader(rows, required, scan = 20) {
+  for (let i = 0; i < Math.min(rows.length, scan); i++) {
+    const idx = {};
+    (rows[i] || []).forEach((v, c) => { const k = K(v); if (k && !(k in idx)) idx[k] = c; });
+    if (required.every(n => n in idx)) return { row: i, col: idx };
+  }
+  throw new Error('Header not found: ' + required.join(', '));
+}
+
+function parseLineMap(rows) {
+  const h = findHeader(rows, ['LINE', 'PU']); const map = {};
+  for (let i = h.row + 1; i < rows.length; i++) {
+    const r = rows[i] || []; const l = K(r[h.col.LINE]), p = K(r[h.col.PU]);
+    if (l && p) map[l] = p;
+  }
+  return map;
+}
+
+function parsePlan(rows) {
+  const h = findHeader(rows, ['LINE', 'STYLE NO', 'DATE']);
+  const styles = {}, disp = {}, linesSeen = {};
+  let start = null, end = null, n = 0;
+  for (let i = h.row + 1; i < rows.length; i++) {
+    const r = rows[i] || [];
+    const ln = K(r[h.col.LINE]), sk = K(r[h.col['STYLE NO']]), d = toSerial(r[h.col.DATE]);
+    if (!ln || !sk || d === null || CONFIG.ignoreStyles.test(sk)) continue;
+    if (!styles[sk]) { styles[sk] = {}; disp[sk] = String(r[h.col['STYLE NO']]).trim(); }
+    if (!(ln in styles[sk]) || d < styles[sk][ln]) styles[sk][ln] = d;
+    linesSeen[ln] = (linesSeen[ln] || 0) + 1;
+    if (start === null || d < start) start = d;
+    if (end === null || d > end) end = d;
+    n++;
+  }
+  if (!n) throw new Error('No valid plan rows (Line / Style No / Date).');
+  return { styles, disp, linesSeen, start, end, rows: n };
+}
+
+// stylePlan = { styles:{KEY:{style,firstDate,firstLines,otherLines,baseline,firstSeenLoad,lastLoad}}, loads:[] }
+function updateStylePlan(sp, plan, loadId, meta) {
+  const isFirst = Object.keys(sp.styles).length === 0;
+  let nNew = 0;
+  for (const [sk, lines] of Object.entries(plan.styles)) {
+    const arr = Object.entries(lines).sort((a, b) => a[1] - b[1] || a[0].localeCompare(b[0]));
+    const minD = arr[0][1];
+    const firstLines = arr.filter(x => x[1] === minD).map(x => x[0]);
+    const others = arr.filter(x => x[1] !== minD);
+    const rec = sp.styles[sk];
+    if (rec) {
+      if (rec.firstDate < plan.start) rec.otherLines = arr;           // first load already happened: frozen
+      else { rec.firstDate = minD; rec.firstLines = firstLines; rec.otherLines = others; } // future: may be rescheduled
+      rec.lastLoad = loadId;
+    } else {
+      sp.styles[sk] = { style: plan.disp[sk], firstDate: minD, firstLines, otherLines: others,
+        baseline: isFirst && minD === plan.start, firstSeenLoad: loadId, lastLoad: loadId };
+      nNew++;
+    }
+  }
+  sp.loads.push(Object.assign({ loadId, planStart: plan.start, planEnd: plan.end, planRows: plan.rows,
+    styles: Object.keys(plan.styles).length, newStyles: nNew }, meta || {}));
+  return nNew;
+}
+
+// "Đã duyệt" notes written by IE Báo cáo máy (data\\approvals) are not IE checks. Existing "Đạt" records are kept as they are.
+function isApproval(v) { return v.status === 'APPROVED'; }
+function setOfRows(rows, f) { const s = {}; (rows || []).forEach(d => { const q = num(d[f]); if (q > 0) s[NM(d.machine)] = (s[NM(d.machine)] || 0) + q; }); return s; }
+function sameMap(a, b) { const ka = Object.keys(a), kb = Object.keys(b); return ka.length === kb.length && ka.every(k => b[k] === a[k]); }
+// who has each style now: CHECK / RECHECK (IE officer), CONS (Consolidator), TECH (IE Tech), DONE
+function styleStages(vals, rawActs, db) {
+  const by = {}, actBy = {};
+  [...vals].sort((a, b) => String(a.savedAt).localeCompare(String(b.savedAt))).forEach(v => (by[K(v.style)] = by[K(v.style)] || []).push(v));
+  [...rawActs].sort((a, b) => String(a.at).localeCompare(String(b.at))).forEach(a => (actBy[a.valId] = actBy[a.valId] || []).push(a));
+  const out = {};
+  Object.entries(by).forEach(([sk, list]) => {
+    const v = list[list.length - 1];
+    let rounds = 0; for (let i = list.length - 1; i >= 0 && list[i].status === 'FAIL'; i--) rounds++;
+    const acts = actBy[v.valId] || [], last = acts[acts.length - 1] || null;
+    const cgs = checkGroups(v), prevDiff = (v.details || []).filter(d => d.result !== 'MATCH' && cgs.bad.has(grpKey(d.machine, d.group))).map(d => NM(d.machine));
+    let stage = 'DONE';
+    if (v.status === 'FAIL') {
+      if (!last && !prevDiff.length) stage = 'TECH';             // Fail without machine differences = the layout itself is questioned
+      else if (last && last.action === 'LAYOUT_TO_FIX') stage = 'TECH';
+      else if (last && last.action === 'TECH_LAYOUT_FIXED') stage = last.result && last.result.diffCount === 0 ? 'RECHECK' : 'TECH';
+      else {                                     // database side (after DB_UPDATED, TECH_DB_WRONG, REOPEN or no action): fixed when DB = layout of the check
+        stage = db && sameTotals(dbGroupTotals(db, sk), cgs.lay) ? 'RECHECK' : 'CONS';
+      }
+    }
+    out[sk] = { stage, rounds, check: v, last, prevDiff, escalate: rounds >= 2 && stage !== 'DONE' };
+  });
+  return out;
+}
+function indexValidations(vals) {
+  const passed = new Set(), last = {};
+  [...vals].sort((a, b) => String(a.savedAt).localeCompare(String(b.savedAt))).forEach(v => {
+    const sk = K(v.style); last[sk] = v.status;
+    if (v.status === 'PASS' || v.status === 'ACCEPTED') passed.add(sk);
+  });
+  return { passed, last };
+}
+
+function styleList(sp, lineMap, vIdx, pu, wkS, inclBase) {
+  const wkE = wkS + 6, out = [];
+  for (const [sk, r] of Object.entries(sp.styles)) {
+    if (vIdx.passed.has(sk)) continue;
+    const pus = pusOf(lineMap, r.firstLines);
+    if (!pus.includes(pu)) continue;
+    if (r.firstDate > wkE) continue;
+    if (r.baseline && !inclBase) continue;           // already running when the first plan was loaded
+    const cat = r.baseline ? 'Baseline' : (r.firstDate >= wkS ? 'New' : 'Carry-over');
+    out.push({ key: sk, style: r.style, firstDate: r.firstDate, firstLines: r.firstLines, pus,
+      otherLines: r.otherLines, baseline: r.baseline, cat, last: vIdx.last[sk] || '' });
+  }
+  return out.sort((a, b) => a.firstDate - b.firstDate || a.style.localeCompare(b.style));
+}
+
+function parseDb(rows) {
+  const h = findHeader(rows, ['STYLE', 'MACHINE', 'QUANTITY']);
+  const c = h.col, byStyle = {}, groupOf = {};
+  for (let i = h.row + 1; i < rows.length; i++) {
+    const r = rows[i] || []; const sk = K(r[c.STYLE]), m = NM(r[c.MACHINE]);
+    if (!sk || !m) continue;
+    const g = 'MACHINE GROUP' in c ? K(r[c['MACHINE GROUP']]) : '';
+    const rec = { machine: m, qty: num(r[c.QUANTITY]), remark: 'REMARK' in c ? (r[c.REMARK] ?? '') : '',
+      group: g, date: 'DATE' in c ? toSerial(r[c.DATE]) : null };
+    (byStyle[sk] = byStyle[sk] || []).push(rec);
+    if (g) groupOf[m] = g;
+  }
+  return { byStyle, groupOf, styles: Object.keys(byStyle) };
+}
+
+// latest DATE only; machines summed
+function dbForStyle(db, sk) {
+  const rows = db.byStyle[sk] || [];
+  const dates = [...new Set(rows.map(r => r.date).filter(d => d !== null))].sort((a, b) => b - a);
+  const use = dates.length ? rows.filter(r => r.date === dates[0]) : rows;
+  const machines = {};
+  use.forEach(r => {
+    const m = machines[r.machine] = machines[r.machine] || { qty: 0, group: r.group, remark: '' };
+    m.qty += r.qty; if (r.remark) m.remark = String(r.remark);
+  });
+  return { machines, date: dates.length ? dates[0] : null, otherDates: dates.slice(1), rowCount: rows.length };
+}
+function dbSuggestions(db, sk) {
+  const base = sk.slice(0, 11); if (base.length < 11) return [];
+  return db.styles.filter(s => s !== sk && s.startsWith(base)).slice(0, 10);
+}
+
+// header of a machine table: "M/C", "Prep M/C", "Asb M/C", "Ass M/C" …
+const MC_HDR = /^[A-Z]{0,10}M\/C$/;
+// all machine tables on a sheet: "M/C | 1 Line/Qty | Remark", "Prep M/C | Qty …", "Asb M/C | Qty …"
+// a combined table (Prep rows, then an "Ass M/C" sub-header, then Ass rows) is read as ONE table
+function findMcPanes(rows) {
+  const panes = [], used = new Set();
+  for (let r = 0; r < rows.length; r++) {
+    const row = rows[r] || [];
+    for (let c = 0; c < row.length; c++) {
+      if (!MC_HDR.test(NM(row[c])) || used.has(r + '|' + c)) continue;
+      let qc = -1, rc = -1;
+      for (let j = c + 1; j <= c + 4 && j < row.length; j++) {
+        const h = NM(row[j]);
+        if (qc < 0 && /^(1LINE|QTY|QUANTITY)/.test(h)) qc = j;
+        else if (rc < 0 && /REMARK/.test(h)) rc = j;
+      }
+      if (qc < 0) continue;
+      const machines = {}; let total = null;
+      for (let i = r + 1; i < rows.length; i++) {
+        const x = rows[i] || []; const m = NM(x[c]);
+        if (!m) break;
+        if (m.startsWith('TOTAL')) { total = num(x[qc]); break; }
+        if (MC_HDR.test(m)) { used.add(i + '|' + c); continue; }   // sub-header ("Ass M/C") inside a combined table
+        const e = machines[m] = machines[m] || { qty: 0, remark: '' };
+        e.qty += num(x[qc]); if (rc >= 0 && x[rc]) e.remark = String(x[rc]);
+      }
+      if (Object.keys(machines).length) panes.push({ row: r + 1, col: c + 1, label: String(row[c]).trim(), machines, total });
+    }
+  }
+  return panes;
+}
+// self-check: operation table "M/c Type" x "Arrange. M/C"
+function opTableSums(rows) {
+  for (let r = 0; r < Math.min(rows.length, 60); r++) {
+    const row = rows[r] || []; let mc = -1, ac = -1;
+    row.forEach((v, c) => { const h = NM(v); if (mc < 0 && h.startsWith('M/CTYPE')) mc = c; if (ac < 0 && h.startsWith('ARRANGE.M/C')) ac = c; });
+    if (mc < 0 || ac < 0) continue;
+    const sums = {};
+    for (let i = r + 1; i < rows.length && i < r + 600; i++) {
+      const x = rows[i] || [];
+      if (K(x[0]).startsWith('TOTAL')) break;
+      const m = NM(x[mc]), q = num(x[ac]);
+      if (m && q > 0) sums[m] = (sums[m] || 0) + q;
+    }
+    return sums;
+  }
+  return null;
+}
+function layoutMeta(rows) {
+  let version = '', type = '';
+  for (let r = 0; r < Math.min(rows.length, 8); r++) (rows[r] || []).forEach(v => {
+    if (typeof v !== 'string') return;
+    let m; if (!version && (m = v.match(/ver[^:]*:\s*(.+)/i))) version = m[1].trim();
+    if (!version && /^\s*version\b/i.test(v)) version = v.trim();
+    if (!type && (m = v.match(/(final|initial)\s*layout/i))) type = m[0];
+  });
+  return { version, type };
+}
+function analyseSheet(ws) {
+  const rows = sheetRows(ws, CONFIG.scanRows, CONFIG.scanCols);
+  const panes = findMcPanes(rows);
+  const machines = {};
+  panes.forEach(p => Object.entries(p.machines).forEach(([m, e]) => {
+    const t = machines[m] = machines[m] || { qty: 0, remark: '' }; t.qty += e.qty; if (e.remark) t.remark = e.remark;
+  }));
+  const ops = opTableSums(rows);
+  let selfCheck = 'N/A', selfDiff = [];
+  if (ops) {
+    const keys = new Set([...Object.keys(machines), ...Object.keys(ops)]);
+    keys.forEach(k => { const a = machines[k] ? machines[k].qty : 0, b = ops[k] || 0; if (a !== b) selfDiff.push(k + ': pane ' + a + ' / op table ' + b); });
+    selfCheck = selfDiff.length ? 'MISMATCH' : 'OK';
+  }
+  return { panes, machines, ops, selfCheck, selfDiff, meta: layoutMeta(rows) };
+}
+
+function compare(dbM, layM, groupOf) {
+  const keys = [...new Set([...Object.keys(dbM), ...Object.keys(layM)])];
+  const rows = keys.map(m => {
+    const db = dbM[m] ? dbM[m].qty : 0, lay = layM[m] ? layM[m].qty : 0;
+    const group = (dbM[m] && dbM[m].group) || groupOf[m] || '?';
+    // result is decided by the QUANTITY, not by whether the machine name is listed (a row with qty 0 = not used)
+    let result = 'MATCH';
+    if (db !== lay) result = db === 0 ? 'LAYOUT ONLY' : lay === 0 ? 'DB ONLY' : 'QTY DIFF';
+    return { machine: m, group, db, lay, diff: lay - db, result };
+  }).filter(r => r.db !== 0 || r.lay !== 0)             // machine with 0 on both sides: not used, not shown
+  .sort((a, b) => a.group.localeCompare(b.group) || a.machine.localeCompare(b.machine));
+  const g = {};
+  rows.forEach(r => { const gk = r.group === '?' ? '? ' + r.machine : r.group; const x = g[gk] = g[gk] || { group: gk, db: 0, lay: 0 }; x.db += r.db; x.lay += r.lay; });
+  const groups = Object.values(g).map(x => Object.assign(x, { diff: x.lay - x.db, result: x.lay === x.db ? 'MATCH' : 'DIFF' }));
+  const totalDB = rows.reduce((s, r) => s + r.db, 0), totalLayout = rows.reduce((s, r) => s + r.lay, 0);
+  return { rows, groups, totalDB, totalLayout, diffCount: rows.filter(r => r.result !== 'MATCH').length,
+    groupDiffCount: groups.filter(x => x.result !== 'MATCH').length };
+}
+function supervisorData(sp, lineMap, vals, wkS, inclBase) {
+  const wkE = wkS + 6, byStyle = {};
+  [...vals].sort((a, b) => String(a.savedAt).localeCompare(String(b.savedAt))).forEach(v => {
+    const sk = K(v.style), cur = byStyle[sk];
+    if (cur && (cur.status === 'PASS' || cur.status === 'ACCEPTED')) return;   // done is permanent
+    byStyle[sk] = v;
+  });
+  const rows = [], sum = {};
+  for (const [sk, r] of Object.entries(sp.styles)) {
+    if (r.firstDate > wkE) continue;
+    if (r.baseline && !inclBase) continue;
+    const v = byStyle[sk];
+    const st = v ? v.status : 'PENDING';
+    const inWeek = r.firstDate >= wkS;
+    const done = st === 'PASS' || st === 'ACCEPTED';
+    if (!inWeek && done) continue;                 // older styles: only show what is still open
+    pusOf(lineMap, r.firstLines).forEach(pu => {
+      const s = sum[pu] = sum[pu] || { pu, week: 0, PASS: 0, ACCEPTED: 0, FAIL: 0, PENDING: 0, carry: 0 };
+      if (inWeek) { s.week++; s[st]++; } else s.carry++;
+      rows.push({ pu, style: r.style, firstDate: r.firstDate, firstLines: r.firstLines.join(', '),
+        scope: inWeek ? 'This week' : 'Carry-over', status: st, key: sk, pdf: !!(v && v.manualPdf), user: v ? v.user : '',
+        savedAt: v ? String(v.savedAt).slice(0, 16).replace('T', ' ') : '', diff: v ? v.diffCount : '', comment: v ? (v.comment || '') : '' });
+    });
+  }
+  Object.values(sum).forEach(s => s.pct = s.week ? Math.round((s.PASS + s.ACCEPTED) / s.week * 100) : 0);
+  rows.sort((a, b) => a.pu.localeCompare(b.pu) || a.firstDate - b.firstDate || a.style.localeCompare(b.style));
+  return { sum: Object.values(sum).sort((a, b) => a.pu.localeCompare(b.pu)), rows };
+}
+function isoWeek(s) {
+  const t = dateOf(s); const day = (t.getUTCDay() + 6) % 7;
+  t.setUTCDate(t.getUTCDate() - day + 3);
+  const y = t.getUTCFullYear(), jan4 = new Date(Date.UTC(y, 0, 4));
+  return 1 + Math.round(((t - jan4) / 864e5 - 3 + ((jan4.getUTCDay() + 6) % 7)) / 7);
+}
+const WD = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const dayName = s => WD[dateOf(s).getUTCDay()];
+function todaySerial() { const t = new Date(); return serOf(t.getFullYear(), t.getMonth() + 1, t.getDate()); }
+function isoOfSerial(s) { const d = dateOf(s); return d.getUTCFullYear() + '-' + pad(d.getUTCMonth() + 1) + '-' + pad(d.getUTCDate()); }
+// plain-language explanation of one compare row
+function explain(r) {
+  if (r.result === 'QTY DIFF') return r.lay > r.db ? `Layout needs ${r.lay}, database has ${r.db} → ${r.lay - r.db} more in layout`
+                                                     : `Layout needs ${r.lay}, database has ${r.db} → ${r.db - r.lay} fewer in layout`;
+  if (r.result === 'DB ONLY') return `In database (${r.db}) but not used in layout`;
+  if (r.result === 'LAYOUT ONLY') return `Used in layout (${r.lay}) but not in database`;
+  return 'Same';
+}
+// ---------- Variation log ----------
+// variations = every non-matching machine in every saved check.
+// Only the LATEST check of a style is "live"; older ones are closed by the re-check.
+// Live ones close automatically when the current Machine Database equals the layout qty.
+// machine group is the key: totals per group (a code without group stays on its own)
+function grpKey(m, g) { return !g || g === '?' ? '? ' + m : g; }
+function groupTotals(list) { const t = {}; list.forEach(x => { const k = grpKey(x.machine, x.group); t[k] = (t[k] || 0) + (+x.qty || 0); }); return t; }
+function sameTotals(a, b) { const k = new Set([...Object.keys(a), ...Object.keys(b)]); for (const x of k) if ((a[x] || 0) !== (b[x] || 0)) return false; return true; }
+function dbGroupTotals(db, sk) { const now = dbForStyle(db, sk); return groupTotals(Object.entries(now.machines).map(([m, e]) => ({ machine: m, group: e.group || db.groupOf[m] || '', qty: e.qty }))); }
+function checkGroups(v) {                       // per check: layout group totals and the groups that differ
+  const lay = groupTotals((v.details || []).map(d => ({ machine: d.machine, group: d.group, qty: d.lay })));
+  const dbt = groupTotals((v.details || []).map(d => ({ machine: d.machine, group: d.group, qty: d.db })));
+  return { lay, bad: new Set(Object.keys(Object.assign({}, lay, dbt)).filter(k => (lay[k] || 0) !== (dbt[k] || 0))) };
+}
+function buildVariations(vals, db, actions) {
+  const sorted = [...vals].sort((a, b) => String(a.savedAt).localeCompare(String(b.savedAt)));
+  const latest = {}; sorted.forEach(v => latest[K(v.style)] = v);
+  const actBy = {};
+  [...actions].sort((a, b) => String(a.at).localeCompare(String(b.at))).forEach(a => (actBy[a.key] = actBy[a.key] || []).push(a));
+  const out = [], dbCache = {};
+  sorted.forEach(v => {
+    const sk = K(v.style), isLatest = latest[sk] === v;
+    const cg = checkGroups(v);
+    (v.details || []).filter(d => d.result !== 'MATCH' && cg.bad.has(grpKey(d.machine, d.group))).forEach(d => {
+      const key = v.valId + '|' + d.machine, acts = actBy[key] || [], last = acts[acts.length - 1];
+      const r = { key, valId: v.valId, style: v.style, styleKey: sk, pu: v.pu, machine: d.machine, group: d.group,
+        dbAtCheck: d.db, layout: d.lay, diffAtCheck: d.diff, type: d.result, foundBy: v.user, foundAt: v.savedAt,
+        checkStatus: v.status, checkComment: v.comment || '', actions: acts, lastAction: last || null,
+        dbNow: null, remaining: d.diff, status: 'OPEN', closeReason: '', closedBy: '', closedAt: '' };
+      if (!isLatest) {
+        const l = latest[sk], u = [...acts].reverse().find(a => a.action === 'DB_UPDATED');
+        Object.assign(r, u ? { status: 'CLOSED', closeReason: 'DB_FIXED', closedBy: u.by, closedAt: u.at, remaining: 0 }
+                           : { status: 'CLOSED', closeReason: 'RECHECKED', closedBy: l.user, closedAt: l.savedAt, remaining: 0 });
+      } else if (last && last.action === 'TECH_LAYOUT_FIXED') {
+        Object.assign(r, last.result && last.result.diffCount === 0
+          ? { status: 'CLOSED', closeReason: 'LAYOUT_FIXED', closedBy: last.by, closedAt: last.at, remaining: 0 } : { status: 'WAITING_LAYOUT' });
+      } else {
+        let grpOk = false;
+        if (db) {
+          const now = dbCache[sk] = dbCache[sk] || dbForStyle(db, sk);
+          r.dbNow = now.machines[d.machine] ? now.machines[d.machine].qty : 0;
+          r.remaining = d.lay - r.dbNow;
+          const gk = grpKey(d.machine, d.group), gNow = (dbCache['G|' + sk] = dbCache['G|' + sk] || dbGroupTotals(db, sk))[gk] || 0;
+          grpOk = gNow === (cg.lay[gk] || 0);
+          if (grpOk) r.remaining = 0;
+        }
+        if (r.dbNow !== null && grpOk) {
+          const u = [...acts].reverse().find(a => a.action === 'DB_UPDATED');
+          Object.assign(r, { status: 'CLOSED', closeReason: 'DB_FIXED', closedBy: u ? u.by : '', closedAt: u ? u.at : '' });
+        } else if (last && last.action === 'LAYOUT_TO_FIX') r.status = 'WAITING_LAYOUT';
+        else if (last && last.action === 'DB_UPDATED') r.status = 'STILL_DIFF';
+        else r.status = 'OPEN';
+      }
+      out.push(r);
+    });
+  });
+  return out;
+}
+const isActiveVar = v => v.status !== 'CLOSED';
+// full machine list to paste into the Machine Database (target = layout qty)
+function correctionRows(check, db, todayIso) {
+  const now = dbForStyle(db, K(check.style));
+  return (check.details || []).filter(d => d.lay > 0).map(d => {
+    const m = now.machines[d.machine] || {};
+    return [check.style, d.machine, d.lay, m.remark || '', m.group || db.groupOf[d.machine] || (d.group !== '?' ? d.group : ''), todayIso];
+  });
+}
+// ---------- Layout file finder ----------
+const alnum = s => K(s).replace(/[^A-Z0-9]/g, '');
+// score: 3 = same style, 2 = same style without suffix, 1 = same article (other colour)
+function suggestLayouts(index, style, q, limit = 15) {
+  if (q && alnum(q)) { const qq = alnum(q); return index.filter(f => alnum(f.name).includes(qq)).slice(0, 40).map(f => Object.assign({ score: 0 }, f)); }
+  const full = alnum(style), base = alnum(String(style).split('(')[0]), art = alnum(String(style).split('-').slice(0, 2).join('-'));
+  return index.map(f => {
+    const n = alnum(f.name);
+    const score = n.includes(full) ? 3 : (base.length >= 8 && n.includes(base)) ? 2 : (art.length >= 6 && n.includes(art)) ? 1 : 0;
+    return Object.assign({ score }, f);
+  }).filter(f => f.score).sort((a, b) => b.score - a.score || a.name.localeCompare(b.name)).slice(0, limit);
+}
+
+// which sheets to use by default: all "Man-Machine-…" sheets (PU1: Prep + Ass), otherwise the first sheet with a machine table
+function defaultSheets(names, sheets) {
+  const withPane = names.filter(n => sheets[n].panes.length);
+  const mm = withPane.filter(n => /man[\s\-_]*machine/i.test(n));
+  return mm.length ? mm : withPane.slice(0, 1);
+}
+// add machines of the ticked sheets together
+function sumSheets(sheets, sel) {
+  const tt = {};
+  sel.forEach(n => Object.entries(sheets[n].machines).forEach(([m, e]) => {
+    const x = tt[m] = tt[m] || { qty: 0, remark: '' }; x.qty += e.qty; if (e.remark) x.remark = e.remark;
+  }));
+  return tt;
+}
+/*CORE-END*/
+
+/* ================= BROWSER STORAGE ================= */
+const idb = {
+  _db: null,
+  open() { return this._db ? Promise.resolve(this._db) : new Promise((res, rej) => {
+    const q = indexedDB.open('layoutcheck', 1);
+    q.onupgradeneeded = () => q.result.createObjectStore('kv');
+    q.onsuccess = () => res(this._db = q.result); q.onerror = () => rej(q.error); }); },
+  async get(k) { const db = await this.open(); return new Promise(res => { const t = db.transaction('kv').objectStore('kv').get(k); t.onsuccess = () => res(t.result); t.onerror = () => res(undefined); }); },
+  async set(k, v) { const db = await this.open(); return new Promise((res, rej) => { const t = db.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, k); t.oncomplete = res; t.onerror = () => rej(t.error); }); }
+};
+async function ensurePerm(h, mode, btnLabel) {
+  const o = { mode };
+  if (await h.queryPermission(o) === 'granted') return true;
+  try { return (await h.requestPermission(o)) === 'granted'; }
+  catch (e) { if (btnLabel) throw new Error(t('permAgain', btnLabel, h.name)); return false; }   // browser needs a fresh click
+}
+async function readText(dir, name) {
+  try { const fh = await dir.getFileHandle(name); return await (await fh.getFile()).text(); }
+  catch (e) { if (e.name === 'NotFoundError') return null; throw e; }
+}
+async function writeText(dir, name, text) {
+  const fh = await dir.getFileHandle(name, { create: true });
+  const w = await fh.createWritable(); await w.write(text); await w.close();
+}
+async function appendLine(dir, name, line) {
+  const fh = await dir.getFileHandle(name, { create: true });
+  const size = (await fh.getFile()).size;
+  const w = await fh.createWritable({ keepExistingData: true });
+  await w.seek(size); await w.write(line + '\n'); await w.close();
+}
+async function readJsonDir(name) {
+  const d = await S.dataDir.getDirectoryHandle(name, { create: true }), out = [];
+  for await (const [fn, h] of d.entries()) {
+    if (h.kind !== 'file' || !fn.toLowerCase().endsWith('.json')) continue;
+    try { out.push(JSON.parse(await (await h.getFile()).text())); } catch (e) { console.warn('bad file', fn); }
+  }
+  return out;
+}
+// find a sheet by name, ignoring upper/lower case and extra spaces ("Machine Database" = "MACHINE DATABASE")
+async function readSheetCI(file, wanted) {
+  const norm = s => K(s).replace(/\s+/g, ' ');
+  const names = (await readWb(file, { bookSheets: true })).SheetNames;
+  const name = names.find(n => norm(n) === norm(wanted));
+  if (!name) throw new Error('Sheet "' + wanted + '" ? ' + file.name + ' → ' + names.join(', '));
+  return (await readWb(file, { sheets: [name] })).Sheets[name];
+}
+async function readWb(file, opts) { return XLSX.read(await file.arrayBuffer(), Object.assign({ type: 'array' }, opts || {})); }
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); return; } catch (e) { /* fallback below */ }
+  const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+}
+const XL_TYPES = [{ description: 'Excel', accept: { 'application/vnd.ms-excel': ['.xlsx', '.xlsm', '.xls', '.xlsb'] } }];
+const LAYOUT_TYPES = XL_TYPES.concat([{ description: 'PDF', accept: { 'application/pdf': ['.pdf'] } }]);   // old layouts that only exist as PDF
+
+/* ================= STATE + SMALL HELPERS ================= */
+const S = { user: null, role: localStorage.getItem('lcRole') || 'IE', dataDir: null, dbHandle: null, lineMap: null, sp: null, vals: [], varActs: [], vars: [], db: null, dbName: '',
+  wkS: weekStart(todaySerial()), tab: 'check', list: [], sel: null, dbRes: null, layouts: [], cmp: null, onlyDiff: true,
+  inclBase: localStorage.getItem('lcBase') === 'Y', myLines: null,
+  layRoot: null, layRootOk: false, layIndex: [], layIndexAt: '', scanning: false, scanCount: 0, showSuggest: true, laySearch: '', acts: [], supData: null, vView: 'cards', approvals: {}, rawActs: [], stages: {} };
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const isSup = () => S.user && S.user.role === 'Supervisor';
+const canCons = () => S.user && (S.user.role === 'Consolidator' || S.user.role === 'Supervisor');
+const canTech = () => S.user && (S.user.role === 'Tech' || S.user.role === 'Supervisor');
+const OWN = { CHECK: 'ownIE', RECHECK: 'ownIE', CONS: 'ownCONS', TECH: 'ownTECH', DONE: 'ownDONE' };
+const stamp = (d = new Date()) => d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '-' + pad(d.getHours()) + pad(d.getMinutes()) + pad(d.getSeconds());
+const safe = s => String(s).replace(/[^\w\-]+/g, '_');
+const dt = iso => { if (!iso) return ''; const d = new Date(iso); return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+const dayT = s => LANG === 'vi' ? ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'][dateOf(s).getUTCDay()] : dayName(s);
+const roleTxt = r => t({ IE: 'roleIE', Tech: 'roleTech', Consolidator: 'roleCons', Supervisor: 'roleSup' }[r] || 'roleIE');
+function toast(text, kind = '') {
+  const d = document.createElement('div'); d.className = 'msg ' + kind; d.textContent = text;
+  $('log').prepend(d); setTimeout(() => d.remove(), kind === 'err' ? 15000 : 8000);
+}
+async function guard(fn) { try { await fn(); } catch (e) { if (e.name === 'AbortError') return; console.error(e); toast(e.message || String(e), 'err'); } }
+const STATUS_CLS = { PASS: 't-ok', ACCEPTED: 't-ok', FAIL: 't-bad', PENDING: 't-warn', APPROVED: 't-info' };
+const RES_TXT = r => t({ MATCH: 'rMATCH', 'QTY DIFF': 'rQTY', 'DB ONLY': 'rDBONLY', 'LAYOUT ONLY': 'rLAYONLY' }[r]);
+const RES_CLS = { MATCH: 't-ok', 'QTY DIFF': 't-warn', 'DB ONLY': 't-bad', 'LAYOUT ONLY': 't-info' };
+const VST_TXT = s => t({ OPEN: 'vOpen', STILL_DIFF: 'vStill', WAITING_LAYOUT: 'vWait', CLOSED: 'vClosed' }[s]);
+const VST_CLS = { OPEN: 't-bad', STILL_DIFF: 't-bad', WAITING_LAYOUT: 't-warn', CLOSED: 't-ok' };
+function explainT(r) {
+  if (r.result === 'QTY DIFF') return r.lay > r.db ? t('exMore', r.lay, r.db, r.lay - r.db) : t('exLess', r.lay, r.db, r.db - r.lay);
+  if (r.result === 'DB ONLY') return t('exDbOnly', r.db);
+  if (r.result === 'LAYOUT ONLY') return t('exLayOnly', r.lay);
+  return t('rMATCH');
+}
+
+/* ================= ACTIVITY LOG (who did what) ================= */
+async function act(action, style = '', detail = '') {
+  if (!S.user || !S.dataDir) return;
+  const now = new Date();
+  const e = { time: now.toISOString(), name: S.user.name, role: S.user.role, pu: S.user.pu || '', action, style, detail };
+  try {
+    const ad = await S.dataDir.getDirectoryHandle(CONFIG.activityDir, { create: true });
+    await appendLine(ad, now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) + '_' + safe(S.user.name) + '.jsonl', JSON.stringify(e));
+  } catch (err) { console.warn('activity log failed', err); }
+}
+async function loadActivity() {
+  const ad = await S.dataDir.getDirectoryHandle(CONFIG.activityDir, { create: true });
+  const from = isoOfSerial(S.wkS), to = isoOfSerial(S.wkS + 6), out = [];
+  for await (const [name, h] of ad.entries()) {
+    if (h.kind !== 'file' || !name.endsWith('.jsonl')) continue;
+    const day = name.slice(0, 10); if (day < from || day > to) continue;
+    (await (await h.getFile()).text()).split('\n').forEach(l => { if (l.trim()) try { out.push(JSON.parse(l)); } catch (e) {} });
+  }
+  S.acts = out.sort((a, b) => b.time.localeCompare(a.time));
+}
+
+/* ================= LANGUAGE ================= */
+function setLang(l) {
+  LANG = l; localStorage.setItem('lcLang', l);
+  applyStatic(); setRole(S.role); paintSetup();
+  if (S.user) { paintUserChip(); renderAll(); }
+}
+
+/* ================= LOGIN / SETUP ================= */
+async function paintSetup() {
+  const dir = await idb.get('dataDir'), dbh = await idb.get('dbFile');
+  $('lgDir').innerHTML = (dir ? '✅ ' : '❌ ') + t('dataFolder') + ': ' + (dir ? '<b>' + esc(dir.name) + '</b>' : t('notChosen'));
+  $('lgDb').innerHTML = (dbh ? '✅ ' : '❌ ') + t('machineDb') + ': ' + (dbh ? '<b>' + esc(dbh.name) + '</b>' : t('notChosen'));
+  $('lgDirBtn').textContent = dir ? t('change') : t('choose'); $('lgDbBtn').textContent = dbh ? t('change') : t('choose');
+  const lay = await idb.get('layRoot');
+  $('lgLay').innerHTML = (lay ? '✅ ' : '➖ ') + t('layoutFolder') + ': ' + (lay ? '<b>' + esc(lay.name) + '</b>' : t('notSetOpt'));
+  $('lgLayBtn').textContent = lay ? t('change') : t('choose');
+  $('stDir').innerHTML = $('lgDir').innerHTML; $('stDb').innerHTML = $('lgDb').innerHTML; $('stLay').innerHTML = $('lgLay').innerHTML;
+  return { dir, dbh };
+}
+// every PU written in Linemapping.xlsx (column PU) becomes a choice: PU1, PU2 SPORT, PU2 INTIMATE, PU3, ... (new PUs need no code change)
+function puSortKey(p) { return p.replace(/(\d+)/g, m => m.padStart(6, '0')); }
+function fillPuSelects(keep) {
+  ['lgPU', 'pu', 'fPU', 'vPU'].forEach(id => {
+    const el = $(id); if (!el) return;
+    const filter = id === 'fPU' || id === 'vPU';                          // Status / Variation filters keep "All PUs" and their own choice
+    const cur = filter ? (el.value || '') : (keep || el.value || '');
+    el.innerHTML = (filter ? '<option value="" data-i18n="allPU">' + esc(t('allPU')) + '</option>' : '') + CONFIG.pus.map(p => '<option value="' + esc(p) + '">' + esc(p) + '</option>').join('');
+    el.value = (filter && cur === '') || CONFIG.pus.includes(cur) ? cur : (filter ? '' : CONFIG.pus[0]);
+  });
+}
+async function refreshPuList() {
+  try {
+    const dir = await idb.get('dataDir'); if (!dir) return;
+    if (await dir.queryPermission({ mode: 'read' }) !== 'granted') return;      // silent: only when already allowed
+    const fh = await dir.getFileHandle(CONFIG.lineMapFile);
+    const lwb = await readWb(await fh.getFile());
+    const pus = [...new Set(Object.values(parseLineMap(sheetRows(lwb.Sheets[lwb.SheetNames[0]]))))].filter(Boolean).sort((a, b) => puSortKey(a).localeCompare(puSortKey(b)));
+    if (pus.length) { CONFIG.pus = pus; fillPuSelects(); }
+  } catch (e) { /* no Linemapping yet: keep the fallback list */ }
+}
+async function chooseDir() {
+  const h = await window.showDirectoryPicker({ id: 'lcData', mode: 'readwrite' });
+  await idb.set('dataDir', h); await refreshPuList(); await paintSetup();
+  if (S.user) { await connect(); act('SETTINGS', '', 'Data folder: ' + h.name); renderAll(); }
+}
+async function chooseDb() {
+  const [h] = await window.showOpenFilePicker({ id: 'lcDb', types: XL_TYPES });
+  await idb.set('dbFile', h); await paintSetup();
+  if (S.user) { await connect(); act('SETTINGS', '', 'Machine DB: ' + h.name); renderAll(); }
+}
+async function chooseLayRoot() {
+  const h = await window.showDirectoryPicker({ id: 'lcLayRoot', mode: 'read' });
+  await idb.set('layRoot', h); await idb.set('layIndex', null);
+  S.layRoot = h; S.layRootOk = true; S.layIndex = []; S.layIndexAt = '';
+  await paintSetup();
+  if (S.user) { act('SETTINGS', '', 'Layout folder: ' + h.name); scanLayouts(); }
+}
+/* ---- layout folder index: scanned once, kept on this computer, rescanned when older than 8 hours ---- */
+async function initLayoutRoot(interactive) {
+  S.layRoot = await idb.get('layRoot') || null; S.layRootOk = false;
+  if (!S.layRoot) return;
+  S.layRootOk = await ensurePerm(S.layRoot, 'read', interactive ? t('start') : null);
+  const cache = await idb.get('layIndex');
+  if (cache && cache.v === 2 && cache.root === S.layRoot.name && Array.isArray(cache.items)) { S.layIndex = cache.items; S.layIndexAt = cache.at; }
+  const old = !S.layIndexAt || (Date.now() - new Date(S.layIndexAt).getTime()) > 8 * 3600e3;
+  if (S.layRootOk && old) scanLayouts();
+}
+async function allowLayRoot() {
+  S.layRootOk = await ensurePerm(S.layRoot, 'read', t('allowLayRoot'));
+  if (S.layRootOk && !S.layIndex.length) scanLayouts(); else renderWork();
+}
+async function scanLayouts() {
+  if (!S.layRoot || !S.layRootOk || S.scanning) return;
+  S.scanning = true; S.scanCount = 0; paintSuggest();
+  const out = [];
+  async function walk(dir, path, depth) {
+    if (depth > 10) return;
+    try {
+      for await (const [name, h] of dir.entries()) {
+        if (h.kind === 'directory') await walk(h, path + name + '/', depth + 1);
+        else if (/\.(xls[xmb]?|pdf)$/i.test(name) && !name.startsWith('~$')) {
+          out.push({ name, path, handle: h });
+          if (++S.scanCount % 100 === 0) paintSuggest();
+        }
+      }
+    } catch (e) { console.warn('skip folder', path, e); }
+  }
+  try {
+    await walk(S.layRoot, '', 0);
+    S.layIndex = out; S.layIndexAt = new Date().toISOString();
+    try { await idb.set('layIndex', { v: 2, root: S.layRoot.name, at: S.layIndexAt, items: out }); } catch (e) { console.warn('index not cached', e); }
+    act('SCAN_LAYOUTS', '', S.layRoot.name + ' · ' + out.length + ' files');
+  } finally { S.scanning = false; paintSuggest(); }
+}
+function setRole(role) {
+  S.role = role;
+  document.querySelectorAll('[data-role]').forEach(b => b.classList.toggle('on', b.dataset.role === role));
+  $('lgPuLbl').textContent = role === 'IE' || role === 'Tech' ? t('myPU') : t('puFirst');
+}
+function paintUserChip() { $('userChip').textContent = '👤 ' + S.user.name + ' · ' + roleTxt(S.user.role) + (S.user.role === 'IE' || S.user.role === 'Tech' ? ' · ' + S.user.pu : ''); }
+async function startSession() {
+  const name = $('lgName').value.trim().replace(/\s+/g, ' ');
+  if (name.length < 2) throw new Error(t('needName'));
+  const { dir, dbh } = await paintSetup();
+  if (!dir || !dbh) throw new Error(t('needFiles'));
+  S.user = { name, role: S.role, pu: $('lgPU').value };
+  localStorage.setItem('lcName', name); localStorage.setItem('lcRole', S.role); localStorage.setItem('lcPU', S.user.pu);
+  await connect();
+  $('login').hidden = true;
+  paintUserChip();
+  $('btnPlan').hidden = !isSup();
+  $('pu').value = S.user.pu;
+  loadMyLines(); $('linePanel').hidden = true;
+  act('LOGIN', '', (navigator.userAgent.includes('Edg') ? 'Edge' : 'Chrome') + ' · ' + LANG.toUpperCase());
+  toast(t('welcome', name), 'ok');
+  setTab(S.user.role === 'Consolidator' ? 'variation' : S.user.role === 'Supervisor' ? 'status' : 'check');
+  document.querySelector('.tabs [data-tab="check"]').dataset.i18n = S.user.role === 'Tech' ? 'tabTech' : 'tabCheck';
+  renderAll();
+}
+async function logout() {
+  await act('LOGOUT');
+  S.user = null; S.sel = null; S.layouts = []; S.cmp = null;
+  $('login').hidden = false; paintSetup();
+}
+
+/* ================= DATA ================= */
+async function connect() {
+  const dir = await idb.get('dataDir'), dbh = await idb.get('dbFile');
+  if (!await ensurePerm(dir, 'readwrite', t('start'))) throw new Error(t('needFiles'));
+  if (!await ensurePerm(dbh, 'read', t('start'))) throw new Error(t('needFiles'));
+  S.dataDir = dir; S.dbHandle = dbh;
+  await initLayoutRoot(false);
+  let fh; try { fh = await dir.getFileHandle(CONFIG.lineMapFile); } catch { throw new Error(CONFIG.lineMapFile + ' ?'); }
+  const lwb = await readWb(await fh.getFile());
+  S.lineMap = parseLineMap(sheetRows(lwb.Sheets[lwb.SheetNames[0]]));
+  await refreshPuList();
+  await reloadData();
+}
+async function loadDb() {
+  const f = await S.dbHandle.getFile();
+  S.db = parseDb(sheetRows(await readSheetCI(f, CONFIG.dbSheet))); S.dbName = f.name;
+}
+async function loadChecks() {
+  const all = await readJsonDir(CONFIG.validationDir), appr = await readJsonDir('approvals');
+  S.vals = all.filter(v => !isApproval(v));
+  S.approvals = {};
+  all.filter(isApproval).concat(appr).sort((a, b) => String(a.savedAt).localeCompare(String(b.savedAt))).forEach(a => S.approvals[K(a.style)] = a);
+  const raw = await readJsonDir(CONFIG.variationDir);
+  S.rawActs = raw;
+  S.varActs = []; raw.forEach(a => (a.keys || []).forEach(k => S.varActs.push(Object.assign({}, a, { key: k }))));
+}
+function computeVars() { S.vars = buildVariations(S.vals, S.db, S.varActs); S.stages = styleStages(S.vals, S.rawActs, S.db); }
+async function reloadData() {
+  const txt = await readText(S.dataDir, CONFIG.stylePlanFile);
+  S.sp = txt ? JSON.parse(txt) : { styles: {}, loads: [] };
+  await loadChecks(); await loadDb(); computeVars();
+  if (!S.sp.loads.length) toast(t('noPlan'), 'warn');
+}
+async function loadPlan() {
+  if (!isSup()) throw new Error(t('onlySupPlan'));
+  const [h] = await window.showOpenFilePicker({ id: 'lcPlan', types: XL_TYPES });
+  const f = await h.getFile();
+  toast(t('reading', f.name));
+  const plan = parsePlan(sheetRows(await readSheetCI(f, CONFIG.planSheet)));
+  const txt = await readText(S.dataDir, CONFIG.stylePlanFile);
+  const sp = txt ? JSON.parse(txt) : { styles: {}, loads: [] };
+  if (txt) await writeText(S.dataDir, 'stylePlan.bak.json', txt);
+  const unmapped = Object.keys(plan.linesSeen).filter(l => lookupPU(S.lineMap, l) === 'UNMAPPED').sort();
+  const nNew = updateStylePlan(sp, plan, stamp(), { planFile: f.name, unmapped, loadedBy: S.user.name, loadedAt: new Date().toISOString() });
+  await writeText(S.dataDir, CONFIG.stylePlanFile, JSON.stringify(sp));
+  S.sp = sp;
+  const nSt = Object.keys(plan.styles).length;
+  act('LOAD_PLAN', '', f.name + ' · ' + fmt(plan.start) + '–' + fmt(plan.end) + ' · ' + nSt + ' / ' + nNew);
+  toast(t('planLoaded', fmt(plan.start), fmt(plan.end), nSt, nNew), 'ok');
+  if (unmapped.length) toast(t('unmappedMsg', CONFIG.lineMapFile, unmapped.join(', ')), 'warn');
+  renderAll();
+}
+
+/* ================= RENDER: common ================= */
+function renderAll() { renderWeek(); renderList(); paintBadges(); renderWork(); if (S.tab === 'variation') renderVariations(); if (S.tab === 'status') renderStatus(); if (S.tab === 'activity') guard(renderActivity); }
+function paintBadges() {
+  if (!S.user || !S.sp) return;
+  const b = (tab, n) => { const el = document.querySelector('.tabs [data-tab="' + tab + '"]'); if (!el) return; el.innerHTML = esc(t(el.dataset.i18n)) + (n ? '<span class="cnt">' + n + '</span>' : ''); };
+  b('check', S.list.length);
+  const nVar = new Set(S.vars.filter(v => isActiveVar(v) && (S.stages[v.styleKey] || {}).stage === 'CONS').map(v => v.styleKey)).size;
+  b('variation', canCons() ? nVar : 0);
+}
+function renderWeek() { $('wkText').textContent = t('weekLbl', isoWeek(S.wkS), fmt(S.wkS, false), fmt(S.wkS + 6)); }
+function setTab(tb) {
+  S.tab = tb;
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === tb));
+  ['check', 'variation', 'status', 'activity'].forEach(x => $('tab-' + x).hidden = x !== tb);
+  if (tb === 'variation') renderVariations();
+  if (tb === 'status') renderStatus();
+  if (tb === 'activity') guard(renderActivity);
+}
+
+/* ================= TAB 1: CHECK (IE) ================= */
+function waitingStyles() {   // styles the Consolidator sent back: layout must be fixed
+  const m = {}; S.vars.filter(v => v.status === 'WAITING_LAYOUT').forEach(v => { m[v.styleKey] = v.lastAction ? v.lastAction.note : ''; }); return m;
+}
+/* ---- line filter: the lines this person is in charge of (saved per name + PU on this computer) ---- */
+const linesKey = () => 'lcLines|' + (S.user ? S.user.name : '') + '|' + $('pu').value;
+function loadMyLines() {
+  try { const a = JSON.parse(localStorage.getItem(linesKey()) || 'null'); S.myLines = Array.isArray(a) && a.length ? new Set(a) : null; } catch (e) { S.myLines = null; }
+}
+function saveMyLines() { localStorage.setItem(linesKey(), JSON.stringify(S.myLines ? [...S.myLines] : null)); }
+function paintLineBtn() {
+  const s = S.myLines;
+  $('btnLines').textContent = (s ? (s.size <= 5 ? [...s].sort().join(', ') : t('linesN', s.size)) : t('allLines')) + ' ▾';
+}
+function puLines() {   // lines of the selected PU that appear in the plan
+  const pu = $('pu').value, set = new Set();
+  if (S.sp) Object.values(S.sp.styles).forEach(r => { r.firstLines.forEach(l => set.add(l)); r.otherLines.forEach(x => set.add(x[0])); });
+  return [...set].filter(l => lookupPU(S.lineMap, l) === pu).sort();
+}
+function renderLineGrid() {
+  const q = K($('lineSearch').value), lines = puLines().filter(l => !q || l.includes(q));
+  $('lineGrid').innerHTML = lines.length ? lines.map(l => '<label><input type="checkbox" value="' + esc(l) + '"' + (S.myLines && S.myLines.has(l) ? ' checked' : '') + '>' + esc(l) + '</label>').join('')
+    : '<span class="muted small">' + t('noLinesForPU') + '</span>';
+  $('lineGrid').querySelectorAll('input').forEach(cb => cb.onchange = () => {
+    const s = S.myLines ? new Set(S.myLines) : new Set();
+    if (cb.checked) s.add(cb.value); else s.delete(cb.value);
+    S.myLines = s.size ? s : null; paintLineBtn();
+  });
+}
+function toggleLinePanel() {
+  if ($('linePanel').hidden) { $('lineSearch').value = ''; renderLineGrid(); $('linePanel').hidden = false; return; }
+  $('linePanel').hidden = true; saveMyLines();
+  act('SET_LINES', '', S.myLines ? [...S.myLines].sort().join(', ') : 'ALL');
+  S.sel = null; renderList(); renderWork();
+}
+function renderList() {
+  if (!S.sp) return;
+  paintLineBtn();
+  const pu = $('pu').value, mine = S.myLines, tech = S.user && S.user.role === 'Tech';
+  const vIdx = indexValidations(S.vals), st = k => (S.stages[k] || { stage: 'CHECK' });
+  vIdx.passed = new Set(Object.keys(S.stages).filter(k => S.stages[k].stage === 'DONE'));
+  const today = todaySerial();
+  const all = styleList(S.sp, S.lineMap, vIdx, pu, S.wkS, S.inclBase).map(r => Object.assign(r, { stg: st(r.key) }));
+  const full = all.filter(r => tech ? r.stg.stage === 'TECH' : (r.stg.stage === 'CHECK' || r.stg.stage === 'RECHECK'))
+    .sort((a, b) => (b.stg.stage === 'RECHECK') - (a.stg.stage === 'RECHECK') || a.firstDate - b.firstDate || a.style.localeCompare(b.style));
+  S.list = mine ? full.filter(r => r.firstLines.some(l => mine.has(l) || mine.has(baseLine(l)))) : full;
+  $('listTitle').textContent = tech ? t('techTitle', S.list.length) : mine ? t('toCheckOf', S.list.length, full.length) : t('toCheck', S.list.length);
+  const nCons = all.filter(r => r.stg.stage === 'CONS').length, nTech = all.filter(r => r.stg.stage === 'TECH').length;
+  const info = !tech && (nCons || nTech) ? '<div class="item muted small">' + esc(t('inProgress', nCons, nTech)) + '</div>' : '';
+  if (!S.list.length) { $('list').innerHTML = '<div class="item muted">' + esc(t(tech ? 'techNone' : 'nothingLeft', pu)) + '</div>' + info; return; }
+  $('list').innerHTML = S.list.map((r, i) => {
+    const badge = r.cat === 'New' ? '<span class="tag t-info">' + t('catNew') + '</span>' : r.cat === 'Carry-over' ? '<span class="tag t-warn">' + t('catCarry') + '</span>' : '<span class="tag t-ok">' + t('catBase') + '</span>';
+    const g = r.stg, ap = S.approvals[r.key];
+    const last = (g.stage === 'RECHECK' ? ' <span class="tag t-ok">' + t('tagRecheck') + '</span>' : g.stage === 'TECH' ? ' <span class="tag t-bad">' + t('layoutToFix') + '</span>' : r.last === 'FAIL' ? ' <span class="tag t-bad">' + t('lastFail') + '</span>' : '') +
+      (g.stage === 'CHECK' && ap ? ' <span class="tag t-info">' + t('tagApproved') + '</span>' : '') +
+      (r.firstDate - today <= 3 ? ' <span class="tag t-bad">' + t('tagUrgent') + '</span>' : '') + (g.escalate ? ' <span class="tag t-bad">' + t('tagRounds', g.rounds) + '</span>' : '');
+    const oth = r.otherLines.slice(0, 4).map(x => x[0] + ' ' + fmt(x[1], false)).join(', ') + (r.otherLines.length > 4 ? ' …' : '');
+    return '<div class="item' + (S.sel && S.sel.key === r.key ? ' on' : '') + '" data-i="' + i + '"><div class="st">' + esc(r.style) + '</div>' +
+      '<div>' + t('loadsFirst') + ' <b>' + esc(r.firstLines.join(', ')) + '</b> · ' + dayT(r.firstDate) + ' ' + fmt(r.firstDate, false) + '</div>' +
+      (oth ? '<div class="muted small">' + t('then') + ': ' + esc(oth) + '</div>' : '') + '<div style="margin-top:3px">' + badge + last + '</div></div>';
+  }).join('') + info;
+  $('list').querySelectorAll('.item[data-i]').forEach(el => el.onclick = () => selectStyle(S.list[+el.dataset.i]));
+}
+function selectStyle(r) {
+  closePdfPane();
+  S.sel = r; S.layouts = []; S.cmp = null; S.onlyDiff = true; S.showSuggest = true; S.laySearch = '';
+  const res = dbForStyle(S.db, r.key);
+  S.dbRes = Object.assign(res, { found: Object.keys(res.machines).length > 0, similar: dbSuggestions(S.db, r.key) });
+  act('OPEN_STYLE', r.style, r.firstLines.join(', '));
+  renderList(); renderWork();
+  const g = r.stg || {};
+  if ((g.stage === 'RECHECK' || g.stage === 'TECH') && g.check) guard(() => autoOpenLayouts(r, g));
+}
+// re-open the file(s) used last time (IE Tech's fixed file first), with the same sheets ticked
+async function autoOpenLayouts(r, g) {
+  const src = g.last && g.last.action === 'TECH_LAYOUT_FIXED' && g.last.result ? g.last.result : g.check;
+  const names = String(src.layoutFiles || '').split('|').map(x => x.trim()).filter(Boolean);
+  const sheets = String(src.layoutSheets || '').split('|').map(x => x.split('+').map(y => y.trim()).filter(Boolean));
+  if (!names.length || !S.layIndex.length || !S.layRootOk) return;
+  const hs = names.map(n => (S.layIndex.find(f => K(f.name) === K(n)) || {}).handle).filter(Boolean);
+  if (hs.length !== names.length || S.sel !== r) return;
+  await openLayoutHandles(hs);
+  S.layouts.forEach((l, i) => {
+    const want = (sheets[i] || []).filter(n => l.eligible.includes(n)); if (want.length) l.sel = want;
+    if (l.pdf && Array.isArray(src.manualRows)) { src.manualRows.filter(x => K(x.file) === K(l.file)).forEach(x => l.rows.push({ m: x.machine, q: x.qty })); syncPdf(l); }   // typed list of the last check, to be verified again
+  });
+  toast(t('autoOpened', names.join(' + ')), 'ok'); renderWork();
+}
+function workNotes(r) {
+  const g = r.stg || {}, l = g.last; let h = '';
+  if (g.stage === 'RECHECK') h += '<div class="note" style="background:var(--okbg);color:var(--ok)">' + esc(t('recheckNote', l ? (l.by + ' · ' + dt(l.at)) : '')) + '</div>';
+  if (g.stage === 'TECH') {
+    const ask = (S.rawActs.filter(a => a.valId === g.check.valId && a.action === 'LAYOUT_TO_FIX').slice(-1)[0]) || { by: g.check.user, at: g.check.savedAt, note: g.check.comment };
+    h += '<div class="note">↩ ' + esc(t('techAsk', ask.by || '', dt(ask.at))) + (ask.note ? ': <b>' + esc(ask.note) + '</b>' : '') + '</div>';
+    if (l && l.action === 'TECH_LAYOUT_FIXED' && l.result) h += '<div class="note">' + esc(t('techPrev', l.result.diffCount)) + '</div>';
+    const ds = (g.check.details || []).filter(d => d.result !== 'MATCH');
+    if (ds.length) h += '<div class="small" style="margin-top:6px"><b>' + t('techDisputed') + '</b><table style="margin-top:4px"><thead><tr><th>' + t('thMachine') + '</th><th class="n">' + t('thLayout') + '</th><th class="n">' + t('thDbCheck') + '</th><th class="n">' + t('thDiff') + '</th></tr></thead><tbody>' +
+      ds.map(d => '<tr><td><b>' + esc(d.machine) + '</b></td><td class="n">' + d.lay + '</td><td class="n">' + d.db + '</td><td class="n">' + (d.diff > 0 ? '+' : '') + d.diff + '</td></tr>').join('') + '</tbody></table></div>';
+  }
+  if (g.escalate) h += '<div class="note" style="background:var(--badbg);color:var(--bad)">' + esc(t('tagRounds', g.rounds)) + '</div>';
+  return h;
+}
+function renderWork() {
+  const w = $('work');
+  if (!S.sel || !S.user) {
+    w.innerHTML = '<div class="card howto"><h3>' + t('howTitle') + '</h3>' +
+      '<div><span class="num">1</span> ' + t('how1') + '</div><div><span class="num">2</span> ' + t('how2') + '</div>' +
+      (S.user && S.user.role === 'Tech' ? '<div>' + t('howTech') + '</div>' : '<div><span class="num">3</span> ' + t('how3') + '</div><div><span class="num">4</span> ' + t('how4') + '</div>') +
+      '<p class="muted small">' + t('howNote') + '</p></div>';
+    return;
+  }
+  const r = S.sel, d = S.dbRes;
+  let h = '<div class="card"><div class="title">' + esc(r.style) + '</div><div>' + t('loadsFirst') + ' <b>' + esc(r.firstLines.join(', ')) + '</b> (' + esc(r.pus.join(', ')) + ') · ' +
+    dayT(r.firstDate) + ' ' + fmt(r.firstDate) + (r.last ? ' · ' + t('lastCheck') + ': <span class="tag ' + STATUS_CLS[r.last] + '">' + t(r.last) + '</span>' : '') + '</div>' +
+    workNotes(r) + '</div>';
+
+  // step 1: database
+  const dbList = Object.entries(d.machines).sort((a, b) => (a[1].group || '').localeCompare(b[1].group || '') || a[0].localeCompare(b[0]));
+  const dbTot = dbList.reduce((s, x) => s + x[1].qty, 0);
+  h += '<div class="card"><h3><span class="num">1</span> ' + t('step1') + '</h3>';
+  if (d.found) {
+    h += '<div>' + t('dbFound', dbTot, dbList.length) + (d.date !== null ? ' · ' + t('updated', fmt(d.date)) : '') +
+      (d.otherDates.length ? ' <span class="muted small">' + t('olderIgnored') + '</span>' : '') + '</div>' +
+      '<details><summary>' + t('showList') + '</summary><table><thead><tr><th>' + t('thMachine') + '</th><th>' + t('thGroup') + '</th><th class="n">' + t('thQty') + '</th><th>' + t('thRemark') + '</th></tr></thead><tbody>' +
+      dbList.map(([m, e]) => '<tr><td>' + esc(m) + '</td><td>' + esc(e.group) + '</td><td class="n">' + e.qty + '</td><td class="muted">' + esc(e.remark) + '</td></tr>').join('') + '</tbody>' +
+      '<tfoot><tr class="tot"><td colspan="2">' + t('totalRow', dbList.length) + '</td><td class="n">' + dbTot + '</td><td></td></tr></tfoot></table></details>';
+  } else {
+    h += '<div class="banner bad">' + t('notInDb') + '</div>' +
+      (d.similar.length ? '<div class="muted">' + t('similar') + ' ' + d.similar.map(esc).join(', ') + '</div>' : '') +
+      '<div class="muted small">' + t('canStillFail') + '</div>';
+  }
+  h += '</div>';
+
+  // step 2: layout
+  h += '<div class="card"><h3><span class="num">2</span> ' + t('step2') + ' <button id="btnOpenLayout" style="margin-left:auto">' + t('browse') + '</button></h3>';
+  if (!S.layRoot) h += '<div class="muted small">' + t('noLayoutRoot') + '</div>';
+  else if (!S.layRootOk) h += '<button id="btnAllowLay" class="primary">' + t('allowLayRoot') + '</button>';
+  else if (S.layouts.length && !S.showSuggest) h += '<button id="btnShowSugg">' + t('addAnother') + '</button>';
+  else h += '<div class="row"><b class="small" id="suggTitle"></b><input id="laySearch" style="margin-left:auto" size="22" placeholder="' + esc(t('searchLayout')) + '" value="' + esc(S.laySearch) + '">' +
+    '<button id="btnRescan">' + t('rescan') + '</button>' + (S.layouts.length ? '<button id="btnHideSugg">' + t('hideList') + '</button>' : '') + '</div>' +
+    '<div class="sugg" id="suggList"></div><div class="muted small" id="suggInfo"></div>';
+  if (!S.layouts.length && !S.layRoot) h += '<div class="muted">' + t('layoutHint') + '</div>';
+  S.layouts.forEach((l, i) => {
+    if (l.pdf) { h += pdfCard(l, i); return; }
+    const withPane = l.eligible.filter(n => l.sheets[n].panes.length);
+    h += '<div class="file"><div class="row"><b>' + esc(l.file) + '</b><button data-rm="' + i + '" style="margin-left:auto">' + t('remove') + '</button></div>';
+    if (!withPane.length) { h += '<div style="margin-top:6px"><span class="tag t-bad">' + t('noPaneFile') + '</span></div></div>'; return; }
+    h += '<div class="muted small" style="margin-top:4px">' + t('sheetsUsed') + '</div>';
+    withPane.forEach(n => {
+      const a = l.sheets[n], on = l.sel.includes(n), tot = Object.values(a.machines).reduce((s, e) => s + e.qty, 0);
+      const said = a.panes.reduce((s, p) => s + (p.total || 0), 0), hasTotal = a.panes.some(p => p.total !== null);
+      h += '<div class="row" style="margin-top:4px' + (on ? '' : ';opacity:.55') + '"><label class="row" style="gap:6px"><input type="checkbox" data-tick="' + i + '" value="' + esc(n) + '"' + (on ? ' checked' : '') + '><b>' + esc(n) + '</b></label>' +
+        '<span class="tag t-info">' + t('machinesN', tot) + '</span>' +
+        (hasTotal && said !== tot ? '<span class="tag t-bad">' + t('totalSays', said) + '</span>' : '') +
+        (a.meta.type ? '<span class="tag t-info">' + esc(a.meta.type) + '</span>' : '') + (a.meta.version ? '<span class="tag t-info">' + esc(a.meta.version) + '</span>' : '') +
+        (a.selfCheck === 'OK' ? '<span class="tag t-ok" title="' + esc(t('consistentTip')) + '">' + t('consistent') + '</span>' : a.selfCheck === 'MISMATCH' ? '<span class="tag t-bad">' + t('notConsistent') + '</span>' : '') + '</div>';
+      if (on && a.selfCheck === 'MISMATCH') h += '<div class="small" style="color:var(--bad);margin:2px 0 0 24px">' + t('notConsistentTxt') + '<br>' +
+        a.selfDiff.map(s => { const m = s.match(/^(.+): pane (\S+) \/ op table (\S+)$/); return esc(m ? t('paneVsTable', m[1], m[2], m[3]) : s); }).join('<br>') + '</div>';
+    });
+    const fileTot = Object.values(sumSheets(l.sheets, l.sel)).reduce((s, e) => s + e.qty, 0);
+    h += '<div style="margin-top:6px"><b>' + t('fileTotal', fileTot) + '</b></div></div>';
+  });
+  h += '</div>';
+
+  // step 3: result
+  const lay = layoutTotal();
+  if (S.layouts.length && Object.keys(lay).length) {
+    const c = S.cmp = compare(d.machines, lay, S.db.groupOf);
+    const selfBad = S.layouts.some(l => l.sel.some(n => l.sheets[n].selfCheck === 'MISMATCH'));
+    const diffs = c.rows.filter(x => x.result !== 'MATCH'), grpOk = !c.groupDiffCount;
+    h += '<div class="card"><h3><span class="num">3</span> ' + t('step3') + '</h3>';
+    if (!diffs.length) h += '<div class="banner ok">' + t('allMatch', c.totalLayout, c.rows.length) + '</div>';
+    else if (grpOk) {
+      h += '<div class="banner ok">' + t('groupOk') + '</div>';
+      h += '<ul class="diffs">' + diffs.map(x => '<li><b>' + esc(x.machine) + '</b> (' + esc(x.group) + '): ' + esc(explainT(x)) + '</li>').join('') + '</ul>';
+    } else {
+      const bad = c.groups.filter(x => x.result !== 'MATCH');
+      h += '<div class="banner bad">' + t('grpDiffFound', bad.length, c.totalDB, c.totalLayout) + '</div>';
+      h += '<ul class="diffs">' + bad.map(x => '<li><b>' + esc(x.group) + '</b>: ' + esc(t('grpLine', x.db, x.lay, (x.diff > 0 ? '+' : '') + x.diff)) + '</li>').join('') + '</ul>';
+    }
+    if (selfBad) h += '<div class="banner warn" style="font-size:14px">' + t('selfBad') + '</div>';
+    if (S.layouts.some(l => l.pdf)) h += '<div class="banner warn" style="font-size:14px">' + t('pdfWarn3') + '</div>';
+    h += '<label class="small"><input type="checkbox" id="onlyDiff"' + (S.onlyDiff ? ' checked' : '') + '> ' + t('onlyDiff') + '</label>';
+    const prevBad = new Set(r.stg && (r.stg.stage === 'RECHECK' || r.stg.stage === 'TECH') ? r.stg.prevDiff : []);
+    const shown = S.onlyDiff ? c.rows.filter(x => x.result !== 'MATCH' || prevBad.has(x.machine)) : c.rows;
+    const tDiff = c.totalLayout - c.totalDB;
+    h += '<table style="margin-top:6px"><thead><tr><th>' + t('thMachine') + '</th><th>' + t('thGroup') + '</th><th class="n">' + t('thDb') + '</th><th class="n">' + t('thLayout') +
+      '</th><th class="n">' + t('thDiff') + '</th><th>' + t('thResult') + '</th></tr></thead><tbody>' +
+      shown.map(x => '<tr' + (prevBad.has(x.machine) ? ' class="prevbad"' : '') + '><td><b>' + esc(x.machine) + '</b>' + (prevBad.has(x.machine) ? ' <span class="tag t-warn">' + t('prevWrong') + '</span>' : '') + '</td><td>' + esc(x.group) + '</td><td class="n">' + x.db + '</td><td class="n">' + x.lay + '</td><td class="n">' + (x.diff > 0 ? '+' : '') + x.diff +
+        '</td><td><span class="tag ' + RES_CLS[x.result] + '">' + RES_TXT(x.result) + '</span></td></tr>').join('') + '</tbody>' +
+      '<tfoot><tr class="tot"><td colspan="2">' + t('totalRow', c.rows.length) + '</td><td class="n">' + c.totalDB + '</td><td class="n">' + c.totalLayout + '</td><td class="n">' + (tDiff > 0 ? '+' : '') + tDiff +
+      '</td><td>' + (tDiff ? '<span class="tag t-bad">' + t('totalDiff') + '</span>' : '<span class="tag t-ok">' + t('rMATCH') + '</span>') + '</td></tr></tfoot></table>';
+    h += '</div>';
+
+    // step 4: decision (IE Tech has its own buttons)
+    const pdfOk = S.layouts.every(l => !l.pdf || l.confirmed);
+    const canPass = grpOk && pdfOk;           // the layout self-check is a warning only (split layouts); a PDF layout needs the manual confirmation
+    if (S.user.role === 'Tech' || (r.stg && r.stg.stage === 'TECH' && canTech())) h += '<div class="card"><h3><span class="num">4</span> ' + t('techStep4') + '</h3>' +
+      '<textarea id="comment" rows="2" style="width:100%" placeholder="' + esc(t('commentPh')) + '"></textarea><div class="decide">' +
+      '<button class="a" id="tDbWrong"><b>' + t('techDbWrong') + '</b><span class="small muted">' + t('techDbWrongSub') + '</span></button>' +
+      '<button class="p" id="tFixed"><b>' + t('techFixed') + '</b><span class="small muted">' + t('techFixedSub') + '</span></button></div></div>';
+    else h += '<div class="card"><h3><span class="num">4</span> ' + t('step4') + '</h3>' +
+      '<textarea id="comment" rows="2" style="width:100%" placeholder="' + esc(t('commentPh')) + '"></textarea>' +
+      '<div class="decide">' +
+      '<button class="p" id="dPass"' + (canPass ? '' : ' disabled title="' + esc(grpOk ? t('pdfPassTip') : t('bPassTip')) + '"') + '><b>' + t('bPass') + '</b><span class="small muted">' + t('bPassSub') + '</span></button>' +
+      '<button class="a" id="dAcc"><b>' + t('bAcc') + '</b><span class="small muted">' + t('bAccSub') + '</span></button>' +
+      '<button class="f" id="dFail"><b>' + t('bFail') + '</b><span class="small muted">' + t('bFailSub') + '</span></button>' +
+      '</div><div class="muted small" style="margin-top:6px">' + t('savedAs', esc(S.user.name)) + '</div></div>';
+  }
+  w.innerHTML = h;
+
+  $('btnOpenLayout').onclick = () => guard(addLayouts); $('btnOpenLayout').title = t('pdfBrowseTip');
+  wirePdf(w);
+  if ($('btnAllowLay')) $('btnAllowLay').onclick = () => guard(allowLayRoot);
+  if ($('btnShowSugg')) $('btnShowSugg').onclick = () => { S.showSuggest = true; renderWork(); };
+  if ($('btnHideSugg')) $('btnHideSugg').onclick = () => { S.showSuggest = false; renderWork(); };
+  if ($('btnRescan')) $('btnRescan').onclick = () => guard(scanLayouts);
+  if ($('laySearch')) $('laySearch').oninput = e => { S.laySearch = e.target.value; paintSuggest(); };
+  paintSuggest();
+  w.querySelectorAll('[data-tick]').forEach(el => el.onchange = () => {
+    const l = S.layouts[+el.dataset.tick];
+    l.sel = l.eligible.filter(n => n === el.value ? el.checked : l.sel.includes(n));
+    act('TICK_SHEET', S.sel.style, l.file + ' → ' + (l.sel.join(' + ') || '-')); renderWork();
+  });
+  w.querySelectorAll('[data-rm]').forEach(el => el.onclick = () => { if (S.layouts[+el.dataset.rm].pdf) closePdfPane(); S.layouts.splice(+el.dataset.rm, 1); renderWork(); });
+  if ($('onlyDiff')) $('onlyDiff').onchange = e => { S.onlyDiff = e.target.checked; const c = $('comment').value; renderWork(); $('comment').value = c; };
+  if ($('tFixed')) { $('tFixed').onclick = () => guard(() => techAction('TECH_LAYOUT_FIXED')); $('tDbWrong').onclick = () => guard(() => techAction('TECH_DB_WRONG')); }
+  if ($('dPass')) {
+    $('dPass').onclick = () => guard(() => save('PASS'));
+    $('dAcc').onclick = () => guard(() => save('ACCEPTED'));
+    $('dFail').onclick = () => guard(() => save('FAIL'));
+  }
+}
+function paintSuggest() {
+  const box = $('suggList'); if (!box || !S.sel) return;
+  const res = suggestLayouts(S.layIndex, S.sel.style, S.laySearch);
+  $('suggTitle').textContent = S.laySearch ? t('searchResults') : t('suggestTitle');
+  const lbl = { 3: ['t-ok', 'sameStyle'], 2: ['t-info', 'sameBase'], 1: ['t-warn', 'sameArt'] };
+  box.innerHTML = res.length ? res.map((f, i) => '<div class="r"><button class="primary" data-sug="' + i + '">' + t('open') + '</button><div><div class="nm">' + esc(f.name) +
+    (lbl[f.score] ? ' <span class="tag ' + lbl[f.score][0] + '">' + t(lbl[f.score][1]) + '</span>' : '') + '</div><div class="muted small">' + esc(S.layRoot.name + '/' + f.path) + ' <span data-mod="' + i + '"></span></div></div></div>').join('')
+    : '<div class="r muted small">' + t('noSuggest') + '</div>';
+  box.querySelectorAll('[data-sug]').forEach(b => b.onclick = () => guard(() => openLayoutHandles([res[+b.dataset.sug].handle])));
+  res.forEach((f, i) => f.handle.getFile().then(file => { const s = box.querySelector('[data-mod="' + i + '"]'); if (s) s.textContent = '· ' + dt(new Date(file.lastModified).toISOString()); }).catch(() => {}));
+  $('suggInfo').textContent = S.scanning ? t('scanning', S.scanCount) : (S.layIndexAt ? t('indexed', S.layIndex.length, S.layRoot.name, dt(S.layIndexAt)) : '');
+}
+async function addLayouts() {   // Browse…: opens in the last layout's folder, or in the Layout folder
+  const startIn = (await idb.get('lastLayout')) || S.layRoot || undefined;
+  const opts = { id: 'lcLayout', multiple: true, types: LAYOUT_TYPES }; if (startIn) opts.startIn = startIn;
+  let hs; try { hs = await window.showOpenFilePicker(opts); } catch (e) { if (e.name === 'AbortError') return; delete opts.startIn; hs = await window.showOpenFilePicker(opts); }
+  await openLayoutHandles(hs);
+}
+const PDFSHEET = 'PDF';
+function syncPdf(l) {              // typed rows -> the same machine structure an Excel sheet gives
+  const m = {};
+  l.rows.forEach(r => { const c = NM(r.m), q = num(r.q); if (c && q > 0) { const x = m[c] = m[c] || { qty: 0, remark: '' }; x.qty += q; } });
+  l.sheets[PDFSHEET].machines = m;
+}
+function parsePasted(text) {
+  const rows = []; let ignored = 0;
+  String(text || '').split(/\r?\n/).forEach(line => {
+    const ln = line.trim(); if (!ln) return;
+    if (/^(total|tổng|cộng|stt|no\.?\b|m\/c\b|machine|qty|stt)/i.test(ln)) { ignored++; return; }
+    let m = ln.match(/^(.*?[A-Za-z].*?)[\s:=×x\-–]+(\d+(?:[.,]\d+)?)\s*$/);
+    if (m) { rows.push({ m: m[1].trim(), q: num(m[2].replace(',', '.')) }); return; }
+    m = ln.match(/^(\d+(?:[.,]\d+)?)\s*[×x]?\s+(.*[A-Za-z].*)$/);
+    if (m) { rows.push({ m: m[2].trim(), q: num(m[1].replace(',', '.')) }); return; }
+    ignored++;
+  });
+  return { rows, ignored };
+}
+async function openPdfHandle(h) {
+  const f = await h.getFile(), blob = new Blob([f], { type: 'application/pdf' });
+  const l = { file: f.name, pdf: true, url: URL.createObjectURL(blob), rows: [], confirmed: false, eligible: [PDFSHEET], sheets: {}, sel: [PDFSHEET], paste: '' };
+  l.sheets[PDFSHEET] = { machines: {}, panes: [], meta: { type: 'PDF', version: '' }, selfCheck: 'N/A', selfDiff: [] };
+  S.layouts.push(l);
+  act('OPEN_LAYOUT', S.sel.style, f.name + ' / PDF (manual)');
+  try { await idb.set('lastLayout', h); } catch (e) {}
+  openPdfPane(l);
+}
+function openPdfPane(l) {
+  $('pdfTitle').textContent = '📄 ' + l.file; $('pdfNew').textContent = t('pdfNewTab'); $('pdfNew').href = l.url;
+  $('pdfFrame').src = l.url; $('pdfPane').hidden = false; $('tab-check').classList.add('withpdf');
+}
+function closePdfPane() { const p = $('pdfPane'); if (p && !p.hidden) { p.hidden = true; $('pdfFrame').src = 'about:blank'; } $('tab-check').classList.remove('withpdf'); }
+function initPdfPane() { $('pdfClose').onclick = closePdfPane; }
+function pdfCard(l, i) {
+  const groupOf = S.db.groupOf || {}, total = Object.values(l.sheets[PDFSHEET].machines).reduce((a, e) => a + e.qty, 0);
+  let h = '<div class="file"><div class="row"><b>' + esc(l.file) + '</b><span class="tag t-info">' + t('pdfTag') + '</span><button data-pview="' + i + '">' + t('pdfView') + '</button>' +
+    '<button data-rm="' + i + '" style="margin-left:auto">' + t('remove') + '</button></div><div class="muted small" style="margin-top:4px">' + t('pdfNote') + '</div>';
+  h += '<datalist id="pdfCodes">' + Object.keys(groupOf).sort().map(c => '<option value="' + esc(c) + '">').join('') + '</datalist>';
+  h += '<div class="pdfadd"><input id="pdfCode" list="pdfCodes" placeholder="' + esc(t('pdfPh')) + '" size="12" aria-label="' + esc(t('pdfCode')) + '"><input id="pdfQty" type="number" min="0" step="1" placeholder="' + esc(t('pdfQty')) + '" style="width:80px">' +
+    '<button class="primary" data-padd="' + i + '">' + t('pdfAdd') + '</button></div>';
+  if (l.rows.length) {
+    h += '<table class="pdfrows" style="margin-top:6px"><thead><tr><th>' + t('thMachine') + '</th><th>' + t('thGroup') + '</th><th class="n">' + t('pdfQty') + '</th><th></th></tr></thead><tbody>' +
+      l.rows.map((r, k) => { const c = NM(r.m), g = groupOf[c];
+        return '<tr><td><b>' + esc(c || r.m) + '</b></td><td>' + (g ? esc(g) : '<span class="tag t-warn">' + t('pdfNoGroup') + '</span>') + '</td><td class="n"><input type="number" min="0" step="1" data-pq="' + i + '|' + k + '" value="' + esc(r.q) + '" style="width:70px"></td>' +
+          '<td><button data-pdel="' + i + '|' + k + '" aria-label="' + esc(t('remove')) + '">✕</button></td></tr>'; }).join('') + '</tbody><tfoot><tr class="tot"><td colspan="2">' + t('pdfTotal', total) + '</td><td></td><td></td></tr></tfoot></table>';
+  } else h += '<div class="muted small" style="margin-top:6px">' + t('pdfEmpty') + '</div>';
+  h += '<details style="margin-top:6px"><summary>' + t('pdfPasteTitle') + '</summary><textarea id="pdfPaste" rows="4" style="width:100%;margin-top:4px">' + esc(l.paste) + '</textarea><button data-ppaste="' + i + '" style="margin-top:4px">' + t('pdfPasteBtn') + '</button></details>';
+  h += '<label class="row" style="gap:6px;margin-top:8px"><input type="checkbox" data-pconf="' + i + '"' + (l.confirmed ? ' checked' : '') + '><b>' + t('pdfConfirm') + '</b></label></div>';
+  return h;
+}
+function wirePdf(w) {
+  const L = i => S.layouts[+i], redo = () => { renderWork(); };
+  const addRow = i => { const l = L(i), c = ($('pdfCode').value || '').trim(), q = num($('pdfQty').value); if (!c || !(q > 0)) { $('pdfCode').focus(); return; } l.rows.push({ m: c, q }); l.confirmed = false; syncPdf(l); redo(); const n = $('pdfCode'); if (n) n.focus(); };
+  w.querySelectorAll('[data-pview]').forEach(b => b.onclick = () => openPdfPane(L(b.dataset.pview)));
+  w.querySelectorAll('[data-padd]').forEach(b => b.onclick = () => addRow(b.dataset.padd));
+  const qe = $('pdfQty'); if (qe) qe.onkeydown = e => { if (e.key === 'Enter') { const b = w.querySelector('[data-padd]'); if (b) addRow(b.dataset.padd); } };
+  w.querySelectorAll('[data-pq]').forEach(el => el.onchange = () => { const [i, k] = el.dataset.pq.split('|'), l = L(i); l.rows[+k].q = num(el.value); l.confirmed = false; syncPdf(l); redo(); });
+  w.querySelectorAll('[data-pdel]').forEach(b => b.onclick = () => { const [i, k] = b.dataset.pdel.split('|'), l = L(i); l.rows.splice(+k, 1); l.confirmed = false; syncPdf(l); redo(); });
+  w.querySelectorAll('[data-ppaste]').forEach(b => b.onclick = () => { const l = L(b.dataset.ppaste), r = parsePasted($('pdfPaste').value); l.rows = l.rows.concat(r.rows); l.paste = ''; l.confirmed = false; syncPdf(l); toast(t('pdfPasteDone', r.rows.length, r.ignored), r.rows.length ? 'ok' : 'warn'); redo(); });
+  w.querySelectorAll('[data-pconf]').forEach(el => el.onchange = () => { L(el.dataset.pconf).confirmed = el.checked; redo(); });
+}
+async function openLayoutHandles(hs) {
+  for (const h of hs) {
+    if (/\.pdf$/i.test(h.name || '')) { await openPdfHandle(h); continue; }
+    const f = await h.getFile();
+    toast(t('reading', f.name));
+    const names = (await readWb(f, { bookSheets: true })).SheetNames;
+    const eligible = names.filter(n => !CONFIG.excludeSheets.test(n));
+    if (!eligible.length) { toast(t('noLayoutSheet', f.name), 'warn'); continue; }
+    const wb = await readWb(f, { sheets: eligible });
+    const sheets = {}; eligible.forEach(n => sheets[n] = analyseSheet(wb.Sheets[n]));
+    const sel = defaultSheets(eligible, sheets);
+    S.layouts.push({ file: f.name, eligible, sheets, sel });
+    act('OPEN_LAYOUT', S.sel.style, f.name + ' / ' + (sel.join(' + ') || '-'));
+    try { await idb.set('lastLayout', h); } catch (e) {}
+  }
+  S.showSuggest = false; S.laySearch = '';
+  renderWork();
+}
+function layoutTotal() {
+  const tt = {};
+  S.layouts.forEach(l => Object.entries(sumSheets(l.sheets, l.sel)).forEach(([m, e]) => {
+    const x = tt[m] = tt[m] || { qty: 0, remark: '' }; x.qty += e.qty; if (e.remark) x.remark = e.remark;
+  }));
+  return tt;
+}
+async function save(status) {
+  if (!S.cmp) return;
+  let comment = $('comment').value.trim();
+  if (status !== 'FAIL' && S.layouts.some(l => l.pdf && !l.confirmed)) throw new Error(t('pdfConfirmNeed'));
+  const manualPdf = S.layouts.some(l => l.pdf);
+  if (status === 'PASS' && manualPdf && !comment) comment = t('pdfAutoComment', S.layouts.filter(l => l.pdf).map(l => l.file).join(', '));
+  if (status !== 'PASS' && comment.length < 3) { $('comment').focus(); throw new Error(t('needComment', t(status))); }
+  const now = new Date(), st = stamp(now);
+  const rec = {
+    valId: st + '-' + Math.random().toString(36).slice(2, 6), week: fmt(S.wkS), weekNo: isoWeek(S.wkS), pu: $('pu').value,
+    style: S.sel.style, firstLines: S.sel.firstLines.join(', '), firstDate: fmt(S.sel.firstDate),
+    status, user: S.user.name, role: S.user.role, savedAt: now.toISOString(),
+    layoutFiles: S.layouts.map(l => l.file).join(' | '), layoutSheets: S.layouts.map(l => l.sel.join(' + ')).join(' | '),
+    layoutVersion: S.layouts.map(l => l.sel.map(n => l.sheets[n].meta.version).join(' + ')).join(' | '), layoutType: S.layouts.map(l => l.sel.map(n => l.sheets[n].meta.type).join(' + ')).join(' | '),
+    selfCheck: S.layouts.map(l => l.sel.map(n => l.sheets[n].selfCheck).join(' + ')).join(' | '),
+    dbFile: S.dbName, dbDate: S.dbRes.date !== null ? fmt(S.dbRes.date) : '', inDb: S.dbRes.found,
+    totalDB: S.cmp.totalDB, totalLayout: S.cmp.totalLayout, diffCount: S.cmp.diffCount, groupDiffCount: S.cmp.groupDiffCount,
+    manualPdf, manualRows: S.layouts.filter(l => l.pdf).flatMap(l => Object.entries(l.sheets[PDFSHEET].machines).map(([m, e]) => ({ file: l.file, machine: m, qty: e.qty }))),
+    comment, details: S.cmp.rows
+  };
+  const vd = await S.dataDir.getDirectoryHandle(CONFIG.validationDir, { create: true });
+  await writeText(vd, st + '_' + safe(rec.pu) + '_' + safe(rec.style) + '_' + safe(rec.user) + '.json', JSON.stringify(rec, null, 1));
+  S.vals.push(rec); computeVars();
+  await act('SAVE_' + status, rec.style, rec.diffCount + ' diff' + (comment ? ' · ' + comment : ''));
+  toast((status === 'FAIL' ? '❌ ' : '✅ ') + t('savedMsg', rec.style, t(status)), status === 'FAIL' ? 'warn' : 'ok');
+  if (rec.groupDiffCount) toast('🛠 ' + t('varsSent', rec.groupDiffCount));
+  const idx = S.list.findIndex(x => x.key === S.sel.key);
+  closePdfPane(); S.sel = null; S.layouts = []; S.cmp = null;
+  renderList();
+  const next = S.list[Math.min(idx, S.list.length - 1)];
+  if (next && status !== 'FAIL') selectStyle(next); else renderWork();
+}
+
+/* ================= TAB 2: VARIATION LOG (Consolidator) ================= */
+// PU of a variation = PU of the style's first lines in the CURRENT Linemapping. The PU written in the check record is only a snapshot
+// (it can be an old name, e.g. "PU2" saved before PU2 was split into PU2 Sport / PU2 Intimate).
+function varPUs(v) {
+  const r = S.sp && S.sp.styles && S.sp.styles[v.styleKey];
+  const cur = r && r.firstLines ? pusOf(S.lineMap, r.firstLines).filter(p => p && p !== 'UNMAPPED') : [];
+  return cur.length ? cur : [v.pu].filter(Boolean);
+}
+function filteredVars() {
+  const st = $('vSt').value, pu = $('vPU').value, q = K($('vSearch').value);
+  return S.vars.filter(v => (st === '' || (st === 'ACTIVE' ? isActiveVar(v) : v.status === st)) && (!pu || varPUs(v).includes(pu) || v.pu === pu) && (!q || v.styleKey.includes(q)));
+}
+function renderVariations() {
+  if (!S.sp) return;
+  const all = S.vars;
+  const nOpen = all.filter(v => v.status === 'OPEN' || v.status === 'STILL_DIFF').length, nWait = all.filter(v => v.status === 'WAITING_LAYOUT').length;
+  const nClosed = all.filter(v => v.status === 'CLOSED').length, nStyles = new Set(all.filter(isActiveVar).map(v => v.styleKey)).size;
+  const kpi = (lbl, n, cls) => '<div class="kpi"><div class="muted small">' + lbl + '</div><div class="big" style="color:var(--' + cls + ')">' + n + '</div></div>';
+  $('vKpis').innerHTML = kpi(t('kOpen'), nOpen, nOpen ? 'bad' : 'ok') + kpi(t('kWait'), nWait, nWait ? 'warn' : 'ok') + kpi(t('kStyles'), nStyles, nStyles ? 'bad' : 'ok') + kpi(t('kClosed'), nClosed, 'ok');
+  const list = filteredVars();
+  if (!list.length) { $('vBody').innerHTML = '<div class="card muted">' + t('varNone') + '</div>'; return; }
+  if (S.vView === 'table') {
+    $('vBody').innerHTML = '<div class="tablewrap"><table><thead><tr><th>' + t('thFoundAt') + '</th><th>' + t('thPU') + '</th><th>' + t('thStyle') + '</th><th>' + t('thMachine') + '</th><th>' + t('thType') +
+      '</th><th class="n">' + t('thDbCheck') + '</th><th class="n">' + t('thLayout') + '</th><th class="n">' + t('thDbNow') + '</th><th class="n">' + t('thToFix') + '</th><th>' + t('thStatus') +
+      '</th><th>' + t('thFoundBy') + '</th><th>' + t('thClosedBy') + '</th></tr></thead><tbody>' +
+      list.map(v => '<tr><td>' + dt(v.foundAt) + '</td><td>' + esc(varPUs(v).join(' / ')) + '</td><td><b>' + esc(v.style) + '</b></td><td>' + esc(v.machine) + '</td><td>' + RES_TXT(v.type) + '</td><td class="n">' + v.dbAtCheck +
+        '</td><td class="n">' + v.layout + '</td><td class="n">' + (v.dbNow ?? '') + '</td><td class="n"><b>' + (v.status === 'CLOSED' ? 0 : v.remaining) + '</b></td><td><span class="tag ' + VST_CLS[v.status] + '">' + VST_TXT(v.status) +
+        (v.closeReason ? ' · ' + t('cr' + v.closeReason) : '') + '</span></td><td>' + esc(v.foundBy) + '</td><td>' + esc(v.closedBy) + (v.closedAt ? ' · ' + dt(v.closedAt) : '') + '</td></tr>').join('') + '</tbody></table></div>';
+    return;
+  }
+  // cards: one per check
+  const groups = {}; list.forEach(v => (groups[v.valId] = groups[v.valId] || []).push(v));
+  const order = Object.values(groups).sort((a, b) => (isActiveVar(b[0]) - isActiveVar(a[0])) || String(b[0].foundAt).localeCompare(String(a[0].foundAt)));
+  $('vBody').innerHTML = order.map(g => {
+    const v0 = g[0], active = g.filter(isActiveVar), remain = active.reduce((s, v) => s + Math.abs(v.remaining), 0);
+    const waiting = active.length && active.every(v => v.status === 'WAITING_LAYOUT');
+    const waitNote = (active.find(v => v.status === 'WAITING_LAYOUT') || {}).lastAction;
+    let h = '<div class="vcard' + (active.length ? '' : ' done') + '"><div class="vhead"><span class="title">' + esc(v0.style) + '</span><span class="tag t-info">' + esc(varPUs(v0).join(' / ')) + '</span>' +
+      '<span class="tag ' + STATUS_CLS[v0.checkStatus] + '">IE: ' + t(v0.checkStatus) + '</span>' +
+      (active.length ? '<span class="tag t-bad" style="margin-left:auto">' + t('remainingN', remain) + '</span>' : '<span class="tag t-ok" style="margin-left:auto">' + t('varZero') + '</span>') + '</div>' +
+      '<div class="muted small">' + esc(t('foundBy', v0.foundBy, dt(v0.foundAt))) + (v0.checkComment ? ' · ' + t('ieComment') + ': <i>' + esc(v0.checkComment) + '</i>' : '') + '</div>';
+    if (waitNote) h += '<div class="note">↩ ' + esc(waitNote.by) + ' · ' + dt(waitNote.at) + (waitNote.note ? ': ' + esc(waitNote.note) : '') + '</div>';
+    const sg = S.stages[v0.styleKey] || {}, la = sg.last;
+    if (active.length || sg.stage === 'RECHECK') h += '<div class="small" style="margin-top:4px"><span class="tag ' + (sg.stage === 'CONS' ? 't-bad' : 't-warn') + '">' + esc(t('withWho', t(OWN[sg.stage] || 'ownIE'))) + '</span>' +
+      (sg.escalate ? ' <span class="tag t-bad">' + esc(t('tagRounds', sg.rounds)) + '</span>' : '') + '</div>';
+    if (la && /^TECH_/.test(la.action) && la.valId === v0.valId) h += '<div class="note">🔧 ' + esc(la.by) + ' · ' + dt(la.at) + ': ' + esc(la.note || '') + '</div>';
+    h += '<table style="margin-top:6px"><thead><tr><th>' + t('thMachine') + '</th><th>' + t('thGroup') + '</th><th>' + t('thType') + '</th><th class="n">' + t('thDbCheck') + '</th><th class="n">' + t('thLayout') +
+      '</th><th class="n">' + t('thDbNow') + '</th><th class="n">' + t('thToFix') + '</th><th>' + t('thStatus') + '</th></tr></thead><tbody>' +
+      g.map(v => '<tr><td><b>' + esc(v.machine) + '</b></td><td>' + esc(v.group) + '</td><td>' + RES_TXT(v.type) + '</td><td class="n">' + v.dbAtCheck + '</td><td class="n">' + v.layout + '</td><td class="n">' + (v.dbNow ?? '') +
+        '</td><td class="n"><b>' + (v.status === 'CLOSED' ? 0 : (v.remaining > 0 ? '+' : '') + v.remaining) + '</b></td><td><span class="tag ' + VST_CLS[v.status] + '">' + VST_TXT(v.status) +
+        (v.closeReason ? ' · ' + t('cr' + v.closeReason) : '') + '</span>' + (v.closedBy ? ' <span class="muted small">' + esc(v.closedBy) + '</span>' : '') + '</td></tr>').join('') + '</tbody></table>';
+    if (active.length && canCons()) h += '<div class="muted small" style="margin-top:6px">' + esc(t('consHint')) + '</div><div class="vact">' +
+      '<button data-copy="' + v0.valId + '" title="' + esc(t('copyTip')) + '">' + t('copyList') + '</button>' +
+      '<button class="primary" data-verify="' + v0.valId + '">' + t('verify') + '</button>' +
+      (waiting ? '<button data-reopen="' + v0.valId + '">' + t('reopen') + '</button>' : '<button data-fixlayout="' + v0.valId + '">' + t('layoutFix') + '</button>') + '</div>';
+    return h + '</div>';
+  }).join('');
+  $('vBody').querySelectorAll('[data-copy]').forEach(b => b.onclick = () => guard(() => copyCorrection(b.dataset.copy)));
+  $('vBody').querySelectorAll('[data-verify]').forEach(b => b.onclick = () => guard(() => verifyDb(b.dataset.verify)));
+  $('vBody').querySelectorAll('[data-fixlayout]').forEach(b => b.onclick = () => guard(() => sendBack(b.dataset.fixlayout)));
+  $('vBody').querySelectorAll('[data-reopen]').forEach(b => b.onclick = () => guard(() => varAction(b.dataset.reopen, 'REOPEN', '')));
+}
+async function writeVarAction(valId, action, keys, note, extra) {
+  const v0 = S.vars.find(v => v.valId === valId) || S.vals.find(v => v.valId === valId);
+  const rec = Object.assign({ valId, style: v0.style, keys, action, by: S.user.name, role: S.user.role, at: new Date().toISOString(), note }, extra || {});
+  const d = await S.dataDir.getDirectoryHandle(CONFIG.variationDir, { create: true });
+  await writeText(d, stamp() + '_' + action + '_' + safe(v0.style) + '_' + safe(S.user.name) + '.json', JSON.stringify(rec, null, 1));
+  keys.forEach(k => S.varActs.push(Object.assign({}, rec, { key: k })));
+  S.rawActs.push(rec);
+  computeVars();
+  await act('VAR_' + action, v0.style, note);
+}
+async function techAction(action) {
+  if (!canTech()) throw new Error(t('techOnly'));
+  const r = S.sel, g = r.stg || {}, comment = $('comment').value.trim();
+  if (!S.cmp) throw new Error(t('techNeedLayout'));
+  if (action === 'TECH_DB_WRONG' && comment.length < 3) { $('comment').focus(); throw new Error(t('needComment', t('techDbWrong'))); }
+  const valId = g.check.valId, keys = S.vars.filter(v => v.valId === valId && isActiveVar(v)).map(v => v.key);
+  const diffCount = S.cmp.groupDiffCount;
+  const result = { diffCount, layoutFiles: S.layouts.map(l => l.file).join(' | '), layoutSheets: S.layouts.map(l => l.sel.join(' + ')).join(' | '),
+    details: S.cmp.rows.map(x => ({ machine: x.machine, db: x.db, lay: x.lay, result: x.result })) };
+  const note = action === 'TECH_DB_WRONG' ? t('techDbWrongNote', comment) : t('techFixedNote', diffCount) + (comment ? ' · ' + comment : '');
+  await writeVarAction(valId, action, keys, note, { result });
+  if (action === 'TECH_DB_WRONG') toast(t('techSentCons', r.style), 'ok');
+  else if (!diffCount) toast(t('techOk', r.style), 'ok'); else toast(t('techLeft', r.style, diffCount), 'warn');
+  S.sel = null; S.layouts = []; S.cmp = null; renderAll();
+}
+async function varAction(valId, action, note) {
+  if (!canCons()) throw new Error(t('consOnly'));
+  const keys = S.vars.filter(v => v.valId === valId && isActiveVar(v)).map(v => v.key);
+  await writeVarAction(valId, action, keys, note);
+  renderAll();
+}
+async function sendBack(valId) {
+  if (!canCons()) throw new Error(t('consOnly'));
+  const note = window.prompt(t('askLayoutNote'), '');
+  if (note === null) return;
+  await varAction(valId, 'LAYOUT_TO_FIX', note.trim());
+  toast(t('sentBack', S.vars.find(v => v.valId === valId).style), 'ok');
+}
+async function copyCorrection(valId) {
+  if (!canCons()) throw new Error(t('consOnly'));
+  const check = S.vals.find(v => v.valId === valId);
+  const rows = correctionRows(check, S.db, isoOfSerial(todaySerial()));
+  await copyText(rows.map(r => r.join('\t')).join('\n'));
+  act('COPY_LIST', check.style, rows.length + ' rows');
+  toast(t('copied', rows.length), 'ok');
+}
+async function verifyDb(valId) {
+  if (!canCons()) throw new Error(t('consOnly'));
+  const before = S.vars.filter(v => v.valId === valId && isActiveVar(v)).map(v => v.key);
+  await loadDb(); computeVars();                                  // read the corrected Machine Database again
+  const after = S.vars.filter(v => before.includes(v.key));
+  const still = after.filter(isActiveVar);
+  const style = after[0].style;
+  const note = still.length ? still.map(v => v.machine + ' ' + v.dbNow + '→' + v.layout).join(', ') : 'variation = 0';
+  await writeVarAction(valId, 'DB_UPDATED', before, note);
+  if (!still.length) toast(t('verifyAllOk', style), 'ok');
+  else toast(t('verifySome', style, still.length, still.map(v => '• ' + v.machine + ': ' + t('thDbNow') + ' ' + v.dbNow + ', ' + t('thLayout') + ' ' + v.layout).join('\n')), 'warn');
+  renderAll();
+}
+
+/* ================= TAB 3: STATUS ================= */
+function renderStatus() {
+  if (!S.sp) return;
+  const data = S.supData = supervisorData(S.sp, S.lineMap, S.vals, S.wkS, S.inclBase);
+  const openVar = {}; S.vars.filter(isActiveVar).forEach(v => varPUs(v).forEach(p => openVar[p] = (openVar[p] || 0) + 1));
+  $('kpis').innerHTML = data.sum.length ? data.sum.map(s => {
+    const done = s.PASS + s.ACCEPTED;
+    return '<div class="kpi"><div class="row"><b style="font-size:16px">' + esc(s.pu) + '</b><span class="tag ' + (s.pct >= 100 ? 't-ok' : s.pct >= 50 ? 't-warn' : 't-bad') + '" style="margin-left:auto">' + t('pctDone', s.pct) + '</span></div>' +
+      '<div class="big">' + done + ' / ' + s.week + '</div><div class="muted small">' + t('checkedThisWeek') + '</div><div class="bar"><i style="width:' + s.pct + '%"></i></div>' +
+      '<div class="small">' + t('kpiLine', s.PASS, s.ACCEPTED, s.FAIL, s.PENDING) + '</div>' +
+      (s.carry ? '<div class="small" style="color:var(--bad)">' + t('openEarlier', s.carry) + '</div>' : '') +
+      '<div class="small" style="color:var(--' + (openVar[s.pu] ? 'bad' : 'ok') + ')">' + t('openVarsKpi', openVar[s.pu] || 0) + '</div></div>';
+  }).join('') : '<div class="muted">' + t('noStyles') + '</div>';
+  const fp = $('fPU').value, fs = $('fSt').value;
+  const cntSt = { CONS: 0, TECH: 0, RECHECK: 0, ESC: 0 };
+  data.rows.forEach(r => { const g = S.stages[r.key]; if (!g) return; if (cntSt[g.stage] !== undefined) cntSt[g.stage]++; if (g.escalate) cntSt.ESC++; });
+  $('kpis').insertAdjacentHTML('beforeend', '<div class="kpi"><div class="small">' + t('kWaitCons') + ': <b>' + cntSt.CONS + '</b></div><div class="small">' + t('kWaitTech') + ': <b>' + cntSt.TECH + '</b></div>' +
+    '<div class="small">' + t('kRecheck') + ': <b>' + cntSt.RECHECK + '</b></div><div class="small" style="color:var(--' + (cntSt.ESC ? 'bad' : 'ok') + ')">' + t('kRounds') + ': <b>' + cntSt.ESC + '</b></div></div>');
+  const rows = data.rows.filter(r => (!fp || r.pu === fp) && (!fs || r.status === fs));
+  $('stCount').textContent = t('stylesN', rows.length);
+  $('stTable').innerHTML = '<table><thead><tr><th>' + t('thPU') + '</th><th>' + t('thStyle') + '</th><th>' + t('thLoadsFirst') + '</th><th>' + t('thWhen') + '</th><th>' + t('thResult') + '</th><th>' + t('thNow') + '</th><th>' +
+    t('thCheckedBy') + '</th><th>' + t('thSavedAt') + '</th><th class="n">' + t('thDiffs') + '</th><th>' + t('thComment') + '</th></tr></thead><tbody>' +
+    rows.map(r => '<tr><td>' + esc(r.pu) + '</td><td><b>' + esc(r.style) + '</b></td><td>' + esc(r.firstLines) + ' · ' + fmt(r.firstDate, false) + '</td><td>' +
+      (r.scope === 'This week' ? t('thisWeek') : '<span class="tag t-bad">' + t('earlierWeek') + '</span>') + '</td><td><span class="tag ' + STATUS_CLS[r.status] + '">' + t(r.status) + '</span>' + (r.pdf ? ' <span class="tag t-info">PDF</span>' : '') +
+      (r.status === 'PENDING' && S.approvals[r.key] ? ' <span class="tag t-info">' + t('tagApproved') + '</span>' : '') + '</td><td>' +
+      (S.stages[r.key] ? esc(t(OWN[S.stages[r.key].stage])) + (S.stages[r.key].escalate ? ' <span class="tag t-bad">' + esc(t('tagRounds', S.stages[r.key].rounds)) + '</span>' : '') : esc(t('ownIE'))) + '</td><td>' +
+      esc(r.user) + '</td><td>' + esc(r.savedAt) + '</td><td class="n">' + esc(r.diff) + '</td><td class="muted">' + esc(r.comment) + '</td></tr>').join('') + '</tbody></table>';
+}
+
+/* ================= TAB 4: ACTIVITY ================= */
+async function renderActivity() {
+  if (!S.dataDir) return;
+  await loadActivity();
+  const users = [...new Set(S.acts.map(a => a.name))].sort(), acts = [...new Set(S.acts.map(a => a.action))].sort();
+  const keepU = $('aUser').value, keepA = $('aAct').value;
+  $('aUser').innerHTML = '<option value="">' + t('everyone') + '</option>' + users.map(u => '<option' + (u === keepU ? ' selected' : '') + '>' + esc(u) + '</option>').join('');
+  $('aAct').innerHTML = '<option value="">' + t('allActions') + '</option>' + acts.map(a => '<option value="' + a + '"' + (a === keepA ? ' selected' : '') + '>' + esc(t('a' + a)) + '</option>').join('');
+  const rows = S.acts.filter(a => (!keepU || a.name === keepU) && (!keepA || a.action === keepA));
+  $('aCount').textContent = t('actionsN', rows.length);
+  const cls = a => a === 'SAVE_FAIL' ? 't-bad' : a.startsWith('SAVE') || a === 'VAR_DB_UPDATED' ? 't-ok' : a === 'LOAD_PLAN' ? 't-info' : a.startsWith('VAR') ? 't-warn' : '';
+  $('aTable').innerHTML = '<table><thead><tr><th>' + t('thTime') + '</th><th>' + t('thName') + '</th><th>' + t('thRole') + '</th><th>' + t('thAction') + '</th><th>' + t('thStyle') + '</th><th>' + t('thDetail') + '</th></tr></thead><tbody>' +
+    rows.map(a => '<tr><td>' + dt(a.time) + '</td><td><b>' + esc(a.name) + '</b></td><td>' + roleTxt(a.role) + (a.pu && a.role === 'IE' ? ' · ' + esc(a.pu) : '') +
+      '</td><td><span class="tag ' + cls(a.action) + '">' + esc(t('a' + a.action)) + '</span></td><td>' + esc(a.style) + '</td><td class="muted">' + esc(a.detail) + '</td></tr>').join('') + '</tbody></table>';
+}
+
+/* ================= EXPORT ================= */
+function exportStatus() {
+  if (!S.supData) return;
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(S.supData.sum.map(s => ({ [t('thPU')]: s.pu, [t('checkedThisWeek')]: s.week, [t('PASS')]: s.PASS, [t('ACCEPTED')]: s.ACCEPTED, [t('FAIL')]: s.FAIL, [t('PENDING')]: s.PENDING, '%': s.pct, [t('earlierWeek')]: s.carry }))), 'Summary');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(S.supData.rows.map(r => ({ [t('thPU')]: r.pu, [t('thStyle')]: r.style, [t('thLoadsFirst')]: r.firstLines, Date: fmt(r.firstDate), [t('thResult')]: t(r.status), [t('thCheckedBy')]: r.user, [t('thSavedAt')]: r.savedAt, [t('thDiffs')]: r.diff, [t('thComment')]: r.comment }))), 'Styles');
+  XLSX.writeFile(wb, 'LayoutCheck_Status_W' + isoWeek(S.wkS) + '.xlsx');
+  act('EXPORT', '', 'Status W' + isoWeek(S.wkS));
+}
+function exportVariations() {
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(S.vars.map(v => ({
+    [t('thFoundAt')]: dt(v.foundAt), [t('thFoundBy')]: v.foundBy, [t('thPU')]: varPUs(v).join(' / '), [t('thStyle')]: v.style, 'IE': t(v.checkStatus), [t('ieComment')]: v.checkComment,
+    [t('thMachine')]: v.machine, [t('thGroup')]: v.group, [t('thType')]: RES_TXT(v.type), [t('thDbCheck')]: v.dbAtCheck, [t('thLayout')]: v.layout, [t('thDbNow')]: v.dbNow ?? '',
+    [t('thToFix')]: v.status === 'CLOSED' ? 0 : v.remaining, [t('thStatus')]: VST_TXT(v.status) + (v.closeReason ? ' · ' + t('cr' + v.closeReason) : ''),
+    [t('thClosedBy')]: v.closedBy, [t('thClosedAt')]: dt(v.closedAt), [t('thLastAction')]: v.lastAction ? t('aVAR_' + v.lastAction.action) + ' · ' + v.lastAction.by + ' · ' + (v.lastAction.note || '') : ''
+  }))), 'Variation log');
+  XLSX.writeFile(wb, 'LayoutCheck_VariationLog_' + isoOfSerial(todaySerial()) + '.xlsx');
+  act('EXPORT', '', 'Variation log');
+}
+function exportActivity() {
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(S.acts.map(a => ({ [t('thTime')]: a.time.replace('T', ' ').slice(0, 19), [t('thName')]: a.name, [t('thRole')]: roleTxt(a.role), PU: a.pu, [t('thAction')]: t('a' + a.action), [t('thStyle')]: a.style, [t('thDetail')]: a.detail }))), 'Activity');
+  XLSX.writeFile(wb, 'LayoutCheck_Activity_W' + isoWeek(S.wkS) + '.xlsx');
+  act('EXPORT', '', 'Activity W' + isoWeek(S.wkS));
+}
+
+/* ================= INIT ================= */
+(function init() {
+  if (!window.XLSX) toast('xlsx.full.min.js ?', 'err');
+  if (!window.showDirectoryPicker) toast('Microsoft Edge / Google Chrome', 'err');
+  initPdfPane();
+  fillPuSelects();
+  refreshPuList();
+  $('lgName').value = localStorage.getItem('lcName') || '';
+  fillPuSelects(localStorage.getItem('lcPU') || CONFIG.pus[0]);
+  $('stBase').checked = S.inclBase;
+  applyStatic(); setRole(S.role); paintSetup(); setTab('check');
+  document.querySelectorAll('.lang button').forEach(b => b.onclick = () => setLang(b.dataset.lang));
+  document.querySelectorAll('[data-role]').forEach(b => b.onclick = () => setRole(b.dataset.role));
+  $('lgDirBtn').onclick = () => guard(chooseDir); $('lgDbBtn').onclick = () => guard(chooseDb);
+  $('lgLayBtn').onclick = () => guard(chooseLayRoot); $('stLayBtn').onclick = () => guard(chooseLayRoot);
+  $('lgStart').onclick = () => guard(startSession);
+  $('lgName').onkeydown = e => { if (e.key === 'Enter') guard(startSession); };
+  $('btnSettings').onclick = () => { paintSetup(); $('settings').hidden = false; };
+  $('stDirBtn').onclick = () => guard(chooseDir); $('stDbBtn').onclick = () => guard(chooseDb);
+  $('stBase').onchange = e => { S.inclBase = e.target.checked; localStorage.setItem('lcBase', S.inclBase ? 'Y' : 'N'); renderAll(); };
+  $('stClose').onclick = () => $('settings').hidden = true;
+  document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => setTab(b.dataset.tab));
+  $('wkPrev').onclick = () => { S.wkS -= 7; renderAll(); };
+  $('wkNext').onclick = () => { S.wkS += 7; renderAll(); };
+  $('wkToday').onclick = () => { S.wkS = weekStart(todaySerial()); renderAll(); };
+  $('btnReload').onclick = () => guard(async () => { await reloadData(); renderAll(); toast(t('latestLoaded'), 'ok'); });
+  $('btnPlan').onclick = () => guard(loadPlan);
+  $('btnLogout').onclick = () => guard(logout);
+  $('pu').onchange = () => { S.sel = null; loadMyLines(); renderList(); renderWork(); if (!$('linePanel').hidden) renderLineGrid(); };
+  $('btnLines').onclick = toggleLinePanel; $('lnDone').onclick = toggleLinePanel;
+  $('lineSearch').oninput = renderLineGrid;
+  $('lnAll').onclick = () => { const s = new Set(S.myLines || []); $('lineGrid').querySelectorAll('input').forEach(cb => s.add(cb.value)); S.myLines = s.size ? s : null; renderLineGrid(); paintLineBtn(); };
+  $('lnNone').onclick = () => { S.myLines = null; renderLineGrid(); paintLineBtn(); };
+  $('vSt').onchange = renderVariations; $('vPU').onchange = renderVariations; $('vSearch').oninput = renderVariations;
+  $('vViewCards').onclick = () => { S.vView = 'cards'; $('vViewCards').classList.add('on'); $('vViewTable').classList.remove('on'); renderVariations(); };
+  $('vViewTable').onclick = () => { S.vView = 'table'; $('vViewTable').classList.add('on'); $('vViewCards').classList.remove('on'); renderVariations(); };
+  $('btnExpVar').onclick = () => guard(exportVariations);
+  $('fPU').onchange = renderStatus; $('fSt').onchange = renderStatus;
+  $('aUser').onchange = () => guard(renderActivity); $('aAct').onchange = () => guard(renderActivity);
+  $('btnExpStatus').onclick = () => guard(exportStatus);
+  $('btnExpAct').onclick = () => guard(exportActivity);
+  window.addEventListener('beforeunload', () => { if (S.user) act('LOGOUT', '', 'closed page'); });
+})();
+</script>
+</body>
+</html>
