@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IE Báo cáo máy — MACHINE DATABASE</title>
+<!-- SheetJS 0.18.5 (Apache-2.0) embedded so the tool works offline -->
+<script id="xlsxlib">/*__XLSX__*/</script>
+<script id="coresrc">/*__CORE__*/</script>
+<!-- ExcelJS 4.4.0 (MIT) embedded: coloured Excel export -->
+<script>/*__EXCELJS__*/</script>
+<style>
+/* ===== Theme: identical tokens and components to LayoutCheck.html ===== */
+:root{--bg:#f3f4f6;--panel:#fff;--text:#1d2330;--muted:#6b7280;--line:#e2e5ea;--accent:#1f6feb;--accent-tx:#fff;
+--ok:#15803d;--okbg:#e7f6ec;--warn:#9a6700;--warnbg:#fff5d6;--bad:#c4202b;--badbg:#fde8e8;--info:#0b5cad;--infobg:#e6f0ff;--sel:#eaf1ff}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1218;--panel:#181c24;--text:#e6e9ef;--muted:#9aa3b2;--line:#2b313d;--accent:#4c8dff;--accent-tx:#0b0f17;
+--ok:#56d364;--okbg:#12301b;--warn:#e3b341;--warnbg:#3a2d0b;--bad:#ff7b72;--badbg:#3d1416;--info:#79b8ff;--infobg:#132a46;--sel:#1c2a40;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 "Segoe UI",Roboto,Arial,sans-serif}
+button{font:inherit;padding:6px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--text);cursor:pointer}
+button:hover:not(:disabled){border-color:var(--accent)}
+button.primary{background:var(--accent);color:var(--accent-tx);border-color:var(--accent)}
+button:disabled{opacity:.4;cursor:not-allowed}
+input,select,textarea{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--text)}
+.muted,small{color:var(--muted)} .small{font-size:12px}
+.tag,.b{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;white-space:nowrap}
+.t-ok{background:var(--okbg);color:var(--ok)}.t-warn{background:var(--warnbg);color:var(--warn)}
+.t-bad{background:var(--badbg);color:var(--bad)}.t-info{background:var(--infobg);color:var(--info)}
+table{border-collapse:collapse;width:100%}
+th,td{border-bottom:1px solid var(--line);padding:5px 8px;text-align:left;vertical-align:top}
+th{position:sticky;top:0;background:var(--panel);color:var(--muted);font-weight:600;font-size:12px;z-index:1}
+/* top bar (as Layout Check header) */
+header{background:var(--panel);border-bottom:1px solid var(--line);padding:8px 16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;position:sticky;top:0;z-index:5}
+header h1{font-size:16px;margin:0 8px 0 0}
+header .sub{font-size:12px;color:var(--muted)}
+.lang{display:flex;gap:4px;margin-left:auto}
+.lang button.on{background:var(--accent);color:var(--accent-tx);border-color:var(--accent)}
+main{padding:14px 16px 90px;display:flex;flex-direction:column;gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.card h3{margin:0 0 8px;font-size:14px;display:flex;gap:8px;align-items:center}
+.num{display:inline-flex;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--accent-tx);align-items:center;justify-content:center;font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px}
+.setup{border:1px dashed var(--line);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:6px}
+.pick{display:inline-block;font:inherit;padding:6px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--text);cursor:pointer;font-weight:600}
+.pick:hover{border-color:var(--accent)}
+.pick input{display:none}
+.slots{margin:0;padding:0;list-style:none}
+.slots li{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:3px 0}
+.slots b{min-width:140px;font-weight:600}
+.st-ok{color:var(--ok)}.st-bad{color:var(--bad)}.st-wait{color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;flex:1;min-width:220px}
+.bar>div{height:100%;width:0;background:var(--ok);transition:width .2s}
+details summary{cursor:pointer;color:var(--accent)}
+/* summary cards = Layout Check KPI cards */
+.views{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:10px}
+.views button{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;text-align:left}
+.views button b{display:block;font-size:28px;font-weight:700;line-height:1.15}
+.views button.on{background:var(--sel);border-color:var(--accent)}
+.views .v-review b{color:var(--accent)}.views .v-missing b{color:var(--bad)}.views .v-issues b{color:var(--warn)}.views .v-same b{color:var(--ok)}.views .v-checked b{color:var(--info)}
+/* filter chips = Layout Check tabs */
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chips button{border:none;border-radius:8px}
+.chips button.on{background:var(--sel);color:var(--accent);font-weight:600}
+.tools{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0}
+input[type=text]{min-width:240px}
+.tw{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:auto;max-height:65vh}
+tr.blk td{opacity:.6}
+tr.grp td{background:var(--bg);font-weight:600}
+select{max-width:360px;width:100%;font-size:13px}
+/* reason badges and machine chips use Layout Check tag colours */
+.k-new{background:var(--okbg);color:var(--ok)}.k-changed{background:var(--warnbg);color:var(--warn)}.k-upgrade{background:var(--infobg);color:var(--info)}
+.k-costing{background:var(--sel);color:var(--accent)}.k-manual,.k-keep,.k-same{background:var(--bg);color:var(--muted)}.k-conflict,.k-hold{background:var(--badbg);color:var(--bad)}
+.mc{display:inline-block;padding:1px 8px;margin:2px 3px 2px 0;border-radius:10px;font-size:12px;white-space:nowrap;border:1px solid transparent}
+.mc.add{background:var(--okbg);color:var(--ok)}.mc.chg{background:var(--warnbg);color:var(--warn);font-weight:600}
+.mc.del{background:var(--badbg);color:var(--bad);text-decoration:line-through}.mc.same{color:var(--muted);border-color:var(--line)}
+/* bottom bar = Layout Check panel */
+.savebar{position:fixed;left:0;right:0;bottom:0;background:var(--panel);border-top:1px solid var(--line);padding:8px 16px;z-index:5}
+.savebar .in{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.savebar .msg{flex:1;min-width:260px;font-size:13px}
+.empty{padding:30px;text-align:center;color:var(--muted)}
+.pg td,.pg th{padding:3px 5px;text-align:right;white-space:nowrap}
+.pg td.l,.pg th.l{text-align:left;white-space:nowrap}
+.pg .s1,.pg .s2,.pg .s3{position:sticky;background:var(--panel);z-index:1}.pg th.s1,.pg th.s2,.pg th.s3{z-index:2}
+.pg .s1{left:0;min-width:44px}.pg .s2{left:44px;min-width:56px}.pg .s3{left:100px;min-width:300px;border-right:1px solid var(--line)}
+.pg tr.tot .s3,.pg tr.tot td.l{background:var(--bg)}
+.pg td.pr{background:var(--warnbg);color:var(--warn);font-weight:600}
+.pg td.sk{color:var(--muted);text-decoration:line-through}
+.pg tr.tot td{font-weight:600;background:var(--bg)}
+.pg td.neg{background:var(--badbg);color:var(--bad);font-weight:600}
+.pg tr.pu td{background:var(--sel);font-weight:600}
+.gblock{margin-top:12px}
+.vcard{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.vhead{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.vhead .title{font-weight:700;font-size:15px}
+.vcard table td,.vcard table th{font-size:12.5px}
+#roleSeg button.on{background:var(--accent);color:var(--accent-tx);border-color:var(--accent)}
+input.lq{width:64px}
+input.lq.diff{border-color:var(--warn);background:var(--warnbg);color:var(--warn);font-weight:600}
+.pg tr.part td{color:var(--muted);font-size:12px;background:var(--bg)}
+.pg tr.part td.s3{padding-left:22px}
+.mtabs{display:flex;gap:4px;padding:6px 16px 0;background:var(--panel);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.mtabs button{border:none;border-radius:8px 8px 0 0;padding:8px 14px;background:transparent;color:var(--muted);font-weight:600}
+.mtabs button.on{background:var(--sel);color:var(--accent)}
+.mtabs .cnt{display:inline-block;min-width:18px;padding:0 6px;margin-left:6px;border-radius:9px;background:var(--bad);color:#fff;font-size:11px}
+.mtabs .ok{color:var(--ok);margin-left:4px}
+#tDrawer{position:fixed;top:0;right:0;bottom:0;width:min(440px,100%);background:var(--panel);border-left:1px solid var(--line);box-shadow:-6px 0 18px rgba(0,0,0,.12);padding:14px 16px;overflow:auto;z-index:20}
+#tDrawer .dgrid{display:grid;grid-template-columns:150px 1fr;gap:6px 10px;align-items:center}
+.pg tr.prow{cursor:pointer}.pg tr.prow:hover td{outline:1px solid var(--accent);outline-offset:-1px}
+.pg td.l .qa{margin-left:6px;padding:1px 7px;font-size:12px}
+.pg tr.pusum td{background:var(--sel);font-weight:600}
+#tGroupChips button{border:1px solid var(--line);border-radius:8px;padding:4px 10px;font-size:13px;background:var(--panel)}
+#tGroupChips button.on{background:var(--sel);color:var(--accent);border-color:var(--accent);font-weight:600}
+#tGroupChips .cnt{display:inline-block;min-width:16px;padding:0 5px;margin-left:5px;border-radius:8px;background:var(--warnbg);color:var(--warn);font-size:11px}
+.laysug button{display:flex;width:100%;text-align:left;gap:8px;align-items:center;border:none;border-bottom:1px solid var(--line);border-radius:0;padding:6px 4px;background:transparent}
+.laysug button:hover{background:var(--sel)}
+.laysug .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.laysug .pth{display:block;font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sheets{display:flex;flex-direction:column;gap:2px;margin-top:4px;font-size:12px}
+.sheets label{white-space:nowrap}
+.sheets label.mt{font-weight:600}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header>
+  <h1 data-t="title"></h1><span class="tag t-info" id="verTag" title="Version">v{{VERSION}}</span><span class="sub" data-t="subtitle"></span>
+  <div role="group" aria-label="Role" id="roleSeg" style="margin-left:auto;display:flex;gap:4px"><button data-role="cons" data-t="roleCons"></button><button data-role="tech" data-t="roleTech"></button></div>
+  <div class="lang" role="group" aria-label="Language" style="margin-left:8px"><button data-lang="vi">VI</button><button data-lang="en">EN</button></div>
+</header>
+<nav class="mtabs" id="mainTabs"><button data-tab="data" data-t="tabData"></button><button data-tab="db" data-t="tabDb"></button><button data-tab="prep" data-t="tabPrep"></button><button data-tab="notice" data-t="tabNotice"></button><button data-tab="activity" data-t="tabAct"></button></nav>
+<main id="techView" hidden>
+  <div class="card">
+    <h3><span class="num">1</span> <span data-t="tTitle"></span></h3>
+    <div class="muted small" data-t="tHint"></div>
+    <div class="row" style="margin-top:10px">
+      <button class="pick" id="tConnect" type="button" data-t="tDataPick"></button><span id="tConn" class="muted small"></span>
+      <button class="pick" id="tLayConnect" type="button" data-t="tLayChoose"></button><span id="tLayConn" class="muted small"></span>
+      <button id="tReuse" type="button" hidden></button>
+    </div>
+    <div class="row" style="margin-top:6px">
+      <label class="small"><span data-t="tLayPathLbl"></span> <input type="text" id="tLayPath" style="min-width:320px"></label><span class="muted small" data-t="tLayPathHint"></span>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <label class="small"><span data-t="userName"></span> <input type="text" id="tName" style="min-width:160px"></label>
+      <label class="small">PU <select id="tPU" style="width:auto"><option value="">—</option></select></label>
+      <label class="small"><span data-t="tLines"></span> <input type="text" id="tLines" style="min-width:200px"></label>
+    </div>
+  </div>
+  <div class="card">
+    <h3><span class="num">2</span> <span data-t="tabTech"></span></h3>
+    <div class="views" id="tKpis"></div>
+    <div class="row" style="margin-bottom:8px">
+      <select id="tGroup" hidden></select>
+      <label class="small"><input type="checkbox" id="tOnlyPrep" checked> <span data-t="pgOnlyPrep"></span></label>
+      <span class="muted small" data-t="tGridHint"></span>
+    </div>
+    <div class="row" style="margin:4px 0 8px"><b class="small" data-t="pcGroup"></b><div class="chips" id="tGroupChips"></div></div>
+    <div id="tGrid"></div>
+  </div>
+  <div class="card setup" style="border-style:solid">
+    <div class="row"><button class="primary" id="tComplete" data-t="tDoneBtn"></button><span id="tDoneInfo" class="small"></span></div>
+    <div class="muted small" data-t="tDoneHint"></div>
+  </div>
+  <div class="card">
+    <h3><span class="num">3</span> <span data-t="tMyNotices"></span></h3>
+    <div class="tw"><table id="tNotices"></table></div>
+  </div>
+</main>
+<aside id="tDrawer" hidden>
+  <div class="row"><b id="dTitle"></b><button id="dClose" style="margin-left:auto">✕</button></div>
+  <div id="dInfo" class="small" style="margin:8px 0"></div>
+  <div class="dgrid">
+    <label data-t="dPrepQty"></label><input type="number" min="0" id="dQty">
+    <label data-t="prThLay"></label><input type="number" min="0" id="dLay">
+    <label data-t="dLoad"></label><input type="date" id="dDate">
+    <label data-t="dDaysLbl"></label><input type="number" id="dDays" min="1" max="30">
+  </div>
+  <div class="muted small" data-t="dHint" style="margin:6px 0 10px"></div>
+  <div class="row">
+    <button class="primary" id="dKeep" data-t="dSave"></button>
+    <button id="dRemove" data-t="dRemove"></button>
+    <button id="dSame" data-t="dSame"></button>
+  </div>
+  <div style="margin-top:14px;border-top:1px solid var(--line);padding-top:10px">
+    <div class="row"><b class="small" data-t="dFindLay"></b><span id="dLayIdx" class="muted small"></span><button id="dLayRescan" data-t="dLayRescan" style="margin-left:auto"></button></div>
+    <input type="text" id="dLayQ" style="width:100%;margin:6px 0">
+    <div id="dLaySug" class="laysug"></div>
+    <div class="row" style="margin-top:6px"><button id="dOpenLay" data-t="dOpenLay" hidden></button><span id="dLayMsg" class="muted small"></span></div>
+  </div>
+  <div id="dLayView" style="margin-top:8px"></div>
+</aside>
+<main id="consView">
+<section data-pane="data">
+  <div class="card setup" id="remBar" hidden style="border-style:solid;border-color:var(--accent)">
+    <div class="row"><b data-t="remTitle"></b><span id="remList" class="small"></span>
+      <button class="primary" id="bReconnect" data-t="remBtn" style="margin-left:auto"></button></div>
+    <div id="remMsg" class="small muted"></div>
+  </div>
+  <div class="card">
+    <h3><span class="num">1</span> <span data-t="s1"></span></h3>
+    <div class="grid">
+      <div>
+        <div class="row"><button class="pick" id="bMc" type="button" data-t="pickMc"></button>
+        <label class="pick"><span data-t="pickFiles"></span><input type="file" id="fFiles" multiple accept=".xlsx,.xlsm,.xlsb"></label></div>
+        <div class="muted" style="margin-top:6px;font-size:12.5px" data-t="pickFilesHint"></div>
+        <ul class="slots setup" style="margin-top:8px">
+          <li><b data-t="inMc"></b><span id="sMc"></span></li>
+          <li><b data-t="inPlan"></b><span id="sPlan"></span></li>
+          <li><b data-t="inPrev"></b><span id="sPrev"></span></li>
+          <li><b data-t="inCk"></b><span id="sCk"></span></li>
+        </ul>
+        <div id="sUnknown" class="st-bad" style="font-size:12.5px"></div>
+      </div>
+      <div>
+        <div class="row"><button class="pick" id="bDir" type="button" data-t="pickDirRem"></button>
+        <label class="pick" style="font-weight:400"><span data-t="pickDirOld"></span><input type="file" id="fDir" webkitdirectory multiple></label></div>
+        <div class="muted" style="margin-top:6px;font-size:12.5px" data-t="pickDirHint"></div>
+        <ul class="slots setup" style="margin-top:8px"><li><b data-t="inDir"></b><span id="sDir"></span></li></ul>
+      </div>
+      <div>
+        <div style="font-weight:600;margin-bottom:6px" data-t="lcTitle"></div>
+        <button class="pick" id="bLc" type="button" data-t="lcPick"></button>
+        <div class="muted" style="margin-top:6px;font-size:12.5px" data-t="lcHint"></div>
+        <ul class="slots setup" style="margin-top:8px"><li><b data-t="lcTitle"></b><span id="sLc"></span></li>
+          <li><b data-t="userName"></b><input type="text" id="uName" style="min-width:200px"></li></ul>
+      </div>
+    </div>
+    <div class="muted small" style="margin-top:10px" data-t="dataNext"></div>
+  </div>
+</section>
+<section data-pane="db" hidden>
+  <div class="card">
+    <h3><span class="num">1</span> <span data-t="s2"></span></h3>
+    <div class="row">
+      <button id="go" class="primary" disabled data-t="start"></button>
+      <button id="stop" disabled data-t="stop"></button>
+      <div class="bar"><div id="pb"></div></div><span id="pt" class="muted"></span>
+    </div>
+    <details><summary data-t="options"></summary><label style="display:inline-block;margin-top:6px"><span data-t="workers"></span> <input type="number" id="nw" min="1" max="8" style="width:60px"></label></details>
+  </div>
+
+  <div class="card" id="step3" hidden>
+    <h3><span class="num">2</span> <span data-t="s3"></span></h3>
+    <div class="views" id="views"></div>
+    <div class="muted" id="vhint"></div>
+    <div class="tools">
+      <div class="chips" id="chips"></div>
+      <input type="text" id="q">
+      <button id="bAll"></button><button id="bNone"></button>
+      <span class="muted" id="note"></span>
+    </div>
+    <div class="tw"><table id="tbl"></table></div>
+  </div>
+</section>
+</main>
+<main style="padding-top:0" id="consView2">
+<section data-pane="notice" hidden>
+  <div class="card" id="noticeEmpty"><div class="empty" data-t="nNeedLc"></div></div>
+  <div class="card" id="noticeCard" hidden>
+    <h3><span class="num">!</span> <span data-t="nTitle"></span> <span class="tag t-warn" id="nCount"></span></h3>
+    <div class="muted small" data-t="nHint"></div>
+    <div class="row" style="margin:8px 0"><select id="nSt" style="width:auto"><option value="OPEN" data-t="nOpen"></option><option value="" data-t="all"></option></select></div>
+    <div class="tw"><table id="nTable"></table></div>
+  </div>
+</section>
+<section data-pane="prep" hidden>
+  <div class="card" id="prepEmpty"><div class="empty" data-t="pNeedData"></div></div>
+  <div class="card" id="step4" hidden>
+    <h3><span data-t="s4"></span></h3>
+    <div class="muted small" data-t="s4Hint"></div>
+    <div class="setup" style="margin-top:10px">
+      <div class="row"><b data-t="srcTitle"></b> <span id="srcInfo" class="small"></span>
+      </div>
+      <div class="row small"><span id="srcDiff"></span> <button id="srcShowDiff" data-t="srcShowDiff"></button> <span id="srcMiss"></span> <button id="srcShowMiss" data-t="srcShowMiss"></button></div>
+      <div class="tw" id="srcBox" style="max-height:260px" hidden><table id="srcTable"></table></div>
+    </div>
+    <div class="row" style="margin:10px 0">
+      <label class="small"><span data-t="pFrom"></span> <input type="date" id="pFrom"></label>
+      <label class="small"><span data-t="pWeeks"></span> <select id="pWeeks" style="width:auto"><option>2</option><option selected>4</option><option>8</option></select></label>
+      <label class="small"><span data-t="pFlat"></span> <input type="number" id="pFlat" value="10" min="0" max="50" style="width:64px"> %</label>
+      <input type="text" id="pQ" style="min-width:160px">
+      <label class="small"><input type="checkbox" id="pAll"> <span data-t="pShowAll"></span></label>
+      <span class="muted small" id="pInfo" style="margin-left:auto"></span>
+    </div>
+    <div class="tw" style="max-height:340px"><table id="pRank"></table></div>
+    <div class="row" style="margin:10px 0">
+      <button class="primary" id="pOpen" data-t="pOpen"></button>
+      <button id="pSaveRules" data-t="pSaveRules"></button>
+      <span class="muted small" id="pMsg"></span>
+    </div>
+    <div id="pDone" class="small" style="margin:6px 0"></div>
+    <div class="row" style="margin:6px 0"><button id="pCloseBtn" data-t="cBtn"></button><span id="pClosedInfo" class="small"></span></div>
+    <div id="closePanel" class="card setup" hidden style="border-style:solid;margin-bottom:10px">
+      <div class="row"><b data-t="cTitle"></b><button id="pCloseRefresh" data-t="cRefresh" style="margin-left:auto"></button><button id="pCloseHide" data-t="cHide"></button></div>
+      <div class="muted small" data-t="cHint"></div>
+      <div id="closeBody" style="margin-top:8px"></div>
+      <div class="row"><input type="text" id="pCloseNote" style="min-width:280px" data-ph="cNotePh"><button class="primary" id="pCloseDo" data-t="cDo"></button></div>
+    </div>
+    <div id="pDetail"></div>
+  </div>
+</section>
+<section data-pane="activity" hidden>
+  <div class="card" id="actEmpty"><div class="empty" data-t="nNeedLc"></div></div>
+  <div class="card" id="actCard" hidden>
+    <h3><span data-t="tabAct"></span> <span class="tag t-info" id="actCount"></span></h3>
+    <div class="muted small" data-t="actHint"></div>
+    <div class="row" style="margin:8px 0">
+      <label class="small"><span data-t="aFrom"></span> <input type="date" id="aFrom"></label>
+      <label class="small"><span data-t="aTo"></span> <input type="date" id="aTo"></label>
+      <select id="aPU" style="width:auto"></select><select id="aBy" style="width:auto"></select><select id="aKind" style="width:auto"></select>
+      <input type="text" id="aLines" style="min-width:150px" data-ph="aLinesPh"><input type="text" id="aQ" style="min-width:140px" data-ph="aQPh">
+      <button id="aRefresh">⟳</button><button id="aExport" data-t="aExport"></button>
+    </div>
+    <div class="chips" id="aGroups" style="margin-bottom:6px"></div>
+    <div class="chips" style="margin-bottom:6px"><button data-av="list" data-t="aViewList"></button><button data-av="group" data-t="aViewGroup"></button><button data-av="line" data-t="aViewLine"></button><span class="muted small" id="aNote" style="margin-left:10px;align-self:center"></span></div>
+    <div class="tw" style="max-height:62vh"><table id="aTable"></table></div>
+  </div>
+</section>
+</main>
+<div class="savebar" id="savebar" hidden><div class="in">
+  <div class="msg" id="smsg"></div>
+  <button id="save" class="primary" data-t="save"></button>
+</div></div>
+
+<script>/*__I18N__*/</script>
+<script type="text/js-worker" id="wsrc">/*__WORKER__*/</script>
+<script>/*__LOGIC__*/</script>
+<script>/*__PREP__*/</script>
+<script>/*__APP__*/</script>
+<script>/*__PREPUI__*/</script>
+<script>/*__TECHUI__*/</script>
+<script>/*__CLOSEACT__*/</script>
+<script>/*__TABS__*/</script>
+</body>
+</html>
