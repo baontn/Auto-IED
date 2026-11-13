@@ -330,8 +330,14 @@ function scenarioModel(G0, rows, ends, delays) {
 // What-if for one delay: the totals of the scenario or null when the line / style is not in this group.
 function delayModel(G0, rows, ends, line, style, n) { var M = scenarioModel(G0, rows, ends, [{ line: line, style: style, n: n }]); return M.applied ? M : null; }
 // Balance per day of a group in the states: base (IE Tech decisions), after the confirmed actions, after confirmed + planned; `eff` = the effect of each action on its own (delay: balance with only that delay - base)
+// A date move counts only while the plan still shows the style at its old date: when the style already loads at or after the target date the new plan contains the move (`applied`), it must not be counted twice.
+function delayApplied(base, a) {
+  var L = base.G.lines[a.line], ks = L && L.styles[a.style] ? Object.keys(L.styles[a.style]).sort() : null;
+  return !!(ks && a.to && ks[0] >= a.to);
+}
 function actionStates(G0, rows, ends, base, actions, group) {
-  var days = G0.days, mine = (actions || []).filter(function (a) { return a.status !== 'CANCELLED' && (a.type === 'DELAY' || a.group === group); });
+  var days = G0.days, all = (actions || []).filter(function (a) { return a.status !== 'CANCELLED' && (a.type === 'DELAY' || a.group === group); }), applied = {};
+  var mine = all.filter(function (a) { if (a.type === 'DELAY' && delayApplied(base, a)) { applied[a.id] = true; return false; } return true; });
   var cov = actionCover(actions, group, days), Mc = scenarioModel(G0, rows, ends, actionDelays(mine, 'confirmed')), Ma = scenarioModel(G0, rows, ends, actionDelays(mine, 'all')), balC = {}, balA = {}, eff = {};
   days.forEach(function (d) { balC[d] = base.bal[d] == null ? null : Mc.bal[d] + cov.confirmed[d]; balA[d] = base.bal[d] == null ? null : Ma.bal[d] + cov.confirmed[d] + cov.planned[d]; });
   mine.forEach(function (a) {
@@ -340,5 +346,6 @@ function actionStates(G0, rows, ends, base, actions, group) {
     else days.forEach(function (d) { e[d] = (+a.qty && ACTION_QTY.indexOf(a.type) >= 0 && (!a.from || d >= a.from) && (!a.to || d <= a.to)) ? +a.qty : 0; });
     eff[a.id] = e;
   });
-  return { Mc: Mc, Ma: Ma, balC: balC, balA: balA, cov: cov, eff: eff, mine: mine };
+  all.forEach(function (a) { if (applied[a.id]) { var z = {}; days.forEach(function (d) { z[d] = 0; }); eff[a.id] = z; } });
+  return { Mc: Mc, Ma: Ma, balC: balC, balA: balA, cov: cov, eff: eff, mine: mine, all: all, applied: applied };
 }

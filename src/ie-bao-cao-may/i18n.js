@@ -1,6 +1,14 @@
 // ===================== TEXTS (VI / EN) =====================
 var I18N = {
   vi: {
+    rsApplied: 'Đã vào kế hoạch',
+    rsActDelayDet: '{0} chuyền {1}: vào chuyền {2} → {3} (+{4} ngày làm việc)', rsActDelayDet0: '{0} chuyền {1} (+{2} ngày làm việc)',
+    rsPrevIdle: 'Nhập hoặc chọn để xem kết quả ngay.',
+    rsPanelTitle: 'Hành động cho {0}', rsPanelTry: 'Thử hành động cho {0} (không lưu)', rsPanelHint: 'Kết quả hiện ngay ở dòng "Xem thử" của bảng phía trên.', rsPanelHintRO: 'Chỉ xem thử: kết quả hiện ngay ở bảng phía trên, không lưu.',
+    rsActDelayTxt2: 'Dời {0} chuyền {1}: vào chuyền {2} → {3} (+{4} ngày làm việc)', rsDelayNew: 'Ngày vào chuyền mới', rsDelayInfo: 'Vào chuyền {0} → {1} (+{2} ngày làm việc)', rsDelayOut: 'Ngày này nằm ngoài kế hoạch của đề xuất.', rsDelayLater: 'Chọn ngày muộn hơn ngày vào chuyền hiện tại.',
+    rsDelayWhole: 'Dời cả chuyền: mã hàng này và các mã sau nó trên chuyền vào chuyền muộn hơn, mã trước chạy tiếp, chuẩn bị dời theo. Ảnh hưởng mọi nhóm máy có chuyền này.',
+    rsResNow: 'Kết quả ngay', rsResOthers: 'Nhóm máy khác cũng đổi:', rsPvDelta: 'Xem thử: thay đổi', rsPvAfter: 'Xem thử: còn lại nếu chốt',
+    rsKpiOk: 'Nhóm máy đủ máy', rsKpiMore: 'Cần IE kiểm tra thêm', rsKpiActs: 'Hành động đã chốt', rsKpiDays: 'Máy-ngày thiếu', rsBefore: 'Ban đầu', rsAfter: 'Sau hành động', rsDaysShort: '{0} ngày thiếu · tệ nhất {1}', rsCardMade: 'Cập nhật {0} · chốt bởi {1}', rsCardNoAct: 'Không có hành động',
     rsViewShort: 'Chỉ ngày thiếu', rsViewAll: 'Cả kế hoạch', rsChipAllG: 'Tất cả nhóm máy', rsChipAllPU: 'Tất cả PU', rsLblG: 'Nhóm máy', rsLblPU: 'PU',
     rsPuNote: 'Chọn PU chỉ lọc các dòng PU; Máy có sẵn và Còn lại luôn tính cho cả nhóm máy.', rsGapNote: 'Khi giữa hai đợt thiếu có đợt đủ máy, các ngày đủ máy vẫn được hiện.', rsNoShort: 'Không có ngày thiếu trong các nhóm máy đã chọn. Bấm "Cả kế hoạch" để xem toàn bộ.',
     rsRowProd: 'Sản xuất', rsRowPrep: 'Chuẩn bị', rsRowTot: 'Tổng', rsRowUse: 'Tổng sử dụng', rsRowAvail: 'Máy có sẵn', rsRowBal: 'Còn lại (hiện tại)', rsRowBalC: 'Còn lại sau hành động đã chốt', rsRowBalA: 'Còn lại kể cả dự kiến',
@@ -178,6 +186,14 @@ var I18N = {
     c_Added: 'Mới', c_Changed: 'Thay đổi', c_Unchanged: 'Không đổi'
   },
   en: {
+    rsApplied: 'Already in the plan',
+    rsActDelayDet: '{0} on line {1}: loading {2} → {3} (+{4} working days)', rsActDelayDet0: '{0} on line {1} (+{2} working days)',
+    rsPrevIdle: 'Type or choose to see the result at once.',
+    rsPanelTitle: 'Action for {0}', rsPanelTry: 'Try an action for {0} (not saved)', rsPanelHint: 'The result shows at once in the "Preview" rows of the table above.', rsPanelHintRO: 'View only: the result shows at once in the table above, nothing is saved.',
+    rsActDelayTxt2: 'Delay {0} on line {1}: loading {2} → {3} (+{4} working days)', rsDelayNew: 'New loading date', rsDelayInfo: 'Loading {0} → {1} (+{2} working days)', rsDelayOut: 'This date is outside the plan of the proposal.', rsDelayLater: 'Choose a date later than the current loading date.',
+    rsDelayWhole: 'Moves the whole line: this style and every style after it on the line load later, the style before it keeps running, preparation moves with them. Affects every machine group that uses this line.',
+    rsResNow: 'Instant result', rsResOthers: 'Other machine groups also change:', rsPvDelta: 'Preview: change', rsPvAfter: 'Preview: left if confirmed',
+    rsKpiOk: 'Machine groups with enough machines', rsKpiMore: 'IE to check further', rsKpiActs: 'Confirmed actions', rsKpiDays: 'Machine-days short', rsBefore: 'Initial', rsAfter: 'After actions', rsDaysShort: '{0} days short · worst {1}', rsCardMade: 'Updated {0} · confirmed by {1}', rsCardNoAct: 'No action',
     rsViewShort: 'Short days only', rsViewAll: 'Whole plan', rsChipAllG: 'All machine groups', rsChipAllPU: 'All PUs', rsLblG: 'Machine group', rsLblPU: 'PU',
     rsPuNote: 'Choosing a PU only filters the PU rows; Available and Left are always for the whole machine group.', rsGapNote: 'When a period with enough machines lies between two short periods, those days stay visible.', rsNoShort: 'No short day in the selected machine groups. Click "Whole plan" to see everything.',
     rsRowProd: 'Production', rsRowPrep: 'Preparation', rsRowTot: 'Total', rsRowUse: 'Total used', rsRowAvail: 'Available', rsRowBal: 'Left (now)', rsRowBalC: 'Left after confirmed actions', rsRowBalA: 'Left incl. planned',

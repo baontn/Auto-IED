@@ -355,6 +355,24 @@ select{max-width:360px;width:100%;font-size:13px}
 .pg tr.tot td{font-weight:600;background:var(--bg)}
 .pg td.neg,.pg tr.tot td.neg,.pg tr.pusum td.neg{background:var(--badbg);color:var(--bad);font-weight:600}
 .pg td.ok{color:var(--ok);font-weight:600}
+.rsp{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:8px 0 6px;background:var(--bg)}
+.pg tr.pv td{background:var(--sel);font-weight:600}.pg tr.pv td.neg{background:var(--badbg);color:var(--bad)}.pg tr.pv td.ok{color:var(--ok)}.pg tr.pv td.s3,.pg tr.pv td.s1,.pg tr.pv td.s2{background:var(--sel);font-style:italic}
+.sc-head{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.sc-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:10px 0}
+.sc-kpi{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--panel)}.sc-kpi b{display:block;font-size:24px;line-height:1.15}.sc-kpi span{font-size:12px;color:var(--muted)}
+.sc-kpi.ok b{color:var(--ok)}.sc-kpi.bad b{color:var(--bad)}
+.sc-h{margin:14px 0 6px}
+.sc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:10px}
+.sc-card{border:1px solid var(--line);border-left:5px solid var(--ok);border-radius:10px;padding:10px 12px;background:var(--panel)}
+.sc-card.more{border-left-color:var(--bad)}
+.sc-top{display:flex;align-items:center;gap:8px}.sc-top b{font-size:16px}.sc-badge{margin-left:auto;border-radius:10px;padding:1px 9px;font-size:12px;font-weight:600}
+.sc-badge.ok{background:var(--okbg);color:var(--ok)}.sc-badge.more{background:var(--badbg);color:var(--bad)}
+.sc-nums{display:flex;align-items:flex-end;gap:12px;margin:8px 0 6px}.sc-nums big{display:block;font-size:28px;font-weight:700;line-height:1.1}.sc-nums small{display:block;color:var(--muted);font-size:12px}.sc-arrow{font-size:22px;color:var(--muted);padding-bottom:12px}
+.sc-bar{height:7px;border-radius:5px;background:var(--badbg);overflow:hidden;margin-bottom:3px}.sc-bar i{display:block;height:100%;background:var(--ok)}
+.sc-acts{list-style:none;margin:8px 0 0;padding:0;font-size:13px}.sc-acts li{padding:4px 0;border-top:1px dashed var(--line)}
+.sc-none{margin-top:8px;padding-top:6px;border-top:1px dashed var(--line);color:var(--muted);font-size:13px}
+.sc-concl{margin-top:8px;font-weight:600;font-size:13px}
+
 .pg tr.pu td{background:var(--sel);font-weight:600}
 .gblock{margin-top:12px}
 .vcard{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
@@ -603,6 +621,14 @@ input.lq.diff{border-color:var(--warn);background:var(--warnbg);color:var(--warn
 <script>// ===================== TEXTS (VI / EN) =====================
 var I18N = {
   vi: {
+    rsApplied: 'Đã vào kế hoạch',
+    rsActDelayDet: '{0} chuyền {1}: vào chuyền {2} → {3} (+{4} ngày làm việc)', rsActDelayDet0: '{0} chuyền {1} (+{2} ngày làm việc)',
+    rsPrevIdle: 'Nhập hoặc chọn để xem kết quả ngay.',
+    rsPanelTitle: 'Hành động cho {0}', rsPanelTry: 'Thử hành động cho {0} (không lưu)', rsPanelHint: 'Kết quả hiện ngay ở dòng "Xem thử" của bảng phía trên.', rsPanelHintRO: 'Chỉ xem thử: kết quả hiện ngay ở bảng phía trên, không lưu.',
+    rsActDelayTxt2: 'Dời {0} chuyền {1}: vào chuyền {2} → {3} (+{4} ngày làm việc)', rsDelayNew: 'Ngày vào chuyền mới', rsDelayInfo: 'Vào chuyền {0} → {1} (+{2} ngày làm việc)', rsDelayOut: 'Ngày này nằm ngoài kế hoạch của đề xuất.', rsDelayLater: 'Chọn ngày muộn hơn ngày vào chuyền hiện tại.',
+    rsDelayWhole: 'Dời cả chuyền: mã hàng này và các mã sau nó trên chuyền vào chuyền muộn hơn, mã trước chạy tiếp, chuẩn bị dời theo. Ảnh hưởng mọi nhóm máy có chuyền này.',
+    rsResNow: 'Kết quả ngay', rsResOthers: 'Nhóm máy khác cũng đổi:', rsPvDelta: 'Xem thử: thay đổi', rsPvAfter: 'Xem thử: còn lại nếu chốt',
+    rsKpiOk: 'Nhóm máy đủ máy', rsKpiMore: 'Cần IE kiểm tra thêm', rsKpiActs: 'Hành động đã chốt', rsKpiDays: 'Máy-ngày thiếu', rsBefore: 'Ban đầu', rsAfter: 'Sau hành động', rsDaysShort: '{0} ngày thiếu · tệ nhất {1}', rsCardMade: 'Cập nhật {0} · chốt bởi {1}', rsCardNoAct: 'Không có hành động',
     rsViewShort: 'Chỉ ngày thiếu', rsViewAll: 'Cả kế hoạch', rsChipAllG: 'Tất cả nhóm máy', rsChipAllPU: 'Tất cả PU', rsLblG: 'Nhóm máy', rsLblPU: 'PU',
     rsPuNote: 'Chọn PU chỉ lọc các dòng PU; Máy có sẵn và Còn lại luôn tính cho cả nhóm máy.', rsGapNote: 'Khi giữa hai đợt thiếu có đợt đủ máy, các ngày đủ máy vẫn được hiện.', rsNoShort: 'Không có ngày thiếu trong các nhóm máy đã chọn. Bấm "Cả kế hoạch" để xem toàn bộ.',
     rsRowProd: 'Sản xuất', rsRowPrep: 'Chuẩn bị', rsRowTot: 'Tổng', rsRowUse: 'Tổng sử dụng', rsRowAvail: 'Máy có sẵn', rsRowBal: 'Còn lại (hiện tại)', rsRowBalC: 'Còn lại sau hành động đã chốt', rsRowBalA: 'Còn lại kể cả dự kiến',
@@ -780,6 +806,14 @@ var I18N = {
     c_Added: 'Mới', c_Changed: 'Thay đổi', c_Unchanged: 'Không đổi'
   },
   en: {
+    rsApplied: 'Already in the plan',
+    rsActDelayDet: '{0} on line {1}: loading {2} → {3} (+{4} working days)', rsActDelayDet0: '{0} on line {1} (+{2} working days)',
+    rsPrevIdle: 'Type or choose to see the result at once.',
+    rsPanelTitle: 'Action for {0}', rsPanelTry: 'Try an action for {0} (not saved)', rsPanelHint: 'The result shows at once in the "Preview" rows of the table above.', rsPanelHintRO: 'View only: the result shows at once in the table above, nothing is saved.',
+    rsActDelayTxt2: 'Delay {0} on line {1}: loading {2} → {3} (+{4} working days)', rsDelayNew: 'New loading date', rsDelayInfo: 'Loading {0} → {1} (+{2} working days)', rsDelayOut: 'This date is outside the plan of the proposal.', rsDelayLater: 'Choose a date later than the current loading date.',
+    rsDelayWhole: 'Moves the whole line: this style and every style after it on the line load later, the style before it keeps running, preparation moves with them. Affects every machine group that uses this line.',
+    rsResNow: 'Instant result', rsResOthers: 'Other machine groups also change:', rsPvDelta: 'Preview: change', rsPvAfter: 'Preview: left if confirmed',
+    rsKpiOk: 'Machine groups with enough machines', rsKpiMore: 'IE to check further', rsKpiActs: 'Confirmed actions', rsKpiDays: 'Machine-days short', rsBefore: 'Initial', rsAfter: 'After actions', rsDaysShort: '{0} days short · worst {1}', rsCardMade: 'Updated {0} · confirmed by {1}', rsCardNoAct: 'No action',
     rsViewShort: 'Short days only', rsViewAll: 'Whole plan', rsChipAllG: 'All machine groups', rsChipAllPU: 'All PUs', rsLblG: 'Machine group', rsLblPU: 'PU',
     rsPuNote: 'Choosing a PU only filters the PU rows; Available and Left are always for the whole machine group.', rsGapNote: 'When a period with enough machines lies between two short periods, those days stay visible.', rsNoShort: 'No short day in the selected machine groups. Click "Whole plan" to see everything.',
     rsRowProd: 'Production', rsRowPrep: 'Preparation', rsRowTot: 'Total', rsRowUse: 'Total used', rsRowAvail: 'Available', rsRowBal: 'Left (now)', rsRowBalC: 'Left after confirmed actions', rsRowBalA: 'Left incl. planned',
@@ -1790,8 +1824,14 @@ function scenarioModel(G0, rows, ends, delays) {
 // What-if for one delay: the totals of the scenario or null when the line / style is not in this group.
 function delayModel(G0, rows, ends, line, style, n) { var M = scenarioModel(G0, rows, ends, [{ line: line, style: style, n: n }]); return M.applied ? M : null; }
 // Balance per day of a group in the states: base (IE Tech decisions), after the confirmed actions, after confirmed + planned; `eff` = the effect of each action on its own (delay: balance with only that delay - base)
+// A date move counts only while the plan still shows the style at its old date: when the style already loads at or after the target date the new plan contains the move (`applied`), it must not be counted twice.
+function delayApplied(base, a) {
+  var L = base.G.lines[a.line], ks = L && L.styles[a.style] ? Object.keys(L.styles[a.style]).sort() : null;
+  return !!(ks && a.to && ks[0] >= a.to);
+}
 function actionStates(G0, rows, ends, base, actions, group) {
-  var days = G0.days, mine = (actions || []).filter(function (a) { return a.status !== 'CANCELLED' && (a.type === 'DELAY' || a.group === group); });
+  var days = G0.days, all = (actions || []).filter(function (a) { return a.status !== 'CANCELLED' && (a.type === 'DELAY' || a.group === group); }), applied = {};
+  var mine = all.filter(function (a) { if (a.type === 'DELAY' && delayApplied(base, a)) { applied[a.id] = true; return false; } return true; });
   var cov = actionCover(actions, group, days), Mc = scenarioModel(G0, rows, ends, actionDelays(mine, 'confirmed')), Ma = scenarioModel(G0, rows, ends, actionDelays(mine, 'all')), balC = {}, balA = {}, eff = {};
   days.forEach(function (d) { balC[d] = base.bal[d] == null ? null : Mc.bal[d] + cov.confirmed[d]; balA[d] = base.bal[d] == null ? null : Ma.bal[d] + cov.confirmed[d] + cov.planned[d]; });
   mine.forEach(function (a) {
@@ -1800,7 +1840,8 @@ function actionStates(G0, rows, ends, base, actions, group) {
     else days.forEach(function (d) { e[d] = (+a.qty && ACTION_QTY.indexOf(a.type) >= 0 && (!a.from || d >= a.from) && (!a.to || d <= a.to)) ? +a.qty : 0; });
     eff[a.id] = e;
   });
-  return { Mc: Mc, Ma: Ma, balC: balC, balA: balA, cov: cov, eff: eff, mine: mine };
+  all.forEach(function (a) { if (applied[a.id]) { var z = {}; days.forEach(function (d) { z[d] = 0; }); eff[a.id] = z; } });
+  return { Mc: Mc, Ma: Ma, balC: balC, balA: balA, cov: cov, eff: eff, mine: mine, all: all, applied: applied };
 }
 </script>
 <script>// ===================== APP =====================
@@ -3023,12 +3064,12 @@ $('nSt').onchange = renderNotices;
 window.techRender = techRender; window.renderNotices = renderNotices;
 
 </script>
-<script>// ===================== RESIDUAL SHORTAGE (after IE Tech's decisions) + actions + what-if =====================
-// Consolidator tab "Thiếu máy còn lại" (records actions) and the Supervisor role (read-only). Numbers come from the data folder only
+<script>// ===================== RESIDUAL SHORTAGE (after IE Tech's decisions) + actions =====================
+// Consolidator tab "Thiếu máy còn lại" (records actions) and the Supervisor role (read-only: can try actions, cannot save). Numbers come from the data folder only
 // (latest proposal per machine group + IE Tech decisions + actions): the same calculation as the IE Tech grid (groupModel in prep.js). Tables are horizontal (days in columns).
-var RS = { root: null, actions: [], actionsRaw: [], selG: null, selPU: null, view: 'short', edit: null, form: null, wi: { line: '', style: '', n: 3 }, wiRes: null, cache: [], at: null };
-function rsNewForm() { return { type: 'RENT', group: '', qty: '', from: '', to: '', pu: '', line: '', style: '', n: 3, status: 'PLANNED', note: '' }; }
-RS.form = rsNewForm();
+// Every machine group that is short has its own action panel under its table; any action typed in the panel shows its result at once (preview rows in the table).
+var RS = { root: null, actions: [], actionsRaw: [], selG: null, selPU: null, view: 'short', edit: null, editG: '', forms: {}, cache: [], at: null };
+function rsForm(g) { return RS.forms[g] || (RS.forms[g] = { type: 'RENT', qty: '', from: '', to: '', pu: '', line: '', style: '', date: '', status: 'PLANNED', note: '', touched: false, active: false }); }
 async function rsLoad(root) {
   RS.root = root; await tLoadAll(root); RS.actionsRaw = await pReadDir(root, 'prep/actions'); RS.actions = latestActions(RS.actionsRaw); RS.at = new Date();
 }
@@ -3057,31 +3098,123 @@ function rsRow(label, vals, days, o) {          // one horizontal row: sticky la
   o = o || {};
   return '<tr class="' + (o.cls || '') + '"' + (o.attr || '') + '><td class="s1' + (o.l1 ? ' l' : '') + '">' + (o.c1 || '') + '</td><td class="l s2">' + (o.c2 || '') + '</td><td class="l s3">' + label + '</td>' + days.map(function (d) { return rsCell(vals ? vals[d] : '', o.neg, o.cellCls); }).join('') + '</tr>';
 }
-function rsActLabel(a, edit) {
-  var tag = '<span class="tag ' + (a.status === 'CONFIRMED' ? 't-ok' : a.status === 'CANCELLED' ? 't-bad' : 't-warn') + '">' + esc(t('rsSt' + a.status)) + '</span>', cx = a.status === 'CANCELLED';
-  var txt = a.type === 'DELAY' ? t('rsActDelayTxt', [a.style, a.line, a.n]) : t('rsAt' + a.type) + (a.qty ? ' ' + (a.qty > 0 ? '+' : '') + a.qty : '') + (a.from ? ' · ' + d2(a.from) + (a.to && a.to !== a.from ? '–' + d2(a.to) : '') : '') + (a.pu ? ' · ' + a.pu : '');
-  var btn = edit && !cx ? '<button class="qa" data-rs-edit="' + esc(a.id) + '" title="' + esc(t('rsEditBtn')) + '">✎</button>' + (a.status === 'PLANNED' ? '<button class="qa" data-rs-conf="' + esc(a.id) + '" title="' + esc(t('rsConfirmBtn')) + '">✔</button>' : '') + '<button class="qa" data-rs-cancel="' + esc(a.id) + '" title="' + esc(t('rsCancelBtn')) + '">✖</button>' : '';
-  return '<span style="' + (cx ? 'text-decoration:line-through;opacity:.6' : '') + '">↳ ' + esc(txt) + '</span> ' + tag + ' <span class="muted small">' + esc((a.by || '') + (a.note ? ' · ' + a.note : '')) + '</span>' + btn;
+function rsSign(v) { return v ? (v > 0 ? '+' + v : '' + v) : ''; }
+function rsActText(a) {
+  if (a.type === 'DELAY') return a.from && a.to ? t('rsActDelayTxt2', [a.style, a.line, d2(a.from), d2(a.to), a.n]) : t('rsActDelayTxt', [a.style, a.line, a.n]);
+  return t('rsAt' + a.type) + (a.qty ? ' ' + (a.qty > 0 ? '+' : '') + a.qty : '') + (a.from ? ' (' + d2(a.from) + (a.to && a.to !== a.from ? '–' + d2(a.to) : '') + ')' : '') + (a.pu ? ' · ' + a.pu : '');
 }
-// horizontal table of one machine group: PU rows, totals, "left", actions (their real effect per day), balance after the actions
-function rsBlock(X, days, edit) {
+function rsActLabel(a, edit, g, applied) {
+  var tag = (applied ? '<span class="tag t-info">' + esc(t('rsApplied')) + '</span> ' : '') + '<span class="tag ' + (a.status === 'CONFIRMED' ? 't-ok' : a.status === 'CANCELLED' ? 't-bad' : 't-warn') + '">' + esc(t('rsSt' + a.status)) + '</span>', cx = a.status === 'CANCELLED';
+  var btn = edit && !cx ? '<button class="qa" data-rs-edit="' + esc(a.id) + '" data-rsg="' + esc(g) + '" title="' + esc(t('rsEditBtn')) + '">✎</button>' + (a.status === 'PLANNED' ? '<button class="qa" data-rs-conf="' + esc(a.id) + '" title="' + esc(t('rsConfirmBtn')) + '">✔</button>' : '') + '<button class="qa" data-rs-cancel="' + esc(a.id) + '" title="' + esc(t('rsCancelBtn')) + '">✖</button>' : '';
+  return '<span style="' + (cx ? 'text-decoration:line-through;opacity:.6' : '') + '">↳ ' + esc(rsActText(a)) + '</span> ' + tag + ' <span class="muted small">' + esc((a.by || '') + (a.note ? ' · ' + a.note : '')) + '</span>' + btn;
+}
+// ----- the action typed in a group's panel (hypothetical until saved)
+function rsDelayInfo(X, f) {          // current loading day of the style on the line, the chosen day snapped to a working day, and the number of working days between them
+  var L = X.M.G.lines[f.line]; if (!L || !L.styles[f.style]) return null;
+  var cur = Object.keys(L.styles[f.style]).sort()[0], days = X.M.days, i0 = days.indexOf(cur);
+  if (!f.date) return { cur: cur, to: null, n: 0 };
+  var j = days.findIndex(function (d) { return d >= f.date; });
+  return j < 0 ? { cur: cur, to: null, n: 0, out: true } : { cur: cur, to: days[j], n: j - i0 };
+}
+function rsStylesOf(X, line) {
+  var L = X.M.G.lines[line]; if (!L) return [];
+  var first = function (s) { return Object.keys(L.styles[s]).sort()[0] || '9'; };
+  return Object.keys(L.styles).sort(function (a, b) { return first(a).localeCompare(first(b)); });
+}
+function rsDefaults(X, f) {
+  var lines = Object.keys(X.M.G.lines).filter(function (l) { return rsStylesOf(X, l).length; }).sort();
+  if (f.type === 'DELAY') {
+    if (lines.indexOf(f.line) < 0) {                                    // default line: the one using most machines on the worst day
+      var w = X.s.worst, best = null, bn = -1; lines.forEach(function (l) { var n = 0; Object.keys(X.M.G.lines[l].styles).forEach(function (s) { n += X.M.G.lines[l].styles[s][w] || 0; }); if (rsStylesOf(X, l).length > 1 && n > bn) { bn = n; best = l; } });
+      f.line = best || lines[0] || ''; f.style = ''; f.date = '';
+    }
+    var st = rsStylesOf(X, f.line);
+    if (st.indexOf(f.style) < 0) { f.style = st[1] || st[0] || ''; f.date = ''; }
+    if (!f.date) { var inf = rsDelayInfo(X, f); if (inf) { var i = X.M.days.indexOf(inf.cur); f.date = X.M.days[i + 1] || inf.cur; } }
+  } else if (['RENT', 'BUY', 'BORROW'].indexOf(f.type) >= 0 && !f.touched && !(RS.edit && RS.editG === X.g)) { f.qty = X.s.gap || ''; f.from = X.s.first || ''; f.to = X.s.last || ''; }    // default: cover the worst gap over the short period
+  return lines;
+}
+function rsFormAction(X, f) {
+  var ty = f.type, qty = f.qty === '' ? 0 : +f.qty;
+  if (ty === 'DELAY') { var inf = rsDelayInfo(X, f); return inf && inf.to && inf.n > 0 ? { id: RS.edit || '__new', type: 'DELAY', group: '*', line: f.line, style: f.style, from: inf.cur, to: inf.to, n: inf.n, status: 'CONFIRMED', note: f.note } : null; }
+  if (ty !== 'OTHER' && !(qty > 0)) return null;
+  if (qty && (!f.from || !f.to || f.from > f.to)) return null;
+  return { id: RS.edit || '__new', type: ty, group: X.g, qty: qty || null, from: f.from, to: f.to, pu: f.pu, status: 'CONFIRMED', note: f.note };
+}
+// instant result: the change of this action on the confirmed balance of the group (and, for a date move, on the other groups of the line)
+function rsPreview(X, f) {
+  var a = rsFormAction(X, f); if (!a) return null;
+  var ends = latestEnds(TS.ends), others = RS.actions.filter(function (x) { return x.id !== RS.edit; }), withA = others.concat([a]), out = { a: a, rows: [] };
+  (a.type === 'DELAY' ? RS.cache : [X]).forEach(function (Y) {
+    var s0 = actionStates(Y.G0, Y.rows, ends, Y.M, others, Y.g), s1 = actionStates(Y.G0, Y.rows, ends, Y.M, withA, Y.g), delta = {};
+    Y.M.days.forEach(function (d) { delta[d] = s0.balC[d] == null ? 0 : s1.balC[d] - s0.balC[d]; });
+    out.rows.push({ g: Y.g, s1: s1, delta: delta, changed: Y.M.days.some(function (d) { return delta[d]; }), A: shortSummary(s0.balC, Y.M.days), B: shortSummary(s1.balC, Y.M.days) });
+  });
+  out.self = out.rows.filter(function (r) { return r.g === X.g; })[0]; return out;
+}
+function rsTableInner(X, days, edit, pv) {
   var m = X.M, st = X.st, puSel = RS.selPU, pus = rsPUs([X]).filter(function (p) { return !puSel || puSel[p]; });
-  var h = '<h4 style="margin:14px 0 4px">' + esc(X.g) + ' <span class="muted small">' + esc(t('rsRowAvail')) + ' ' + (m.avail == null ? '' : m.avail) + ' · ' + esc(t('rsThDays')) + ' ' + X.s.n + '/' + X.s.of + ' · ' + esc(t('rsThWorst')) + ' ' + (X.s.gap ? '−' + X.s.gap : '0') + '</span></h4>';
-  h += '<div class="tw" style="max-height:60vh"><table class="pg" data-rs-block="' + esc(X.g) + '"><tr><th class="l s1">PU</th><th class="l s2"></th><th class="l s3">' + t('rsThDay') + '</th>' + days.map(function (d) { return '<th>' + esc(dw(d)) + '</th>'; }).join('') + '</tr>';
+  var h = '<table class="pg" data-rs-block="' + esc(X.g) + '"><tr><th class="l s1">PU</th><th class="l s2"></th><th class="l s3">' + t('rsThDay') + '</th>' + days.map(function (d) { return '<th>' + esc(dw(d)) + '</th>'; }).join('') + '</tr>';
   pus.forEach(function (p) {
-    var pv = {}, rv = {}, tv = {}; days.forEach(function (d) { pv[d] = m.prodPu[p + '|' + d] || 0; rv[d] = m.prepPu[p + '|' + d] || 0; tv[d] = pv[d] + rv[d]; });
-    h += rsRow(esc(t('pgPuSum', [puName(p), t('rsRowProd')])), pv, days, { cls: 'pusum', attr: ' data-rs-pu="' + esc(p) + '"', c1: esc(puName(p)), l1: 1 }) + rsRow(esc(t('pgPuSum', [puName(p), t('rsRowPrep')])), rv, days, { cls: 'pusum' }) + rsRow(esc(t('pgPuSum', [puName(p), t('rsRowTot')])), tv, days, { cls: 'tot' });
+    var pv_ = {}, rv = {}, tv = {}; days.forEach(function (d) { pv_[d] = m.prodPu[p + '|' + d] || 0; rv[d] = m.prepPu[p + '|' + d] || 0; tv[d] = pv_[d] + rv[d]; });
+    h += rsRow(esc(t('pgPuSum', [puName(p), t('rsRowProd')])), pv_, days, { cls: 'pusum', attr: ' data-rs-pu="' + esc(p) + '"', c1: esc(puName(p)), l1: 1 }) + rsRow(esc(t('pgPuSum', [puName(p), t('rsRowPrep')])), rv, days, { cls: 'pusum' }) + rsRow(esc(t('pgPuSum', [puName(p), t('rsRowTot')])), tv, days, { cls: 'tot' });
   });
   var av = {}; days.forEach(function (d) { av[d] = m.avail; });
   h += rsRow(esc(t('rsRowUse')), m.total, days, { cls: 'tot', attr: ' data-rs-r="use"' }) + rsRow(esc(t('rsRowAvail')), av, days, { cls: 'tot', attr: ' data-rs-r="avail"' }) + rsRow(esc(t('rsRowBal')), m.bal, days, { cls: 'tot', attr: ' data-rs-r="bal"', neg: 1 });
-  var acts = RS.actions.filter(function (a) { return a.type === 'DELAY' ? !!X.G0.lines[a.line] : a.group === X.g; });
-  acts.forEach(function (a) {
-    var e = st.eff[a.id] || {}, vals = {}; days.forEach(function (d) { var v = e[d] || 0; vals[d] = v ? (v > 0 ? '+' + v : v) : ''; });
-    var shown = {}; days.forEach(function (d) { shown[d] = e[d] || 0; });
-    h += '<tr data-rs-r="act" data-id="' + esc(a.id) + '"><td class="s1"></td><td class="l s2"></td><td class="l s3">' + rsActLabel(a, edit) + '</td>' + days.map(function (d) { var v = e[d] || 0; return '<td class="' + (v < 0 ? 'neg' : (v > 0 ? 'ok' : '')) + '">' + (v ? (v > 0 ? '+' + v : v) : '') + '</td>'; }).join('') + '</tr>';
+  RS.actions.filter(function (a) { return a.type === 'DELAY' ? !!X.G0.lines[a.line] : a.group === X.g; }).forEach(function (a) {
+    var e = st.eff[a.id] || {};
+    h += '<tr data-rs-r="act" data-id="' + esc(a.id) + '"><td class="s1"></td><td class="l s2"></td><td class="l s3">' + rsActLabel(a, edit, X.g, st.applied[a.id]) + '</td>' + days.map(function (d) { var v = e[d] || 0; return '<td class="' + (v < 0 ? 'neg' : (v > 0 ? 'ok' : '')) + '">' + rsSign(v) + '</td>'; }).join('') + '</tr>';
   });
-  if (st.mine.length) h += rsRow('<b>' + esc(t('rsRowBalC')) + '</b>', st.balC, days, { cls: 'tot', attr: ' data-rs-r="balC"', neg: 1 }) + rsRow('<b>' + esc(t('rsRowBalA')) + '</b>', st.balA, days, { cls: 'tot', attr: ' data-rs-r="balA"', neg: 1 });
-  return h + '</table></div>';
+  if (st.all.length) h += rsRow('<b>' + esc(t('rsRowBalC')) + '</b>', st.balC, days, { cls: 'tot', attr: ' data-rs-r="balC"', neg: 1 }) + rsRow('<b>' + esc(t('rsRowBalA')) + '</b>', st.balA, days, { cls: 'tot', attr: ' data-rs-r="balA"', neg: 1 });
+  if (pv && pv.self && pv.self.changed) {                        // the action being typed: its change and the result if confirmed
+    var r = pv.self;
+    h += '<tr class="pv" data-rs-r="pvDelta"><td class="s1"></td><td class="l s2"></td><td class="l s3"><b>' + esc(t('rsPvDelta')) + '</b></td>' + days.map(function (d) { var v = r.delta[d] || 0; return '<td class="' + (v < 0 ? 'neg' : v > 0 ? 'ok' : '') + '">' + rsSign(v) + '</td>'; }).join('') + '</tr>' + rsRow('<b>' + esc(t('rsPvAfter')) + '</b>', r.s1.balC, days, { cls: 'tot pv', attr: ' data-rs-r="pvAfter"', neg: 1 });
+  }
+  return h + '</table>';
+}
+function rsResultHtml(X, f, edit) {
+  if (!f.active) return '<span class="muted small">' + esc(t('rsPrevIdle')) + '</span>';
+  var pv = rsPreview(X, f);
+  if (!pv) {
+    if (f.type === 'DELAY') { var inf = rsDelayInfo(X, f); return '<span class="muted small">' + esc(inf && inf.out ? t('rsDelayOut') : (inf && inf.to && inf.n <= 0 ? t('rsDelayLater') : t('rsPrevFill'))) + '</span>'; }
+    return '<span class="muted small">' + esc(t('rsPrevFill')) + '</span>';
+  }
+  var r = pv.self, h = '';
+  if (pv.a.type === 'DELAY') h += '<div class="small">' + esc(t('rsDelayInfo', [d2(pv.a.from), d2(pv.a.to), pv.a.n])) + '</div>';
+  h += r && r.changed ? '<div class="small"><b>' + esc(t('rsResNow')) + ':</b> ' + esc(t('rsPrevSum', [r.A.gap ? '−' + r.A.gap : '0', r.B.gap ? '−' + r.B.gap : '0', r.A.n, r.B.n])) + '</div>' : '<div class="muted small">' + esc(t('rsPrevNone')) + '</div>';
+  var oth = pv.rows.filter(function (y) { return y.g !== X.g && y.changed; });
+  if (oth.length) h += '<div class="small">' + esc(t('rsResOthers')) + ' ' + oth.map(function (y) { return '<b>' + esc(y.g) + '</b> ' + esc(t('rsPrevSum', [y.A.gap ? '−' + y.A.gap : '0', y.B.gap ? '−' + y.B.gap : '0', y.A.n, y.B.n])); }).join(' · ') + '</div>';
+  return h;
+}
+function rsPanelHtml(X, edit) {
+  var f = rsForm(X.g), lines = rsDefaults(X, f), pus = rsPUs([X]), inEdit = edit && RS.edit && RS.editG === X.g;
+  var opt = function (arr, cur, lab) { return arr.map(function (v) { return '<option value="' + esc(v) + '"' + (v === cur ? ' selected' : '') + '>' + esc(lab ? lab(v) : v) + '</option>'; }).join(''); };
+  var lbl = function (k, inner, extra) { return '<label class="small"' + (extra || '') + '>' + esc(t(k)) + '<br>' + inner + '</label>'; };
+  var g = ' data-g="' + esc(X.g) + '"';
+  var h = '<div class="row" style="gap:8px;align-items:center"><b>' + esc(inEdit ? t('rsFSave') + ' · ' + X.g : (edit ? t('rsPanelTitle', [X.g]) : t('rsPanelTry', [X.g]))) + '</b><span class="muted small">' + esc(edit ? t('rsPanelHint') : t('rsPanelHintRO')) + '</span></div><div class="row" style="margin-top:6px;flex-wrap:wrap;gap:8px;align-items:flex-end">' +
+    lbl('rsFType', '<select data-f="type"' + g + '>' + opt(ACTION_TYPES, f.type, function (v) { return t('rsAt' + v); }) + '</select>');
+  if (f.type === 'DELAY') {
+    var st = rsStylesOf(X, f.line);
+    h += lbl('rsThLine', '<select data-f="line"' + g + '>' + opt(lines, f.line) + '</select>') +
+      lbl('rsWiStyle', '<select data-f="style"' + g + '>' + opt(st, f.style, function (s) { var L = X.M.G.lines[f.line], c = L && L.styles[s] ? Object.keys(L.styles[s]).sort()[0] : ''; return s + (c ? ' (' + d2(c) + ')' : ''); }) + '</select>') +
+      lbl('rsDelayNew', '<input data-f="date" type="date"' + g + ' value="' + esc(f.date) + '">');
+  } else {
+    h += lbl(f.type === 'OTHER' ? 'rsFQtyOpt' : 'rsFQty', '<input data-f="qty" type="number"' + g + ' style="width:90px" value="' + esc(f.qty) + '">') + lbl('rsFFrom', '<input data-f="from" type="date"' + g + ' value="' + esc(f.from) + '">') + lbl('rsFTo', '<input data-f="to" type="date"' + g + ' value="' + esc(f.to) + '">') +
+      lbl('rsFPU', '<select data-f="pu"' + g + '><option value="">' + esc(t('rsFPUany')) + '</option>' + opt(pus, f.pu, puName) + '</select>');
+  }
+  if (edit) h += lbl('rsFStatus', '<select data-f="status"' + g + '>' + opt(['PLANNED', 'CONFIRMED'], f.status, function (v) { return t('rsSt' + v); }) + '</select>') + lbl('rsFNote', '<input data-f="note" type="text"' + g + ' style="width:100%" value="' + esc(f.note) + '">', ' style="flex:1;min-width:180px"') +
+    '<button class="primary" data-rs-save="1"' + g + '>' + esc(inEdit ? t('rsFSave') : t('rsFAdd')) + '</button>' + (inEdit ? '<button data-rs-canceledit="1"' + g + '>' + esc(t('rsFCancelEdit')) + '</button>' : '') + '<span class="small st-bad" data-rs-err="' + esc(X.g) + '"></span>';
+  h += '</div>' + (f.type === 'DELAY' ? '<div class="muted small" style="margin-top:4px">' + esc(t('rsDelayWhole')) + '</div>' : '') + '<div style="margin-top:6px" data-rs-res="' + esc(X.g) + '">' + rsResultHtml(X, f, edit) + '</div>';
+  return h;
+}
+// ----- one machine group: horizontal table (+ its action panel when it is short)
+function rsBlock(X, days, edit) {
+  var panel = X.s.gap > 0, f = rsForm(X.g); if (panel) rsDefaults(X, f);
+  var pv = panel && f.active ? rsPreview(X, f) : null;                         // instant result appears as soon as the panel is used
+  var h = '<div data-rs-blk="' + esc(X.g) + '"><h4 style="margin:14px 0 4px">' + esc(X.g) + ' <span class="muted small">' + esc(t('rsRowAvail')) + ' ' + (X.M.avail == null ? '' : X.M.avail) + ' · ' + esc(t('rsThDays')) + ' ' + X.s.n + '/' + X.s.of + ' · ' + esc(t('rsThWorst')) + ' ' + (X.s.gap ? '−' + X.s.gap : '0') + '</span></h4>';
+  h += '<div class="tw" data-rs-tbl="' + esc(X.g) + '" style="max-height:60vh">' + rsTableInner(X, days, edit, pv) + '</div>';
+  if (panel) h += '<div class="rsp" data-rs-panel="' + esc(X.g) + '">' + rsPanelHtml(X, edit) + '</div>';
+  return h + '</div>';
 }
 function rsControls() {
   var M = RS.cache, chips = function (items, sel, attr, allAttr, allLabel) {
@@ -3109,58 +3242,11 @@ function rsHtml(edit) {
   if (!shown) h += '<div class="muted" style="margin:10px 0">' + esc(t('rsNoShort')) + '</div>';
   return h;
 }
-// ----- action form with a live preview of the real change
-function rsFormAction() {
-  var f = RS.form, ty = f.type, qty = f.qty === '' ? 0 : +f.qty;
-  if (ty === 'DELAY') return f.line && f.style && +f.n > 0 ? { id: RS.edit || '__new', type: 'DELAY', group: '*', line: f.line, style: f.style, n: +f.n, status: 'CONFIRMED', note: f.note } : null;
-  if (!f.group) return null;
-  if (ty !== 'OTHER' && !(qty > 0)) return null;
-  if (qty && (!f.from || !f.to || f.from > f.to)) return null;
-  return { id: RS.edit || '__new', type: ty, group: f.group, qty: qty || null, from: f.from, to: f.to, pu: f.pu, status: 'CONFIRMED', note: f.note };
-}
-function rsPreviewHtml() {
-  var a = rsFormAction(); if (!a) return '<div class="muted small">' + esc(t('rsPrevFill')) + '</div>';
-  var ends = latestEnds(TS.ends), others = RS.actions.filter(function (x) { return x.id !== RS.edit; }), withA = others.concat([a]), h = '', any = false;
-  var targets = a.type === 'DELAY' ? RS.cache : RS.cache.filter(function (x) { return x.g === a.group; });
-  targets.forEach(function (X) {
-    var gd = rsGroupDays(X), dd = gd.length ? gd : X.M.days, s0 = actionStates(X.G0, X.rows, ends, X.M, others, X.g), s1 = actionStates(X.G0, X.rows, ends, X.M, withA, X.g), delta = {};
-    X.M.days.forEach(function (d) { delta[d] = s0.balC[d] == null ? 0 : s1.balC[d] - s0.balC[d]; });
-    var changed = X.M.days.some(function (d) { return delta[d]; }); if (!changed) return; any = true;
-    var A = shortSummary(s0.balC, X.M.days), B = shortSummary(s1.balC, X.M.days);
-    h += '<div class="small" style="margin:8px 0 2px"><b>' + esc(X.g) + '</b>: ' + esc(t('rsPrevSum', [A.gap ? '−' + A.gap : '0', B.gap ? '−' + B.gap : '0', A.n, B.n])) + '</div><div class="tw"><table class="pg"><tr><th class="l s1">' + esc(X.g) + '</th><th class="l s2"></th><th class="l s3"></th>' + dd.map(function (d) { return '<th>' + esc(dw(d)) + '</th>'; }).join('') + '</tr>' +
-      rsRow(esc(t('rsPrevNow')), s0.balC, dd, { cls: 'tot', neg: 1 }) + '<tr><td class="s1"></td><td class="l s2"></td><td class="l s3"><b>' + esc(t('rsPrevDelta')) + '</b></td>' + dd.map(function (d) { var v = delta[d]; return '<td class="' + (v < 0 ? 'neg' : v > 0 ? 'ok' : '') + '">' + (v ? (v > 0 ? '+' + v : v) : '') + '</td>'; }).join('') + '</tr>' +
-      rsRow('<b>' + esc(t('rsPrevAfter')) + '</b>', s1.balC, dd, { cls: 'tot', neg: 1 }) + '</table></div>';
-  });
-  return any ? h : '<div class="muted small">' + esc(t('rsPrevNone')) + '</div>';
-}
-function rsFormHtml(edit) {
-  if (!edit) return '';
-  var f = RS.form, gs = RS.cache.map(function (x) { return x.g; }), pus = rsPUs(RS.cache), lines = {};
-  RS.cache.forEach(function (x) { Object.keys(x.G0.lines).forEach(function (l) { lines[l] = lines[l] || x.G0.lines[l]; }); });
-  var ls = Object.keys(lines).sort();
-  if (!f.group || gs.indexOf(f.group) < 0) f.group = (RS.cache[0] || {}).g || '';
-  if (ls.indexOf(f.line) < 0) { f.line = ls[0] || ''; f.style = ''; }
-  var st = f.line ? Object.keys(lines[f.line].styles).sort(function (a, b) { var k = function (s) { return Object.keys(lines[f.line].styles[s]).sort()[0] || '9'; }; return k(a).localeCompare(k(b)); }) : [];
-  if (st.indexOf(f.style) < 0) f.style = st[1] || st[0] || '';
-  var X0 = RS.cache.filter(function (x) { return x.g === f.group; })[0];
-  if (!RS.edit && ['RENT', 'BUY', 'BORROW'].indexOf(f.type) >= 0 && X0 && f.qty === '' && !f.from && !f.to) { f.qty = X0.s.gap || ''; f.from = X0.s.first || ''; f.to = X0.s.last || ''; }          // default: cover the worst gap over the short period
-  var opt = function (arr, cur, lab) { return arr.map(function (v) { return '<option value="' + esc(v) + '"' + (v === cur ? ' selected' : '') + '>' + esc(lab ? lab(v) : v) + '</option>'; }).join(''); };
-  var lbl = function (k, inner, extra) { return '<label class="small"' + (extra || '') + '>' + esc(t(k)) + '<br>' + inner + '</label>'; };
-  var h = '<h3 style="margin-top:0">' + esc(RS.edit ? t('rsFSave') : t('rsActTitle')) + '</h3><div class="muted small">' + esc(t('rsActHint')) + '</div><div class="row" style="margin-top:8px;flex-wrap:wrap;gap:8px;align-items:flex-end">' +
-    lbl('rsFType', '<select data-f="type">' + opt(ACTION_TYPES, f.type, function (v) { return t('rsAt' + v); }) + '</select>');
-  if (f.type === 'DELAY') h += lbl('rsThLine', '<select data-f="line">' + opt(ls, f.line) + '</select>') + lbl('rsWiStyle', '<select data-f="style">' + opt(st, f.style) + '</select>') + lbl('rsWiN', '<input data-f="n" type="number" min="1" max="15" style="width:70px" value="' + esc(f.n) + '">');
-  else h += lbl('rsThGroup', '<select data-f="group">' + opt(gs, f.group) + '</select>') + lbl(f.type === 'OTHER' ? 'rsFQtyOpt' : 'rsFQty', '<input data-f="qty" type="number" style="width:90px" value="' + esc(f.qty) + '">') + lbl('rsFFrom', '<input data-f="from" type="date" value="' + esc(f.from) + '">') + lbl('rsFTo', '<input data-f="to" type="date" value="' + esc(f.to) + '">') +
-    lbl('rsFPU', '<select data-f="pu"><option value="">' + esc(t('rsFPUany')) + '</option>' + opt(pus, f.pu, puName) + '</select>');
-  h += lbl('rsFStatus', '<select data-f="status">' + opt(['PLANNED', 'CONFIRMED'], f.status, function (v) { return t('rsSt' + v); }) + '</select>') + lbl('rsFNote', '<input data-f="note" type="text" style="width:100%" value="' + esc(f.note) + '">', ' style="flex:1;min-width:200px"') +
-    '<button class="primary" data-rs-save="1">' + esc(RS.edit ? t('rsFSave') : t('rsFAdd')) + '</button>' + (RS.edit ? '<button data-rs-canceledit="1">' + esc(t('rsFCancelEdit')) + '</button>' : '') + '<span class="small st-bad" data-rs-err></span></div>' +
-    '<h4 style="margin:12px 0 2px">' + esc(t('rsPrevTitle')) + '</h4><div data-rs-prev="1">' + rsPreviewHtml() + '</div>';
-  return h;
-}
 // ----- summary card once every action is confirmed: by machine group and by PU
 function rsCardData() {
   var M = RS.cache, acts = RS.actions.filter(function (a) { return a.status !== 'CANCELLED'; }), planned = acts.filter(function (a) { return a.status === 'PLANNED'; }), conf = acts.filter(function (a) { return a.status === 'CONFIRMED'; });
   var rowsG = M.map(function (X) {
-    var mine = conf.filter(function (a) { return a.type === 'DELAY' ? X.st.mine.indexOf(a) >= 0 && X.st.eff[a.id] && X.M.days.some(function (d) { return X.st.eff[a.id][d]; }) : a.group === X.g; });
+    var mine = conf.filter(function (a) { return a.type === 'DELAY' ? !!X.G0.lines[a.line] : a.group === X.g; });
     var left = X.s2, init = X.s;
     var concl = !init.gap && !mine.length ? t('rsConcNoNeed') : (left.gap > 0 ? t('rsConcMoreLeft', [left.gap]) : (mine.length ? t('rsConcEnough') : t('rsConcMore')));
     return { g: X.g, init: init, left: left, acts: mine, concl: concl, more: left.gap > 0 || (init.gap > 0 && !mine.length) };
@@ -3168,24 +3254,34 @@ function rsCardData() {
   var puMap = {}; rsPUs(M).forEach(function (p) { puMap[p] = { pu: p, acts: [], rel: [] }; });
   conf.forEach(function (a) { var pu = a.type === 'DELAY' ? ((M.map(function (X) { return X.G0.lines[a.line]; }).filter(Boolean)[0] || {}).pu) : a.pu; if (pu && puMap[pu]) puMap[pu].acts.push(a); });
   M.forEach(function (X) { if (!X.s.gap) return; var w = X.s.worst; Object.keys(puMap).forEach(function (p) { var n = (X.M.prodPu[p + '|' + w] || 0) + (X.M.prepPu[p + '|' + w] || 0); if (n) puMap[p].rel.push({ g: X.g, n: n, d: w, left: X.s2.gap }); }); });
-  return { planned: planned.length, conf: conf.length, groups: rowsG, pus: Object.keys(puMap).map(function (k) { return puMap[k]; }) };
+  var by = {}, last = ''; conf.forEach(function (a) { by[a.by] = 1; if (String(a.at) > last) last = String(a.at); });
+  return { planned: planned.length, conf: conf.length, groups: rowsG, pus: Object.keys(puMap).map(function (k) { return puMap[k]; }), by: Object.keys(by), last: last };
 }
-function rsActText(a) { return a.type === 'DELAY' ? t('rsActDelayTxt', [a.style, a.line, a.n]) : t('rsAt' + a.type) + (a.qty ? ' ' + (a.qty > 0 ? '+' : '') + a.qty : '') + (a.from ? ' (' + d2(a.from) + (a.to && a.to !== a.from ? '–' + d2(a.to) : '') + ')' : ''); }
+function rsActDetail(a) { return a.type === 'DELAY' ? (a.from && a.to ? t('rsActDelayDet', [a.style, a.line, d2(a.from), d2(a.to), a.n]) : t('rsActDelayDet0', [a.style, a.line, a.n])) : (a.qty ? (a.qty > 0 ? '+' : '') + a.qty : '') + (a.from ? ' (' + d2(a.from) + (a.to && a.to !== a.from ? '–' + d2(a.to) : '') + ')' : '') + (a.pu ? ' · ' + a.pu : ''); }
+function rsActPill(a) { var k = a.type === 'DELAY' ? 't-info' : (a.type === 'OTHER' ? 't-warn' : 't-ok'); return '<li><span class="tag ' + k + '">' + esc(t('rsAt' + a.type)) + '</span> ' + esc(rsActDetail(a)) + (a.note ? ' <span class="muted small">· ' + esc(a.note) + '</span>' : '') + '</li>'; }
 function rsCardHtml() {
-  var D = rsCardData(), h = '<h3 style="margin-top:0">' + esc(t('rsCardTitle')) + '</h3>';
-  if (!D.conf) return h + '<div class="muted small">' + esc(t('rsCardNone')) + '</div>';
-  if (D.planned) return h + '<div class="muted small">' + esc(t('rsCardWait', [D.planned])) + '</div>';
-  h += '<div class="row" style="gap:8px"><span class="muted small">' + esc(t('rsCardHint')) + '</span><button data-rs-export="1" style="margin-left:auto">' + esc(t('rsExport')) + '</button></div>';
-  h += '<h4 style="margin:10px 0 4px">' + esc(t('rsCardByG')) + '</h4><div class="tw"><table class="pg" data-rs-card="g"><tr><th class="l">' + t('rsThGroup') + '</th><th>' + t('rsCThInit') + '</th><th class="l">' + t('rsCThActs') + '</th><th>' + t('rsCThAfter') + '</th><th class="l">' + t('rsCThConc') + '</th></tr>' +
-    D.groups.map(function (r) {
-      return '<tr><td class="l"><b>' + esc(r.g) + '</b></td><td>' + rsGapCell(r.init) + '</td><td class="l">' + (r.acts.length ? r.acts.map(function (a) { return esc(rsActText(a)); }).join('<br>') : '<span class="muted">—</span>') + '</td><td>' + rsGapCell(r.left) + '</td><td class="l ' + (r.more ? 'st-bad' : 'st-ok') + '"><b>' + esc(r.concl) + '</b></td></tr>';
-    }).join('') + '</table></div>';
-  h += '<h4 style="margin:12px 0 4px">' + esc(t('rsCardByPU')) + '</h4><div class="tw"><table class="pg" data-rs-card="pu"><tr><th class="l">' + t('rsCThPU') + '</th><th class="l">' + t('rsCThActs') + '</th><th class="l">' + t('rsCThRel') + '</th><th class="l">' + t('rsCThConc') + '</th></tr>' +
-    D.pus.map(function (x) {
-      var stillShort = x.rel.some(function (r) { return r.left > 0; });
-      var concl = x.acts.length ? t('rsConcActs') : (stillShort ? t('rsConcMore') : t('rsCNoActPU'));
-      return '<tr><td class="l"><b>' + esc(puName(x.pu)) + '</b></td><td class="l">' + (x.acts.length ? x.acts.map(function (a) { return esc(rsActText(a)); }).join('<br>') : '<span class="muted">—</span>') + '</td><td class="l">' + (x.rel.length ? x.rel.map(function (r) { return esc(r.g + ' ' + r.n + ' (' + d2(r.d) + ')'); }).join(' · ') : '') + '</td><td class="l ' + (!x.acts.length && stillShort ? 'st-bad' : '') + '"><b>' + esc(concl) + '</b></td></tr>';
-    }).join('') + '</table></div>';
+  var D = rsCardData(), h = '<div class="sc-head"><h3 style="margin:0">' + esc(t('rsCardTitle')) + '</h3>';
+  if (!D.conf) return h + '</div><div class="muted small" style="margin-top:6px">' + esc(t('rsCardNone')) + '</div>';
+  if (D.planned) return h + '</div><div class="muted small" style="margin-top:6px">' + esc(t('rsCardWait', [D.planned])) + '</div>';
+  var okN = D.groups.filter(function (r) { return !r.more; }).length, moreN = D.groups.length - okN, before = D.groups.reduce(function (s, r) { return s + r.init.sum; }, 0), after = D.groups.reduce(function (s, r) { return s + r.left.sum; }, 0);
+  h += '<span class="muted small">' + esc(t('rsCardMade', [String(D.last).slice(0, 16).replace('T', ' '), D.by.join(', ')])) + '</span><button data-rs-export="1" style="margin-left:auto">' + esc(t('rsExport')) + '</button></div>';
+  var kpi = function (cls, big, lab) { return '<div class="sc-kpi ' + cls + '"><b>' + big + '</b><span>' + esc(lab) + '</span></div>'; };
+  h += '<div class="sc-kpis">' + kpi('ok', okN + ' / ' + D.groups.length, t('rsKpiOk')) + kpi(moreN ? 'bad' : 'ok', moreN, t('rsKpiMore')) + kpi('', D.conf, t('rsKpiActs')) + kpi(after < before ? 'ok' : 'bad', before + ' → ' + after, t('rsKpiDays')) + '</div>';
+  h += '<h4 class="sc-h">' + esc(t('rsCardByG')) + '</h4><div class="sc-grid" data-rs-card="g">' + D.groups.map(function (r) {
+    var pct = r.init.sum ? Math.max(0, Math.min(100, Math.round(100 * (r.init.sum - r.left.sum) / r.init.sum))) : 100;
+    return '<div class="sc-card ' + (r.more ? 'more' : 'ok') + '" data-rs-g2="' + esc(r.g) + '"><div class="sc-top"><b>' + esc(r.g) + '</b><span class="sc-badge ' + (r.more ? 'more' : 'ok') + '">' + esc(r.more ? t('rsConcMore') : t('rsEnough')) + '</span></div>' +
+      '<div class="sc-nums"><div><small>' + esc(t('rsBefore')) + '</small><big class="' + (r.init.gap ? 'st-bad' : 'st-ok') + '">' + (r.init.gap ? '−' + r.init.gap : '0') + '</big><small>' + (r.init.n ? esc(t('rsDaysShort', [r.init.n, d2(r.init.worst)])) : '') + '</small></div><div class="sc-arrow">→</div>' +
+      '<div><small>' + esc(t('rsAfter')) + '</small><big class="' + (r.left.gap ? 'st-bad' : 'st-ok') + '">' + (r.left.gap ? '−' + r.left.gap : '0') + '</big><small>' + (r.left.n ? esc(t('rsDaysShort', [r.left.n, d2(r.left.worst)])) : '') + '</small></div></div>' +
+      '<div class="sc-bar" title="' + esc(t('rsKpiDays')) + '"><i style="width:' + pct + '%"></i></div><small class="muted">' + esc(t('rsKpiDays')) + ' ' + r.init.sum + ' → ' + r.left.sum + (r.init.sum ? ' (−' + pct + '%)' : '') + '</small>' +
+      (r.acts.length ? '<ul class="sc-acts">' + r.acts.map(rsActPill).join('') + '</ul>' : '<div class="sc-none">' + esc(t('rsCardNoAct')) + '</div>') +
+      '<div class="sc-concl ' + (r.more ? 'st-bad' : 'st-ok') + '">' + esc(r.concl) + '</div></div>';
+  }).join('') + '</div>';
+  h += '<h4 class="sc-h">' + esc(t('rsCardByPU')) + '</h4><div class="sc-grid" data-rs-card="pu">' + D.pus.map(function (x) {
+    var still = x.rel.some(function (r) { return r.left > 0; }), more = !x.acts.length && still, concl = x.acts.length ? t('rsConcActs') : (still ? t('rsConcMore') : t('rsCNoActPU'));
+    return '<div class="sc-card ' + (more ? 'more' : 'ok') + '"><div class="sc-top"><b>' + esc(puName(x.pu)) + '</b><span class="sc-badge ' + (more ? 'more' : 'ok') + '">' + esc(concl) + '</span></div>' +
+      (x.acts.length ? '<ul class="sc-acts">' + x.acts.map(rsActPill).join('') + '</ul>' : '<div class="sc-none">' + esc(t('rsCardNoAct')) + '</div>') +
+      (x.rel.length ? '<div class="small" style="margin-top:6px"><span class="muted">' + esc(t('rsCThRel')) + ':</span> ' + x.rel.map(function (r) { return '<span class="tag ' + (r.left > 0 ? 't-bad' : 't-info') + '">' + esc(r.g + ' ' + r.n + ' · ' + d2(r.d)) + '</span>'; }).join(' ') + '</div>' : '') + '</div>';
+  }).join('') + '</div>';
   return h;
 }
 function rsExport() {
@@ -3196,46 +3292,25 @@ function rsExport() {
   var wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(a1), 'ACTIONS');
   var n = new Date(), p = function (x) { return String(x).padStart(2, '0'); }; XLSX.writeFile(wb, 'SHORTAGE_ACTIONS_' + n.getFullYear() + p(n.getMonth() + 1) + p(n.getDate()) + '.xlsx');
 }
-// ----- what-if (read-only helper, also for the Supervisor)
-function rsWhatIfHtml() {
-  var lines = {}, W = RS.wi; RS.cache.forEach(function (x) { Object.keys(x.G0.lines).forEach(function (l) { lines[l] = lines[l] || x.G0.lines[l]; }); });
-  var ls = Object.keys(lines).sort(); if (!ls.length) return '';
-  if (ls.indexOf(W.line) < 0) { W.line = ls[0]; W.style = ''; }
-  var L = lines[W.line], first = function (s) { var k = Object.keys(L.styles[s]).sort()[0]; return k || '9'; }, st = Object.keys(L.styles).sort(function (a, b) { return first(a).localeCompare(first(b)); });
-  if (st.indexOf(W.style) < 0) W.style = st[1] || st[0] || '';
-  var h = '<h3 style="margin-top:0">' + esc(t('rsWiTitle')) + '</h3><div class="muted small">' + esc(t('rsWiHint')) + '</div>' +
-    '<div class="row" style="margin-top:8px;flex-wrap:wrap;gap:8px;align-items:flex-end">' +
-    '<label class="small">' + t('rsThLine') + '<br><select data-wi="line">' + ls.map(function (l) { return '<option' + (l === W.line ? ' selected' : '') + '>' + esc(l) + '</option>'; }).join('') + '</select></label>' +
-    '<label class="small">' + t('rsWiStyle') + '<br><select data-wi="style">' + st.map(function (s) { return '<option' + (s === W.style ? ' selected' : '') + '>' + esc(s) + '</option>'; }).join('') + '</select></label>' +
-    '<label class="small">' + t('rsWiN') + '<br><input data-wi="n" type="number" min="1" max="15" style="width:70px" value="' + W.n + '"></label><button data-rs-wigo="1">' + esc(t('rsWiGo')) + '</button></div>';
-  if (RS.wiRes) {
-    var R = RS.wiRes;
-    h += '<div class="muted small" style="margin-top:8px"><b>' + esc(t('rsWiResult', [R.style, R.line, R.n])) + '</b></div>' + (R.rows.length ? '<div class="tw"><table class="pg"><tr><th class="l">' + t('rsThGroup') + '</th><th>' + t('rsWiDays') + '</th><th>' + t('rsWiGap') + '</th><th>' + t('rsWiSum') + '</th></tr>' +
-      R.rows.map(function (r) {
-        var cell = function (a, b) { return a + ' → <b class="' + (b < a ? 'st-ok' : b > a ? 'st-bad' : '') + '">' + b + '</b>'; };
-        return '<tr><td class="l"><b>' + esc(r.g) + '</b></td><td>' + cell(r.a.n, r.b.n) + '</td><td>' + cell(r.a.gap, r.b.gap) + '</td><td>' + cell(r.a.sum, r.b.sum) + '</td></tr>';
-      }).join('') + '</table></div>' : '<div class="muted small">' + esc(t('rsWiNone')) + '</div>');
-  }
-  return h;
-}
 function rsPaint(cid, edit) {
   var c = $(cid); if (!c) return;
   c.innerHTML = '<div class="card"><div class="row"><b>' + esc(t('rsTitle')) + '</b><button data-rs-refresh="1" style="margin-left:auto">' + esc(t('cRefresh')) + '</button><span class="muted small">' + esc(RS.at ? RS.at.toLocaleString() : '') + '</span></div><div class="muted small">' + esc(t('rsHint')) + '</div><div id="' + cid + 'A">' + rsHtml(edit) + '</div></div>' +
-    (RS.cache.length ? (edit ? '<div class="card" id="' + cid + 'B">' + rsFormHtml(edit) + '</div>' : '') + '<div class="card" id="' + cid + 'S">' + rsCardHtml() + '</div><div class="card" id="' + cid + 'C">' + rsWhatIfHtml() + '</div>' : '');
+    (RS.cache.length ? '<div class="card" id="' + cid + 'S">' + rsCardHtml() + '</div>' : '');
   c.onclick = function (e) { rsClick(e, cid, edit); };
   c.onchange = function (e) { rsInput(e, cid, edit, true); };
   c.oninput = function (e) { rsInput(e, cid, edit, false); };
 }
+function rsLive(cid, edit, g) {                // instant result: only the group's table and result line are redrawn (the form keeps the focus)
+  var X = RS.cache.filter(function (x) { return x.g === g; })[0], c = $(cid); if (!X || !c) return;
+  var tb = c.querySelector('[data-rs-tbl="' + g + '"]'), rs = c.querySelector('[data-rs-res="' + g + '"]'), f = rsForm(g), days = rsGroupDays(X);
+  if (tb && days.length) { var s0 = tb.scrollLeft, s1 = tb.scrollTop; tb.innerHTML = rsTableInner(X, days, edit, rsPreview(X, f)); tb.scrollLeft = s0; tb.scrollTop = s1; }
+  if (rs) rs.innerHTML = rsResultHtml(X, f, edit);
+}
 function rsInput(e, cid, edit, commit) {
-  var f = e.target.dataset.f, w = e.target.dataset.wi;
-  if (f) {
-    RS.form[f] = e.target.value;
-    if (commit && (f === 'type' || f === 'line')) { if (f === 'line') RS.form.style = ''; rsPaint(cid, edit); return; }
-    var pv = $(cid).querySelector('[data-rs-prev]'); if (pv) pv.innerHTML = rsPreviewHtml(); return;
-  }
-  if (!w || !commit) return;
-  if (w === 'line') { RS.wi.line = e.target.value; RS.wi.style = ''; RS.wiRes = null; } else if (w === 'style') { RS.wi.style = e.target.value; RS.wiRes = null; } else if (w === 'n') RS.wi.n = Math.max(1, Math.min(15, +e.target.value || 1));
-  rsPaint(cid, edit);
+  var el = e.target, f = el.dataset.f, g = el.dataset.g; if (!f || !g) return;
+  var F = rsForm(g); F[f] = el.value; F.active = true; if (['qty', 'from', 'to'].indexOf(f) >= 0) F.touched = true;
+  if (commit && (f === 'type' || f === 'line' || f === 'style')) { if (f === 'line') { F.style = ''; F.date = ''; } if (f === 'style') F.date = ''; if (f === 'type') { F.date = ''; } rsPaint(cid, edit); return; }
+  rsLive(cid, edit, g);
 }
 function rsRepaint() { if ($('rsC') && !$('rsC').closest('[data-pane]').hidden) rsPaint('rsC', true); if ($('rsS') && !$('supView').hidden) rsPaint('rsS', false); }
 async function rsWrite(rec) {
@@ -3249,7 +3324,7 @@ function rsToggle(sel, k, all) {          // nothing filtered yet: the click sel
   return Object.keys(m).length && Object.keys(m).length < all.length ? m : null;
 }
 async function rsClick(e, cid, edit) {
-  var b = e.target.closest('[data-rs-g],[data-rs-refresh],[data-rs-edit],[data-rs-conf],[data-rs-cancel],[data-rs-save],[data-rs-canceledit],[data-rs-wigo],[data-rs-cg],[data-rs-cgall],[data-rs-cpu],[data-rs-cpuall],[data-rs-view],[data-rs-export]'); if (!b) return;
+  var b = e.target.closest('[data-rs-g],[data-rs-refresh],[data-rs-edit],[data-rs-conf],[data-rs-cancel],[data-rs-save],[data-rs-canceledit],[data-rs-cg],[data-rs-cgall],[data-rs-cpu],[data-rs-cpuall],[data-rs-view],[data-rs-export]'); if (!b) return;
   var c = $(cid), d = b.dataset, byId = function (id) { return RS.actions.filter(function (a) { return a.id === id; })[0]; };
   try {
     if (d.rsG != null) { RS.selG = RS.cache.length > 1 ? (function () { var o = {}; o[d.rsG] = true; return o; })() : null; rsPaint(cid, edit); return; }
@@ -3260,30 +3335,25 @@ async function rsClick(e, cid, edit) {
     if (d.rsView != null) { RS.view = d.rsView; rsPaint(cid, edit); return; }
     if (d.rsExport != null) { rsExport(); return; }
     if (d.rsRefresh != null) { await rsLoad(RS.root); rsPaint(cid, edit); paintTabs(); return; }
-    if (d.rsWigo != null) {
-      var W = RS.wi, rows = [], ends = latestEnds(TS.ends);
-      RS.cache.forEach(function (x) { var S2 = delayModel(x.G0, x.rows, ends, W.line, W.style, W.n); if (S2) rows.push({ g: x.g, a: x.s, b: shortSummary(S2.bal, S2.days) }); });
-      RS.wiRes = { line: W.line, style: W.style, n: W.n, rows: rows }; rsPaint(cid, edit); return;
-    }
     if (!edit) return;
     var user = $('uName').value.trim();
     if (d.rsEdit != null) {
-      var a0 = byId(d.rsEdit); if (!a0) return; RS.edit = a0.id;
-      RS.form = { type: a0.type, group: a0.group === '*' ? '' : a0.group, qty: a0.qty == null ? '' : a0.qty, from: a0.from || '', to: a0.to || '', pu: a0.pu || '', line: a0.line || '', style: a0.style || '', n: a0.n || 3, status: a0.status === 'CANCELLED' ? 'PLANNED' : a0.status, note: a0.note || '' };
-      rsPaint(cid, edit); var fb = $(cid + 'B'); if (fb) fb.scrollIntoView({ block: 'center' }); return;
+      var a0 = byId(d.rsEdit); if (!a0) return; var g0 = d.rsg || a0.group; RS.edit = a0.id; RS.editG = g0;
+      RS.forms[g0] = { type: a0.type, qty: a0.qty == null ? '' : a0.qty, from: a0.type === 'DELAY' ? '' : (a0.from || ''), to: a0.type === 'DELAY' ? '' : (a0.to || ''), pu: a0.pu || '', line: a0.line || '', style: a0.style || '', date: a0.type === 'DELAY' ? (a0.to || '') : '', status: a0.status === 'CANCELLED' ? 'PLANNED' : a0.status, note: a0.note || '', touched: true, active: true };
+      rsPaint(cid, edit); var pn = c.querySelector('[data-rs-panel="' + g0 + '"]'); if (pn) pn.scrollIntoView({ block: 'center' }); return;
     }
-    if (d.rsCanceledit != null) { RS.edit = null; RS.form = rsNewForm(); rsPaint(cid, edit); return; }
+    if (d.rsCanceledit != null) { RS.edit = null; RS.editG = ''; RS.forms[d.g] = null; rsPaint(cid, edit); return; }
     if (d.rsConf != null || d.rsCancel != null) {
       var a = byId(d.rsConf != null ? d.rsConf : d.rsCancel); if (!a) return; if (!user) { alert(t('lcNeedName')); return; }
       await rsWrite(Object.assign({}, a, { status: d.rsConf != null ? 'CONFIRMED' : 'CANCELLED', by: user, at: new Date().toISOString() })); rsPaint(cid, edit); paintTabs(); return;
     }
     if (d.rsSave != null) {
-      var f = RS.form, err = c.querySelector('[data-rs-err]'), ty = f.type, qty = f.qty === '' ? 0 : +f.qty, isDelay = ty === 'DELAY', needQty = !isDelay && ty !== 'OTHER';
-      var bad = isDelay ? (!f.line || !f.style || !(+f.n > 0) ? t('rsErrDelay') : '') : (!f.group ? t('rsErrGroup') : (needQty && !(qty > 0)) ? t('rsErrQty') : (qty && (!f.from || !f.to || f.from > f.to)) ? t('rsErrDates') : (ty === 'OTHER' && !qty && !String(f.note).trim()) ? t('rsErrNote') : '');
+      var g = d.g, X = RS.cache.filter(function (x) { return x.g === g; })[0], f = rsForm(g), err = c.querySelector('[data-rs-err="' + g + '"]'), ty = f.type, qty = f.qty === '' ? 0 : +f.qty, isDelay = ty === 'DELAY', needQty = !isDelay && ty !== 'OTHER', inf = isDelay ? rsDelayInfo(X, f) : null;
+      var bad = isDelay ? (!inf ? t('rsErrDelay') : inf.out ? t('rsDelayOut') : (!inf.to || inf.n <= 0) ? t('rsDelayLater') : '') : ((needQty && !(qty > 0)) ? t('rsErrQty') : (qty && (!f.from || !f.to || f.from > f.to)) ? t('rsErrDates') : (ty === 'OTHER' && !qty && !String(f.note).trim()) ? t('rsErrNote') : '');
       if (bad) { err.textContent = bad; return; }
       if (!user) { alert(t('lcNeedName')); return; }
-      var rec = { id: RS.edit || (tStamp() + '-' + Math.random().toString(36).slice(2, 6)), type: ty, group: isDelay ? '*' : f.group, qty: isDelay ? null : (qty || null), from: isDelay ? '' : f.from, to: isDelay ? '' : f.to, pu: isDelay ? '' : f.pu, line: isDelay ? f.line : '', style: isDelay ? f.style : '', n: isDelay ? +f.n : null, status: f.status, note: String(f.note).trim(), by: user, at: new Date().toISOString() };
-      await rsWrite(rec); RS.edit = null; RS.form = rsNewForm(); rsPaint(cid, edit); paintTabs();
+      var rec = { id: RS.edit || (tStamp() + '-' + Math.random().toString(36).slice(2, 6)), type: ty, group: isDelay ? '*' : g, qty: isDelay ? null : (qty || null), from: isDelay ? inf.cur : f.from, to: isDelay ? inf.to : f.to, pu: isDelay ? '' : f.pu, line: isDelay ? f.line : '', style: isDelay ? f.style : '', n: isDelay ? inf.n : null, status: f.status, note: String(f.note).trim(), by: user, at: new Date().toISOString() };
+      await rsWrite(rec); RS.edit = null; RS.editG = ''; RS.forms[g] = null; rsPaint(cid, edit); paintTabs();
     }
   } catch (er) { alert(er.message || String(er)); }
 }
@@ -3293,7 +3363,7 @@ window.rsOpen = function () {
   if (!LCDIR) { c.innerHTML = '<div class="card"><div class="empty">' + esc(t('rsNoData')) + '</div></div>'; return; }
   rsLoad(LCDIR).then(function () { rsPaint('rsC', true); paintTabs(); }).catch(function (e) { c.innerHTML = '<div class="card st-bad">' + esc(e.message) + '</div>'; });
 };
-// ---- Supervisor role (read-only)
+// ---- Supervisor role (read-only: can try actions, cannot save)
 async function supUse(d) {
   await rsLoad(d); $('sInfo').className = 'small st-ok'; $('sInfo').textContent = '✓ ' + t('rsConnected', [d.name]); rsPaint('rsS', false);
 }

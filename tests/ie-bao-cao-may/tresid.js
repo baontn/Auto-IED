@@ -3,7 +3,7 @@ const fs = require('fs'), vm = require('vm'), path = require('path'), assert = r
 const ctx = { console }; vm.createContext(ctx);
 vm.runInContext('var skey=function(s){return String(s==null?"":s).toUpperCase().replace(/\\s+/g,"");};var norm=function(v){return String(v==null?"":v).toLowerCase().replace(/\\s+/g,"");};var findCol=function(h,n){for(var i=0;i<h.length;i++)if(norm(h[i])===norm(n))return i;return -1;};', ctx);
 vm.runInContext(fs.readFileSync(path.join(__dirname, '../../src/ie-bao-cao-may/prep.js'), 'utf8'), ctx);
-const { groupModel, shortSummary, latestActions, actionCover, delayModel, scenarioModel, actionStates, actionDelays } = ctx;
+const { groupModel, shortSummary, latestActions, actionCover, delayModel, scenarioModel, actionStates, actionDelays, delayApplied } = ctx;
 let n = 0; const ok = (name, fn) => { fn(); n++; console.log('PASS', name); };
 // 8 working days d1..d8; machines available 5. Line A: X(2/day) d1-d4, Y(4/day) d5-d8. Line B: Z(1/day) d1-d8.
 const days = ['2026-11-09', '2026-11-10', '2026-11-11', '2026-11-12', '2026-11-13', '2026-11-14', '2026-11-16', '2026-11-17'];
@@ -88,5 +88,17 @@ ok('actionStates: base / after confirmed / incl. planned and the effect of each 
   assert.deepStrictEqual(days.map(d => S.eff.d[d]), [0, 0, 2, 2, 0, 0, 0, 0]);
   assert.strictEqual(S.eff.x, undefined); assert.strictEqual(S.mine.length, 2);                                // cancelled ignored
   assert.strictEqual(actionDelays(S.mine, 'confirmed').length, 0); assert.strictEqual(actionDelays(S.mine, 'all').length, 1);
+});
+ok('a date move is not counted twice once the new plan already shows it', () => {
+  const g = G0(); g.avail = 4;
+  const act = latestActions([{ id: 'd', group: '*', type: 'DELAY', line: 'A', style: 'Y', from: days[4], to: days[6], n: 2, status: 'CONFIRMED', at: '1' },
+    { id: 'r', group: 'G', type: 'RENT', qty: 1, from: days[2], to: days[7], status: 'CONFIRMED', at: '2' }]);
+  const base = groupModel(g, rows(), {}), S1 = actionStates(g, rows(), {}, base, act, 'G');                // old plan: Y still starts d5 -> the move counts
+  assert.strictEqual(S1.applied.d, undefined); assert.deepStrictEqual(days.map(d => S1.eff.d[d]), [0, 0, 2, 2, 0, 0, 0, 0]);
+  const g2 = G0(); g2.avail = 4; g2.lines.A.styles = { X: rng(0, 5, 2), Y: rng(6, 7, 4) };                // PPC's new plan: X runs two days longer, Y starts d7
+  const r2 = [{ key: 'A|X|Y|G', line: 'A', pu: 'PU1', from: 'X', to: 'Y', group: 'G', load: days[6], qtyB: 4, eff: 2, status: 'KEPT', days: [days[4], days[5]] }];
+  const base2 = groupModel(g2, r2, {}), S2 = actionStates(g2, r2, {}, base2, act, 'G');
+  assert.strictEqual(S2.applied.d, true); assert.deepStrictEqual(days.map(d => S2.eff.d[d]), [0, 0, 0, 0, 0, 0, 0, 0]);
+  assert.deepStrictEqual(days.map(d => S2.balC[d]), days.map(d => base2.bal[d] + (d >= days[2] ? 1 : 0)));  // only the rent is added to the new plan
 });
 console.log('ALL ' + n + ' PASS');
