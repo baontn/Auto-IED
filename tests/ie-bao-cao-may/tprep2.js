@@ -1,0 +1,11 @@
+global.XLSX=require('/home/claude/pkg/package/xlsx.js'); const fs=require('fs');
+eval(['core.js','i18n.js','logic.js','prep.js'].map(f=>fs.readFileSync('/home/claude/v2/'+f,'utf8')).join(';\n')+';global.P={loadMbl,loadAvail,loadPuList,sharedIndex,buildPrep,applyReviews,groupGrid,loadGroups,sheetAoa}');
+const wb=XLSX.read(fs.readFileSync('/mnt/user-data/uploads/MC_report.xlsx'),{sheets:['MACHINE BY LINE','MC STATUS','MACHINE GROUP','PU LIST'],cellDates:true});
+const G=P.loadGroups(P.sheetAoa(wb.Sheets['MACHINE GROUP'],1)), mbl=P.loadMbl(P.sheetAoa(wb.Sheets['MACHINE BY LINE'],5)), av=P.loadAvail(P.sheetAoa(wb.Sheets['MC STATUS'],20),G), pu=P.loadPuList(P.sheetAoa(wb.Sheets['PU LIST'],2));
+const from=Date.UTC(2026,10,9), to=from+27*864e5, share=P.sharedIndex(JSON.parse(fs.readFileSync('/tmp/scanfiles.json')),[]);
+const rows=P.applyReviews(P.buildPrep(mbl,['BT1M'],{ratios:{BT1M:0.5},days:3},share,pu,from,to+3*864e5),[]);
+const skip=rows.filter(r=>r.status==='AUTO_SKIP');
+console.log('BT1M style starts with prep',rows.length,'auto-skipped (same layout file)',skip.length, 'reasons', [...new Set(skip.map(r=>r.same))]);
+const g=P.groupGrid(mbl,'BT1M',rows,av,from,to,pu); const d=g.days.slice(0,6);
+console.log('prep per day', d.map(x=>g.prep[x]||0).join(' '), '| balance', d.map(x=>g.bal[x]).join(' '));
+const byLine={}; rows.forEach(r=>byLine[r.line]=(byLine[r.line]||0)+1); console.log('changeovers per line in 4 weeks: avg', (rows.length/Object.keys(byLine).length).toFixed(1));

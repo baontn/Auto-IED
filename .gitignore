@@ -1,0 +1,17 @@
+# Company data must never be committed: results, plans, layouts, MC Report, etc.
+data/
+**/data/
+*.xlsx
+*.xlsm
+*.xlsb
+*.xls
+*.zip
+*.pdf
+# keep the vendor libraries and docs that are explicitly needed
+!vendor/*.js
+# tooling
+node_modules/
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db

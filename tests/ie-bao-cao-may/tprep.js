@@ -1,0 +1,20 @@
+global.XLSX=require('/home/claude/pkg/package/xlsx.js'); const fs=require('fs');
+eval(['core.js','i18n.js','logic.js','prep.js'].map(f=>fs.readFileSync('/home/claude/v2/'+f,'utf8')).join(';\n')+';global.P={loadMbl,loadAvail,loadPuList,rankGroups,sharedIndex,buildPrep,applyReviews,groupGrid,loadGroups,sheetAoa}');
+console.time('read');
+const wb=XLSX.read(fs.readFileSync('/mnt/user-data/uploads/MC_report.xlsx'),{sheets:['MACHINE BY LINE','MC STATUS','MACHINE GROUP','PU LIST'],cellDates:true});
+console.timeEnd('read'); console.time('calc');
+const G=P.loadGroups(P.sheetAoa(wb.Sheets['MACHINE GROUP'],1));
+const mbl=P.loadMbl(P.sheetAoa(wb.Sheets['MACHINE BY LINE'],5)), av=P.loadAvail(P.sheetAoa(wb.Sheets['MC STATUS'],20),G), pu=P.loadPuList(P.sheetAoa(wb.Sheets['PU LIST'],2));
+const from=Date.UTC(2026,10,9), to=from+27*864e5;
+const rk=P.rankGroups(mbl,av,from,28,0.1); console.log('top risk', rk.slice(0,6).map(r=>r.group+' avail '+r.avail+' peak '+r.peak+' bal '+r.bal));
+const share=P.sharedIndex([],[]);
+const rows=P.applyReviews(P.buildPrep(mbl,['BT1M','ZZC'],{ratios:{BT1M:0.5,ZZC:0.25},days:3},share,pu,from,to),[]);
+console.log('prep rows',rows.length,'first',JSON.stringify(rows[0]));
+const g=P.groupGrid(mbl,'BT1M',rows,av,from,to,pu); console.timeEnd('calc');
+console.log('BT1M lines',g.order.length,'days',g.days.length, 'day1 prod',g.prod[g.days[0]],'prep',g.prep[g.days[0]]||0,'avail',g.avail,'bal',g.bal[g.days[0]]);
+let multi=0,tot=0,ret=0,newc=0; const D=mbl.dates;
+for (const l in mbl.lines){ const L=mbl.lines[l]; D.forEach((d,i)=>{ if(!L[d])return; tot++; if(Object.keys(L[d]).length>1)multi++; }); }
+rows.filter(r=>r.group==='BT1M').forEach(r=>{ newc++; const L=mbl.lines[r.line]; const i=D.indexOf(r.load); for(let j=Math.max(0,i-8);j<i-1;j++){ if(L[D[j]]&&L[D[j]][r.to]){ret++;break;} } });
+console.log('line-days',tot,'with >1 style',multi,'| BT1M starts',newc,'returning within 8 days',ret);
+const ex=Object.keys(mbl.lines).find(l=>D.some(d=>mbl.lines[l][d]&&Object.keys(mbl.lines[l][d]).length>1));
+console.log(ex); D.slice(0,14).forEach(d=>console.log(new Date(d).toISOString().slice(0,10), Object.keys(mbl.lines[ex][d]||{}).join(' , ')));

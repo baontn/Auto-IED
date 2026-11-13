@@ -1,0 +1,137 @@
+﻿HƯỚNG DẪN SỬ DỤNG – KIỂM TRA MÁY THEO LAYOUT
+(Mở bằng Microsoft Edge hoặc Google Chrome)
+
+I. CÀI ĐẶT LẦN ĐẦU TRÊN MỖI MÁY TÍNH
+1. Mở file "Open LayoutCheck.bat" (hoặc mở LayoutCheck.html bằng Edge).
+2. Nhập Họ tên, chọn Vai trò và PU.
+3. Bấm "Chọn…" tại Thư mục dữ liệu, chọn thư mục "data", bấm "Cho phép / Allow".
+4. Bấm "Chọn…" tại CSDL máy, chọn file Machine Database.
+   Bấm "Chọn…" tại Thư mục layout, chọn thư mục chung nơi IE lưu layout (thư mục lớn nhất chứa tất cả layout).
+5. Bấm "Bắt đầu".
+Từ lần sau: chỉ cần nhập tên (đã lưu sẵn) và bấm "Bắt đầu", sau đó bấm "Cho phép" nếu trình duyệt hỏi.
+
+II. GIÁM SÁT – HẰNG TUẦN
+1. Đăng nhập với vai trò Giám sát.
+2. Bấm "📥 Tải kế hoạch", chọn file kế hoạch tuần (sheet MasterPlan-Full).
+3. Nếu có thông báo chuyền chưa có PU: bổ sung vào data\Linemapping.xlsx, bấm "⟳ Làm mới".
+4. Theo dõi tab "📊 Tình trạng" và "🕘 Nhật ký thao tác".
+
+III. NHÂN VIÊN IE – KIỂM TRA MÃ HÀNG
+1. Đăng nhập với vai trò Nhân viên IE, chọn đúng PU.
+   Lần đầu: bấm nút "Chuyền phụ trách" ở cột trái, chọn các chuyền mình phụ trách, bấm "Xong".
+   (Lựa chọn được lưu trên máy; bấm "Bỏ lọc" để xem tất cả chuyền của PU.)
+2. Chọn mã hàng ở cột bên trái.
+3. Tại bước 2, phần mềm tự liệt kê các file layout có tên chứa mã hàng: bấm "Mở" ở file đúng (nhãn "Đúng mã hàng").
+   Nếu không thấy: nhập một phần tên file vào ô tìm kiếm, hoặc bấm "⟳ Quét lại" (khi có file mới lưu), hoặc bấm "📂 Duyệt…".
+   Kiểm tra đúng sheet.
+4. Xem kết quả, nhập ghi chú nếu cần, bấm Đạt / Chấp nhận có ghi chú / Không đạt.
+
+IV. NGƯỜI TỔNG HỢP – XỬ LÝ SAI LỆCH
+1. Đăng nhập với vai trò Người tổng hợp; tab "🛠 Nhật ký sai lệch" mở sẵn.
+2. Nếu CSDL sai: bấm "📋 Sao chép danh sách máy đã sửa", mở file Machine Database,
+   dán vào cuối sheet "Machine Database", lưu và đóng file Excel,
+   sau đó bấm "✅ Đã cập nhật CSDL — xác nhận". Sai lệch = 0 thì tự động đóng.
+3. Nếu layout sai: bấm "↩ Cần sửa layout", ghi rõ nội dung cần sửa. Mã hàng quay lại danh sách của IE.
+
+LƯU Ý
+- Không đổi tên, không xóa các thư mục trong "data" (activity, validations, variations).
+- Luôn nhập họ tên giống nhau mỗi lần đăng nhập.
+- Đóng file Machine Database trước khi bấm "xác nhận".
+
+
+================================================================
+CẬP NHẬT V4 — QUY TRÌNH 4 VAI TRÒ VÀ LIÊN KẾT IE BÁO CÁO MÁY
+================================================================
+Vai trò
+  Nhân viên IE      Kiểm tra layout so với CSDL máy. Chỉ Nhân viên IE lưu Đạt mới hoàn tất mã hàng.
+  IE Báo cáo máy    (trước đây "Người tổng hợp") Quyết định CSDL sai hay layout sai; sửa CSDL.
+  IE Tech           Màn hình mới "Layout cần sửa": xử lý layout bị yêu cầu sửa của PU mình.
+  Giám sát          Tải kế hoạch, theo dõi từng bước, xử lý mã hàng quá 2 vòng.
+
+Các bước của một mã hàng (cột "Đang ở" trong tab Tình trạng)
+  1. Cần kiểm tra (Nhân viên IE)
+     - Đạt hoặc Chấp nhận -> Hoàn tất.
+     - Không đạt có sai lệch máy -> bước 2.
+     - Không đạt nhưng không có sai lệch máy (nghi ngờ chính layout) -> bước 3.
+  2. Chờ IE Báo cáo máy
+     - CSDL sai: sửa CSDL trong công cụ IE Báo cáo máy, dán vào Table1. Khi CSDL khớp layout, mã hàng tự
+       chuyển sang bước 4 (bấm "Đã cập nhật CSDL — xác nhận" để kiểm tra ngay).
+     - Layout sai: bấm "Cần sửa layout" và ghi lý do -> bước 3.
+  3. Chờ IE Tech
+     - "Layout đúng — CSDL sai" (bắt buộc ghi chú) -> quay lại bước 2.
+     - Sửa file layout, mở lại, bấm "Đã sửa layout — kiểm tra ngay": hệ thống so sánh ngay.
+       Không còn sai lệch -> bước 4. Còn sai lệch -> sửa tiếp hoặc chọn "Layout đúng — CSDL sai".
+  4. Đã sửa — kiểm tra lại (Nhân viên IE)
+     - Mã hàng nằm đầu danh sách. File layout lần trước tự mở lại, máy sai trước đó được tô màu.
+     - Đạt -> Hoàn tất. Không đạt -> quay lại bước 2 (vòng tiếp theo).
+
+Nhãn trong danh sách
+  "IE Báo cáo máy đã duyệt"   CSDL đã được cập nhật từ layout; Nhân viên IE vẫn kiểm tra.
+  "Đã sửa — chờ IE kiểm tra lại"
+  "Gấp"                       vào chuyền trong 3 ngày tới.
+  "2 vòng — báo Giám sát"     đã Không đạt 2 lần liên tiếp.
+Số trên mỗi tab = số mã hàng đang chờ người dùng đó.
+
+Giám sát kiểm soát
+  - Tab Tình trạng: số mã hàng Chờ IE Báo cáo máy / Chờ IE Tech / Chờ IE kiểm tra lại / Quá 2 vòng,
+    cột "Đang ở" cho từng mã hàng.
+  - Mã hàng quá 2 vòng: trao đổi với các bên; Giám sát có thể thực hiện thao tác của IE Báo cáo máy và IE Tech.
+
+Dữ liệu
+  data\approvals\   ghi chú "Đã duyệt" do công cụ IE Báo cáo máy ghi. Không được tính là kiểm tra.
+  Các kết quả Đạt đã có trong data\validations giữ nguyên.
+  Máy dùng phiên bản cũ của LayoutCheck.html vẫn chạy bình thường (không hiển thị nhãn mới).
+
+----------------------------------------------------------------
+V4.1 — ĐẠT THEO NHÓM MÁY; CẢNH BÁO LAYOUT CHIA NHỎ
+----------------------------------------------------------------
+1. So sánh theo NHÓM MÁY: CSDL máy ghi theo nhóm máy, layout ghi theo mã máy (một nhóm có nhiều mã).
+   - Mọi nhóm máy có tổng số máy bằng nhau -> được lưu Đạt, kể cả khi mã máy trong cùng nhóm khác nhau.
+     Kết quả hiển thị màu xanh "Khớp theo nhóm máy" và liệt kê các mã máy khác nhau để tham khảo.
+   - Có nhóm máy khác tổng số -> không chọn được Đạt; kết quả liệt kê nhóm máy sai lệch.
+   - Sai lệch gửi IE Báo cáo máy chỉ gồm các mã máy thuộc nhóm sai lệch, và tự đóng khi tổng nhóm trong CSDL
+     bằng layout (kể cả khi sửa bằng mã máy khác cùng nhóm).
+   - Mã máy chưa có nhóm trong CSDL được so sánh riêng từng mã.
+2. Bảng máy cuối layout khác bảng công đoạn (ví dụ layout lớn chia thành nhiều layout nhỏ do SMV nhỏ):
+   vẫn hiển thị cảnh báo ở bước 2 và bước 3 nhưng KHÔNG chặn Đạt. Cảnh báo được lưu kèm kết quả (selfCheck).
+
+----------------------------------------------------------------
+V4.2 — PU TÁCH (ví dụ PU2 SPORT, PU2 INTIMATE)
+----------------------------------------------------------------
+Danh sách PU (màn hình đăng nhập, danh sách kiểm tra, nhật ký, trạng thái) lấy từ cột PU của Linemapping.xlsx.
+Khi thêm hoặc tách PU, chỉ cần sửa Linemapping.xlsx trong thư mục data; không cần sửa phần mềm.
+Lưu ý:
+- Tên PU phải giống nhau ở mọi dòng (VD: "PU2 SPORT" và "PU2 INTIMATE"; không dùng "PU2 Sport" ở dòng này và "PU2 SPORT" ở dòng khác).
+- Sau khi sửa Linemapping.xlsx, chọn lại thư mục data (hoặc đóng và mở lại trang) để danh sách PU được cập nhật.
+- Danh sách PU hiển thị chữ in hoa.
+
+----------------------------------------------------------------
+V4.3 — LAYOUT CHỈ CÒN FILE PDF (KIỂM TRA THỦ CÔNG)
+----------------------------------------------------------------
+Dùng khi layout cũ không còn file Excel mà chỉ có PDF.
+1. Mở file PDF ở bước 2 "File layout":
+   - Bấm "Duyệt…" và chọn file .pdf, hoặc chọn file .pdf trong danh sách gợi ý (thư mục layout được quét cả file PDF;
+     lần đầu sau khi nâng cấp, danh sách tự quét lại).
+   - Trang web hiện PDF ở cột bên phải để vừa xem vừa nhập. Nút "Xem PDF tại đây" mở lại khung PDF, "Mở tab mới" mở PDF ở tab riêng,
+     dấu X đóng khung.
+2. Nhập danh sách máy của layout:
+   - Nhập "Mã máy" và "SL" rồi bấm "Thêm" (hoặc nhấn Enter ở ô SL). Ô mã máy gợi ý các mã đang có trong CSDL.
+   - Hoặc mở "Dán danh sách máy (copy từ PDF)", dán các dòng "mã máy  số lượng" rồi bấm "Đọc danh sách".
+     Dòng Tổng, tiêu đề được bỏ qua; kết quả báo số dòng đã thêm và số dòng bỏ qua. PDF dạng ảnh scan không copy được chữ thì nhập tay.
+   - Mỗi dòng sửa được SL hoặc xóa bằng dấu X. Mã máy chưa có nhóm trong CSDL được đánh dấu "Chưa có nhóm".
+3. So sánh và kết quả giống layout Excel: so theo nhóm máy với CSDL; nhóm máy khớp thì được lưu Đạt.
+4. Bắt buộc tích "Tôi đã đối chiếu từng dòng với file PDF" trước khi lưu Đạt hoặc Chấp nhận (Không đạt không cần tích).
+   Nếu thay đổi danh sách, dấu tích tự bỏ và phải tích lại.
+5. Kết quả lưu có nhãn PDF trong tab Tình trạng. Nếu để trống ghi chú khi lưu Đạt, hệ thống tự ghi
+   "Layout PDF, kiểm tra thủ công: <tên file>". Danh sách máy đã nhập được lưu kèm kết quả; khi kiểm tra lại cùng file PDF,
+   danh sách cũ tự điền sẵn để người kiểm tra đối chiếu lại.
+Các chức năng khác (Kiểm tra lại, IE Tech, sai lệch) không đổi.
+
+----------------------------------------------------------------
+V4.3.1 — SỬA NHẬT KÝ SAI LỆCH THEO PU (PU TÁCH)
+----------------------------------------------------------------
+1. Nhật ký sai lệch, thẻ KPI sai lệch ở tab Tình trạng và file Excel nhật ký sai lệch dùng PU của mã hàng theo Linemapping HIỆN TẠI
+   (theo chuyền vào đầu tiên của mã hàng), không dùng PU đã ghi lúc kiểm tra. Nhờ đó các kiểm tra đã lưu trước khi tách PU2
+   (ghi "PU2") vẫn hiện đúng ở PU2 SPORT hoặc PU2 INTIMATE theo chuyền của mã hàng. Mã hàng không còn trong kế hoạch dùng PU đã ghi.
+2. Bộ lọc PU của tab Nhật ký sai lệch và tab Tình trạng có lại lựa chọn "Tất cả PU" và mặc định là Tất cả PU
+   (trước đó mặc định là PU đăng nhập gần nhất và không có "Tất cả PU").
