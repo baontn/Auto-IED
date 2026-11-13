@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>IE Báo cáo máy: Hướng dẫn sử dụng</title><link rel="icon" href="../icon.png"><link rel="stylesheet" href="manual.css"></head><body>
-<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>IE Báo cáo máy v7.8: Hướng dẫn sử dụng</b><a href="layout-check.html">Layout Check ›</a><a href="../index.html">‹ Trang chủ</a></header>
+<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>IE Báo cáo máy v7.9: Hướng dẫn sử dụng</b><a href="layout-check.html">Layout Check ›</a><a href="../index.html">‹ Trang chủ</a></header>
 <div class="wrap">
 <nav class="toc"><b>Nội dung</b>
 <a href="#gioi-thieu">1. Giới thiệu</a>
@@ -10,14 +10,17 @@
 <a class="sub" href="#b1">Bước 1: Dữ liệu đầu vào</a>
 <a class="sub" href="#b2">Bước 2: Quét layout</a>
 <a class="sub" href="#b3">Bước 3: Duyệt và lưu</a>
+<a class="sub" href="#keep">Xác nhận giữ dữ liệu hiện tại</a>
+<a class="sub" href="#overlay">Thiếu máy dùng ngay thay đổi vừa duyệt</a>
 <a class="sub" href="#b4">Bước 4: Đưa vào MC Report</a>
 <a href="#thieu-may">4. Thiếu máy và chuẩn bị</a>
 <a href="#tech">5. IE Tech: duyệt chuẩn bị</a>
-<a href="#chot">6. Chốt báo cáo, xuất Excel</a>
-<a href="#bao-sai-lech">7. Báo sai lệch và Nhật ký</a>
-<a href="#quy-tac">8. Quy tắc</a>
-<a href="#file-luu">9. File lưu và thư mục data</a>
-<a href="#loi">10. Lỗi thường gặp</a>
+<a href="#resid">6. Thiếu máy còn lại, hành động</a>
+<a href="#chot">7. Chốt báo cáo, xuất Excel</a>
+<a href="#bao-sai-lech">8. Báo sai lệch và Nhật ký</a>
+<a href="#quy-tac">9. Quy tắc</a>
+<a href="#file-luu">10. File lưu và thư mục data</a>
+<a href="#loi">11. Lỗi thường gặp</a>
 </nav>
 <main>
 <section id="gioi-thieu"><h1>IE Báo cáo máy</h1>
@@ -28,9 +31,10 @@
 <tr><td><b>Dữ liệu</b></td><td>Chọn MC Report, Master plan, thư mục layout, thư mục <code>data</code> của Layout Check, nhập họ tên. Có dấu ✓ khi đã nạp đủ.</td></tr>
 <tr><td><b>Cập nhật CSDL</b></td><td>Quét layout, duyệt thay đổi, <b>Lưu MACHINE DATABASE</b> (thanh lưu chỉ hiện ở tab này). Số trên tab = mục cần duyệt.</td></tr>
 <tr><td><b>Thiếu máy &amp; chuẩn bị</b></td><td>Xếp hạng nguy cơ thiếu máy, chi tiết theo ngày, gửi IE Tech duyệt, chốt báo cáo, xuất Excel.</td></tr>
+<tr><td><b>Thiếu máy còn lại</b></td><td>Máy còn thiếu sau khi IE Tech duyệt (bảng ngang, chọn nhóm máy/PU), hành động xử lý (thuê, mua, mượn, dời kế hoạch) ghi ngay dưới bảng của từng nhóm máy thiếu, thấy kết quả tức thì, và thẻ tổng hợp (mục 6).</td></tr>
 <tr><td><b>Báo sai lệch</b></td><td>Thông báo của IE Tech. Số trên tab = thông báo chưa xử lý.</td></tr>
 <tr><td><b>Nhật ký</b></td><td>Lịch sử thao tác chuẩn bị máy theo loại máy và theo chuyền.</td></tr></table>
-<p>Góc trên bên phải có hai nút <b>vai trò</b> (<b>IE Báo cáo máy</b> / <b>IE Tech</b>) và nút ngôn ngữ <b>VI / EN</b>. Vai trò IE Tech chỉ thấy màn hình “Duyệt chuẩn bị” (mục 5).</p>
+<p>Góc trên bên phải có ba nút <b>vai trò</b> (<b>IE Báo cáo máy</b> / <b>IE Tech</b> / <b>Giám sát</b>) và nút ngôn ngữ <b>VI / EN</b>. Vai trò IE Tech chỉ thấy màn hình “Duyệt chuẩn bị” (mục 5); vai trò Giám sát chỉ xem “Thiếu máy còn lại” (mục 6).</p>
 <div class="note">Mã hàng chỉ <b>hoàn tất</b> khi Nhân viên IE lưu Đạt/Chấp nhận trong <a href="layout-check.html">Layout Check</a>. IE Báo cáo máy không bao giờ ghi “Đạt”; chỉ ghi chú “Đã duyệt”.<br>Các ảnh trong tài liệu dùng <b>dữ liệu mẫu giả</b> (mã hàng DMO26-…, chuyền A, B, K, J, D, E), không phải dữ liệu công ty.</div>
 </section>
 
@@ -64,6 +68,7 @@
 <tr><td><b>Còn thiếu dữ liệu</b></td><td>Mã hàng trong kế hoạch chưa có layout, chưa có costing và chưa có trong database. Cách xử lý ghi ở cột cuối.</td></tr>
 <tr><td><b>Lỗi dữ liệu</b></td><td>Cần sửa tại nguồn (ví dụ mã máy chưa có trong MACHINE GROUP, dòng bị dán trùng trong database có thể đánh dấu để giữ một bản).</td></tr>
 <tr><td><b>Không thay đổi</b></td><td>Layout trùng khớp database (so theo nhóm máy).</td></tr>
+<tr><td><b>Đã xác nhận giữ</b></td><td>Mã hàng bạn đã chọn “Giữ dữ liệu hiện tại” và xác nhận (xem bên dưới). Thẻ chỉ hiện khi có mục đã xác nhận.</td></tr>
 <tr><td><b>Đã kiểm tra (Layout Check)</b></td><td>Nhân viên IE đã Đạt/Chấp nhận, layout không đổi, CSDL đã khớp: không duyệt lại.</td></tr>
 <tr><td><b>Nhật ký quét</b></td><td>Kết quả từng file.</td></tr></table>
 <figure><a href="img/ibm-03-review.png"><img src="img/ibm-03-review.png" alt="Duyệt thay đổi" loading="lazy"></a><figcaption>Thẻ <b>Cần duyệt</b>: mỗi mã hàng có <b>Nguồn dữ liệu</b> (chọn layout khác, costing, hoặc giữ dữ liệu hiện tại), cột <b>Máy</b> và <b>Ghi chú</b>. Chip xanh = thêm, vàng = đổi số lượng (cũ→mới), đỏ gạch = bỏ.</figcaption></figure>
@@ -76,6 +81,29 @@
 <p>Khi đã chọn xong, bấm <span class="btn">Lưu MACHINE DATABASE</span> ở thanh dưới cùng. File lưu tên <code>MACHINE_DATABASE_yyyymmdd_hhmm.xlsx</code>.</p>
 <figure><a href="img/ibm-07-approve-all.png"><img src="img/ibm-07-approve-all.png" alt="Duyệt tất cả" loading="lazy"></a><figcaption>Sau “Duyệt tất cả mục đang hiển thị”: thanh dưới báo số thay đổi đã chọn.</figcaption></figure>
 <figure><a href="img/ibm-08-saved.png"><img src="img/ibm-08-saved.png" alt="Đã lưu" loading="lazy"></a><figcaption>Sau khi lưu: thông báo số thay đổi, số dòng database, trạng thái quét đã ghi vào Layout Check, số ghi chú “Đã duyệt” đã ghi, và bước tiếp theo.</figcaption></figure>
+<h3 id="keep">Giữ dữ liệu hiện tại và xác nhận giữ</h3>
+<p>Khi layout mới hoặc khác nhưng bạn muốn <b>giữ nguyên database</b> (ví dụ dữ liệu nhập tay do IE đã kiểm tra, hoặc layout chưa chốt), làm như sau:</p>
+<ol>
+<li>Ở cột <b>Nguồn dữ liệu</b> của mã hàng, chọn <b>Giữ dữ liệu hiện tại</b> (dòng cuối của danh sách).</li>
+<li>Tích ô ✓ ở đầu dòng. Thanh dưới hiện “<b>1 xác nhận giữ</b>” và nút <span class="btn">Xác nhận giữ (1)</span>.</li>
+<li>Bấm <span class="btn">Xác nhận giữ</span>. Cũng có thể bấm <span class="btn">Lưu MACHINE DATABASE</span>: các mục đã tích giữ được ghi nhớ cùng lúc.</li></ol>
+<figure><a href="img/ibm-22-keep-select.png"><img src="img/ibm-22-keep-select.png" alt="Xác nhận giữ" loading="lazy"></a><figcaption>Đã chọn “Giữ dữ liệu hiện tại” cho DMO26-00105-1201, ô ✓ được tích, nút <b>Xác nhận giữ (1)</b> hiện ở thanh dưới.</figcaption></figure>
+<p>Mã hàng chuyển sang thẻ <b>Đã xác nhận giữ</b> và <b>không hiện lại ở “Cần duyệt”</b> trong các lần quét sau. Mã hàng chỉ hiện lại khi một trong hai thay đổi:</p>
+<ul>
+<li><b>Nội dung layout thay đổi</b> (mã máy hoặc số lượng khác): ghi chú “Layout đã thay đổi sau khi … xác nhận giữ dữ liệu hiện tại”.</li>
+<li><b>Dữ liệu của mã hàng trong database thay đổi</b> (ví dụ có người cập nhật số máy): ghi chú “Database đã thay đổi sau khi … xác nhận giữ dữ liệu hiện tại”.</li></ul>
+<p>Khi hiện lại, xác nhận cũ <b>bị xóa</b>; muốn giữ tiếp thì xác nhận lại. Chỉ lưu lại file, đổi ngày sửa hoặc định dạng layout thì <b>không</b> làm mã hàng hiện lại.</p>
+<figure><a href="img/ibm-23-keep-list.png"><img src="img/ibm-23-keep-list.png" alt="Đã xác nhận giữ" loading="lazy"></a><figcaption>Thẻ <b>Đã xác nhận giữ</b>: ai xác nhận, lúc nào và các máy đang giữ. Nút <b>Hủy xác nhận</b> đưa mã hàng về “Cần duyệt”.</figcaption></figure>
+<ul>
+<li>Xác nhận được lưu trong <code>data\machinedb\keeps.json</code> (dùng chung với những người cùng thư mục data). Nếu chưa kết nối thư mục data, xác nhận chỉ lưu trên trình duyệt của máy này.</li>
+<li>Không xác nhận giữ được khi mã hàng chưa có dữ liệu hiện tại (mã hàng mới): ô ✓ bị khóa vì không có gì để giữ.</li>
+<li>“Duyệt tất cả mục đang hiển thị” <b>không</b> tự xác nhận giữ; phải tích từng mã hàng.</li></ul>
+<h3 id="overlay">Thiếu máy dùng ngay thay đổi vừa duyệt</h3>
+<p>Sau khi bấm <span class="btn">Lưu MACHINE DATABASE</span>, tab <b>Thiếu máy &amp; chuẩn bị</b> tính nhu cầu máy <b>đã gồm các thay đổi vừa duyệt</b>, không cần chờ dán vào <code>Table1</code> và Refresh All. Dòng “Nhu cầu tính từ” ghi rõ: “<i>gồm N thay đổi vừa duyệt (database trong MC Report chưa cập nhật)</i>”.</p>
+<ul>
+<li>Bảng chi tiết đang mở bị xóa; bấm lại <b>Mở chi tiết các nhóm đã chọn</b> để thấy số mới.</li>
+<li>Đề xuất gửi IE Tech trong lúc đó ghi lại cơ sở tính; IE Tech thấy dòng “Đề xuất dựa trên database gồm N thay đổi vừa duyệt…” phía trên bảng.</li>
+<li>Vẫn phải dán vào <code>Table1</code> và Refresh All (bước 4). Khi nạp lại MC Report đã cập nhật, dòng ghi chú tự biến mất và số liệu không đổi.</li></ul>
 <h3 id="b4">Bước 4: Đưa dữ liệu vào MC Report</h3>
 <p>Chọn một cách:</p>
 <ol type="a"><li>Dán sheet <code>MACHINE DATABASE</code> của file vừa lưu vào bảng <code>Table1</code> (thay toàn bộ dòng); hoặc</li>
@@ -139,7 +167,48 @@
 <div class="note"><b>Quyết định được giữ sang tuần sau</b> khi trình tự mã hàng trên chuyền không đổi (cùng chuyền, mã trước, mã sau, nhóm máy), kể cả khi ngày thay đổi. Nếu số máy của mã sau trong CSDL thay đổi, dòng quay lại “Chờ duyệt”.</div>
 </section>
 
-<section id="chot"><h2>6. Chốt báo cáo, xuất Excel</h2>
+<section id="resid"><h2>6. Thiếu máy còn lại, hành động</h2>
+<p>Sau khi IE Tech duyệt, nhóm máy nào vẫn còn thiếu thì cần quyết định thuê, mua, mượn hoặc dời kế hoạch với PPC. Màn hình này tập hợp số liệu cho người quyết định (Giám sát) và cho IE Báo cáo máy ghi lại hành động.</p>
+<h3>6.1 Mở màn hình</h3>
+<ul>
+<li><b>IE Báo cáo máy:</b> tab <b>Thiếu máy còn lại</b> (cần đã kết nối thư mục data; số trên tab = số nhóm máy còn thiếu).</li>
+<li><b>Giám sát (chỉ xem):</b> bấm vai trò <b>Giám sát</b> &rarr; <span class="btn">Chọn thư mục data…</span> (hoặc “🔁 Dùng lại”) &rarr; chọn thư mục <code>data</code> dùng chung. Không cần MC Report hay Master plan.</li></ul>
+<p>Số liệu lấy từ đề xuất mới nhất của từng nhóm máy và quyết định của IE Tech, bằng <b>đúng cách tính của bảng IE Tech</b>. Bấm <span class="btn">Làm mới</span> để đọc lại khi có người vừa lưu.</p>
+<h3>6.2 Xem số liệu: bảng ngang theo ngày</h3>
+<figure><a href="img/ibm-24-residual.png"><img src="img/ibm-24-residual.png" alt="Thiếu máy còn lại" loading="lazy"></a><figcaption>Bảng tóm tắt từng nhóm máy ở trên; bên dưới là bảng <b>ngang</b> (ngày ở cột) của từng nhóm máy, giống bảng IE Tech. Khung đỏ: các nút chọn.</figcaption></figure>
+<ul>
+<li><b>Chọn nhóm máy và PU:</b> bấm một nhóm máy (hoặc PU) để chỉ xem nhóm đó; bấm thêm để thêm hoặc bỏ; <span class="btn">Tất cả nhóm máy</span> / <span class="btn">Tất cả PU</span> để bỏ lọc. Bấm một dòng ở bảng tóm tắt cũng chọn nhóm máy đó. <b>Chọn PU chỉ lọc các dòng PU</b>; “Máy có sẵn” và “Còn lại” luôn tính cho cả nhóm máy (số máy có sẵn không chia theo PU).</li>
+<li><span class="btn">Chỉ ngày thiếu</span> (mặc định): mỗi nhóm máy hiện từ <b>ngày thiếu đầu tiên đến ngày thiếu cuối cùng</b>. Nếu giữa hai đợt thiếu có một đợt đủ máy thì các <b>ngày đủ máy ở giữa vẫn được hiện</b>. <span class="btn">Cả kế hoạch</span>: hiện toàn bộ các ngày của đề xuất.</li>
+<li>Các dòng của mỗi nhóm máy: Sản xuất / Chuẩn bị / Tổng theo từng PU, <b>Tổng sử dụng</b>, <b>Máy có sẵn</b>, <b>Còn lại (hiện tại)</b>, các <b>hàng hành động</b>, rồi <b>Còn lại sau hành động đã chốt</b> và <b>Còn lại kể cả dự kiến</b> (hai dòng sau chỉ hiện khi đã có hành động).</li>
+<li><b>Số máy âm (thiếu) có nền đỏ nhạt và chữ đỏ</b> để dễ nhận biết; cách hiển thị này cũng áp dụng cho dòng “Còn lại” trong bảng của IE Tech.</li></ul>
+<table><tr><th>Cột của bảng tóm tắt</th><th>Ý nghĩa</th></tr>
+<tr><td><b>Ngày thiếu</b></td><td>Số ngày làm việc có “Còn lại” &lt; 0 trên tổng số ngày của đề xuất.</td></tr>
+<tr><td><b>Thiếu nhiều nhất</b></td><td>Số máy thiếu ở ngày tệ nhất (kèm ngày). <b>Từ – đến</b>: ngày thiếu đầu tiên và cuối cùng.</td></tr>
+<tr><td><b>Sau hành động đã chốt</b></td><td>Thiếu còn lại nếu chỉ tính các hành động đã chốt.</td></tr>
+<tr><td><b>Kể cả dự kiến</b></td><td>Thiếu còn lại nếu tính cả hành động dự kiến.</td></tr>
+<tr><td><b>Chưa duyệt</b></td><td>Số dòng chuẩn bị IE Tech chưa duyệt (số liệu có thể còn đổi).</td></tr></table>
+<h3>6.3 Hành động: mỗi nhóm máy thiếu có khung riêng, kết quả hiện ngay</h3>
+<p>Dưới bảng của <b>mỗi nhóm máy còn thiếu</b> có một khung <b>Hành động cho &lt;nhóm máy&gt;</b>. Chỉ cần chọn loại và nhập số máy hoặc ngày, các dòng <b>“Xem thử”</b> trong bảng phía trên và dòng <b>“Kết quả ngay”</b> (thiếu nhiều nhất và số ngày thiếu, trước &rarr; sau) cập nhật tức thì, chưa lưu gì. Chưa nhập gì thì bảng không có dòng xem thử. Chỉ IE Báo cáo máy có nút <span class="btn">Thêm hành động</span> (nhập <b>Họ tên</b> ở tab Dữ liệu trước); Giám sát vẫn thử được nhưng không lưu được.</p>
+<figure><a href="img/ibm-25-action-form.png"><img src="img/ibm-25-action-form.png" alt="Khung hành động và xem thử" loading="lazy"></a><figcaption>BT1M: thuê 9 máy từ ngày thiếu đầu đến ngày thiếu cuối. Hai dòng “Xem thử: thay đổi” và “Xem thử: còn lại nếu chốt” hiện ngay; dòng “Kết quả ngay” ở cuối khung: thiếu nhiều nhất −9 &rarr; 0, ngày thiếu 13 &rarr; 0.</figcaption></figure>
+<table><tr><th>Loại</th><th>Tác dụng lên số liệu</th></tr>
+<tr><td><b>Thuê</b>, <b>Mua</b>, <b>Mượn</b></td><td>Cộng thêm số máy của nhóm máy trong khoảng ngày đã nhập (tự điền theo mức thiếu lớn nhất và khoảng ngày thiếu). Có thể ghi <b>PU nhận</b> (không bắt buộc) để thẻ tổng hợp hiện theo PU.</td></tr>
+<tr><td><b>Dời kế hoạch</b></td><td>Chọn <b>chuyền</b>, <b>mã hàng</b> và <b>ngày vào chuyền mới</b> (ngày chủ nhật tự chuyển sang ngày làm việc; khung ghi “+n ngày làm việc”). <b>Cả chuyền dời theo</b>: mã hàng đó và mọi mã sau nó vào chuyền muộn hơn; mã trước vẫn chạy tiếp; chuẩn bị dời theo. Tác dụng thật lên <b>mọi nhóm máy</b> có chuyền đó; kết quả ngay cho biết các nhóm máy khác bị thay đổi bao nhiêu.</td></tr>
+<tr><td><b>Khác</b></td><td>Ghi chú bắt buộc. Nếu nhập số máy (+ hoặc −) và khoảng ngày thì cộng/trừ máy như trên; nếu không thì chỉ ghi nhận.</td></tr></table>
+<figure><a href="img/ibm-26-delay-preview.png"><img src="img/ibm-26-delay-preview.png" alt="Dời kế hoạch ngay trong khung hành động" loading="lazy"></a><figcaption>Dời kế hoạch nằm trong cùng khung: chọn chuyền, mã hàng, ngày vào chuyền mới. Các dòng xem thử và “Kết quả ngay” cho thấy tác dụng thật lên bảng.</figcaption></figure>
+<div class="warn"><b>Dời kế hoạch có thể không giải quyết được thiếu máy</b> (ví dụ máy dùng nhiều nhất rơi vào ngày khác, hoặc số ngày thiếu tăng vì mã trước chạy lâu hơn). Hãy đọc dòng “Kết quả ngay” (thiếu nhiều nhất và số ngày thiếu) trước khi đề nghị PPC.</div>
+<ul>
+<li><b>Dự kiến</b> = chưa chắc chắn; <b>Đã chốt</b> = đã có máy / PPC đã đồng ý dời. Hai trạng thái được tính ở hai dòng riêng (“sau hành động đã chốt” và “kể cả dự kiến”).</li>
+<li>Mỗi hành động là một hàng trong bảng ngang, hiện <b>số thay đổi thực tế từng ngày</b>. Nút <span class="btn">✎</span> sửa, <span class="btn">✔</span> chốt (Dự kiến &rarr; Đã chốt), <span class="btn">✖</span> hủy (hàng bị gạch, không còn tác dụng).</li>
+<li><b>Dời kế hoạch đã vào kế hoạch mới:</b> khi MC Report / Master plan mới đã cho mã hàng vào chuyền đúng hoặc sau ngày mới, hành động được gắn nhãn <b>“Đã vào kế hoạch”</b> và <b>không tính nữa</b> (tránh dời hai lần).</li>
+<li>Mỗi lần thay đổi ghi thành một file trong <code>data\prep\actions</code>, đồng thời hiện ở tab <b>Nhật ký</b> (loại “Hành động thiếu máy”).</li></ul>
+<h3>6.4 Thẻ tổng hợp hành động</h3>
+<p>Khi <b>mọi hành động đã được chốt</b> (không còn hành động Dự kiến) và có ít nhất một hành động, màn hình tự tạo thẻ <b>Tổng hợp hành động xử lý thiếu máy</b>: bốn ô chỉ số (nhóm máy đủ máy, nhóm cần IE kiểm tra thêm, số hành động đã chốt, máy-ngày thiếu trước &rarr; sau), một thẻ cho <b>mỗi nhóm máy</b> (thiếu trước &rarr; sau, thanh tiến độ, danh sách hành động) và một thẻ cho <b>mỗi PU</b>. Nhóm máy hoặc PU không có hành động mà vẫn còn thiếu ghi <b>“IE kiểm tra thêm”</b>; nhóm máy sau hành động vẫn thiếu ghi “Còn thiếu −x: IE kiểm tra thêm”. Nút <span class="btn">Xuất Excel</span> lưu thẻ thành file.</p>
+<figure><a href="img/ibm-27-actions-and-card.png"><img src="img/ibm-27-actions-and-card.png" alt="Thẻ tổng hợp hành động" loading="lazy"></a><figcaption>Thẻ tổng hợp: BT1M giảm từ −9 xuống −2 nhờ Thuê +9 và Dời kế hoạch nhưng vẫn cần IE kiểm tra thêm; ZZM chưa đủ máy.</figcaption></figure>
+<h3>6.5 Vai trò Giám sát</h3>
+<figure><a href="img/ibm-28-supervisor.png"><img src="img/ibm-28-supervisor.png" alt="Vai trò Giám sát" loading="lazy"></a><figcaption>Vai trò <b>Giám sát</b>: cùng bảng ngang, khung hành động (để thử, xem kết quả ngay) và thẻ tổng hợp, nhưng không lưu được hành động.</figcaption></figure>
+</section>
+
+<section id="chot"><h2>7. Chốt báo cáo, xuất Excel</h2>
 <p>Quay về vai trò <b>IE Báo cáo máy</b>, tab <b>Thiếu máy &amp; chuẩn bị</b>, bấm <span class="btn">Mở chi tiết các nhóm đã chọn</span> để thấy quyết định của IE Tech (nhãn <i>Đã giữ</i>, <i>Đã chỉnh 1→2</i>, <i>Đã bỏ</i>, <i>theo SL layout</i>, “ngày do IE Tech chỉnh”).</p>
 <figure><a href="img/ibm-17-detail-approved.png"><img src="img/ibm-17-detail-approved.png" alt="Chi tiết đã duyệt" loading="lazy"></a><figcaption>Chi tiết sau khi IE Tech duyệt. Dòng “IE Tech đã hoàn tất: Hoa · PU1 · … 2 chưa duyệt” cho biết ai hoàn tất, phạm vi nào, còn bao nhiêu dòng chưa duyệt.</figcaption></figure>
 <h3>Chốt báo cáo</h3>
@@ -157,7 +226,7 @@
 <p>Bấm <span class="btn">Xuất Excel</span> (sau “Mở chi tiết”): mỗi loại máy một sheet có tô màu như sheet chi tiết hiện tại; sheet <code>PREP BY PU</code> đúng dạng TTL DEMAND BY PU (Combine.MACHINE | PU | ngày) để cộng vào báo cáo; sheet <code>CHƯA DUYỆT</code> liệt kê các dòng IE Tech chưa duyệt; sheet <code>TRẠNG THÁI</code> (người chốt, thời điểm, ghi chú, bảng theo PU). Tên file có <code>CHOT</code> (<code>PREP_DEMAND_CHOT_…</code>) chỉ khi đã chốt và chưa có thay đổi sau đó. Dòng chuẩn bị bị bỏ được xuất là 0.</p>
 </section>
 
-<section id="bao-sai-lech"><h2>7. Báo sai lệch và Nhật ký</h2>
+<section id="bao-sai-lech"><h2>8. Báo sai lệch và Nhật ký</h2>
 <h3>Báo sai lệch từ IE Tech</h3>
 <p>Khi IE Tech nhập “SL theo layout” khác CSDL, thông báo hiện ở tab <b>Báo sai lệch</b>. Kiểm tra layout, sửa CSDL ở bước 3 nếu đúng, sau đó bấm <span class="btn">Đã sửa CSDL</span> hoặc <span class="btn">Không đúng</span>. Khi CSDL đã khớp số của IE Tech, cột trạng thái tự báo “CSDL đã khớp”. IE Tech xem kết quả ở bảng “Báo sai lệch tôi đã gửi”.</p>
 <figure><a href="img/ibm-20-notices.png"><img src="img/ibm-20-notices.png" alt="Báo sai lệch" loading="lazy"></a><figcaption>Thông báo của IE Tech: BT1M, CSDL lúc báo 2, layout 3, CSDL hiện tại 2.</figcaption></figure>
@@ -170,7 +239,7 @@
 <li><span class="btn">Xuất Excel</span>: ba sheet NHẬT KÝ, THEO LOẠI MÁY, THEO CHUYỀN theo bộ lọc đang chọn.</li></ul>
 </section>
 
-<section id="quy-tac"><h2>8. Quy tắc</h2>
+<section id="quy-tac"><h2>9. Quy tắc</h2>
 <table><tr><th>Chủ đề</th><th>Quy tắc</th></tr>
 <tr><td>Thứ tự nguồn</td><td>Layout trước. Không có layout thì dùng costing (chỉ cho mã hàng chưa có layout và chưa có dữ liệu). Dữ liệu nhập tay (REMARK <code>IETL</code>, <code>SMS</code>, <code>PDF</code>, <code>tt</code>, <code>E</code>) chỉ được thay khi người duyệt chọn.</td></tr>
 <tr><td>Mã hàng</td><td>Đọc từ ô B3, D3, D4 (layout thường), B11 (Man-Machine), sau đó tên file. Mã ghép được tách: <code>3801.3802.3803</code>, <code>3801-3803</code>, <code>3901.04</code>, <code>00115_116_117</code>, xuống dòng. Mã khách hàng đặc biệt (SP…, S2xxx, F2xxx, DS…) giữ nguyên như khi ghi.</td></tr>
@@ -180,20 +249,22 @@
 <tr><td>So sánh layout – CSDL</td><td><b>Theo nhóm máy</b> (nhóm lấy từ sheet MACHINE GROUP): tổng số máy mỗi nhóm bằng nhau là khớp; khác mã máy trong cùng nhóm không tạo đề xuất và không làm mất “Đã kiểm tra”. Mã máy chưa có nhóm được so sánh riêng.</td></tr>
 <tr><td>Dữ liệu CSDL</td><td>Chỉ dùng các dòng có <b>ngày mới nhất</b> của mỗi mã hàng.</td></tr>
 <tr><td>Quyết định mới nhất có hiệu lực</td><td>Công cụ đọc lại đúng file và sheet của bản ghi Layout Check: máy trong file = bản ghi và CSDL = bản ghi → “Đã kiểm tra”; file đã được sửa sau lần kiểm tra → “Cần duyệt”, IE kiểm tra lại; file khác file IE đã kiểm tra → “Lỗi dữ liệu: File layout khác file IE đã kiểm tra”.</td></tr>
+<tr><td>Thiếu máy còn lại</td><td>Tính bằng đúng cách tính của bảng IE Tech (đề xuất mới nhất của từng nhóm máy + quyết định IE Tech). Hành động Thuê/Mua/Mượn (và Khác có nhập số máy) cộng máy theo ngày, Dời kế hoạch dời cả chuyền từ mã hàng đã chọn (Đã chốt và Dự kiến tính riêng; dời đã vào kế hoạch mới thì không tính nữa); mỗi nhóm máy thiếu có khung hành động riêng với kết quả hiện ngay; chỉ IE Báo cáo máy ghi hành động, Giám sát chỉ thử. Thẻ tổng hợp tạo khi mọi hành động đã chốt.</td></tr>
+<tr><td>Số liệu ngay sau khi lưu</td><td>Báo cáo thiếu máy tính cả các thay đổi vừa duyệt (có nhãn), dù MC Report chưa cập nhật.</td></tr>
 <tr><td>Mã băm</td><td><b>File Hash</b> (SHA-256 cả file): giống lần trước thì bỏ qua. <b>Content Hash</b> (chỉ máy và số lượng): đổi định dạng, ghi chú, tên sheet, ô mã hàng không tính là thay đổi.</td></tr></table>
 </section>
 
-<section id="file-luu"><h2>9. File lưu và thư mục data</h2>
+<section id="file-luu"><h2>10. File lưu và thư mục data</h2>
 <p>File <code>MACHINE_DATABASE_yyyymmdd_hhmm.xlsx</code> gồm các sheet:</p>
 <table><tr><th>Sheet</th><th>Nội dung</th></tr>
 <tr><td><code>MACHINE DATABASE</code></td><td>Toàn bộ database sau khi áp dụng thay đổi đã duyệt (dán vào <code>Table1</code>).</td></tr>
 <tr><td><code>CHANGES</code></td><td>Nhật ký thay đổi (cũ, mới, nguồn, file, ngày duyệt).</td></tr>
 <tr><td><code>EXCEPTIONS</code></td><td>Lỗi dữ liệu và mã hàng còn thiếu.</td></tr>
 <tr><td><code>LAYOUT DATA</code>, <code>NEW CHANGED</code>, <code>SCAN STATE</code></td><td>Dữ liệu layout hiện hành, file mới/thay đổi trong lần chạy, trạng thái quét.</td></tr></table>
-<p>Thư mục <code>data</code> dùng chung với Layout Check: <code>machinedb\scanstate.json</code> (mã băm từng file layout), <code>validations\*.json</code> (quyết định của Layout Check), <code>approvals\*.json</code> (ghi chú “Đã duyệt”, không tính là kiểm tra), <code>prep\</code> (<code>proposals</code>, <code>reviews</code>, <code>shared</code>, <code>notices</code>, <code>noticeres</code>, <code>complete</code>, <code>closed</code>, <code>lineends</code>, <code>rules.json</code>).</p>
+<p>Thư mục <code>data</code> dùng chung với Layout Check: <code>machinedb\scanstate.json</code> (mã băm từng file layout), <code>validations\*.json</code> (quyết định của Layout Check), <code>approvals\*.json</code> (ghi chú “Đã duyệt”, không tính là kiểm tra), <code>prep\</code> (<code>proposals</code>, <code>reviews</code>, <code>shared</code>, <code>notices</code>, <code>noticeres</code>, <code>complete</code>, <code>closed</code>, <code>lineends</code>, <code>actions</code>, <code>rules.json</code>), <code>machinedb\keeps.json</code> (xác nhận giữ).</p>
 </section>
 
-<section id="loi"><h2>10. Lỗi thường gặp</h2>
+<section id="loi"><h2>11. Lỗi thường gặp</h2>
 <table><tr><th>Hiện tượng</th><th>Cách xử lý</th></tr>
 <tr><td>“MC Report cần sheet MACHINE DATABASE và MACHINE GROUP”</td><td>Chọn đúng file MC Report; kiểm tra tên sheet.</td></tr>
 <tr><td>“không có sheet COSTING PROPOSAL (bỏ qua costing)”</td><td>Thêm query COSTING PROPOSAL (mục 2) nếu cần costing.</td></tr>

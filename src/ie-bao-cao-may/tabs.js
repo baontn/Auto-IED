@@ -5,7 +5,8 @@ function setTab(tb) {
   TAB = tb; try { localStorage.setItem('mdb_tab', tb); } catch (e) { }
   [].forEach.call(document.querySelectorAll('[data-pane]'), function (p) { p.hidden = p.dataset.pane !== tb; });
   [].forEach.call(document.querySelectorAll('#mainTabs [data-tab]'), function (b) { b.classList.toggle('on', b.dataset.tab === tb); });
-  $('savebar').hidden = !(tb === 'db' && RV && ROLE !== 'tech');
+  $('savebar').hidden = !(tb === 'db' && RV && ROLE !== 'tech' && ROLE !== 'sup');
+  if (tb === 'resid' && window.rsOpen) rsOpen();
   if (tb === 'prep') { ensurePrep(); if (window.refreshPrepData) refreshPrepData(); }
   if (tb === 'activity') { applyPh(); actLoad(); }
   if (tb === 'notice') { $('noticeEmpty').hidden = !!LCDIR; if (LCDIR) renderNotices(); }
@@ -23,6 +24,7 @@ function paintTabs() {
   var nRev = RV ? RV.items.filter(function (it) { return it.bucket === 'review'; }).length : 0;
   lbl('db', nRev ? '<span class="cnt">' + nRev + '</span>' : '');
   lbl('prep', '');
+  var nS = window.rsShortCount && RS.root ? rsShortCount() : 0; lbl('resid', nS ? '<span class="cnt">' + nS + '</span>' : '');
   lbl('activity', '');
   var nN = (PS.notices || []).filter(function (n) { return !(PS.noticeRes || []).some(function (r) { return r.id === n.id; }); }).length;
   lbl('notice', nN ? '<span class="cnt">' + nN + '</span>' : '');
@@ -31,7 +33,7 @@ $('mainTabs').onclick = function (e) { var b = e.target.closest('[data-tab]'); i
 window.setTabMain = setTab; window.paintTabs = paintTabs;
 // role switch: IE Tech sees only "Duyệt chuẩn bị"
 var _setRole = setRole;
-setRole = function (r) { _setRole(r); $('mainTabs').hidden = r === 'tech'; if (r !== 'tech') setTab(TAB); };
+setRole = function (r) { _setRole(r); $('mainTabs').hidden = r === 'tech' || r === 'sup'; if (r !== 'tech' && r !== 'sup') setTab(TAB); };
 setRole(ROLE);
 
 if (window.paintRemember) paintRemember();

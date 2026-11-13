@@ -87,7 +87,26 @@ select{max-width:360px;width:100%;font-size:13px}
 .pg td.pr{background:var(--warnbg);color:var(--warn);font-weight:600}
 .pg td.sk{color:var(--muted);text-decoration:line-through}
 .pg tr.tot td{font-weight:600;background:var(--bg)}
-.pg td.neg{background:var(--badbg);color:var(--bad);font-weight:600}
+.pg td.neg,.pg tr.tot td.neg,.pg tr.pusum td.neg{background:var(--badbg);color:var(--bad);font-weight:600}
+.pg td.ok{color:var(--ok);font-weight:600}
+.rsp{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:8px 0 6px;background:var(--bg)}
+.pg tr.pv td{background:var(--sel);font-weight:600}.pg tr.pv td.neg{background:var(--badbg);color:var(--bad)}.pg tr.pv td.ok{color:var(--ok)}.pg tr.pv td.s3,.pg tr.pv td.s1,.pg tr.pv td.s2{background:var(--sel);font-style:italic}
+.sc-head{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.sc-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:10px 0}
+.sc-kpi{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--panel)}.sc-kpi b{display:block;font-size:24px;line-height:1.15}.sc-kpi span{font-size:12px;color:var(--muted)}
+.sc-kpi.ok b{color:var(--ok)}.sc-kpi.bad b{color:var(--bad)}
+.sc-h{margin:14px 0 6px}
+.sc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:10px}
+.sc-card{border:1px solid var(--line);border-left:5px solid var(--ok);border-radius:10px;padding:10px 12px;background:var(--panel)}
+.sc-card.more{border-left-color:var(--bad)}
+.sc-top{display:flex;align-items:center;gap:8px}.sc-top b{font-size:16px}.sc-badge{margin-left:auto;border-radius:10px;padding:1px 9px;font-size:12px;font-weight:600}
+.sc-badge.ok{background:var(--okbg);color:var(--ok)}.sc-badge.more{background:var(--badbg);color:var(--bad)}
+.sc-nums{display:flex;align-items:flex-end;gap:12px;margin:8px 0 6px}.sc-nums big{display:block;font-size:28px;font-weight:700;line-height:1.1}.sc-nums small{display:block;color:var(--muted);font-size:12px}.sc-arrow{font-size:22px;color:var(--muted);padding-bottom:12px}
+.sc-bar{height:7px;border-radius:5px;background:var(--badbg);overflow:hidden;margin-bottom:3px}.sc-bar i{display:block;height:100%;background:var(--ok)}
+.sc-acts{list-style:none;margin:8px 0 0;padding:0;font-size:13px}.sc-acts li{padding:4px 0;border-top:1px dashed var(--line)}
+.sc-none{margin-top:8px;padding-top:6px;border-top:1px dashed var(--line);color:var(--muted);font-size:13px}
+.sc-concl{margin-top:8px;font-weight:600;font-size:13px}
+
 .pg tr.pu td{background:var(--sel);font-weight:600}
 .gblock{margin-top:12px}
 .vcard{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
@@ -125,10 +144,10 @@ input.lq.diff{border-color:var(--warn);background:var(--warnbg);color:var(--warn
 <body>
 <header>
   <h1 data-t="title"></h1><span class="tag t-info" id="verTag" title="Version">v{{VERSION}}</span><span class="sub" data-t="subtitle"></span>
-  <div role="group" aria-label="Role" id="roleSeg" style="margin-left:auto;display:flex;gap:4px"><button data-role="cons" data-t="roleCons"></button><button data-role="tech" data-t="roleTech"></button></div>
+  <div role="group" aria-label="Role" id="roleSeg" style="margin-left:auto;display:flex;gap:4px"><button data-role="cons" data-t="roleCons"></button><button data-role="tech" data-t="roleTech"></button><button data-role="sup" data-t="roleSup"></button></div>
   <div class="lang" role="group" aria-label="Language" style="margin-left:8px"><button data-lang="vi">VI</button><button data-lang="en">EN</button></div>
 </header>
-<nav class="mtabs" id="mainTabs"><button data-tab="data" data-t="tabData"></button><button data-tab="db" data-t="tabDb"></button><button data-tab="prep" data-t="tabPrep"></button><button data-tab="notice" data-t="tabNotice"></button><button data-tab="activity" data-t="tabAct"></button></nav>
+<nav class="mtabs" id="mainTabs"><button data-tab="data" data-t="tabData"></button><button data-tab="db" data-t="tabDb"></button><button data-tab="prep" data-t="tabPrep"></button><button data-tab="resid" data-t="tabResid"></button><button data-tab="notice" data-t="tabNotice"></button><button data-tab="activity" data-t="tabAct"></button></nav>
 <main id="techView" hidden>
   <div class="card">
     <h3><span class="num">1</span> <span data-t="tTitle"></span></h3>
@@ -166,6 +185,14 @@ input.lq.diff{border-color:var(--warn);background:var(--warnbg);color:var(--warn
     <h3><span class="num">3</span> <span data-t="tMyNotices"></span></h3>
     <div class="tw"><table id="tNotices"></table></div>
   </div>
+</main>
+<main id="supView" hidden>
+  <div class="card">
+    <h3><span class="num">1</span> <span data-t="roleSup"></span></h3>
+    <div class="muted small" data-t="rsSupHint"></div>
+    <div class="row" style="margin-top:10px"><button class="pick" id="sConnect" type="button" data-t="tDataPick"></button><button id="sReuse" type="button" hidden></button><span id="sInfo" class="muted small"></span></div>
+  </div>
+  <div id="rsS"></div>
 </main>
 <aside id="tDrawer" hidden>
   <div class="row"><b id="dTitle"></b><button id="dClose" style="margin-left:auto">✕</button></div>
@@ -300,6 +327,7 @@ input.lq.diff{border-color:var(--warn);background:var(--warnbg);color:var(--warn
     <div id="pDetail"></div>
   </div>
 </section>
+<section data-pane="resid" hidden><div id="rsC"></div></section>
 <section data-pane="activity" hidden>
   <div class="card" id="actEmpty"><div class="empty" data-t="nNeedLc"></div></div>
   <div class="card" id="actCard" hidden>
@@ -320,6 +348,7 @@ input.lq.diff{border-color:var(--warn);background:var(--warnbg);color:var(--warn
 </main>
 <div class="savebar" id="savebar" hidden><div class="in">
   <div class="msg" id="smsg"></div>
+  <button id="keepBtn" hidden></button>
   <button id="save" class="primary" data-t="save"></button>
 </div></div>
 
@@ -330,6 +359,7 @@ input.lq.diff{border-color:var(--warn);background:var(--warnbg);color:var(--warn
 <script>/*__APP__*/</script>
 <script>/*__PREPUI__*/</script>
 <script>/*__TECHUI__*/</script>
+<script>/*__RESIDUI__*/</script>
 <script>/*__CLOSEACT__*/</script>
 <script>/*__TABS__*/</script>
 </body>

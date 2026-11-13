@@ -4,9 +4,11 @@ var TS = { dir: null, lay: null, props: [], reviews: [], notices: [], res: [], r
 function setRole(r) {
   ROLE = r; try { localStorage.setItem('mdb_role', r); } catch (e) { }
   [].forEach.call(document.querySelectorAll('#roleSeg [data-role]'), function (b) { b.classList.toggle('on', b.dataset.role === r); });
-  $('techView').hidden = r !== 'tech'; $('consView').hidden = r === 'tech'; $('consView2').hidden = r === 'tech';
+  var cons = r !== 'tech' && r !== 'sup';
+  $('techView').hidden = r !== 'tech'; $('supView').hidden = r !== 'sup'; $('consView').hidden = !cons; $('consView2').hidden = !cons;
   if (r !== 'tech') $('tDrawer').hidden = true;
   if (r === 'tech') techRender();
+  if (r === 'sup' && window.supRender) supRender();
 }
 $('roleSeg').onclick = function (e) { var b = e.target.closest('[data-role]'); if (b) setRole(b.dataset.role); };
 function tSave(k, v) { try { localStorage.setItem(k, v); } catch (e) { } }
@@ -128,7 +130,7 @@ function latestGrid(g) {
   var ps = TS.props.filter(function (p) { return p.grid && p.grid[g]; }).sort(function (a, b) { return String(b.at).localeCompare(String(a.at)); });
   if (!ps.length) return null;
   var G = ps[0].grid[g], sun = function (d) { return new Date(typeof d === 'number' ? d : d + 'T00:00:00Z').getUTCDay() === 0; };
-  return Object.assign({}, G, { days: (G.days || []).filter(function (d) { return !sun(d); }) });      // no Sundays (also in proposals sent before this version)
+  return Object.assign({}, G, { days: (G.days || []).filter(function (d) { return !sun(d); }), basis: ps[0].dbBasis || null });      // no Sundays (also in proposals sent before this version)
 }
 function noticeStatus(n) { var r = TS.res.concat(PS.noticeRes || []).filter(function (x) { return x.id === n.id; }).sort(function (a, b) { return String(a.at).localeCompare(String(b.at)); }).pop(); return r || null; }
 function puSort(p) { return !p || p === '?' ? 1 : 0; }
@@ -171,16 +173,8 @@ function techRender() {
   if (!G) { $('tGrid').innerHTML = '<div class="empty">' + esc(t('tNoProposal')) + '</div>'; renderMyNotices(); return; }
   var days = G.days, allRows = TS.rows.filter(function (x) { return x.group === g; });
   var ms = function (d) { return Date.parse(d + 'T00:00:00Z'); }, iso = function (d) { return new Date(d).toISOString().slice(0, 10); }, dms = days.map(ms);
-  G = Object.assign({}, G, { lines: {} }); var G0 = latestGrid(g);
-  Object.keys(G0.lines).forEach(function (l) { var st = {}; Object.keys(G0.lines[l].styles).forEach(function (s) { st[s] = Object.assign({}, G0.lines[l].styles[s]); }); G.lines[l] = Object.assign({}, G0.lines[l], { styles: st }); });
-  allRows.forEach(function (x) { if (x.loadActual && G.lines[x.line]) shiftProduction(G.lines[x.line].styles, x, ms(x.load), ms(x.loadActual), dms, iso); });
-  var TE = latestEnds(TS.ends), runInfo = {};
-  Object.keys(G0.lines).forEach(function (l) {                              // running style of each line (from the unadjusted plan), its planned and effective end
-    var run = runningStyle(G0.lines[l].styles, days); if (!run) return;
-    var pe = runEnd(G0.lines[l].styles, run, days), e = TE[l + '|' + run];
-    runInfo[l] = { style: run, plan: pe, eff: e && e.endDate ? e.endDate : pe, edited: !!(e && e.endDate && e.endDate !== pe) };
-    if (e && e.endDate) adjustRunningEnd(G.lines[l].styles, run, ms(e.endDate), days, ms);
-  });
+  var G0 = latestGrid(g), M = groupModel(G0, allRows, latestEnds(TS.ends)), runInfo = M.runInfo;          // same calculation as the supervisor's residual-shortage view
+  G = Object.assign({}, G, { lines: M.G.lines });
   var endTag = function (l, s) {
     var r = runInfo[l]; if (!r || r.style !== s || !r.eff) return '';
     return ' <span class="muted small">' + esc(t('eEnd', [d2(r.eff)])) + '</span>' + (r.edited ? ' <span class="tag t-info">' + esc(d2(r.plan)) + '→' + esc(d2(r.eff)) + '</span>' : '') +
@@ -218,9 +212,7 @@ function techRender() {
   });
   // totals per PU (all lines of the group), then total, available and balance
   var pus = {}; Object.keys(G.lines).forEach(function (l) { pus[G.lines[l].pu] = 1; });
-  var prod = {}, prep = {}, totP = {}, totR = {};
-  Object.keys(G.lines).forEach(function (l) { var L = G.lines[l]; Object.keys(L.styles).forEach(function (s) { Object.keys(L.styles[s]).forEach(function (d) { var k = L.pu + '|' + d; prod[k] = (prod[k] || 0) + L.styles[s][d]; totP[d] = (totP[d] || 0) + L.styles[s][d]; }); }); });
-  allRows.forEach(function (x) { if (!x.eff) return; (x.days || []).forEach(function (d) { var k = x.pu + '|' + d; prep[k] = (prep[k] || 0) + x.eff; totR[d] = (totR[d] || 0) + x.eff; }); });
+  var prod = M.prodPu, prep = M.prepPu, totP = M.prod, totR = M.prep;
   var trow = function (label, f, cls, neg) { return '<tr class="' + cls + '"><td class="s1"></td><td class="s2"></td><td class="l s3">' + esc(label) + '</td>' + days.map(function (d) { var v = f(d); return '<td class="' + (neg && v != null && v < 0 ? 'neg' : '') + '">' + (v == null ? '' : v) + '</td>'; }).join('') + '</tr>'; };
   Object.keys(pus).sort(function (a, b) { return puSort(a) - puSort(b) || a.localeCompare(b); }).forEach(function (p) {
     h += trow(t('pgPuSum', [puName(p), t('pgProd')]), function (d) { return prod[p + '|' + d] || 0; }, 'pusum') + trow(t('pgPuSum', [puName(p), t('pgPrep')]), function (d) { return prep[p + '|' + d] || 0; }, 'pusum') +
@@ -231,7 +223,8 @@ function techRender() {
   h += trow(t('pgBal'), function (d) { return G.avail == null ? null : G.avail - (totP[d] || 0) - (totR[d] || 0); }, 'tot', true) + '</table></div>';
   var tw0 = $('tGrid').querySelector('.tw'), gk = g + '|' + pu + '|' + $('tLines').value, keep = TS.gridKey === gk && !!tw0;
   var sT = keep ? tw0.scrollTop : 0, sL = keep ? tw0.scrollLeft : 0, pY = window.scrollY, pX = window.scrollX;     // approving a row must not throw the user back to the top
-  $('tGrid').innerHTML = h; TS.gridKey = gk;
+  var basisNote = G0.basis && G0.basis.overlay ? '<div class="muted small" style="margin:0 0 6px;padding:6px 10px;border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:6px">' + esc(t('tBasis', [G0.basis.overlay, String(G0.basis.at || '').slice(0, 16).replace('T', ' '), G0.basis.by || '-'])) + '</div>' : '';
+  $('tGrid').innerHTML = basisNote + h; TS.gridKey = gk;
   var tw1 = $('tGrid').querySelector('.tw'); if (tw1) { tw1.scrollTop = sT; tw1.scrollLeft = sL; }
   if (keep) window.scrollTo(pX, pY);
   [].forEach.call($('tGrid').querySelectorAll('[data-te]'), function (b) { b.onclick = function (e) { e.stopPropagation(); techSetEnd(b.dataset.te); }; });

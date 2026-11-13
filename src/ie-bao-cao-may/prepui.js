@@ -1,5 +1,20 @@
 // ===================== STEP 4 UI: machine group analysis + prep =====================
-function SRC() { if (!REF.demand && REF.planRows && REF.db) REF.demand = buildDemand(REF.planRows, REF.db, REF.groups || {}); return REF.demand || REF.mbl; }
+function SRC() { if (!REF.demand && REF.planRows && REF.db) REF.demand = buildDemand(REF.planRows, effDb(), REF.groups || {}); return REF.demand || REF.mbl; }
+// Database used for the demand: the MC Report's MACHINE DATABASE plus the changes approved and saved in this session (not yet pasted into Table1 / refreshed in the MC Report).
+function effDb() {
+  var O = REF.dbOver; if (!O || !Object.keys(O.items).length) return REF.db;
+  var by = Object.assign({}, REF.db.byKey);
+  Object.keys(O.items).forEach(function (k) { by[k] = Object.assign({}, by[k] || { name: O.names[k] }, { set: O.items[k] }); });
+  return Object.assign({}, REF.db, { byKey: by });
+}
+function addDbOverlay(items, user) {
+  var O = REF.dbOver = REF.dbOver || { items: {}, names: {}, at: null, by: '' };
+  items.forEach(function (it) { O.items[it.key] = Object.assign({}, it.opts[it.sel].set); O.names[it.key] = it.name; });
+  O.at = new Date().toISOString(); O.by = user || '';
+  REF.demand = null; PS.changes = null;
+  if (PS.rows) { PS.rows = null; PS.open = []; $('pDetail').innerHTML = ''; $('pMsg').textContent = t('ovRecalc'); }
+  if (window.prepRender && !$('step4').hidden) prepRender();
+}
 var PS = { rules: JSON.parse(JSON.stringify(PREP_DEFAULT)), shared: [], reviews: [], sel: {}, rows: null, onlyPrep: true, groups: [] };
 function pDay(k, wd) { var d = new Date(k), p = function (x) { return String(x).padStart(2, '0'); }; return (wd ? ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'][d.getUTCDay()] + ' ' : '') + p(d.getUTCDate()) + '/' + p(d.getUTCMonth() + 1); }
 function pIso(k) { var d = new Date(k); return d.toISOString().slice(0, 10); }
@@ -159,7 +174,8 @@ async function prepSend() {
   });
   var d = await (await LCDIR.getDirectoryHandle('prep', { create: true })).getDirectoryHandle('proposals', { create: true });
   var h = await d.getFileHandle(st + '_' + user.replace(/[^\w\-]+/g, '_') + '.json', { create: true }), w = await h.createWritable();
-  await w.write(JSON.stringify({ at: now.toISOString(), by: user, groups: PS.open, from: pIso(pRange().from), rows: rows, grid: grid, groupMap: REF.groups || {} })); await w.close();
+  await w.write(JSON.stringify({ at: now.toISOString(), by: user, groups: PS.open, from: pIso(pRange().from), rows: rows, grid: grid, groupMap: REF.groups || {},
+    dbBasis: REF.dbOver && Object.keys(REF.dbOver.items).length ? { overlay: Object.keys(REF.dbOver.items).length, at: REF.dbOver.at, by: REF.dbOver.by, styles: Object.keys(REF.dbOver.names).map(function (k) { return REF.dbOver.names[k]; }).slice(0, 40) } : null })); await w.close();
   $('pMsg2').textContent = t('pSent', [rows.filter(function (x) { return !x.same; }).length]);
 }
 async function prepExport() {
@@ -231,9 +247,10 @@ function partRows(g, G) {
 var SRCVIEW = null;
 function renderSource() {
   var M = SRC(), info = REF.planRows && REF.db ? t('srcPlanTxt', [REF.planFile || '', REF.planAt ? REF.planAt.toLocaleString() : '']) : t('srcMblTxt');
-  $('srcInfo').textContent = info;
+  var nOv = REF.dbOver ? Object.keys(REF.dbOver.items).length : 0;
+  $('srcInfo').textContent = info + (nOv ? t('srcOverlay', [nOv]) : '');
   var ch = [], miss = (M && M.missing) || [];
-  if (REF.mbl && REF.demand) ch = PS.changes = PS.changes || planChanges(REF.mbl, REF.demand, pRange().from, function (s) { return !!REF.db.byKey[skey(s)]; });
+  if (REF.mbl && REF.demand) ch = PS.changes = PS.changes || planChanges(REF.mbl, REF.demand, pRange().from, function (s) { return !!effDb().byKey[skey(s)]; });
   var nl = Object.keys(ch.reduce(function (a, c) { a[c.line] = 1; return a; }, {})).length;
   $('srcDiff').textContent = REF.mbl && REF.demand ? (ch.length ? t('srcDiff', [ch.length, nl]) : t('srcSame')) : '';
   $('srcDiff').className = ch.length ? 'st-bad' : 'st-ok';

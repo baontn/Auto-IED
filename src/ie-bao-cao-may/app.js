@@ -121,6 +121,29 @@ function readJsonFiles(dir) {
     return out;
   })();
 }
+// ---------- "keep current data" confirmations (data\\machinedb\\keeps.json, or this browser when the data folder is not connected) ----------
+var KEEPS = {}, KEEPMSG = '';
+async function loadKeeps(d) {
+  KEEPS = {};
+  try {
+    if (d) { var md = await d.getDirectoryHandle('machinedb'); KEEPS = JSON.parse(await (await (await md.getFileHandle('keeps.json')).getFile()).text()).items || {}; }
+    else { var s = localStorage.getItem('mdb_keeps'); if (s) KEEPS = JSON.parse(s).items || {}; }
+  } catch (e) { }
+}
+async function persistKeeps() {
+  var txt = JSON.stringify({ version: 1, items: KEEPS });
+  if (LCDIR) { var md = await LCDIR.getDirectoryHandle('machinedb', { create: true }), fh = await md.getFileHandle('keeps.json', { create: true }), w = await fh.createWritable(); await w.write(txt); await w.close(); return 'data'; }
+  localStorage.setItem('mdb_keeps', txt); return 'local';
+}
+function pendingKeeps() { return RV ? RV.items.filter(function (it) { var o = it.opts[it.sel]; return it.bucket === 'review' && it.apply && o.type === 'keep' && it.current; }) : []; }
+async function confirmKeeps() {
+  var list = pendingKeeps(); if (!list.length) return null;
+  var user = $('uName').value.trim(), now = new Date(), before = {};
+  list.forEach(function (it) { before[it.key] = KEEPS[it.key]; KEEPS[it.key] = keepRecord(it, user, now); });
+  var where; try { where = await persistKeeps(); } catch (e) { list.forEach(function (it) { if (before[it.key]) KEEPS[it.key] = before[it.key]; else delete KEEPS[it.key]; }); alert(t('keepErr', [e.message])); return null; }
+  list.forEach(function (it) { it.bucketBefore = it.bucket; it.bucket = 'kept'; it.keptRec = KEEPS[it.key]; it.apply = false; });
+  return { n: list.length, where: where };
+}
 $('bLc').onclick = async function () {
   if (!window.showDirectoryPicker) { slot('sLc', 'lcNoApi', [], 'bad'); return; }
   try {
@@ -136,7 +159,7 @@ async function connectLc(d) {
     var actsFlat = []; acts.forEach(function (a) { (a.keys && a.keys.length ? [a] : [a]).forEach(function (x) { actsFlat.push(x); }); });
     var lines = [];
     try { var lf = await (await d.getFileHandle('Linemapping.xlsx')).getFile(); var lw = await readWb(lf); lines = sheetAoa(lw.Sheets[lw.SheetNames[0]], 3); } catch (e) { }
-    LC = loadLayoutCheck(vals, actsFlat, lines, apprs); LCDIR = d;
+    LC = loadLayoutCheck(vals, actsFlat, lines, apprs); LCDIR = d; await loadKeeps(d);
     if (window.prepLoadLc) await prepLoadLc(d);
     try {
       var md = await d.getDirectoryHandle('machinedb'), js = JSON.parse(await (await (await md.getFileHandle('scanstate.json')).getFile()).text());
@@ -191,6 +214,8 @@ $('go').onclick = function () {
     DONE = recs.filter(Boolean); PROG.end = cancel ? 'cancelled' : 'done'; renderProg();
     $('stop').disabled = true; $('go').disabled = false;
     RV = buildReview(DONE, REF); applyLayoutCheck(RV, LC, DONE);
+    var staleKeeps = applyKeeps(RV, KEEPS);                                  // layout or database changed since the confirmation: clear it (the style is listed again)
+    if (staleKeeps.length) { staleKeeps.forEach(function (k) { delete KEEPS[k]; }); persistKeeps().catch(function () { }); }
     if (REF.ck) compareCheckMc(DONE, REF.ck, RV.issues);
     VIEW = 'review'; CHIP = 'all'; $('step3').hidden = false; renderAll(); if (window.setTabMain) setTabMain('db');
   }
@@ -245,12 +270,13 @@ function reviewRows() {
   });
 }
 function renderViews() {
-  var c = { review: 0, same: 0, checked: 0 }; RV.items.forEach(function (it) { c[it.bucket]++; });
+  var c = { review: 0, same: 0, checked: 0, kept: 0 }; RV.items.forEach(function (it) { c[it.bucket]++; });
   var V = [['review', 'vReview', c.review], ['missing', 'vMissing', RV.missing.length], ['issues', 'vIssues', RV.issues.length], ['same', 'vSame', c.same]];
+  if (c.kept) V.push(['kept', 'vKept', c.kept]);
   if (LC) V.push(['checked', 'vChecked', c.checked]);
   V.push(['files', 'vFiles', DONE.length]);
   $('views').innerHTML = V.map(function (v) { return '<button class="v-' + v[0] + (VIEW === v[0] ? ' on' : '') + '" data-v="' + v[0] + '"><b>' + v[2] + '</b>' + esc(t(v[1])) + '</button>'; }).join('');
-  $('vhint').textContent = t({ review: 'vReviewHint', same: LC ? 'vSameHintLc' : 'vSameHint', checked: 'vCheckedHint', missing: 'vMissingHint', issues: 'vIssuesHint', files: 'vFilesHint' }[VIEW]);
+  $('vhint').textContent = t({ review: 'vReviewHint', same: LC ? 'vSameHintLc' : 'vSameHint', checked: 'vCheckedHint', kept: 'vKeptHint', missing: 'vMissingHint', issues: 'vIssuesHint', files: 'vFilesHint' }[VIEW]);
   var chips = '';
   if (VIEW === 'review') {
     var kc = {}, nc = 0; RV.items.forEach(function (it) { if (it.bucket === 'review') { kc[it.kind0] = (kc[it.kind0] || 0) + 1; if (it.conflict) nc++; } });
@@ -269,15 +295,22 @@ function renderTable() {
     var rows = reviewRows(), tick = VIEW === 'review' || (VIEW === 'same' && LC); total = rows.length;
     h = '<tr>' + (tick ? '<th>' + (VIEW === 'same' ? esc(t('colConfirm')) : '✓') + '</th>' : '') + '<th>' + t('colStyle') + '</th><th>' + t('colLoad') + '</th><th>' + t('colSource') + '</th><th>' + t('colMc') + '</th><th>' + t('colNote') + '</th></tr>';
     h += rows.slice(0, lim).map(function (it) {
-      var i = RV.items.indexOf(it), o = it.opts[it.sel], kind = itemKind(it), dis = o.type === 'keep' || o.blocked;
+      var i = RV.items.indexOf(it), o = it.opts[it.sel], kind = itemKind(it), dis = o.blocked || (o.type === 'keep' && !it.current);
       var sel = '<select data-s="' + i + '" aria-label="' + esc(t('colSource')) + '">' + it.opts.map(function (x, j) { return '<option value="' + j + '"' + (j === it.sel ? ' selected' : '') + '>' + esc(optLabel(it, x)) + '</option>'; }).join('') + '</select>';
       var sub = o.file ? '<br><small>' + esc(o.file.path) + ' · ' + esc(t('modShort', [fmtDT(o.file.mtime)])) + '</small>' + sheetTicks(i, o) : '';
-      var box = VIEW === 'review' ? '<td><input type="checkbox" data-a="' + i + '"' + (it.apply && !dis ? ' checked' : '') + (dis ? ' disabled' : '') + '></td>'
+      var box = VIEW === 'review' ? '<td><input type="checkbox" data-a="' + i + '"' + (it.apply && !dis ? ' checked' : '') + (dis ? ' disabled' : '') + (o.type === 'keep' && !dis ? ' title="' + esc(t('keepTip')) + '"' : '') + '></td>'
         : (VIEW === 'same' && LC ? '<td><input type="checkbox" data-k="' + i + '"' + (it.confirm ? ' checked' : '') + (o.type !== 'layout' ? ' disabled' : '') + '></td>' : '');
       return '<tr class="' + (o.blocked ? 'blk' : '') + '">' + box +
         '<td><b>' + esc(it.name) + '</b><div><span class="b k-' + kind + '">' + esc(t('k_' + kind)) + '</span>' + (it.conflict ? '<span class="b k-conflict">' + esc(t('conflict')) + '</span>' : '') + '</div></td>' +
         '<td>' + loadCell(it) + '</td><td>' + sel + sub + '</td><td>' + chipsMc(o.type === 'keep' ? it.current : o.set, o.type === 'keep' ? null : it.current) + '</td>' +
         '<td><small>' + esc(notesText(it.notes.concat(o.notes))) + '</small></td></tr>';
+    }).join('');
+  } else if (VIEW === 'kept') {
+    var kr = reviewRows(); total = kr.length;
+    h = '<tr><th>' + t('colStyle') + '</th><th>' + t('colLoad') + '</th><th>' + t('colKeptBy') + '</th><th>' + t('colMc') + '</th><th></th></tr>' + kr.slice(0, lim).map(function (it) {
+      var r = it.keptRec || {};
+      return '<tr><td><b>' + esc(it.name) + '</b></td><td>' + loadCell(it) + '</td><td>' + esc(r.by || '-') + '<br><small>' + esc(r.at ? fmtDT(new Date(r.at)) : '') + '</small></td><td>' + chipsMc(it.current, null) + '</td>' +
+        '<td><button data-ku="' + RV.items.indexOf(it) + '">' + esc(t('keepUndo')) + '</button></td></tr>';
     }).join('');
   } else if (VIEW === 'missing') {
     var m = RV.missing.filter(function (x) { return !q || (x.name + ' ' + x.lines.join(' ')).toUpperCase().indexOf(q) >= 0; }); total = m.length;
@@ -312,7 +345,8 @@ function renderSave() {
   if (!RV) return;
   var n = RV.items.filter(function (it) { var o = it.opts[it.sel]; return it.apply && o.type !== 'keep' && !o.blocked; }).length;
   var f = RV.issues.filter(function (x) { return x.fix && x.apply; }).length;
-  $('smsg').innerHTML = SAVED ? '<b class="st-ok">' + esc(t('saved', SAVED)) + '</b> ' + (SAVED[3] ? esc(SAVED[3]) + ' ' : '') + esc(t('nextSteps')) : '<b>' + esc(t('selected', [n])) + '</b>' + (f ? ' · ' + esc(t('fixes', [f])) : '');
+  var nk = pendingKeeps().length; $('keepBtn').hidden = !nk; $('keepBtn').textContent = t('keepBtn', [nk]); $('keepBtn').title = t('keepTip');
+  $('smsg').innerHTML = SAVED ? '<b class="st-ok">' + esc(t('saved', SAVED)) + '</b> ' + (SAVED[3] ? esc(SAVED[3]) + ' ' : '') + (SAVED.k ? esc(SAVED.k) + ' ' : '') + esc(t('nextSteps')) : '<b>' + esc(t('selected', [n])) + '</b>' + (f ? ' · ' + esc(t('fixes', [f])) : '') + (nk ? ' · ' + esc(t('keepsSel', [nk])) : '') + (KEEPMSG ? ' · <b class="st-ok">' + esc(KEEPMSG) + '</b>' : '');
 }
 function renderAll() {
   document.documentElement.lang = LANG;
@@ -344,10 +378,10 @@ $('tbl').onchange = function (e) {
     o2.notes = (o2.flags || []).concat(o2.unknown.length ? [['unknownCode', o2.unknown.join(', ')]] : []); o2.blocked = o2.unknown.length > 0 || !Object.keys(o2.set).length;
     if (o2.blocked) it2.apply = false; renderTable();
   }
-  else if (el.dataset.s != null) { var it = RV.items[+el.dataset.s]; it.sel = +el.value; var o = it.opts[it.sel]; if (o.type === 'keep' || o.blocked) it.apply = false; renderTable(); }
+  else if (el.dataset.s != null) { var it = RV.items[+el.dataset.s], wasKeep = it.opts[it.sel].type === 'keep'; it.sel = +el.value; var o = it.opts[it.sel]; if (o.type === 'keep' || wasKeep || o.blocked) it.apply = false; renderTable(); }
   else if (el.dataset.f != null) { RV.issues[+el.dataset.f].apply = el.checked; }
   else if (el.dataset.k != null) { RV.items[+el.dataset.k].confirm = el.checked; }
-  SAVED = null; renderSave();
+  SAVED = null; KEEPMSG = ''; renderSave();
 };
 $('bAll').onclick = function () {
   if (VIEW === 'issues') RV.issues.forEach(function (x) { if (x.fix) x.apply = true; });
@@ -361,6 +395,15 @@ $('bNone').onclick = function () {
   else reviewRows().forEach(function (it) { it.apply = false; });
   SAVED = null; renderTable(); renderSave();
 };
+$('keepBtn').onclick = function () {
+  confirmKeeps().then(function (r) { if (r) { SAVED = null; KEEPMSG = t('keepSaved', [r.n]) + (r.where === 'local' ? t('keepLocal') : ''); } renderAll(); });
+};
+$('tbl').addEventListener('click', function (e) {
+  var b = e.target.closest('[data-ku]'); if (!b) return;
+  var it = RV.items[+b.dataset.ku], old = KEEPS[it.key]; delete KEEPS[it.key];
+  persistKeeps().then(function () { it.bucket = it.bucketBefore || 'review'; it.keptRec = null; KEEPMSG = ''; VIEW = it.bucket === 'kept' ? 'review' : (RV.items.some(function (x) { return x.bucket === 'kept'; }) ? 'kept' : 'review'); renderAll(); })
+    .catch(function (err) { if (old) KEEPS[it.key] = old; alert(t('keepErr', [err.message])); });
+});
 $('save').onclick = function () {
   var d = new Date(), today = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   var ex = buildExport(RV, REF, DONE, today), wb = XLSX.utils.book_new();
@@ -378,7 +421,10 @@ $('save').onclick = function () {
   var user = $('uName').value.trim();
   if (lcItems.length && !user) { $('uName').focus(); alert(t('lcNeedName')); return; }
   XLSX.writeFile(wb, name);
+  var apprNow = RV.items.filter(function (it) { var o = it.opts[it.sel]; return it.apply && o.type !== 'keep' && !o.blocked; });
+  if (apprNow.length) addDbOverlay(apprNow, user);                           // the shortage report counts the approved changes at once (labelled: not yet in the MC Report)
   SAVED = [name, ex.nApproved, ex.db.length - 1, '']; renderSave();
+  confirmKeeps().then(function (r) { if (r && SAVED) SAVED.k = t('keepSaved', [r.n]) + (r.where === 'local' ? t('keepLocal') : ''); renderAll(); });
   if (!LCDIR) return;
   (async function () {
     try {
@@ -407,4 +453,5 @@ $('save').onclick = function () {
     renderSave();
   })();
 };
+loadKeeps(null);
 renderAll();
