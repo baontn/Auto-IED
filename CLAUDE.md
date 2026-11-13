@@ -26,9 +26,11 @@ tools/build_ie_bao_cao_may.py   python3 tools/build_ie_bao_cao_may.py   -> regen
 tests/                   Playwright (python) harnesses, see section 7
 docs/                    Vietnamese user-guide deck (pptx) + its generator build_deck.js (pptxgenjs; needs the environment's pptx skill)
 index.html               landing page for GitHub Pages;  update.bat = `git pull` for the shared-folder option
+logo.png icon.png         Crystal logo (copied from the Time Study app) used by index.html and manual/*.html
+manual/                  GENERATED readable HTML guides (python3 tools/build_manuals.py) from the .txt guides; re-run after editing any HUONG_DAN/README_EN/CAP_NHAT .txt
 ```
 
-Release routine for IBM: edit `src/...` -> bump `src/ie-bao-cao-may/VERSION` -> `python3 tools/build_ie_bao_cao_may.py` -> `node --check` each src JS -> run smoke/regression tests -> update `ie-bao-cao-may/HUONG_DAN.txt`, `README_EN.txt`, `CAP_NHAT_SO_VOI_v7.4.txt` (Vietnamese manual of changes), `CHANGELOG.md`, `index.html` version tag -> commit/push. For LC: edit the HTML, change the `#verTag` text, append a section to `layout-check/HUONG_DAN.txt`, update `CHANGELOG.md` and `index.html`.
+Release routine for IBM: edit `src/...` -> bump `src/ie-bao-cao-may/VERSION` -> `python3 tools/build_ie_bao_cao_may.py` -> `node --check` each src JS -> run smoke/regression tests -> update `ie-bao-cao-may/HUONG_DAN.txt`, `README_EN.txt`, `CAP_NHAT_SO_VOI_v7.4.txt` (Vietnamese manual of changes), `CHANGELOG.md`, `index.html` version tag, then `python3 tools/build_manuals.py` -> commit/push. For LC: edit the HTML, change the `#verTag` text, append a section to `layout-check/HUONG_DAN.txt`, update `CHANGELOG.md` and `index.html`.
 
 ## 3. Style of work the user expects
 
