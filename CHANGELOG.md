@@ -2,6 +2,9 @@
 
 Dates are the build dates in the working sessions (Nov 2026). "LC" = Layout Check, "IBM" = IE Báo cáo máy (IE_BaoCaoMay.html).
 
+## Docs
+- **Manuals** New illustrated HTML manuals for both tools (`manual/`), screenshots taken from synthetic demo data (`tools/manual_shots/`); Crystal logo on the home page. Old text guides, slide deck (v7.7) and the English guide removed.
+
 ## IBM
 - **v7.8** Grid of IE Tech keeps its scroll position after Keep/Remove/Save (was jumping to the top). IE Tech can edit the end date of the style running on a line; next style loads the next working day, prep days follow, applies to all machine groups; logged in Nhật ký (`prep/lineends`).
 - **v7.7** "Chốt báo cáo" (per-PU check, warns but allows closing, flags changes after closing, `prep/closed`), Excel export gets STATUS sheet and `CHOT` file name; tab "Nhật ký" (by machine group and line, filters, Excel export); completion/notices refresh when the tab opens.

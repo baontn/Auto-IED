@@ -28,7 +28,7 @@ Lưu ý: gói miễn phí chỉ dùng Pages cho kho công khai; kho riêng tư c
 ## Mỗi lần cập nhật
 - IE Báo cáo máy: sửa mã trong `src/ie-bao-cao-may/`, tăng số trong `VERSION`, chạy `python3 tools/build_ie_bao_cao_may.py`.
 - Layout Check: sửa trực tiếp `layout-check/LayoutCheck.html`.
-- Cập nhật `CHANGELOG.md` và hướng dẫn (file `.txt`), chạy `python3 tools/build_manuals.py` để tạo lại trang hướng dẫn `manual/*.html`, Commit, Push. Quay lại bản cũ: History > Revert.
+- Cập nhật `CHANGELOG.md` và hướng dẫn `manual/*.html` (chụp lại ảnh nếu giao diện đổi: xem `tools/manual_shots/README.md`), Commit, Push. Quay lại bản cũ: History > Revert.
 
 ## Không đưa lên GitHub
 Thư mục `data`, file `.xlsx/.xlsm`, `.zip`, `.pdf` (đã nằm trong `.gitignore`). Giữ `Linemapping.xlsx` thật trên thư mục chung.

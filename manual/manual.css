@@ -1,0 +1,29 @@
+/* Crystal International palette (same as the Time Study app / home page) */
+:root{--bg:#f1f1ef;--panel:#fff;--text:#091d36;--muted:#5f6670;--line:#e2e2e2;--accent:#0058a0;--red:#ed1c24;--sel:#e3eef8;--warnbg:#fff5d6;--warn:#9a6700;--okbg:#e7f6ec;--ok:#15803d;--badbg:#fde8e9;--bad:#c8161e}
+@media (prefers-color-scheme:dark){:root{--bg:#06142a;--panel:#0d2140;--text:#e8edf3;--muted:#9fb0c4;--line:#1f3858;--accent:#5e9fe0;--red:#ff5a5f;--sel:#15335a;--warnbg:#3a2d0b;--warn:#e3b341;--okbg:#12301b;--ok:#56d364;--badbg:#3d1416;--bad:#ff6b6b}}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 "Segoe UI",Roboto,Arial,sans-serif}
+header{display:flex;gap:10px;align-items:center;padding:8px 16px;background:var(--panel);border-bottom:3px solid var(--accent);box-shadow:0 1px 0 var(--red);position:sticky;top:0;z-index:10}
+header img{height:28px;width:auto}header b{flex:1;font-size:16px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header a{color:var(--accent);font-weight:600;text-decoration:none;white-space:nowrap}
+.wrap{max-width:1100px;margin:0 auto;padding:16px;display:grid;grid-template-columns:230px 1fr;gap:20px}
+nav.toc{position:sticky;top:64px;align-self:start;max-height:calc(100vh - 80px);overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px}
+nav.toc b{display:block;margin-bottom:4px}nav.toc a{display:block;padding:3px 0;color:var(--text);text-decoration:none}nav.toc a:hover{color:var(--accent)}nav.toc a.sub{padding-left:12px;color:var(--muted);font-size:13px}
+main{min-width:0}
+section{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px 20px 14px;margin-bottom:16px}
+h1{font-size:26px;margin:4px 0 4px}h2{font-size:20px;margin:18px 0 6px;color:var(--accent);border-bottom:1px solid var(--line);padding-bottom:4px}h3{font-size:16.5px;margin:16px 0 4px}
+.lead{color:var(--muted);margin:0 0 14px}
+ol,ul{padding-left:22px;margin:6px 0}li{margin:3px 0}
+figure{margin:12px 0;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--bg)}
+figure img{display:block;width:100%;height:auto}
+figcaption{padding:6px 12px;font-size:13.5px;color:var(--muted);background:var(--panel);border-top:1px solid var(--line)}
+.note,.warn,.ok{border-radius:8px;padding:8px 12px;margin:10px 0;font-size:15px}
+.note{background:var(--sel)}.warn{background:var(--warnbg);color:var(--text);border-left:4px solid var(--warn)}.ok{background:var(--okbg);border-left:4px solid var(--ok)}
+.btn{display:inline-block;padding:0 7px;border:1px solid var(--line);border-radius:6px;background:var(--sel);font-weight:600;font-size:14.5px;white-space:nowrap}
+.tag{display:inline-block;padding:0 8px;border-radius:10px;font-size:13px;font-weight:600}
+.t-ok{background:var(--okbg);color:var(--ok)}.t-bad{background:var(--badbg);color:var(--bad)}.t-warn{background:var(--warnbg);color:var(--warn)}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:15px}th,td{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}th{background:var(--sel)}
+code{background:var(--sel);padding:0 5px;border-radius:4px;font-size:14px}
+.demo{font-size:13.5px;color:var(--muted)}
+@media (max-width:860px){.wrap{grid-template-columns:1fr}nav.toc{position:static;max-height:none}}
+@media print{header,nav.toc{display:none}.wrap{display:block}section{break-inside:avoid-page;border:0}}
