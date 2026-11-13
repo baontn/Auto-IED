@@ -85,7 +85,11 @@
 <li>Tích ô ✓ ở đầu dòng. Thanh dưới hiện “<b>1 xác nhận giữ</b>” và nút <span class="btn">Xác nhận giữ (1)</span>.</li>
 <li>Bấm <span class="btn">Xác nhận giữ</span>. Cũng có thể bấm <span class="btn">Lưu MACHINE DATABASE</span>: các mục đã tích giữ được ghi nhớ cùng lúc.</li></ol>
 <figure><a href="img/ibm-22-keep-select.png"><img src="img/ibm-22-keep-select.png" alt="Xác nhận giữ" loading="lazy"></a><figcaption>Đã chọn “Giữ dữ liệu hiện tại” cho DMO26-00105-1201, ô ✓ được tích, nút <b>Xác nhận giữ (1)</b> hiện ở thanh dưới.</figcaption></figure>
-<p>Mã hàng chuyển sang thẻ <b>Đã xác nhận giữ</b> và <b>không hiện lại ở “Cần duyệt”</b> trong các lần quét sau. Mã hàng chỉ hiện lại khi <b>nội dung layout thay đổi</b> (mã máy hoặc số lượng khác); khi đó dòng ghi chú cho biết “Layout đã thay đổi sau khi … xác nhận giữ dữ liệu hiện tại”. Chỉ lưu lại file, đổi ngày sửa hoặc định dạng layout thì <b>không</b> làm mã hàng hiện lại.</p>
+<p>Mã hàng chuyển sang thẻ <b>Đã xác nhận giữ</b> và <b>không hiện lại ở “Cần duyệt”</b> trong các lần quét sau. Mã hàng chỉ hiện lại khi một trong hai thay đổi:</p>
+<ul>
+<li><b>Nội dung layout thay đổi</b> (mã máy hoặc số lượng khác): ghi chú “Layout đã thay đổi sau khi … xác nhận giữ dữ liệu hiện tại”.</li>
+<li><b>Dữ liệu của mã hàng trong database thay đổi</b> (ví dụ có người cập nhật số máy): ghi chú “Database đã thay đổi sau khi … xác nhận giữ dữ liệu hiện tại”.</li></ul>
+<p>Khi hiện lại, xác nhận cũ <b>bị xóa</b>; muốn giữ tiếp thì xác nhận lại. Chỉ lưu lại file, đổi ngày sửa hoặc định dạng layout thì <b>không</b> làm mã hàng hiện lại.</p>
 <figure><a href="img/ibm-23-keep-list.png"><img src="img/ibm-23-keep-list.png" alt="Đã xác nhận giữ" loading="lazy"></a><figcaption>Thẻ <b>Đã xác nhận giữ</b>: ai xác nhận, lúc nào và các máy đang giữ. Nút <b>Hủy xác nhận</b> đưa mã hàng về “Cần duyệt”.</figcaption></figure>
 <ul>
 <li>Xác nhận được lưu trong <code>data\machinedb\keeps.json</code> (dùng chung với những người cùng thư mục data). Nếu chưa kết nối thư mục data, xác nhận chỉ lưu trên trình duyệt của máy này.</li>

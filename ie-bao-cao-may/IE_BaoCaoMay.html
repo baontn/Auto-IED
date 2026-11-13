@@ -593,9 +593,10 @@ input.lq.diff{border-color:var(--warn);background:var(--warnbg);color:var(--warn
 <script>// ===================== TEXTS (VI / EN) =====================
 var I18N = {
   vi: {
-    vKept: 'Đã xác nhận giữ', vKeptHint: 'Bạn đã xác nhận giữ dữ liệu hiện tại cho các mã hàng này. Chỉ hiện lại ở "Cần duyệt" khi layout thay đổi.', colKeptBy: 'Xác nhận bởi', keepUndo: 'Hủy xác nhận',
-    keepBtn: 'Xác nhận giữ ({0})', keepTip: 'Xác nhận giữ dữ liệu hiện tại: mã hàng chỉ hiện lại khi layout thay đổi', keepsSel: '{0} xác nhận giữ', keepSaved: 'Đã xác nhận giữ {0} mã hàng; chỉ hiện lại khi layout thay đổi.', keepLocal: ' (lưu trên máy này vì chưa kết nối thư mục data)', keepErr: 'Không ghi được xác nhận giữ: {0}',
-    n_keepChanged: 'Layout đã thay đổi sau khi {0} xác nhận giữ dữ liệu hiện tại ({1})',
+    n_keepDbChanged: 'Database đã thay đổi sau khi {0} xác nhận giữ dữ liệu hiện tại ({1}): xác nhận đã bị xóa',
+    vKept: 'Đã xác nhận giữ', vKeptHint: 'Bạn đã xác nhận giữ dữ liệu hiện tại cho các mã hàng này. Chỉ hiện lại ở "Cần duyệt" khi layout hoặc dữ liệu của mã hàng trong database thay đổi.', colKeptBy: 'Xác nhận bởi', keepUndo: 'Hủy xác nhận',
+    keepBtn: 'Xác nhận giữ ({0})', keepTip: 'Xác nhận giữ dữ liệu hiện tại: mã hàng chỉ hiện lại khi layout hoặc database của mã hàng thay đổi', keepsSel: '{0} xác nhận giữ', keepSaved: 'Đã xác nhận giữ {0} mã hàng; chỉ hiện lại khi layout hoặc database thay đổi.', keepLocal: ' (lưu trên máy này vì chưa kết nối thư mục data)', keepErr: 'Không ghi được xác nhận giữ: {0}',
+    n_keepChanged: 'Layout đã thay đổi sau khi {0} xác nhận giữ dữ liệu hiện tại ({1}): xác nhận đã bị xóa',
     eAsk: 'Ngày kết thúc của mã đang chạy {0} trên chuyền {1} (dd/mm/yyyy). Theo kế hoạch: {2}. Để trống = theo kế hoạch.', eEnd: 'kết thúc {0}', eBtn: 'Sửa ngày kết thúc của mã đang chạy',
     pf_endSet: 'ngày kết thúc mã trước do IE Tech chỉnh', ak_end: 'Đổi ngày kết thúc', aDetailEnd: 'kết thúc {0} → {1}', aDetailEndReset: 'về theo kế hoạch ({0})',
     tabAct: 'Nhật ký', cBtn: '🔒 Chốt báo cáo…', cTitle: 'Chốt báo cáo chuẩn bị máy', cRefresh: 'Làm mới', cHide: 'Đóng', cDo: '🔒 Chốt báo cáo', cNotePh: 'Ghi chú khi chốt (không bắt buộc)',
@@ -745,9 +746,10 @@ var I18N = {
     c_Added: 'Mới', c_Changed: 'Thay đổi', c_Unchanged: 'Không đổi'
   },
   en: {
-    vKept: 'Confirmed to keep', vKeptHint: 'You confirmed keeping the current data for these styles. They come back under "To review" only when the layout changes.', colKeptBy: 'Confirmed by', keepUndo: 'Undo',
-    keepBtn: 'Confirm keep ({0})', keepTip: 'Confirm keeping the current data: the style comes back only when the layout changes', keepsSel: '{0} keep confirmations', keepSaved: 'Confirmed keeping {0} styles; they come back only when the layout changes.', keepLocal: ' (stored on this computer because the data folder is not connected)', keepErr: 'Could not save the keep confirmation: {0}',
-    n_keepChanged: 'The layout changed after {0} confirmed keeping the current data ({1})',
+    n_keepDbChanged: 'The database changed after {0} confirmed keeping the current data ({1}): the confirmation was cleared',
+    vKept: 'Confirmed to keep', vKeptHint: 'You confirmed keeping the current data for these styles. They come back under "To review" only when the layout or the database data of the style changes.', colKeptBy: 'Confirmed by', keepUndo: 'Undo',
+    keepBtn: 'Confirm keep ({0})', keepTip: 'Confirm keeping the current data: the style comes back only when its layout or database data changes', keepsSel: '{0} keep confirmations', keepSaved: 'Confirmed keeping {0} styles; they come back only when the layout or the database changes.', keepLocal: ' (stored on this computer because the data folder is not connected)', keepErr: 'Could not save the keep confirmation: {0}',
+    n_keepChanged: 'The layout changed after {0} confirmed keeping the current data ({1}): the confirmation was cleared',
     eAsk: 'End date of the running style {0} on line {1} (dd/mm/yyyy). Per plan: {2}. Empty = per plan.', eEnd: 'ends {0}', eBtn: 'Edit the end date of the running style',
     pf_endSet: 'end date of the previous style set by IE Tech', ak_end: 'End date changed', aDetailEnd: 'ends {0} → {1}', aDetailEndReset: 'back to plan ({0})',
     tabAct: 'Activity', cBtn: '🔒 Close report…', cTitle: 'Close the machine prep report', cRefresh: 'Refresh', cHide: 'Close', cDo: '🔒 Close report', cNotePh: 'Note when closing (optional)',
@@ -1247,15 +1249,20 @@ function applyLayoutCheck(rv, lc, files) {
 }
 // ---------- "keep current data" confirmations: remembered by layout CONTENT (machines and quantities), shown again only when it changes ----------
 function keepFps(it) { return it.opts.filter(function (o) { return o.type !== 'keep'; }).map(function (o) { return o.fp0; }); }
-function keepRecord(it, user, now) { return { name: it.name, by: user || '', at: now.toISOString(), fps: keepFps(it) }; }
+function keepRecord(it, user, now) { return { name: it.name, by: user || '', at: now.toISOString(), fps: keepFps(it), dbFp: fp(it.current) }; }
+// A confirmation is valid only while BOTH the layout/costing content and the database data of the style are unchanged. Returns the keys of the confirmations that are no longer valid (the caller clears them).
 function applyKeeps(rv, keeps) {
+  var stale = [];
   rv.items.forEach(function (it) {
     var r = keeps && keeps[it.key]; if (!r || it.bucket !== 'review' || it.fromLc || it.kind0 === 'hold' || !it.current) return;
-    var fps = keepFps(it), known = r.fps || [];
+    var fps = keepFps(it), known = r.fps || [], when = r.at ? String(r.at).slice(0, 10) : '';
+    var dbSame = r.dbFp === undefined || r.dbFp === fp(it.current);                      // records made before the database check existed stay valid
+    if (!dbSame) { it.notes.push(['keepDbChanged', r.by || '-', when]); stale.push(it.key); return; }
     if (fps.length && fps.every(function (f) { return known.indexOf(f) >= 0; })) {      // nothing new or changed since the confirmation
       it.bucketBefore = it.bucket; it.bucket = 'kept'; it.keptRec = r; it.apply = false; it.sel = it.opts.length - 1;
-    } else it.notes.push(['keepChanged', r.by || '-', r.at ? String(r.at).slice(0, 10) : '']);
+    } else { it.notes.push(['keepChanged', r.by || '-', when]); stale.push(it.key); }
   });
+  return stale;
 }
 // one Layout Check record per style (status PASS: database = layout), written by the Builder
 function lcRecord(it, lc, user, now) {
@@ -1856,7 +1863,9 @@ $('go').onclick = function () {
     URL.revokeObjectURL(url);
     DONE = recs.filter(Boolean); PROG.end = cancel ? 'cancelled' : 'done'; renderProg();
     $('stop').disabled = true; $('go').disabled = false;
-    RV = buildReview(DONE, REF); applyLayoutCheck(RV, LC, DONE); applyKeeps(RV, KEEPS);
+    RV = buildReview(DONE, REF); applyLayoutCheck(RV, LC, DONE);
+    var staleKeeps = applyKeeps(RV, KEEPS);                                  // layout or database changed since the confirmation: clear it (the style is listed again)
+    if (staleKeeps.length) { staleKeeps.forEach(function (k) { delete KEEPS[k]; }); persistKeeps().catch(function () { }); }
     if (REF.ck) compareCheckMc(DONE, REF.ck, RV.issues);
     VIEW = 'review'; CHIP = 'all'; $('step3').hidden = false; renderAll(); if (window.setTabMain) setTabMain('db');
   }

@@ -316,15 +316,20 @@ function applyLayoutCheck(rv, lc, files) {
 }
 // ---------- "keep current data" confirmations: remembered by layout CONTENT (machines and quantities), shown again only when it changes ----------
 function keepFps(it) { return it.opts.filter(function (o) { return o.type !== 'keep'; }).map(function (o) { return o.fp0; }); }
-function keepRecord(it, user, now) { return { name: it.name, by: user || '', at: now.toISOString(), fps: keepFps(it) }; }
+function keepRecord(it, user, now) { return { name: it.name, by: user || '', at: now.toISOString(), fps: keepFps(it), dbFp: fp(it.current) }; }
+// A confirmation is valid only while BOTH the layout/costing content and the database data of the style are unchanged. Returns the keys of the confirmations that are no longer valid (the caller clears them).
 function applyKeeps(rv, keeps) {
+  var stale = [];
   rv.items.forEach(function (it) {
     var r = keeps && keeps[it.key]; if (!r || it.bucket !== 'review' || it.fromLc || it.kind0 === 'hold' || !it.current) return;
-    var fps = keepFps(it), known = r.fps || [];
+    var fps = keepFps(it), known = r.fps || [], when = r.at ? String(r.at).slice(0, 10) : '';
+    var dbSame = r.dbFp === undefined || r.dbFp === fp(it.current);                      // records made before the database check existed stay valid
+    if (!dbSame) { it.notes.push(['keepDbChanged', r.by || '-', when]); stale.push(it.key); return; }
     if (fps.length && fps.every(function (f) { return known.indexOf(f) >= 0; })) {      // nothing new or changed since the confirmation
       it.bucketBefore = it.bucket; it.bucket = 'kept'; it.keptRec = r; it.apply = false; it.sel = it.opts.length - 1;
-    } else it.notes.push(['keepChanged', r.by || '-', r.at ? String(r.at).slice(0, 10) : '']);
+    } else { it.notes.push(['keepChanged', r.by || '-', when]); stale.push(it.key); }
   });
+  return stale;
 }
 // one Layout Check record per style (status PASS: database = layout), written by the Builder
 function lcRecord(it, lc, user, now) {

@@ -213,7 +213,9 @@ $('go').onclick = function () {
     URL.revokeObjectURL(url);
     DONE = recs.filter(Boolean); PROG.end = cancel ? 'cancelled' : 'done'; renderProg();
     $('stop').disabled = true; $('go').disabled = false;
-    RV = buildReview(DONE, REF); applyLayoutCheck(RV, LC, DONE); applyKeeps(RV, KEEPS);
+    RV = buildReview(DONE, REF); applyLayoutCheck(RV, LC, DONE);
+    var staleKeeps = applyKeeps(RV, KEEPS);                                  // layout or database changed since the confirmation: clear it (the style is listed again)
+    if (staleKeeps.length) { staleKeeps.forEach(function (k) { delete KEEPS[k]; }); persistKeeps().catch(function () { }); }
     if (REF.ck) compareCheckMc(DONE, REF.ck, RV.issues);
     VIEW = 'review'; CHIP = 'all'; $('step3').hidden = false; renderAll(); if (window.setTabMain) setTabMain('db');
   }
