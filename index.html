@@ -34,12 +34,17 @@ ul{margin:8px 0 0 18px;padding:0}a{color:var(--accent)}
 <div class="muted" data-t="ibmDesc">Cập nhật MACHINE DATABASE, phân tích thiếu máy, chuẩn bị máy, IE Tech duyệt, chốt báo cáo, nhật ký.</div>
 <a class="btn" href="ie-bao-cao-may/IE_BaoCaoMay.html" data-t="openIbm">Mở IE Báo cáo máy</a><a class="btn sec" id="manIbm" href="manual/ie-bao-cao-may.html" data-t="manual">📖 Hướng dẫn sử dụng</a></div>
 
+<div class="card"><h2>Layout Sim <span class="tag">v1.0</span></h2>
+<div class="muted" data-t="lsDesc">Mô phỏng bố trí chuyền theo tỷ lệ: dán layout từ Excel, kéo, xoay máy, kiểm tra vùng người vận hành, xem 3D.</div>
+<a class="btn" href="layout-sim/LayoutSim.html" data-t="openLs">Mở Layout Sim</a></div>
+
 <div class="muted" data-t="foot">Lần đầu mở bằng đường dẫn này, chọn lại các thư mục (trình duyệt ghi nhớ theo địa chỉ trang). Sau khi cập nhật, nhấn Ctrl+F5 để lấy bản mới.</div>
 </main>
 <script>
 var T={vi:{},en:{hdr:'IE tools · Crystal',h1:'IE tools',intro:'Open in Chrome or Edge. Your data (layouts, the data folder, check results) stays on your computer and shared folder; this page only provides the programs.',
 lcDesc:'Check layouts against the machine database by machine group: IE officer, Consolidator, IE Tech, Supervisor.',openLc:'Open Layout Check',manual:'📖 User guide',
 ibmDesc:'Update the MACHINE DATABASE, analyse machine shortage, prep machines, IE Tech review, close the report, activity log.',openIbm:'Open IE Báo cáo máy',
+lsDesc:'Line layout to scale: paste a layout from Excel, drag and rotate machines, operator-zone checks, 3D view.',openLs:'Open Layout Sim',
 foot:'The first time you open it from this address, choose the folders again (the browser remembers per page address). After an update, press Ctrl+F5 to get the new version.',
 title:'IE tools: Layout Check and IE Báo cáo máy'}};
 var els=[].slice.call(document.querySelectorAll('[data-t]')); els.forEach(function(e){T.vi[e.dataset.t]=e.innerHTML;}); T.vi.title=document.title;

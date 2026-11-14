@@ -2,6 +2,9 @@
 
 Dates are the build dates in the working sessions (Nov 2026). "LC" = Layout Check, "IBM" = IE Báo cáo máy (IE_BaoCaoMay.html).
 
+## Layout Sim
+- **v1.0** New offline tool `layout-sim/LayoutSim.html` (built from `src/layout-sim` by `tools/build_layout_sim.py`, SheetJS + three.js inlined, no network). Machine library read from the company Excel (sheet Machine_Needle: code, names, Dimension = length*width cm; machine register: name/brand/model) and cached in the browser. Paste a layout range from Excel (code rows + operation number rows; the number row side = operator side), machines placed to scale with an operator zone (chair, leg room) in front of each; drag (5 cm snap), rotate 90° / turn around 180°, rotate a block, align, pack, duplicate, undo/redo, input/QC tables, pillars, obstacles. Checks: machines overlapping, operator zone blocked, aisle behind the operator blocked, outside the line; ergonomic values editable. Flow line in operation order with distance. 3D view with simple models per machine family (lockstitch, overlock, flat bed / cylinder bed coverstitch, bartack, pattern sewer, bonding, ultrasonic, heat press, ironing, stretching, snap, suction, manual table), seated operators, labels. Library tab: sizes and 3D type per code (overrides), model -> code suggestions with "Confirmed" for IE Tech, Excel export/import. Save/open `.layout.json`, PNG export, print. VI/EN. Test `tests/layout-sim/smoke.py` (synthetic data, turnkey). Manual not written yet.
+
 ## Docs
 - **English** The home page has a VI/EN switch (remembered) and both manuals exist in English (`manual/*.en.html`) with VI/EN links in their headers.
 - **Manuals** New illustrated HTML manuals for both tools (`manual/`), screenshots taken from synthetic demo data (`tools/manual_shots/`); Crystal logo on the home page. Old text guides, slide deck (v7.7) and the English guide removed.
