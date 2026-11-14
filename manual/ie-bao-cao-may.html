@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>IE Báo cáo máy: Hướng dẫn sử dụng</title><link rel="icon" href="../icon.png"><link rel="stylesheet" href="manual.css"></head><body>
-<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>IE Báo cáo máy v7.9: Hướng dẫn sử dụng</b><a href="layout-check.html">Layout Check ›</a><a href="../index.html">‹ Trang chủ</a></header>
+<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>IE Báo cáo máy v7.10: Hướng dẫn sử dụng</b><a href="layout-check.html">Layout Check ›</a><a href="../index.html">‹ Trang chủ</a></header>
 <div class="wrap">
 <nav class="toc"><b>Nội dung</b>
 <a href="#gioi-thieu">1. Giới thiệu</a>
@@ -34,6 +34,7 @@
 <tr><td><b>Thiếu máy còn lại</b></td><td>Máy còn thiếu sau khi IE Tech duyệt (bảng ngang, chọn nhóm máy/PU), hành động xử lý (thuê, mua, mượn, dời kế hoạch) ghi ngay dưới bảng của từng nhóm máy thiếu, thấy kết quả tức thì, và thẻ tổng hợp (mục 6).</td></tr>
 <tr><td><b>Báo sai lệch</b></td><td>Thông báo của IE Tech. Số trên tab = thông báo chưa xử lý.</td></tr>
 <tr><td><b>Nhật ký</b></td><td>Lịch sử thao tác chuẩn bị máy theo loại máy và theo chuyền.</td></tr></table>
+<p><b>Quay về trang chủ:</b> bấm <b>Trang chủ</b> ở góc trên bên phải. <b>Đổi độ rộng cột:</b> ở mọi bảng, kéo mép phải của tiêu đề cột để đổi độ rộng (chữ trong bảng tự xuống dòng); bấm đúp vào mép đó để trở về tự động.</p>
 <p>Góc trên bên phải có ba nút <b>vai trò</b> (<b>IE Báo cáo máy</b> / <b>IE Tech</b> / <b>Giám sát</b>) và nút ngôn ngữ <b>VI / EN</b>. Vai trò IE Tech chỉ thấy màn hình “Duyệt chuẩn bị” (mục 5); vai trò Giám sát chỉ xem “Thiếu máy còn lại” (mục 6).</p>
 <div class="note">Mã hàng chỉ <b>hoàn tất</b> khi Nhân viên IE lưu Đạt/Chấp nhận trong <a href="layout-check.html">Layout Check</a>. IE Báo cáo máy không bao giờ ghi “Đạt”; chỉ ghi chú “Đã duyệt”.<br>Các ảnh trong tài liệu dùng <b>dữ liệu mẫu giả</b> (mã hàng DMO26-…, chuyền A, B, K, J, D, E), không phải dữ liệu công ty.</div>
 </section>
@@ -54,11 +55,11 @@
 <ol>
 <li>Mở <code>IE_BaoCaoMay.html</code> bằng Chrome hoặc Edge.</li>
 <li><span class="btn">MC Report… (ghi nhớ)</span>: chọn file MC Report. Công cụ ghi nhớ file này cho các tuần sau.</li>
-<li><span class="btn">Chọn file Excel…</span>: chọn Master plan mới của tuần (có thể chọn cùng lúc nhiều file; công cụ tự nhận biết từng file qua tên sheet).</li>
+<li><span class="btn">Chọn file Excel… (ghi nhớ)</span>: chọn Master plan mới của tuần, file tuần trước, CheckMc (có thể chọn cùng lúc nhiều file; công cụ tự nhận biết từng file qua tên sheet và ghi nhớ các file này). Nút “hoặc chọn file Excel… (không ghi nhớ)” dùng khi không cần ghi nhớ.</li>
 <li><span class="btn">Chọn thư mục layout… (ghi nhớ)</span>: thư mục gốc chứa layout (quét cả thư mục con; bỏ qua thư mục <code>Old layout</code>, <code>/old/</code>, <code>backup</code>). Chrome hỏi “Upload” thì chọn Upload (dữ liệu chỉ đọc trên máy). “hoặc chọn kiểu cũ” là cách chọn không ghi nhớ.</li>
 <li><span class="btn">Kết nối thư mục data của Layout Check…</span> (không bắt buộc nhưng nên dùng): chọn thư mục <code>data</code> dùng chung, bấm Cho phép (xem và sửa). Nhập <b>Họ tên</b>.</li></ol>
 <figure><a href="img/ibm-01-data.png"><img src="img/ibm-01-data.png" alt="Tab Dữ liệu" loading="lazy"></a><figcaption>Tab Dữ liệu: các nút chọn (đánh dấu đỏ) và trạng thái từng nguồn. Ví dụ: MC Report 16 mã hàng, Master plan 18 mã hàng, 16 file layout, Layout Check có 3 lần kiểm tra.</figcaption></figure>
-<div class="ok"><b>Từ lần sau:</b> bấm “🔁 Kết nối lại” (một lần bấm; trình duyệt có thể hỏi quyền). Mỗi tuần chỉ cần chọn Master plan mới bằng “Chọn file Excel…”. Trạng thái quét lần trước lấy từ thư mục data, không cần chọn lại “file đã lưu lần trước”. Lần triển khai đầu có thể chọn thêm <code>CheckMc.xlsm</code> để so sánh với lần quét CheckMc gần nhất.</div>
+<div class="ok"><b>Từ lần sau:</b> công cụ tự kết nối lại MC Report, các file Excel, thư mục layout và thư mục data đã ghi nhớ khi trình duyệt còn cho phép; nếu trình duyệt cần hỏi quyền thì bấm vào trang một lần (hoặc “🔁 Kết nối lại”). IE Tech và Giám sát dùng chung các thư mục này. Mỗi tuần chỉ cần chọn lại Master plan mới nếu file có tên khác. Trạng thái quét lần trước lấy từ thư mục data, không cần chọn lại “file đã lưu lần trước”. Lần triển khai đầu có thể chọn thêm <code>CheckMc.xlsm</code> để so sánh với lần quét CheckMc gần nhất.</div>
 <h3 id="b2">Bước 2: Quét layout (tab Cập nhật CSDL)</h3>
 <p>Bấm <span class="btn">Bắt đầu</span>. Công cụ quét layout trước; mã hàng chưa có layout thì dùng costing. Thanh tiến độ hiện số file đã quét. Quét giống macro CheckMc (<code>RunWeeklyIncrementalScan</code>); file Man-Machine chỉ lấy Man-Machine-Ass/Prep; sheet ẩn và sheet có tên “F T S C” / “F-S-T-C” không được quét.</p>
 <h3 id="b3">Bước 3: Duyệt và lưu</h3>
@@ -160,7 +161,7 @@
 <p>Ô <b>Tìm layout</b> (danh sách file của thư mục layout, nhớ 8 giờ; <span class="btn">⟳ Quét lại</span> để cập nhật). Để trống = gợi ý theo tên file (Đúng mã hàng &gt; Mã hàng không có size &gt; Cùng article); gõ một phần tên để tìm. Bấm vào file để xem các máy thuộc nhóm đang xem (“Hiện tất cả máy của layout” để xem toàn bộ), mỗi sheet một cột, kèm ngày sửa file.</p>
 <figure><a href="img/ibm-14-layout-viewer.png"><img src="img/ibm-14-layout-viewer.png" alt="Xem layout" loading="lazy"></a><figcaption>Xem layout trong bảng bên phải: BT1M theo sheet đã chọn là 3 máy, CSDL là 2. Nút <b>Dùng 3 làm SL theo layout</b> điền số này vào ô “SL theo layout”; “Tải bản sao” mở file bằng Excel.</figcaption></figure>
 <h3>5.5 Sửa ngày kết thúc mã đang chạy</h3>
-<p>Ở dòng mã đang chạy của mỗi chuyền (mã chạy ở ngày đầu của bảng) có chữ “kết thúc dd/mm” và nút <span class="btn">✎</span>. Bấm ✎, nhập ngày kết thúc (dd/mm/yyyy); để trống hoặc nhập đúng ngày kế hoạch để về lại kế hoạch. Mã đang chạy dừng sau ngày đó (nếu muộn hơn kế hoạch thì chạy tiếp với số máy cuối); mã kế tiếp vào chuyền ngày làm việc liền sau, chuẩn bị dời theo; áp dụng cho <b>mọi loại máy của chuyền</b>.</p>
+<p>Ở dòng mã đang chạy của mỗi chuyền (mã chạy ở ngày đầu của bảng) có chữ “kết thúc dd/mm” và nút <span class="btn">✎</span>. Bấm ✎ sẽ hiện hộp chọn ngày có <b>lịch</b> (giống ô ngày vào chuyền của dòng chuẩn bị): chọn ngày rồi bấm <span class="btn">Lưu</span>; bấm <span class="btn">Theo kế hoạch</span> (hoặc chọn đúng ngày kế hoạch) để về lại kế hoạch. Mã đang chạy dừng sau ngày đó (nếu muộn hơn kế hoạch thì chạy tiếp với số máy cuối); mã kế tiếp vào chuyền ngày làm việc liền sau, chuẩn bị dời theo; áp dụng cho <b>mọi loại máy của chuyền</b>.</p>
 <h3>5.6 Hoàn tất duyệt</h3>
 <p>Khi duyệt xong phạm vi đang xem (PU, chuyền phụ trách, tất cả nhóm máy), bấm <span class="btn">✔ Hoàn tất duyệt</span>. Nếu còn dòng chưa duyệt, hệ thống cảnh báo số dòng và số chuyền; vẫn có thể hoàn tất (các dòng đó giữ số đề xuất). Có thể hoàn tất lại sau khi duyệt thêm.</p>
 <figure><a href="img/ibm-16-tech-done.png"><img src="img/ibm-16-tech-done.png" alt="Hoàn tất duyệt" loading="lazy"></a><figcaption>Sau “Hoàn tất duyệt”: dòng thông báo “đã hoàn tất lúc …” cạnh nút.</figcaption></figure>

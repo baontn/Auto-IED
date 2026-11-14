@@ -303,6 +303,18 @@ async function supUse(d) {
 }
 $('sConnect').onclick = async function () { try { await supUse(await chooseDir('tdata', 'lcdata', 'read')); paintSupReuse(); } catch (e) { if (e.name !== 'AbortError') { $('sInfo').className = 'small st-bad'; $('sInfo').textContent = e.message; } } };
 $('sReuse').onclick = async function () { try { var d = await reuseDir('tdata', 'read'); if (d) await supUse(d); else $('sInfo').textContent = t('tReuseNone'); } catch (e) { $('sInfo').textContent = e.message; } };
-async function paintSupReuse() { var d = await KV.get('tdata'); $('sReuse').hidden = !d; if (d) $('sReuse').textContent = t('tReuseBtn', [d.name]); }
+async function paintSupReuse() { var d = await kvDir('tdata'); $('sReuse').hidden = !d; if (d) $('sReuse').textContent = t('tReuseBtn', [d.name]); }
 paintSupReuse();
+// IE Tech / Supervisor: connect the remembered folders without a click when the browser still allows it
+window.quietRole = async function () {
+  try {
+    if (ROLE === 'tech') {
+      var d = await kvDir('tdata'), l = await kvDir('tlay');
+      if (d && !TS.dir && (await d.queryPermission({ mode: 'readwrite' })) === 'granted') await useDataDir(d);
+      if (l && !TS.lay && (await l.queryPermission({ mode: 'read' })) === 'granted') await useLayDir(l);
+    } else if (ROLE === 'sup') {
+      var s = await kvDir('tdata'); if (s && !RS.root && (await s.queryPermission({ mode: 'read' })) === 'granted') await supUse(s);
+    }
+  } catch (e) { }
+};
 window.supRender = function () { if (RS.root && !$('supView').hidden) rsPaint('rsS', false); else if (!RS.root) $('rsS').innerHTML = '<div class="empty">' + esc(t('rsNeedConn')) + '</div>'; };

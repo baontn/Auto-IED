@@ -36,4 +36,4 @@ var _setRole = setRole;
 setRole = function (r) { _setRole(r); $('mainTabs').hidden = r === 'tech' || r === 'sup'; if (r !== 'tech' && r !== 'sup') setTab(TAB); };
 setRole(ROLE);
 
-if (window.paintRemember) paintRemember();
+if (window.paintRemember) paintRemember().then(function () { return reconnect(false); });

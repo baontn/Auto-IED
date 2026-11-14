@@ -405,12 +405,19 @@ input.lq.diff{border-color:var(--warn);background:var(--warnbg);color:var(--warn
 .sheets label{white-space:nowrap}
 .sheets label.mt{font-weight:600}
 [hidden]{display:none!important}
+th .rzh{position:absolute;right:0;top:0;bottom:0;width:7px;cursor:col-resize;user-select:none}th .rzh:hover,body.rzing th .rzh{background:var(--accent);opacity:.45}
+body.rzing{cursor:col-resize;user-select:none}
+table.rzw td,table.rzw th{white-space:normal!important;overflow-wrap:anywhere;word-break:break-word}
+.homebtn{color:var(--accent);text-decoration:none;font-size:13px;margin-left:10px;white-space:nowrap}.homebtn:hover{text-decoration:underline}
+.dlg-ov{position:fixed;inset:0;background:rgba(0,0,0,.42);display:flex;align-items:center;justify-content:center;z-index:60}
+.dlg{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:320px;max-width:92vw;box-shadow:0 12px 40px rgba(0,0,0,.3);display:flex;flex-direction:column;gap:10px}
 </style>
 </head>
 <body>
 <header>
-  <h1 data-t="title"></h1><span class="tag t-info" id="verTag" title="Version">v7.9</span><span class="sub" data-t="subtitle"></span>
+  <h1 data-t="title"></h1><span class="tag t-info" id="verTag" title="Version">v7.10</span><span class="sub" data-t="subtitle"></span>
   <div role="group" aria-label="Role" id="roleSeg" style="margin-left:auto;display:flex;gap:4px"><button data-role="cons" data-t="roleCons"></button><button data-role="tech" data-t="roleTech"></button><button data-role="sup" data-t="roleSup"></button></div>
+  <a class="homebtn" id="btnHome" href="../index.html" data-t="homeLink"></a>
   <div class="lang" role="group" aria-label="Language" style="margin-left:8px"><button data-lang="vi">VI</button><button data-lang="en">EN</button></div>
 </header>
 <nav class="mtabs" id="mainTabs"><button data-tab="data" data-t="tabData"></button><button data-tab="db" data-t="tabDb"></button><button data-tab="prep" data-t="tabPrep"></button><button data-tab="resid" data-t="tabResid"></button><button data-tab="notice" data-t="tabNotice"></button><button data-tab="activity" data-t="tabAct"></button></nav>
@@ -460,6 +467,11 @@ input.lq.diff{border-color:var(--warn);background:var(--warnbg);color:var(--warn
   </div>
   <div id="rsS"></div>
 </main>
+<div class="dlg-ov" id="eDlg" hidden><div class="dlg">
+  <b id="eTitle"></b><div class="muted small" id="eHint"></div>
+  <input type="date" id="eDate">
+  <div class="row"><button class="primary" id="eSave" data-t="eSave"></button><button id="ePlan" data-t="ePlan"></button><button id="eCancel" data-t="eCancel"></button></div>
+</div></div>
 <aside id="tDrawer" hidden>
   <div class="row"><b id="dTitle"></b><button id="dClose" style="margin-left:auto">✕</button></div>
   <div id="dInfo" class="small" style="margin:8px 0"></div>
@@ -495,7 +507,8 @@ input.lq.diff{border-color:var(--warn);background:var(--warnbg);color:var(--warn
     <div class="grid">
       <div>
         <div class="row"><button class="pick" id="bMc" type="button" data-t="pickMc"></button>
-        <label class="pick"><span data-t="pickFiles"></span><input type="file" id="fFiles" multiple accept=".xlsx,.xlsm,.xlsb"></label></div>
+        <button class="pick" id="bFiles" type="button" data-t="pickFilesRem"></button>
+        <label class="pick" style="font-weight:400"><span data-t="pickFiles"></span><input type="file" id="fFiles" multiple accept=".xlsx,.xlsm,.xlsb"></label></div>
         <div class="muted" style="margin-top:6px;font-size:12.5px" data-t="pickFilesHint"></div>
         <ul class="slots setup" style="margin-top:8px">
           <li><b data-t="inMc"></b><span id="sMc"></span></li>
@@ -621,6 +634,7 @@ input.lq.diff{border-color:var(--warn);background:var(--warnbg);color:var(--warn
 <script>// ===================== TEXTS (VI / EN) =====================
 var I18N = {
   vi: {
+    homeLink: 'Trang chủ', rzHint: 'Kéo để đổi độ rộng cột; bấm đúp để trở về tự động', eDlgTitle: 'Ngày kết thúc của mã đang chạy {0} trên chuyền {1}', eDlgHint: 'Theo kế hoạch: {0}. Chọn ngày trên lịch rồi bấm Lưu, hoặc bấm "Theo kế hoạch" để dùng ngày của kế hoạch.', eSave: 'Lưu', ePlan: 'Theo kế hoạch', eCancel: 'Hủy', pickFilesRem: 'Chọn file Excel… (ghi nhớ)', remFiles: 'File Excel',
     rsApplied: 'Đã vào kế hoạch',
     rsActDelayDet: '{0} chuyền {1}: vào chuyền {2} → {3} (+{4} ngày làm việc)', rsActDelayDet0: '{0} chuyền {1} (+{2} ngày làm việc)',
     rsPrevIdle: 'Nhập hoặc chọn để xem kết quả ngay.',
@@ -685,7 +699,7 @@ var I18N = {
     tDoneWarn: 'Còn {0} dòng chuẩn bị chưa duyệt (trên {1} chuyền). Các dòng này giữ số đề xuất. Vẫn hoàn tất?', tDoneSaved: 'Đã báo hoàn tất cho IE Báo cáo máy.',
     tDoneHint: 'Bấm khi đã duyệt xong phạm vi đang xem (PU, chuyền phụ trách, tất cả nhóm máy). Dòng chưa duyệt giữ số đề xuất. Có thể hoàn tất lại sau khi duyệt thêm.',
     pDoneTitle: 'IE Tech đã hoàn tất:', pDonePend: '{0} chưa duyệt',
-    remTitle: 'Đã ghi nhớ:', remBtn: '🔁 Kết nối lại', remOk: '✓ Đã kết nối lại. Chọn kế hoạch mới (và file khác nếu cần) bằng "Chọn file Excel…".', remAgain: 'Chưa cấp quyền cho: {0}. Bấm "Kết nối lại" lần nữa.',
+    remTitle: 'Đã ghi nhớ:', remBtn: '🔁 Kết nối lại', remOk: '✓ Đã kết nối lại. Nếu có Master plan mới, chọn lại bằng "Chọn file Excel…".', remAgain: 'Chưa cấp quyền cho: {0}. Bấm "Kết nối lại" lần nữa.',
     pickMc: 'MC Report… (ghi nhớ)', pickDirRem: 'Chọn thư mục layout… (ghi nhớ)', pickDirOld: 'hoặc chọn kiểu cũ', dirListing: 'Đang đọc danh sách file… {0}',
     modShort: 'sửa {0}', nMc: '{0} máy',
     dFindLay: 'Tìm layout', dLayRescan: '⟳ Quét lại', dLayIdx: '{0} file · cập nhật {1}', dLayScanning: 'Đang quét danh sách file… {0}', dLayQ: 'Gõ tên file để tìm (để trống = gợi ý theo mã hàng)',
@@ -759,7 +773,7 @@ var I18N = {
     title: 'IE Báo cáo máy — Cập nhật MACHINE DATABASE',
     subtitle: 'Quét layout trước; mã hàng chưa có layout thì dùng costing. Chỉ thay đổi được duyệt mới được ghi. Mã hàng chỉ hoàn tất khi Nhân viên IE kiểm tra Đạt trong Layout Check.',
     s1: 'Dữ liệu đầu vào', s2: 'Quét layout và bổ sung costing', s3: 'Duyệt và lưu',
-    pickFiles: 'Chọn file Excel…', pickFilesHint: 'MC Report chọn bằng nút "MC Report…" để được ghi nhớ. "Chọn file Excel…": Master plan mới mỗi tuần (và CheckMc lần đầu). Hệ thống tự nhận biết từng file.',
+    pickFiles: 'hoặc chọn file Excel… (không ghi nhớ)', pickFilesHint: 'Bấm "Chọn file Excel… (ghi nhớ)" để chọn Master plan, tuần trước, CheckMc cùng lúc; lần sau chỉ cần "Kết nối lại" (hoặc tự kết nối). Hệ thống tự nhận biết từng file.',
     pickDir: 'Chọn thư mục layout…', pickDirHint: 'Chọn thư mục gốc; quét toàn bộ thư mục con. Bỏ qua thư mục Old layout / backup.',
     inMc: 'MC Report', inPlan: 'Master plan', inPrev: 'File đã lưu lần trước (không bắt buộc)', inDir: 'Thư mục layout',
     notLoaded: 'Chưa chọn', reading: 'Đang đọc…',
@@ -806,6 +820,7 @@ var I18N = {
     c_Added: 'Mới', c_Changed: 'Thay đổi', c_Unchanged: 'Không đổi'
   },
   en: {
+    homeLink: 'Home', rzHint: 'Drag to resize the column; double-click to reset', eDlgTitle: 'End date of the running style {0} on line {1}', eDlgHint: 'Per plan: {0}. Pick a date on the calendar and press Save, or press "Per plan" to use the plan date.', eSave: 'Save', ePlan: 'Per plan', eCancel: 'Cancel', pickFilesRem: 'Choose Excel files… (remembered)', remFiles: 'Excel files',
     rsApplied: 'Already in the plan',
     rsActDelayDet: '{0} on line {1}: loading {2} → {3} (+{4} working days)', rsActDelayDet0: '{0} on line {1} (+{2} working days)',
     rsPrevIdle: 'Type or choose to see the result at once.',
@@ -870,7 +885,7 @@ var I18N = {
     tDoneWarn: '{0} prep rows are not reviewed yet (on {1} lines). They keep the proposed quantity. Complete anyway?', tDoneSaved: 'Completion sent to the Consolidator.',
     tDoneHint: 'Click when the current scope (PU, your lines, all machine groups) is reviewed. Rows not reviewed keep the proposed quantity. You can complete again after more review.',
     pDoneTitle: 'IE Tech completed:', pDonePend: '{0} not reviewed',
-    remTitle: 'Remembered:', remBtn: '🔁 Reconnect', remOk: '✓ Reconnected. Choose the new plan (and other files if needed) with "Choose Excel files…".', remAgain: 'No permission yet for: {0}. Click "Reconnect" again.',
+    remTitle: 'Remembered:', remBtn: '🔁 Reconnect', remOk: '✓ Reconnected. If there is a new Master plan, choose it again with "Choose Excel files…".', remAgain: 'No permission yet for: {0}. Click "Reconnect" again.',
     pickMc: 'MC Report… (remembered)', pickDirRem: 'Choose layout folder… (remembered)', pickDirOld: 'or the old way', dirListing: 'Listing files… {0}',
     modShort: 'modified {0}', nMc: '{0} machines',
     dFindLay: 'Find layout', dLayRescan: '⟳ Rescan', dLayIdx: '{0} files · updated {1}', dLayScanning: 'Listing files… {0}', dLayQ: 'Type a file name to search (empty = suggestions for the style)',
@@ -944,7 +959,7 @@ var I18N = {
     title: 'Consolidator — MACHINE DATABASE update',
     subtitle: 'Layouts are scanned first. Styles without a layout use costing. Only approved changes are written.',
     s1: 'Inputs', s2: 'Scan layouts and fill gaps with costing', s3: 'Review and save',
-    pickFiles: 'Choose Excel files…', pickFilesHint: 'Choose the MC Report with "MC Report…" so it is remembered. "Choose Excel files…": the new Master plan each week (and CheckMc the first time). Each file is recognised automatically.',
+    pickFiles: 'or choose Excel files… (not remembered)', pickFilesHint: 'Press "Choose Excel files… (remembered)" to pick the Master plan, last week and CheckMc together; next time just "Reconnect" (or it reconnects by itself). Each file is recognised automatically.',
     pickDir: 'Choose layout folder…', pickDirHint: 'Pick the root folder; all subfolders are scanned. Old layout / backup folders are skipped.',
     inMc: 'MC Report', inPlan: 'Master plan', inPrev: 'Last saved file (optional)', inDir: 'Layout folder',
     notLoaded: 'Not selected', reading: 'Reading…',
@@ -1941,21 +1956,60 @@ $('bDir').onclick = async function () {
   try { var d = await window.showDirectoryPicker({ id: 'layroot', mode: 'read' }); await KV.set('cdir', d); await useLayoutDir(d); paintRemember(); }
   catch (e) { if (e.name !== 'AbortError') slot('sDir', 'lcErr', [e.message], 'bad'); }
 };
-// remembered connections: MC Report, layout folder, Layout Check data folder (name is kept too); the plan is chosen each week
+// remembered connections: MC Report, the other Excel files (plan, last week, CheckMc), layout folder, Layout Check data folder
+// They reconnect by themselves when the browser still allows it; otherwise the first click on the page (or the button) asks once.
+var XL_TYPES = [{ description: 'Excel', accept: { 'application/vnd.ms-excel': ['.xlsx', '.xlsm', '.xlsb'] } }];
+async function useFileHandle(h) { var f = await h.getFile(); processExcel(f); }
+$('bFiles').onclick = async function () {
+  if (!window.showOpenFilePicker) { $('fFiles').click(); return; }
+  try {
+    var hs = await window.showOpenFilePicker({ id: 'xlfiles', multiple: true, types: XL_TYPES });
+    var cur = (await KV.get('cfiles')) || [], have = {}; hs.forEach(function (h) { have[h.name] = 1; });
+    await KV.set('cfiles', cur.filter(function (h) { return !have[h.name]; }).concat(hs));       // newest picks last: they win when two plans are stored
+    UNKNOWN = []; for (var i = 0; i < hs.length; i++) await useFileHandle(hs[i]);
+    paintRemember();
+  } catch (e) { if (e.name !== 'AbortError') slot('sPlan', 'lcErr', [e.message], 'bad'); }
+};
 async function paintRemember() {
-  var h = { mc: await KV.get('cmc'), dir: await KV.get('cdir'), lc: await KV.get('cdata') }, names = [];
-  if (h.mc) names.push(t('inMc') + ': ' + h.mc.name); if (h.dir) names.push(t('inDir') + ': ' + h.dir.name); if (h.lc) names.push(t('lcTitle') + ': ' + h.lc.name);
+  var h = { mc: await KV.get('cmc'), files: (await KV.get('cfiles')) || [], dir: await KV.get('cdir'), lc: await KV.get('cdata') }, names = [];
+  if (h.mc) names.push(t('inMc') + ': ' + h.mc.name); if (h.files.length) names.push(t('remFiles') + ': ' + h.files.map(function (x) { return x.name; }).join(', '));
+  if (h.dir) names.push(t('inDir') + ': ' + h.dir.name); if (h.lc) names.push(t('lcTitle') + ': ' + h.lc.name);
   $('remBar').hidden = !names.length; $('remList').textContent = names.join(' · ');
 }
-$('bReconnect').onclick = async function () {
-  var steps = [['cmc', 'read', useMcHandle], ['cdir', 'read', useLayoutDir], ['cdata', 'readwrite', function (d) { return connectLc(d); }]], miss = [];
-  for (var i = 0; i < steps.length; i++) {
-    var h = await KV.get(steps[i][0]); if (!h) continue;
-    try { if ((await h.queryPermission({ mode: steps[i][1] })) !== 'granted' && (await h.requestPermission({ mode: steps[i][1] })) !== 'granted') { miss.push(h.name); continue; } await steps[i][2](h); }
-    catch (e) { miss.push(h.name); }
+var RECON = false, RECON_ARMED = false;
+async function reconnect(ask) {
+  if (RECON) return; RECON = true;
+  var steps = [['cmc', 'read', useMcHandle], ['cfiles', 'read', useFileHandle], ['cdir', 'read', useLayoutDir], ['cdata', 'readwrite', function (d) { return connectLc(d); }]], miss = [], done = 0, mcName = '';
+  try {
+    for (var i = 0; i < steps.length; i++) {
+      var v = await KV.get(steps[i][0]); if (!v) continue;
+      var list = Array.isArray(v) ? v : [v], keep = [];
+      if (steps[i][0] === 'cmc') mcName = v.name;
+      UNKNOWN = steps[i][0] === 'cfiles' ? [] : UNKNOWN;
+      for (var j = 0; j < list.length; j++) {
+        var h = list[j]; if (steps[i][0] === 'cfiles' && h.name === mcName) { keep.push(h); continue; }
+        try {
+          var p = await h.queryPermission({ mode: steps[i][1] });
+          if (p !== 'granted' && ask) p = await h.requestPermission({ mode: steps[i][1] });
+          if (p !== 'granted') { miss.push(h.name); keep.push(h); continue; }
+          await steps[i][2](h); keep.push(h); done++;
+        } catch (e) { if (!(steps[i][0] === 'cfiles' && e && e.name === 'NotFoundError')) keep.push(h); miss.push(h.name); }       // a moved/deleted file is forgotten
+      }
+      if (Array.isArray(v) && keep.length !== v.length) await KV.set(steps[i][0], keep);
+    }
+  } finally { RECON = false; }
+  $('remMsg').textContent = miss.length ? (ask ? t('remAgain', [miss.join(', ')]) : '') : (done ? t('remOk') : '');
+  if (miss.length && !ask && !RECON_ARMED) {                                         // ask once on the first click (a permission prompt needs a click)
+    RECON_ARMED = true;
+    document.addEventListener('pointerdown', function onFirst(ev) {
+      if (ev.target.closest && ev.target.closest('.pick,#bReconnect,#bMc,#bDir,#bLc,#bFiles,#tConnect,#tLayConnect,#sConnect,input,select,textarea')) return;
+      document.removeEventListener('pointerdown', onFirst, true); RECON_ARMED = false; reconnect(true);
+    }, true);
   }
-  $('remMsg').textContent = miss.length ? t('remAgain', [miss.join(', ')]) : t('remOk');
-};
+  if (window.quietRole) await quietRole();
+  paintRemember();
+}
+$('bReconnect').onclick = function () { reconnect(true); };
 // ---- Layout Check data folder (read + write) ----
 function readJsonFiles(dir) {
   var out = [];
@@ -2624,15 +2678,17 @@ var KV = { db: null,
   get: function (k) { return this.open().then(function (db) { return new Promise(function (res) { var r = db.transaction('kv').objectStore('kv').get(k); r.onsuccess = function () { res(r.result); }; r.onerror = function () { res(null); }; }); }).catch(function () { return null; }); },
   set: function (k, v) { return this.open().then(function (db) { return new Promise(function (res) { var tx = db.transaction('kv', 'readwrite'); tx.objectStore('kv').put(v, k); tx.oncomplete = res; tx.onerror = res; }); }).catch(function () { }); } };
 // the person always chooses the folder (the picker opens in the remembered one); "Dùng lại" reconnects the remembered folder
+var KEYMAP = { tdata: 'cdata', tlay: 'cdir' };                              // IE Tech / Supervisor use the same remembered folders as the Data tab
+async function kvDir(key) { return (await KV.get(KEYMAP[key] || key)) || (await KV.get(key)); }
 async function chooseDir(key, id, mode) {
   if (!window.showDirectoryPicker) throw new Error(t('lcNoApi'));
-  var old = await KV.get(key), opt = { id: id, mode: mode };
+  var old = await kvDir(key), opt = { id: id, mode: mode };
   if (old) opt.startIn = old;
   var h; try { h = await window.showDirectoryPicker(opt); } catch (e) { if (e.name === 'AbortError') throw e; delete opt.startIn; h = await window.showDirectoryPicker(opt); }
-  await KV.set(key, h); return h;
+  await KV.set(KEYMAP[key] || key, h); return h;
 }
 async function reuseDir(key, mode) {
-  var h = await KV.get(key); if (!h) return null;
+  var h = await kvDir(key); if (!h) return null;
   if ((await h.queryPermission({ mode: mode })) === 'granted' || (await h.requestPermission({ mode: mode })) === 'granted') return h;
   return null;
 }
@@ -2654,7 +2710,7 @@ $('tReuse').onclick = async function () {
   } catch (e) { $('tConn').className = 'small st-bad'; $('tConn').textContent = e.message; }
 };
 async function paintReuse() {
-  var d = await KV.get('tdata'), l = await KV.get('tlay'), n = [d && d.name, l && l.name].filter(Boolean);
+  var d = await kvDir('tdata'), l = await kvDir('tlay'), n = [d && d.name, l && l.name].filter(Boolean);
   $('tReuse').hidden = !n.length; $('tReuse').textContent = t('tReuseBtn', [n.join(' + ')]);
 }
 paintReuse();
@@ -2851,16 +2907,21 @@ function techSetEnd(line) {
   var days = G0.days, run = runningStyle(L.styles, days); if (!run) return;
   var plan = runEnd(L.styles, run, days), e = latestEnds(TS.ends)[line + '|' + run], cur = e && e.endDate ? e.endDate : plan;
   var fmt = function (iso) { return iso ? iso.slice(8, 10) + '/' + iso.slice(5, 7) + '/' + iso.slice(0, 4) : ''; };
-  var a = window.prompt(t('eAsk', [run, line, fmt(plan)]), fmt(cur)); if (a === null) return;
-  var s = a.trim(), iso = '';
-  if (s) {
-    var m = s.match(/^(\d{1,2})[\/\-.](\d{1,2})(?:[\/\-.](\d{2,4}))?$/); if (!m) { alert(t('prBadDate')); return; }
-    var y = m[3] ? (m[3].length === 2 ? 2000 + +m[3] : +m[3]) : +plan.slice(0, 4);
-    iso = y + '-' + String(+m[2]).padStart(2, '0') + '-' + String(+m[1]).padStart(2, '0'); if (isNaN(Date.parse(iso))) { alert(t('prBadDate')); return; }
-  }
-  if (iso === plan) iso = '';
-  var rec = { line: line, style: run, endDate: iso, planEnd: plan, by: me, at: new Date().toISOString() };
-  tWrite(TS.dir, 'prep/lineends', tStamp() + '_' + me.replace(/[^\w\-]+/g, '_') + '.json', rec).then(function () { (TS.ends = TS.ends || []).push(rec); techRender(); }).catch(function (er) { alert(er.message); });
+  var dlg = $('eDlg'), inp = $('eDate');
+  $('eTitle').textContent = t('eDlgTitle', [run, line]); $('eHint').textContent = t('eDlgHint', [fmt(plan)]); inp.value = cur;
+  var close = function () { dlg.hidden = true; $('eSave').onclick = $('ePlan').onclick = $('eCancel').onclick = null; dlg.onclick = null; document.removeEventListener('keydown', onKey, true); };
+  var save = function (iso) {
+    if (iso && isNaN(Date.parse(iso + 'T00:00:00Z'))) { alert(t('prBadDate')); return; }
+    if (iso === plan) iso = '';
+    close();
+    var rec = { line: line, style: run, endDate: iso, planEnd: plan, by: me, at: new Date().toISOString() };
+    tWrite(TS.dir, 'prep/lineends', tStamp() + '_' + me.replace(/[^\w\-]+/g, '_') + '.json', rec).then(function () { (TS.ends = TS.ends || []).push(rec); techRender(); }).catch(function (er) { alert(er.message); });
+  };
+  var onKey = function (ev) { if (ev.key === 'Escape') close(); else if (ev.key === 'Enter') { ev.preventDefault(); save(inp.value); } };
+  $('eSave').onclick = function () { save(inp.value); }; $('ePlan').onclick = function () { save(''); }; $('eCancel').onclick = close;
+  dlg.onclick = function (ev) { if (ev.target === dlg) close(); };
+  document.addEventListener('keydown', onKey, true);
+  dlg.hidden = false; inp.focus();
 }
 async function writeReview(x, patch) {
   var me = $('tName').value.trim(); if (!TS.dir || !me) throw new Error(t('prNeedConn'));
@@ -3369,8 +3430,20 @@ async function supUse(d) {
 }
 $('sConnect').onclick = async function () { try { await supUse(await chooseDir('tdata', 'lcdata', 'read')); paintSupReuse(); } catch (e) { if (e.name !== 'AbortError') { $('sInfo').className = 'small st-bad'; $('sInfo').textContent = e.message; } } };
 $('sReuse').onclick = async function () { try { var d = await reuseDir('tdata', 'read'); if (d) await supUse(d); else $('sInfo').textContent = t('tReuseNone'); } catch (e) { $('sInfo').textContent = e.message; } };
-async function paintSupReuse() { var d = await KV.get('tdata'); $('sReuse').hidden = !d; if (d) $('sReuse').textContent = t('tReuseBtn', [d.name]); }
+async function paintSupReuse() { var d = await kvDir('tdata'); $('sReuse').hidden = !d; if (d) $('sReuse').textContent = t('tReuseBtn', [d.name]); }
 paintSupReuse();
+// IE Tech / Supervisor: connect the remembered folders without a click when the browser still allows it
+window.quietRole = async function () {
+  try {
+    if (ROLE === 'tech') {
+      var d = await kvDir('tdata'), l = await kvDir('tlay');
+      if (d && !TS.dir && (await d.queryPermission({ mode: 'readwrite' })) === 'granted') await useDataDir(d);
+      if (l && !TS.lay && (await l.queryPermission({ mode: 'read' })) === 'granted') await useLayDir(l);
+    } else if (ROLE === 'sup') {
+      var s = await kvDir('tdata'); if (s && !RS.root && (await s.queryPermission({ mode: 'read' })) === 'granted') await supUse(s);
+    }
+  } catch (e) { }
+};
 window.supRender = function () { if (RS.root && !$('supView').hidden) rsPaint('rsS', false); else if (!RS.root) $('rsS').innerHTML = '<div class="empty">' + esc(t('rsNeedConn')) + '</div>'; };
 </script>
 <script>// ===================== CLOSE REPORT + ACTIVITY (IE Báo cáo máy) =====================
@@ -3636,7 +3709,62 @@ var _setRole = setRole;
 setRole = function (r) { _setRole(r); $('mainTabs').hidden = r === 'tech' || r === 'sup'; if (r !== 'tech' && r !== 'sup') setTab(TAB); };
 setRole(ROLE);
 
-if (window.paintRemember) paintRemember();
+if (window.paintRemember) paintRemember().then(function () { return reconnect(false); });
+</script>
+<script>// ===================== RESIZABLE TABLE COLUMNS =====================
+// Drag the right edge of any column header to change the width; the text of that table then wraps inside the cells.
+// Widths are remembered per table (and column) while the page is open, also after the table is redrawn.
+var RZ = { w: {}, drag: null };
+function rzKey(tb) {
+  var id = tb.id, p = tb.parentElement;
+  while (!id && p) { id = p.id; p = p.parentElement; }
+  var all = id ? [].slice.call(document.querySelectorAll('#' + id + ' table, table#' + id)) : [];
+  return (id || 'page') + '#' + Math.max(0, all.indexOf(tb));
+}
+function rzHeadRow(tb) { return tb.querySelector('tr:has(th)') || null; }
+function rzApply(tb) {
+  var row = rzHeadRow(tb); if (!row) return;
+  var key = rzKey(tb), ws = RZ.w[key]; if (!ws) return;
+  var ths = [].slice.call(row.children);
+  var set = false; ths.forEach(function (th, i) { if (ws[i]) { th.style.width = th.style.minWidth = th.style.maxWidth = ws[i] + 'px'; set = true; } });
+  if (set) { tb.classList.add('rzw'); tb.style.tableLayout = 'fixed'; tb.style.width = ths.reduce(function (s, th, i) { return s + (ws[i] || th.offsetWidth); }, 0) + 'px'; }
+}
+function rzDecorate(tb) {
+  if (tb.dataset.rz || tb.closest('[data-norz]')) return;
+  var row = rzHeadRow(tb); if (!row) return;
+  tb.dataset.rz = '1';
+  [].forEach.call(row.children, function (th, i) {
+    if (th.tagName !== 'TH') return;
+    var h = document.createElement('span'); h.className = 'rzh'; h.title = t('rzHint'); h.dataset.i = i; th.appendChild(h);
+  });
+  rzApply(tb);
+}
+function rzScan() { [].forEach.call(document.querySelectorAll('table'), rzDecorate); }
+document.addEventListener('mousedown', function (e) {
+  var h = e.target.closest && e.target.closest('.rzh'); if (!h) return;
+  var tb = h.closest('table'), row = rzHeadRow(tb), ths = [].slice.call(row.children), key = rzKey(tb);
+  var ws = RZ.w[key] = RZ.w[key] || {};
+  ths.forEach(function (th, i) { if (!ws[i]) ws[i] = th.offsetWidth; });          // freeze all columns at their present width, then change only this one
+  tb.classList.add('rzw'); tb.style.tableLayout = 'fixed';
+  ths.forEach(function (th, i) { th.style.width = th.style.minWidth = th.style.maxWidth = ws[i] + 'px'; });
+  RZ.drag = { tb: tb, ths: ths, key: key, i: +h.dataset.i, x: e.clientX, w0: ws[+h.dataset.i] };
+  document.body.classList.add('rzing'); e.preventDefault(); e.stopPropagation();
+}, true);
+document.addEventListener('mousemove', function (e) {
+  var d = RZ.drag; if (!d) return;
+  var w = Math.max(28, d.w0 + e.clientX - d.x), ws = RZ.w[d.key]; ws[d.i] = w;
+  var th = d.ths[d.i]; th.style.width = th.style.minWidth = th.style.maxWidth = w + 'px';
+  d.tb.style.width = d.ths.reduce(function (s, x, i) { return s + (ws[i] || x.offsetWidth); }, 0) + 'px';
+});
+document.addEventListener('mouseup', function () { if (RZ.drag) { RZ.drag = null; document.body.classList.remove('rzing'); } });
+document.addEventListener('dblclick', function (e) {                                  // double-click the edge: back to automatic width for this table
+  var h = e.target.closest && e.target.closest('.rzh'); if (!h) return;
+  var tb = h.closest('table'); delete RZ.w[rzKey(tb)];
+  tb.classList.remove('rzw'); tb.style.tableLayout = ''; tb.style.width = ''; [].forEach.call(tb.querySelectorAll('th'), function (th) { th.style.width = th.style.minWidth = th.style.maxWidth = ''; });
+});
+var rzTimer = 0;
+new MutationObserver(function () { if (rzTimer) return; rzTimer = setTimeout(function () { rzTimer = 0; rzScan(); }, 30); }).observe(document.body, { childList: true, subtree: true });
+rzScan();
 </script>
 </body>
 </html>
