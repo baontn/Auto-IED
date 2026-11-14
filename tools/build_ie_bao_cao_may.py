@@ -12,7 +12,7 @@ OUT = ROOT / 'ie-bao-cao-may' / 'IE_BaoCaoMay.html'
 # placeholder in tpl.html (/*__NAME__*/) -> file. ORDER MATTERS only for readability: each placeholder sits in its own <script>.
 PARTS = [('XLSX', VENDOR / 'xlsx.full.min.js'), ('EXCELJS', VENDOR / 'exceljs.min.js'), ('CORE', SRC / 'core.js'), ('I18N', SRC / 'i18n.js'),
          ('WORKER', SRC / 'worker.js'), ('LOGIC', SRC / 'logic.js'), ('PREP', SRC / 'prep.js'), ('APP', SRC / 'app.js'), ('PREPUI', SRC / 'prepui.js'),
-         ('TECHUI', SRC / 'techui.js'), ('RESIDUI', SRC / 'residui.js'), ('CLOSEACT', SRC / 'closeact.js'), ('TABS', SRC / 'tabs.js')]
+         ('TECHUI', SRC / 'techui.js'), ('RESIDUI', SRC / 'residui.js'), ('CLOSEACT', SRC / 'closeact.js'), ('TABS', SRC / 'tabs.js'), ('RESIZE', SRC / 'resize.js')]
 
 def main():
     html = (SRC / 'tpl.html').read_text(encoding='utf-8')

@@ -95,21 +95,60 @@ $('bDir').onclick = async function () {
   try { var d = await window.showDirectoryPicker({ id: 'layroot', mode: 'read' }); await KV.set('cdir', d); await useLayoutDir(d); paintRemember(); }
   catch (e) { if (e.name !== 'AbortError') slot('sDir', 'lcErr', [e.message], 'bad'); }
 };
-// remembered connections: MC Report, layout folder, Layout Check data folder (name is kept too); the plan is chosen each week
+// remembered connections: MC Report, the other Excel files (plan, last week, CheckMc), layout folder, Layout Check data folder
+// They reconnect by themselves when the browser still allows it; otherwise the first click on the page (or the button) asks once.
+var XL_TYPES = [{ description: 'Excel', accept: { 'application/vnd.ms-excel': ['.xlsx', '.xlsm', '.xlsb'] } }];
+async function useFileHandle(h) { var f = await h.getFile(); processExcel(f); }
+$('bFiles').onclick = async function () {
+  if (!window.showOpenFilePicker) { $('fFiles').click(); return; }
+  try {
+    var hs = await window.showOpenFilePicker({ id: 'xlfiles', multiple: true, types: XL_TYPES });
+    var cur = (await KV.get('cfiles')) || [], have = {}; hs.forEach(function (h) { have[h.name] = 1; });
+    await KV.set('cfiles', cur.filter(function (h) { return !have[h.name]; }).concat(hs));       // newest picks last: they win when two plans are stored
+    UNKNOWN = []; for (var i = 0; i < hs.length; i++) await useFileHandle(hs[i]);
+    paintRemember();
+  } catch (e) { if (e.name !== 'AbortError') slot('sPlan', 'lcErr', [e.message], 'bad'); }
+};
 async function paintRemember() {
-  var h = { mc: await KV.get('cmc'), dir: await KV.get('cdir'), lc: await KV.get('cdata') }, names = [];
-  if (h.mc) names.push(t('inMc') + ': ' + h.mc.name); if (h.dir) names.push(t('inDir') + ': ' + h.dir.name); if (h.lc) names.push(t('lcTitle') + ': ' + h.lc.name);
+  var h = { mc: await KV.get('cmc'), files: (await KV.get('cfiles')) || [], dir: await KV.get('cdir'), lc: await KV.get('cdata') }, names = [];
+  if (h.mc) names.push(t('inMc') + ': ' + h.mc.name); if (h.files.length) names.push(t('remFiles') + ': ' + h.files.map(function (x) { return x.name; }).join(', '));
+  if (h.dir) names.push(t('inDir') + ': ' + h.dir.name); if (h.lc) names.push(t('lcTitle') + ': ' + h.lc.name);
   $('remBar').hidden = !names.length; $('remList').textContent = names.join(' · ');
 }
-$('bReconnect').onclick = async function () {
-  var steps = [['cmc', 'read', useMcHandle], ['cdir', 'read', useLayoutDir], ['cdata', 'readwrite', function (d) { return connectLc(d); }]], miss = [];
-  for (var i = 0; i < steps.length; i++) {
-    var h = await KV.get(steps[i][0]); if (!h) continue;
-    try { if ((await h.queryPermission({ mode: steps[i][1] })) !== 'granted' && (await h.requestPermission({ mode: steps[i][1] })) !== 'granted') { miss.push(h.name); continue; } await steps[i][2](h); }
-    catch (e) { miss.push(h.name); }
+var RECON = false, RECON_ARMED = false;
+async function reconnect(ask) {
+  if (RECON) return; RECON = true;
+  var steps = [['cmc', 'read', useMcHandle], ['cfiles', 'read', useFileHandle], ['cdir', 'read', useLayoutDir], ['cdata', 'readwrite', function (d) { return connectLc(d); }]], miss = [], done = 0, mcName = '';
+  try {
+    for (var i = 0; i < steps.length; i++) {
+      var v = await KV.get(steps[i][0]); if (!v) continue;
+      var list = Array.isArray(v) ? v : [v], keep = [];
+      if (steps[i][0] === 'cmc') mcName = v.name;
+      UNKNOWN = steps[i][0] === 'cfiles' ? [] : UNKNOWN;
+      for (var j = 0; j < list.length; j++) {
+        var h = list[j]; if (steps[i][0] === 'cfiles' && h.name === mcName) { keep.push(h); continue; }
+        try {
+          var p = await h.queryPermission({ mode: steps[i][1] });
+          if (p !== 'granted' && ask) p = await h.requestPermission({ mode: steps[i][1] });
+          if (p !== 'granted') { miss.push(h.name); keep.push(h); continue; }
+          await steps[i][2](h); keep.push(h); done++;
+        } catch (e) { if (!(steps[i][0] === 'cfiles' && e && e.name === 'NotFoundError')) keep.push(h); miss.push(h.name); }       // a moved/deleted file is forgotten
+      }
+      if (Array.isArray(v) && keep.length !== v.length) await KV.set(steps[i][0], keep);
+    }
+  } finally { RECON = false; }
+  $('remMsg').textContent = miss.length ? (ask ? t('remAgain', [miss.join(', ')]) : '') : (done ? t('remOk') : '');
+  if (miss.length && !ask && !RECON_ARMED) {                                         // ask once on the first click (a permission prompt needs a click)
+    RECON_ARMED = true;
+    document.addEventListener('pointerdown', function onFirst(ev) {
+      if (ev.target.closest && ev.target.closest('.pick,#bReconnect,#bMc,#bDir,#bLc,#bFiles,#tConnect,#tLayConnect,#sConnect,input,select,textarea')) return;
+      document.removeEventListener('pointerdown', onFirst, true); RECON_ARMED = false; reconnect(true);
+    }, true);
   }
-  $('remMsg').textContent = miss.length ? t('remAgain', [miss.join(', ')]) : t('remOk');
-};
+  if (window.quietRole) await quietRole();
+  paintRemember();
+}
+$('bReconnect').onclick = function () { reconnect(true); };
 // ---- Layout Check data folder (read + write) ----
 function readJsonFiles(dir) {
   var out = [];

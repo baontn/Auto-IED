@@ -99,8 +99,8 @@ function prepCell(x, d) {
   return '<td class="pr"' + (x.status === 'ADJUSTED' ? ' title="' + x.prep + ' → ' + x.eff + '"' : '') + '>' + x.eff + '</td>';
 }
 function statusTag(x) {
-  var cls = { PENDING: 't-warn', KEPT: 't-ok', ADJUSTED: 't-info', REMOVED: 't-bad', AUTO_SKIP: 't-ok' }[x.status];
-  return '<span class="tag ' + cls + '">' + esc(t('ps_' + x.status)) + (x.status === 'ADJUSTED' ? ' ' + x.prep + '→' + x.eff : '') + '</span>' +
+  var cls = psCls(x);
+  return '<span class="tag ' + cls + '">' + esc(psLabel(x)) + (x.status === 'ADJUSTED' ? ' ' + x.prep + '→' + x.eff : '') + '</span>' +
     x.flags.map(function (f) { return ' <span class="tag t-warn">' + esc(t('pf_' + f)) + '</span>'; }).join('');
 }
 // totals per PU for one group grid: production and prep per day
@@ -208,7 +208,7 @@ async function prepExport() {
   function addPrep(ws, G, pu, line, x) {
     var skip = x.status === 'AUTO_SKIP' || x.status === 'REMOVED';
     // skipped / removed prep = 0 in Excel (never a number that a SUM could pick up by mistake)
-    var row = ws.addRow([pu, line, t('pgPrepOf', [x.to]) + ' — ' + t('ps_' + x.status)].concat(G.days.map(function (d) { return x.days.indexOf(d) >= 0 ? (skip ? 0 : x.eff) : null; })));
+    var row = ws.addRow([pu, line, t('pgPrepOf', [x.to]) + ' — ' + psLabel(x)].concat(G.days.map(function (d) { return x.days.indexOf(d) >= 0 ? (skip ? 0 : x.eff) : null; })));
     row.eachCell(function (c, n) { if (n > 3 && c.value != null) { if (skip) c.font = { color: { argb: 'FF6B7280' } }; else { c.fill = Y; c.font = { bold: true, color: { argb: 'FF9A6700' } }; } } });
     row.getCell(3).font = { color: { argb: 'FF9A6700' } };
   }

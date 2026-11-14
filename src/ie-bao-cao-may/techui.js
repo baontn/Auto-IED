@@ -44,15 +44,17 @@ var KV = { db: null,
   get: function (k) { return this.open().then(function (db) { return new Promise(function (res) { var r = db.transaction('kv').objectStore('kv').get(k); r.onsuccess = function () { res(r.result); }; r.onerror = function () { res(null); }; }); }).catch(function () { return null; }); },
   set: function (k, v) { return this.open().then(function (db) { return new Promise(function (res) { var tx = db.transaction('kv', 'readwrite'); tx.objectStore('kv').put(v, k); tx.oncomplete = res; tx.onerror = res; }); }).catch(function () { }); } };
 // the person always chooses the folder (the picker opens in the remembered one); "Dùng lại" reconnects the remembered folder
+var KEYMAP = { tdata: 'cdata', tlay: 'cdir' };                              // IE Tech / Supervisor use the same remembered folders as the Data tab
+async function kvDir(key) { return (await KV.get(KEYMAP[key] || key)) || (await KV.get(key)); }
 async function chooseDir(key, id, mode) {
   if (!window.showDirectoryPicker) throw new Error(t('lcNoApi'));
-  var old = await KV.get(key), opt = { id: id, mode: mode };
+  var old = await kvDir(key), opt = { id: id, mode: mode };
   if (old) opt.startIn = old;
   var h; try { h = await window.showDirectoryPicker(opt); } catch (e) { if (e.name === 'AbortError') throw e; delete opt.startIn; h = await window.showDirectoryPicker(opt); }
-  await KV.set(key, h); return h;
+  await KV.set(KEYMAP[key] || key, h); return h;
 }
 async function reuseDir(key, mode) {
-  var h = await KV.get(key); if (!h) return null;
+  var h = await kvDir(key); if (!h) return null;
   if ((await h.queryPermission({ mode: mode })) === 'granted' || (await h.requestPermission({ mode: mode })) === 'granted') return h;
   return null;
 }
@@ -74,7 +76,7 @@ $('tReuse').onclick = async function () {
   } catch (e) { $('tConn').className = 'small st-bad'; $('tConn').textContent = e.message; }
 };
 async function paintReuse() {
-  var d = await KV.get('tdata'), l = await KV.get('tlay'), n = [d && d.name, l && l.name].filter(Boolean);
+  var d = await kvDir('tdata'), l = await kvDir('tlay'), n = [d && d.name, l && l.name].filter(Boolean);
   $('tReuse').hidden = !n.length; $('tReuse').textContent = t('tReuseBtn', [n.join(' + ')]);
 }
 paintReuse();
@@ -107,7 +109,7 @@ function techRows() {
     else {
       if (r.loadDate && r.loadDate !== x.load) x.flags.push('dateMoved');
       if (r.qtyB != null && r.qtyB !== x.qtyB) { x.status = 'PENDING'; x.eff = x.prep; x.flags.push('qtyChanged'); }
-      else if (r.decision === 'REMOVE') { x.status = 'REMOVED'; x.eff = 0; }
+      else if (r.decision === 'REMOVE') { x.status = 'REMOVED'; x.eff = 0; x.sameRem = isSameRemoval(r); }
       else if (r.decision === 'ADJUST') { x.status = 'ADJUSTED'; x.eff = +r.qty || 0; }
       else { x.status = 'KEPT'; x.eff = r.qtyBActual != null ? Math.ceil(x.ratio * r.qtyBActual - 1e-9) : x.prep; if (r.qtyBActual != null) x.flags.push('layoutQty'); }
       if (r.loadDateActual || r.prepDays) {                                     // IE Tech's loading date / number of prep days move the prep days
@@ -198,7 +200,7 @@ function techRender() {
         var skip = x.status === 'REMOVED' || x.status === 'AUTO_SKIP';
         h += '<tr class="prow" data-k="' + esc(x.key) + '"><td class="s1"></td><td class="l s2">' + (shown ? '' : '<b>' + esc(l) + '</b>') + '</td><td class="l s3" style="color:var(--warn)">↳ ' + esc(t('pgPrepOf', [s]).replace('↳ ', '')) +
           ' <span class="muted small">' + esc(t('prLoad', [d2(x.loadActual || x.load)])) + '</span>' +
-          ' <span class="tag ' + stCls[x.status] + '">' + esc(t('ps_' + x.status)) + (x.status === 'ADJUSTED' || (x.status === 'KEPT' && x.eff !== x.prep) ? ' ' + x.prep + '→' + x.eff : '') + '</span>' +
+          ' <span class="tag ' + psCls(x) + '">' + esc(psLabel(x)) + (x.status === 'ADJUSTED' || (x.status === 'KEPT' && x.eff !== x.prep) ? ' ' + x.prep + '→' + x.eff : '') + '</span>' +
           (x.flags.indexOf('dateSet') >= 0 || x.flags.indexOf('endSet') >= 0 ? ' <span class="tag t-info">' + esc(d2(x.load)) + '→' + esc(d2(x.loadActual)) + '</span>' : '') + (x.overdue ? ' <span class="tag t-bad">' + esc(t('prOVERDUE')) + '</span>' : '') +
           '<button class="qa" data-qe="' + esc(x.key) + '" title="' + esc(t('dOpenEdit')) + '">✎</button><button class="qa" data-qk="' + esc(x.key) + '" title="' + esc(t('prKeep')) + '">✔</button><button class="qa" data-qr="' + esc(x.key) + '" title="' + esc(t('prRemove')) + '">✖</button></td>' +
           days.map(function (d) { return (x.days || []).indexOf(d) < 0 ? '<td></td>' : (skip ? '<td class="sk">' + x.prep + '</td>' : '<td class="pr">' + x.eff + '</td>'); }).join('') + '</tr>';
@@ -271,16 +273,21 @@ function techSetEnd(line) {
   var days = G0.days, run = runningStyle(L.styles, days); if (!run) return;
   var plan = runEnd(L.styles, run, days), e = latestEnds(TS.ends)[line + '|' + run], cur = e && e.endDate ? e.endDate : plan;
   var fmt = function (iso) { return iso ? iso.slice(8, 10) + '/' + iso.slice(5, 7) + '/' + iso.slice(0, 4) : ''; };
-  var a = window.prompt(t('eAsk', [run, line, fmt(plan)]), fmt(cur)); if (a === null) return;
-  var s = a.trim(), iso = '';
-  if (s) {
-    var m = s.match(/^(\d{1,2})[\/\-.](\d{1,2})(?:[\/\-.](\d{2,4}))?$/); if (!m) { alert(t('prBadDate')); return; }
-    var y = m[3] ? (m[3].length === 2 ? 2000 + +m[3] : +m[3]) : +plan.slice(0, 4);
-    iso = y + '-' + String(+m[2]).padStart(2, '0') + '-' + String(+m[1]).padStart(2, '0'); if (isNaN(Date.parse(iso))) { alert(t('prBadDate')); return; }
-  }
-  if (iso === plan) iso = '';
-  var rec = { line: line, style: run, endDate: iso, planEnd: plan, by: me, at: new Date().toISOString() };
-  tWrite(TS.dir, 'prep/lineends', tStamp() + '_' + me.replace(/[^\w\-]+/g, '_') + '.json', rec).then(function () { (TS.ends = TS.ends || []).push(rec); techRender(); }).catch(function (er) { alert(er.message); });
+  var dlg = $('eDlg'), inp = $('eDate');
+  $('eTitle').textContent = t('eDlgTitle', [run, line]); $('eHint').textContent = t('eDlgHint', [fmt(plan)]); inp.value = cur;
+  var close = function () { dlg.hidden = true; $('eSave').onclick = $('ePlan').onclick = $('eCancel').onclick = null; dlg.onclick = null; document.removeEventListener('keydown', onKey, true); };
+  var save = function (iso) {
+    if (iso && isNaN(Date.parse(iso + 'T00:00:00Z'))) { alert(t('prBadDate')); return; }
+    if (iso === plan) iso = '';
+    close();
+    var rec = { line: line, style: run, endDate: iso, planEnd: plan, by: me, at: new Date().toISOString() };
+    tWrite(TS.dir, 'prep/lineends', tStamp() + '_' + me.replace(/[^\w\-]+/g, '_') + '.json', rec).then(function () { (TS.ends = TS.ends || []).push(rec); techRender(); }).catch(function (er) { alert(er.message); });
+  };
+  var onKey = function (ev) { if (ev.key === 'Escape') close(); else if (ev.key === 'Enter') { ev.preventDefault(); save(inp.value); } };
+  $('eSave').onclick = function () { save(inp.value); }; $('ePlan').onclick = function () { save(''); }; $('eCancel').onclick = close;
+  dlg.onclick = function (ev) { if (ev.target === dlg) close(); };
+  document.addEventListener('keydown', onKey, true);
+  dlg.hidden = false; inp.focus();
 }
 async function writeReview(x, patch) {
   var me = $('tName').value.trim(); if (!TS.dir || !me) throw new Error(t('prNeedConn'));
@@ -324,7 +331,7 @@ $('dKeep').onclick = function () {
 $('dRemove').onclick = function () { drawerSave({ decision: 'REMOVE', reason: '' }); };
 $('dSame').onclick = function () {
   var x = TS.cur, me = $('tName').value.trim();
-  writeReview(x, { decision: 'REMOVE', reason: t('prR1') }).then(async function () {
+  writeReview(x, { decision: 'REMOVE', reason: t('prR1'), sameLayout: true }).then(async function () {
     if (x.from) for (const A of x.from.split(' + ')) {                // remember the pair; every machine group and line with it is skipped from now on
       const rec = { styles: [A, x.to], by: me, at: new Date().toISOString() };
       await tWrite(TS.dir, 'prep/shared', tStamp() + '.json', rec); (TS.shared = TS.shared || []).push(rec);

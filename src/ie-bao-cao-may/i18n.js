@@ -1,6 +1,10 @@
 // ===================== TEXTS (VI / EN) =====================
 var I18N = {
   vi: {
+    rsExpAll: 'Hiện tất cả mã hàng', rsCollapse: 'Ẩn mã hàng', rsLoadsOn: 'vào chuyền {0}', rsPrepOf: 'chuẩn bị {0}', rsPuxTip: 'Bấm để hiện / ẩn các chuyền và mã hàng của PU',
+    rsAtAREA: 'Thu hồi từ khu vực', rsFArea: 'Khu vực (số máy đang giữ)', rsErrArea: 'Chọn khu vực và số máy thu hồi không vượt quá số máy khu vực đang giữ.', rsAreaHdr: 'Khu vực đang giữ máy (đã trừ khỏi "Máy có sẵn")', rsAreaTake: 'Thu hồi',
+    rsCardPUs: 'Thiếu theo PU (máy dùng ngày tệ nhất {0}) — bấm vào PU để xem chi tiết', rsPuUse: 'Máy PU dùng ngày tệ nhất', rsPuLines: 'Chuyền và mã hàng của PU ngày {0}', rsPuLine: 'Chuyền', thStyleLbl: 'Mã hàng', rsPuDays: 'Máy PU dùng theo từng ngày thiếu',
+    homeLink: 'Trang chủ', rzHint: 'Kéo để đổi độ rộng cột; bấm đúp để trở về tự động', eDlgTitle: 'Ngày kết thúc của mã đang chạy {0} trên chuyền {1}', eDlgHint: 'Theo kế hoạch: {0}. Chọn ngày trên lịch rồi bấm Lưu, hoặc bấm "Theo kế hoạch" để dùng ngày của kế hoạch.', eSave: 'Lưu', ePlan: 'Theo kế hoạch', eCancel: 'Hủy', pickFilesRem: 'Chọn file Excel… (ghi nhớ)', remFiles: 'File Excel',
     rsApplied: 'Đã vào kế hoạch',
     rsActDelayDet: '{0} chuyền {1}: vào chuyền {2} → {3} (+{4} ngày làm việc)', rsActDelayDet0: '{0} chuyền {1} (+{2} ngày làm việc)',
     rsPrevIdle: 'Nhập hoặc chọn để xem kết quả ngay.',
@@ -65,7 +69,7 @@ var I18N = {
     tDoneWarn: 'Còn {0} dòng chuẩn bị chưa duyệt (trên {1} chuyền). Các dòng này giữ số đề xuất. Vẫn hoàn tất?', tDoneSaved: 'Đã báo hoàn tất cho IE Báo cáo máy.',
     tDoneHint: 'Bấm khi đã duyệt xong phạm vi đang xem (PU, chuyền phụ trách, tất cả nhóm máy). Dòng chưa duyệt giữ số đề xuất. Có thể hoàn tất lại sau khi duyệt thêm.',
     pDoneTitle: 'IE Tech đã hoàn tất:', pDonePend: '{0} chưa duyệt',
-    remTitle: 'Đã ghi nhớ:', remBtn: '🔁 Kết nối lại', remOk: '✓ Đã kết nối lại. Chọn kế hoạch mới (và file khác nếu cần) bằng "Chọn file Excel…".', remAgain: 'Chưa cấp quyền cho: {0}. Bấm "Kết nối lại" lần nữa.',
+    remTitle: 'Đã ghi nhớ:', remBtn: '🔁 Kết nối lại', remOk: '✓ Đã kết nối lại. Nếu có Master plan mới, chọn lại bằng "Chọn file Excel…".', remAgain: 'Chưa cấp quyền cho: {0}. Bấm "Kết nối lại" lần nữa.',
     pickMc: 'MC Report… (ghi nhớ)', pickDirRem: 'Chọn thư mục layout… (ghi nhớ)', pickDirOld: 'hoặc chọn kiểu cũ', dirListing: 'Đang đọc danh sách file… {0}',
     modShort: 'sửa {0}', nMc: '{0} máy',
     dFindLay: 'Tìm layout', dLayRescan: '⟳ Quét lại', dLayIdx: '{0} file · cập nhật {1}', dLayScanning: 'Đang quét danh sách file… {0}', dLayQ: 'Gõ tên file để tìm (để trống = gợi ý theo mã hàng)',
@@ -139,7 +143,7 @@ var I18N = {
     title: 'IE Báo cáo máy — Cập nhật MACHINE DATABASE',
     subtitle: 'Quét layout trước; mã hàng chưa có layout thì dùng costing. Chỉ thay đổi được duyệt mới được ghi. Mã hàng chỉ hoàn tất khi Nhân viên IE kiểm tra Đạt trong Layout Check.',
     s1: 'Dữ liệu đầu vào', s2: 'Quét layout và bổ sung costing', s3: 'Duyệt và lưu',
-    pickFiles: 'Chọn file Excel…', pickFilesHint: 'MC Report chọn bằng nút "MC Report…" để được ghi nhớ. "Chọn file Excel…": Master plan mới mỗi tuần (và CheckMc lần đầu). Hệ thống tự nhận biết từng file.',
+    pickFiles: 'hoặc chọn file Excel… (không ghi nhớ)', pickFilesHint: 'Bấm "Chọn file Excel… (ghi nhớ)" để chọn Master plan, tuần trước, CheckMc cùng lúc; lần sau chỉ cần "Kết nối lại" (hoặc tự kết nối). Hệ thống tự nhận biết từng file.',
     pickDir: 'Chọn thư mục layout…', pickDirHint: 'Chọn thư mục gốc; quét toàn bộ thư mục con. Bỏ qua thư mục Old layout / backup.',
     inMc: 'MC Report', inPlan: 'Master plan', inPrev: 'File đã lưu lần trước (không bắt buộc)', inDir: 'Thư mục layout',
     notLoaded: 'Chưa chọn', reading: 'Đang đọc…',
@@ -186,6 +190,10 @@ var I18N = {
     c_Added: 'Mới', c_Changed: 'Thay đổi', c_Unchanged: 'Không đổi'
   },
   en: {
+    rsExpAll: 'Show all styles', rsCollapse: 'Hide styles', rsLoadsOn: 'loads {0}', rsPrepOf: 'prepare {0}', rsPuxTip: 'Click to show / hide the lines and styles of the PU',
+    rsAtAREA: 'Take back from area', rsFArea: 'Area (machines held)', rsErrArea: 'Choose an area and a quantity not above the machines the area holds.', rsAreaHdr: 'Areas holding machines (already taken off "Available")', rsAreaTake: 'Take back',
+    rsCardPUs: 'Shortage by PU (machines used on the worst day {0}) — click a PU for details', rsPuUse: 'Machines the PU uses on the worst day', rsPuLines: 'Lines and styles of the PU on {0}', rsPuLine: 'Line', thStyleLbl: 'Style', rsPuDays: 'Machines the PU uses on each short day',
+    homeLink: 'Home', rzHint: 'Drag to resize the column; double-click to reset', eDlgTitle: 'End date of the running style {0} on line {1}', eDlgHint: 'Per plan: {0}. Pick a date on the calendar and press Save, or press "Per plan" to use the plan date.', eSave: 'Save', ePlan: 'Per plan', eCancel: 'Cancel', pickFilesRem: 'Choose Excel files… (remembered)', remFiles: 'Excel files',
     rsApplied: 'Already in the plan',
     rsActDelayDet: '{0} on line {1}: loading {2} → {3} (+{4} working days)', rsActDelayDet0: '{0} on line {1} (+{2} working days)',
     rsPrevIdle: 'Type or choose to see the result at once.',
@@ -250,7 +258,7 @@ var I18N = {
     tDoneWarn: '{0} prep rows are not reviewed yet (on {1} lines). They keep the proposed quantity. Complete anyway?', tDoneSaved: 'Completion sent to the Consolidator.',
     tDoneHint: 'Click when the current scope (PU, your lines, all machine groups) is reviewed. Rows not reviewed keep the proposed quantity. You can complete again after more review.',
     pDoneTitle: 'IE Tech completed:', pDonePend: '{0} not reviewed',
-    remTitle: 'Remembered:', remBtn: '🔁 Reconnect', remOk: '✓ Reconnected. Choose the new plan (and other files if needed) with "Choose Excel files…".', remAgain: 'No permission yet for: {0}. Click "Reconnect" again.',
+    remTitle: 'Remembered:', remBtn: '🔁 Reconnect', remOk: '✓ Reconnected. If there is a new Master plan, choose it again with "Choose Excel files…".', remAgain: 'No permission yet for: {0}. Click "Reconnect" again.',
     pickMc: 'MC Report… (remembered)', pickDirRem: 'Choose layout folder… (remembered)', pickDirOld: 'or the old way', dirListing: 'Listing files… {0}',
     modShort: 'modified {0}', nMc: '{0} machines',
     dFindLay: 'Find layout', dLayRescan: '⟳ Rescan', dLayIdx: '{0} files · updated {1}', dLayScanning: 'Listing files… {0}', dLayQ: 'Type a file name to search (empty = suggestions for the style)',
@@ -324,7 +332,7 @@ var I18N = {
     title: 'Consolidator — MACHINE DATABASE update',
     subtitle: 'Layouts are scanned first. Styles without a layout use costing. Only approved changes are written.',
     s1: 'Inputs', s2: 'Scan layouts and fill gaps with costing', s3: 'Review and save',
-    pickFiles: 'Choose Excel files…', pickFilesHint: 'Choose the MC Report with "MC Report…" so it is remembered. "Choose Excel files…": the new Master plan each week (and CheckMc the first time). Each file is recognised automatically.',
+    pickFiles: 'or choose Excel files… (not remembered)', pickFilesHint: 'Press "Choose Excel files… (remembered)" to pick the Master plan, last week and CheckMc together; next time just "Reconnect" (or it reconnects by itself). Each file is recognised automatically.',
     pickDir: 'Choose layout folder…', pickDirHint: 'Pick the root folder; all subfolders are scanned. Old layout / backup folders are skipped.',
     inMc: 'MC Report', inPlan: 'Master plan', inPrev: 'Last saved file (optional)', inDir: 'Layout folder',
     notLoaded: 'Not selected', reading: 'Reading…',

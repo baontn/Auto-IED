@@ -53,6 +53,10 @@ function loadAvail(aoa, groups, ws) {
   av.__parts = { cols: cols.map(function (k) { return { idx: k, name: String(h[k]).trim(), sign: sign[k] }; }), byGroup: comp, formula: f || '' };
   return av;
 }
+// IE Tech pressed "Cùng layout": stored as a REMOVE with reason "Cùng layout" / "Same layout" (and sameLayout:true since v7.10)
+function isSameRemoval(r) { return !!(r && r.decision === 'REMOVE' && (r.sameLayout || r.reason === 'Cùng layout' || r.reason === 'Same layout')); }
+function psLabel(x) { return t(x.status === 'REMOVED' && x.sameRem ? 'ps_AUTO_SKIP' : 'ps_' + x.status); }     // "Cùng layout — bỏ" instead of just "Đã bỏ"
+function psCls(x) { return x.status === 'REMOVED' && x.sameRem ? 't-ok' : { PENDING: 't-warn', KEPT: 't-ok', ADJUSTED: 't-info', REMOVED: 't-bad', AUTO_SKIP: 't-ok' }[x.status]; }
 function loadPuList(aoa) { var m = {}, h = aoa[0] || [], li = findCol(h, 'Line'), pi = findCol(h, 'PU'); aoa.slice(1).forEach(function (r) { var l = String(r[li] || '').trim().toUpperCase(); if (l) m[l] = String(r[pi] || '').trim(); }); return m; }
 function puOf(m, line) { var k = String(line).trim().toUpperCase(); if (m[k]) return m[k]; var b = k.match(/^[^\-_ (]+/); return (b && m[b[0]]) || '?'; }
 // demand from the latest plan x MACHINE DATABASE (latest date per style, totals per machine group) = MACHINE BY LINE
@@ -148,7 +152,7 @@ function applyReviews(rows, reviews) {
     }
     if (!r) { x.status = x.same ? 'AUTO_SKIP' : 'PENDING'; x.eff = x.same ? 0 : x.prep; return; }
     if (r.loadDate && r.loadDate !== new Date(x.load).toISOString().slice(0, 10)) x.flags.push('dateMoved');
-    if (r.decision === 'REMOVE') { x.status = 'REMOVED'; x.eff = 0; return; }
+    if (r.decision === 'REMOVE') { x.status = 'REMOVED'; x.eff = 0; x.sameRem = isSameRemoval(r); return; }
     if (r.decision === 'ADJUST') {
       if (r.qtyB != null && r.qtyB !== x.qtyB) { x.status = 'PENDING'; x.eff = x.prep; x.flags.push('qtyChanged'); return; }
       x.status = 'ADJUSTED'; x.eff = +r.qty || 0; return;
@@ -279,7 +283,7 @@ function shortSummary(bal, days) {
   return { n: neg.length, of: days.length, days: neg, worst: worst, gap: worst ? -bal[worst] : 0, first: neg[0] || null, last: neg[neg.length - 1] || null, sum: neg.reduce(function (s, d) { return s - bal[d]; }, 0) };
 }
 // actions of the Consolidator (one record per change, latest per id wins)
-var ACTION_TYPES = ['RENT', 'BUY', 'BORROW', 'DELAY', 'OTHER'], ACTION_QTY = ['RENT', 'BUY', 'BORROW', 'OTHER'];     // DELAY moves a style (line, style, n working days); OTHER carries machines only when qty is given
+var ACTION_TYPES = ['RENT', 'BUY', 'BORROW', 'AREA', 'DELAY', 'OTHER'], ACTION_QTY = ['RENT', 'BUY', 'BORROW', 'AREA', 'OTHER'];     // AREA = take machines back from an area that holds them (MC STATUS: lending, sample room, TRA...)     // DELAY moves a style (line, style, n working days); OTHER carries machines only when qty is given
 function latestActions(list) {
   var m = {}; (list || []).slice().sort(function (a, b) { return String(a.at).localeCompare(String(b.at)); }).forEach(function (r) { if (r && r.id) m[r.id] = r; });
   return Object.keys(m).map(function (k) { return m[k]; }).sort(function (a, b) { return String(a.id).localeCompare(String(b.id)); });

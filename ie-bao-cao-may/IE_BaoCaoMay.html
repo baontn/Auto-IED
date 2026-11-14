@@ -370,6 +370,7 @@ select{max-width:360px;width:100%;font-size:13px}
 .sc-nums{display:flex;align-items:flex-end;gap:12px;margin:8px 0 6px}.sc-nums big{display:block;font-size:28px;font-weight:700;line-height:1.1}.sc-nums small{display:block;color:var(--muted);font-size:12px}.sc-arrow{font-size:22px;color:var(--muted);padding-bottom:12px}
 .sc-bar{height:7px;border-radius:5px;background:var(--badbg);overflow:hidden;margin-bottom:3px}.sc-bar i{display:block;height:100%;background:var(--ok)}
 .sc-acts{list-style:none;margin:8px 0 0;padding:0;font-size:13px}.sc-acts li{padding:4px 0;border-top:1px dashed var(--line)}
+.sc-put,.sc-put2{width:100%;font-size:13px;border-collapse:collapse}.sc-put td,.sc-put2 td,.sc-put2 th{padding:3px 6px;border-bottom:1px solid var(--line)}.sc-put td.n,.sc-put2 .n{text-align:right}.sc-pu{cursor:pointer}.sc-pu:hover td,.sc-pu.on td{background:var(--sel)}.sc-car{color:var(--muted)}.sc-pud>td{background:var(--bg);padding:8px 10px!important}
 .sc-none{margin-top:8px;padding-top:6px;border-top:1px dashed var(--line);color:var(--muted);font-size:13px}
 .sc-concl{margin-top:8px;font-weight:600;font-size:13px}
 
@@ -405,12 +406,19 @@ input.lq.diff{border-color:var(--warn);background:var(--warnbg);color:var(--warn
 .sheets label{white-space:nowrap}
 .sheets label.mt{font-weight:600}
 [hidden]{display:none!important}
+th .rzh{position:absolute;right:0;top:0;bottom:0;width:7px;cursor:col-resize;user-select:none}th .rzh:hover,body.rzing th .rzh{background:var(--accent);opacity:.45}
+body.rzing{cursor:col-resize;user-select:none}
+table.rzw td,table.rzw th{white-space:normal!important;overflow-wrap:anywhere;word-break:break-word}
+.homebtn{color:var(--accent);text-decoration:none;font-size:13px;margin-left:10px;white-space:nowrap}.homebtn:hover{text-decoration:underline}
+.dlg-ov{position:fixed;inset:0;background:rgba(0,0,0,.42);display:flex;align-items:center;justify-content:center;z-index:60}
+.dlg{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:320px;max-width:92vw;box-shadow:0 12px 40px rgba(0,0,0,.3);display:flex;flex-direction:column;gap:10px}
 </style>
 </head>
 <body>
 <header>
-  <h1 data-t="title"></h1><span class="tag t-info" id="verTag" title="Version">v7.9</span><span class="sub" data-t="subtitle"></span>
+  <h1 data-t="title"></h1><span class="tag t-info" id="verTag" title="Version">v7.10</span><span class="sub" data-t="subtitle"></span>
   <div role="group" aria-label="Role" id="roleSeg" style="margin-left:auto;display:flex;gap:4px"><button data-role="cons" data-t="roleCons"></button><button data-role="tech" data-t="roleTech"></button><button data-role="sup" data-t="roleSup"></button></div>
+  <a class="homebtn" id="btnHome" href="../index.html" data-t="homeLink"></a>
   <div class="lang" role="group" aria-label="Language" style="margin-left:8px"><button data-lang="vi">VI</button><button data-lang="en">EN</button></div>
 </header>
 <nav class="mtabs" id="mainTabs"><button data-tab="data" data-t="tabData"></button><button data-tab="db" data-t="tabDb"></button><button data-tab="prep" data-t="tabPrep"></button><button data-tab="resid" data-t="tabResid"></button><button data-tab="notice" data-t="tabNotice"></button><button data-tab="activity" data-t="tabAct"></button></nav>
@@ -460,6 +468,11 @@ input.lq.diff{border-color:var(--warn);background:var(--warnbg);color:var(--warn
   </div>
   <div id="rsS"></div>
 </main>
+<div class="dlg-ov" id="eDlg" hidden><div class="dlg">
+  <b id="eTitle"></b><div class="muted small" id="eHint"></div>
+  <input type="date" id="eDate">
+  <div class="row"><button class="primary" id="eSave" data-t="eSave"></button><button id="ePlan" data-t="ePlan"></button><button id="eCancel" data-t="eCancel"></button></div>
+</div></div>
 <aside id="tDrawer" hidden>
   <div class="row"><b id="dTitle"></b><button id="dClose" style="margin-left:auto">✕</button></div>
   <div id="dInfo" class="small" style="margin:8px 0"></div>
@@ -495,7 +508,8 @@ input.lq.diff{border-color:var(--warn);background:var(--warnbg);color:var(--warn
     <div class="grid">
       <div>
         <div class="row"><button class="pick" id="bMc" type="button" data-t="pickMc"></button>
-        <label class="pick"><span data-t="pickFiles"></span><input type="file" id="fFiles" multiple accept=".xlsx,.xlsm,.xlsb"></label></div>
+        <button class="pick" id="bFiles" type="button" data-t="pickFilesRem"></button>
+        <label class="pick" style="font-weight:400"><span data-t="pickFiles"></span><input type="file" id="fFiles" multiple accept=".xlsx,.xlsm,.xlsb"></label></div>
         <div class="muted" style="margin-top:6px;font-size:12.5px" data-t="pickFilesHint"></div>
         <ul class="slots setup" style="margin-top:8px">
           <li><b data-t="inMc"></b><span id="sMc"></span></li>
@@ -621,6 +635,10 @@ input.lq.diff{border-color:var(--warn);background:var(--warnbg);color:var(--warn
 <script>// ===================== TEXTS (VI / EN) =====================
 var I18N = {
   vi: {
+    rsExpAll: 'Hiện tất cả mã hàng', rsCollapse: 'Ẩn mã hàng', rsLoadsOn: 'vào chuyền {0}', rsPrepOf: 'chuẩn bị {0}', rsPuxTip: 'Bấm để hiện / ẩn các chuyền và mã hàng của PU',
+    rsAtAREA: 'Thu hồi từ khu vực', rsFArea: 'Khu vực (số máy đang giữ)', rsErrArea: 'Chọn khu vực và số máy thu hồi không vượt quá số máy khu vực đang giữ.', rsAreaHdr: 'Khu vực đang giữ máy (đã trừ khỏi "Máy có sẵn")', rsAreaTake: 'Thu hồi',
+    rsCardPUs: 'Thiếu theo PU (máy dùng ngày tệ nhất {0}) — bấm vào PU để xem chi tiết', rsPuUse: 'Máy PU dùng ngày tệ nhất', rsPuLines: 'Chuyền và mã hàng của PU ngày {0}', rsPuLine: 'Chuyền', thStyleLbl: 'Mã hàng', rsPuDays: 'Máy PU dùng theo từng ngày thiếu',
+    homeLink: 'Trang chủ', rzHint: 'Kéo để đổi độ rộng cột; bấm đúp để trở về tự động', eDlgTitle: 'Ngày kết thúc của mã đang chạy {0} trên chuyền {1}', eDlgHint: 'Theo kế hoạch: {0}. Chọn ngày trên lịch rồi bấm Lưu, hoặc bấm "Theo kế hoạch" để dùng ngày của kế hoạch.', eSave: 'Lưu', ePlan: 'Theo kế hoạch', eCancel: 'Hủy', pickFilesRem: 'Chọn file Excel… (ghi nhớ)', remFiles: 'File Excel',
     rsApplied: 'Đã vào kế hoạch',
     rsActDelayDet: '{0} chuyền {1}: vào chuyền {2} → {3} (+{4} ngày làm việc)', rsActDelayDet0: '{0} chuyền {1} (+{2} ngày làm việc)',
     rsPrevIdle: 'Nhập hoặc chọn để xem kết quả ngay.',
@@ -685,7 +703,7 @@ var I18N = {
     tDoneWarn: 'Còn {0} dòng chuẩn bị chưa duyệt (trên {1} chuyền). Các dòng này giữ số đề xuất. Vẫn hoàn tất?', tDoneSaved: 'Đã báo hoàn tất cho IE Báo cáo máy.',
     tDoneHint: 'Bấm khi đã duyệt xong phạm vi đang xem (PU, chuyền phụ trách, tất cả nhóm máy). Dòng chưa duyệt giữ số đề xuất. Có thể hoàn tất lại sau khi duyệt thêm.',
     pDoneTitle: 'IE Tech đã hoàn tất:', pDonePend: '{0} chưa duyệt',
-    remTitle: 'Đã ghi nhớ:', remBtn: '🔁 Kết nối lại', remOk: '✓ Đã kết nối lại. Chọn kế hoạch mới (và file khác nếu cần) bằng "Chọn file Excel…".', remAgain: 'Chưa cấp quyền cho: {0}. Bấm "Kết nối lại" lần nữa.',
+    remTitle: 'Đã ghi nhớ:', remBtn: '🔁 Kết nối lại', remOk: '✓ Đã kết nối lại. Nếu có Master plan mới, chọn lại bằng "Chọn file Excel…".', remAgain: 'Chưa cấp quyền cho: {0}. Bấm "Kết nối lại" lần nữa.',
     pickMc: 'MC Report… (ghi nhớ)', pickDirRem: 'Chọn thư mục layout… (ghi nhớ)', pickDirOld: 'hoặc chọn kiểu cũ', dirListing: 'Đang đọc danh sách file… {0}',
     modShort: 'sửa {0}', nMc: '{0} máy',
     dFindLay: 'Tìm layout', dLayRescan: '⟳ Quét lại', dLayIdx: '{0} file · cập nhật {1}', dLayScanning: 'Đang quét danh sách file… {0}', dLayQ: 'Gõ tên file để tìm (để trống = gợi ý theo mã hàng)',
@@ -759,7 +777,7 @@ var I18N = {
     title: 'IE Báo cáo máy — Cập nhật MACHINE DATABASE',
     subtitle: 'Quét layout trước; mã hàng chưa có layout thì dùng costing. Chỉ thay đổi được duyệt mới được ghi. Mã hàng chỉ hoàn tất khi Nhân viên IE kiểm tra Đạt trong Layout Check.',
     s1: 'Dữ liệu đầu vào', s2: 'Quét layout và bổ sung costing', s3: 'Duyệt và lưu',
-    pickFiles: 'Chọn file Excel…', pickFilesHint: 'MC Report chọn bằng nút "MC Report…" để được ghi nhớ. "Chọn file Excel…": Master plan mới mỗi tuần (và CheckMc lần đầu). Hệ thống tự nhận biết từng file.',
+    pickFiles: 'hoặc chọn file Excel… (không ghi nhớ)', pickFilesHint: 'Bấm "Chọn file Excel… (ghi nhớ)" để chọn Master plan, tuần trước, CheckMc cùng lúc; lần sau chỉ cần "Kết nối lại" (hoặc tự kết nối). Hệ thống tự nhận biết từng file.',
     pickDir: 'Chọn thư mục layout…', pickDirHint: 'Chọn thư mục gốc; quét toàn bộ thư mục con. Bỏ qua thư mục Old layout / backup.',
     inMc: 'MC Report', inPlan: 'Master plan', inPrev: 'File đã lưu lần trước (không bắt buộc)', inDir: 'Thư mục layout',
     notLoaded: 'Chưa chọn', reading: 'Đang đọc…',
@@ -806,6 +824,10 @@ var I18N = {
     c_Added: 'Mới', c_Changed: 'Thay đổi', c_Unchanged: 'Không đổi'
   },
   en: {
+    rsExpAll: 'Show all styles', rsCollapse: 'Hide styles', rsLoadsOn: 'loads {0}', rsPrepOf: 'prepare {0}', rsPuxTip: 'Click to show / hide the lines and styles of the PU',
+    rsAtAREA: 'Take back from area', rsFArea: 'Area (machines held)', rsErrArea: 'Choose an area and a quantity not above the machines the area holds.', rsAreaHdr: 'Areas holding machines (already taken off "Available")', rsAreaTake: 'Take back',
+    rsCardPUs: 'Shortage by PU (machines used on the worst day {0}) — click a PU for details', rsPuUse: 'Machines the PU uses on the worst day', rsPuLines: 'Lines and styles of the PU on {0}', rsPuLine: 'Line', thStyleLbl: 'Style', rsPuDays: 'Machines the PU uses on each short day',
+    homeLink: 'Home', rzHint: 'Drag to resize the column; double-click to reset', eDlgTitle: 'End date of the running style {0} on line {1}', eDlgHint: 'Per plan: {0}. Pick a date on the calendar and press Save, or press "Per plan" to use the plan date.', eSave: 'Save', ePlan: 'Per plan', eCancel: 'Cancel', pickFilesRem: 'Choose Excel files… (remembered)', remFiles: 'Excel files',
     rsApplied: 'Already in the plan',
     rsActDelayDet: '{0} on line {1}: loading {2} → {3} (+{4} working days)', rsActDelayDet0: '{0} on line {1} (+{2} working days)',
     rsPrevIdle: 'Type or choose to see the result at once.',
@@ -870,7 +892,7 @@ var I18N = {
     tDoneWarn: '{0} prep rows are not reviewed yet (on {1} lines). They keep the proposed quantity. Complete anyway?', tDoneSaved: 'Completion sent to the Consolidator.',
     tDoneHint: 'Click when the current scope (PU, your lines, all machine groups) is reviewed. Rows not reviewed keep the proposed quantity. You can complete again after more review.',
     pDoneTitle: 'IE Tech completed:', pDonePend: '{0} not reviewed',
-    remTitle: 'Remembered:', remBtn: '🔁 Reconnect', remOk: '✓ Reconnected. Choose the new plan (and other files if needed) with "Choose Excel files…".', remAgain: 'No permission yet for: {0}. Click "Reconnect" again.',
+    remTitle: 'Remembered:', remBtn: '🔁 Reconnect', remOk: '✓ Reconnected. If there is a new Master plan, choose it again with "Choose Excel files…".', remAgain: 'No permission yet for: {0}. Click "Reconnect" again.',
     pickMc: 'MC Report… (remembered)', pickDirRem: 'Choose layout folder… (remembered)', pickDirOld: 'or the old way', dirListing: 'Listing files… {0}',
     modShort: 'modified {0}', nMc: '{0} machines',
     dFindLay: 'Find layout', dLayRescan: '⟳ Rescan', dLayIdx: '{0} files · updated {1}', dLayScanning: 'Listing files… {0}', dLayQ: 'Type a file name to search (empty = suggestions for the style)',
@@ -944,7 +966,7 @@ var I18N = {
     title: 'Consolidator — MACHINE DATABASE update',
     subtitle: 'Layouts are scanned first. Styles without a layout use costing. Only approved changes are written.',
     s1: 'Inputs', s2: 'Scan layouts and fill gaps with costing', s3: 'Review and save',
-    pickFiles: 'Choose Excel files…', pickFilesHint: 'Choose the MC Report with "MC Report…" so it is remembered. "Choose Excel files…": the new Master plan each week (and CheckMc the first time). Each file is recognised automatically.',
+    pickFiles: 'or choose Excel files… (not remembered)', pickFilesHint: 'Press "Choose Excel files… (remembered)" to pick the Master plan, last week and CheckMc together; next time just "Reconnect" (or it reconnects by itself). Each file is recognised automatically.',
     pickDir: 'Choose layout folder…', pickDirHint: 'Pick the root folder; all subfolders are scanned. Old layout / backup folders are skipped.',
     inMc: 'MC Report', inPlan: 'Master plan', inPrev: 'Last saved file (optional)', inDir: 'Layout folder',
     notLoaded: 'Not selected', reading: 'Reading…',
@@ -1547,6 +1569,10 @@ function loadAvail(aoa, groups, ws) {
   av.__parts = { cols: cols.map(function (k) { return { idx: k, name: String(h[k]).trim(), sign: sign[k] }; }), byGroup: comp, formula: f || '' };
   return av;
 }
+// IE Tech pressed "Cùng layout": stored as a REMOVE with reason "Cùng layout" / "Same layout" (and sameLayout:true since v7.10)
+function isSameRemoval(r) { return !!(r && r.decision === 'REMOVE' && (r.sameLayout || r.reason === 'Cùng layout' || r.reason === 'Same layout')); }
+function psLabel(x) { return t(x.status === 'REMOVED' && x.sameRem ? 'ps_AUTO_SKIP' : 'ps_' + x.status); }     // "Cùng layout — bỏ" instead of just "Đã bỏ"
+function psCls(x) { return x.status === 'REMOVED' && x.sameRem ? 't-ok' : { PENDING: 't-warn', KEPT: 't-ok', ADJUSTED: 't-info', REMOVED: 't-bad', AUTO_SKIP: 't-ok' }[x.status]; }
 function loadPuList(aoa) { var m = {}, h = aoa[0] || [], li = findCol(h, 'Line'), pi = findCol(h, 'PU'); aoa.slice(1).forEach(function (r) { var l = String(r[li] || '').trim().toUpperCase(); if (l) m[l] = String(r[pi] || '').trim(); }); return m; }
 function puOf(m, line) { var k = String(line).trim().toUpperCase(); if (m[k]) return m[k]; var b = k.match(/^[^\-_ (]+/); return (b && m[b[0]]) || '?'; }
 // demand from the latest plan x MACHINE DATABASE (latest date per style, totals per machine group) = MACHINE BY LINE
@@ -1642,7 +1668,7 @@ function applyReviews(rows, reviews) {
     }
     if (!r) { x.status = x.same ? 'AUTO_SKIP' : 'PENDING'; x.eff = x.same ? 0 : x.prep; return; }
     if (r.loadDate && r.loadDate !== new Date(x.load).toISOString().slice(0, 10)) x.flags.push('dateMoved');
-    if (r.decision === 'REMOVE') { x.status = 'REMOVED'; x.eff = 0; return; }
+    if (r.decision === 'REMOVE') { x.status = 'REMOVED'; x.eff = 0; x.sameRem = isSameRemoval(r); return; }
     if (r.decision === 'ADJUST') {
       if (r.qtyB != null && r.qtyB !== x.qtyB) { x.status = 'PENDING'; x.eff = x.prep; x.flags.push('qtyChanged'); return; }
       x.status = 'ADJUSTED'; x.eff = +r.qty || 0; return;
@@ -1773,7 +1799,7 @@ function shortSummary(bal, days) {
   return { n: neg.length, of: days.length, days: neg, worst: worst, gap: worst ? -bal[worst] : 0, first: neg[0] || null, last: neg[neg.length - 1] || null, sum: neg.reduce(function (s, d) { return s - bal[d]; }, 0) };
 }
 // actions of the Consolidator (one record per change, latest per id wins)
-var ACTION_TYPES = ['RENT', 'BUY', 'BORROW', 'DELAY', 'OTHER'], ACTION_QTY = ['RENT', 'BUY', 'BORROW', 'OTHER'];     // DELAY moves a style (line, style, n working days); OTHER carries machines only when qty is given
+var ACTION_TYPES = ['RENT', 'BUY', 'BORROW', 'AREA', 'DELAY', 'OTHER'], ACTION_QTY = ['RENT', 'BUY', 'BORROW', 'AREA', 'OTHER'];     // AREA = take machines back from an area that holds them (MC STATUS: lending, sample room, TRA...)     // DELAY moves a style (line, style, n working days); OTHER carries machines only when qty is given
 function latestActions(list) {
   var m = {}; (list || []).slice().sort(function (a, b) { return String(a.at).localeCompare(String(b.at)); }).forEach(function (r) { if (r && r.id) m[r.id] = r; });
   return Object.keys(m).map(function (k) { return m[k]; }).sort(function (a, b) { return String(a.id).localeCompare(String(b.id)); });
@@ -1941,21 +1967,60 @@ $('bDir').onclick = async function () {
   try { var d = await window.showDirectoryPicker({ id: 'layroot', mode: 'read' }); await KV.set('cdir', d); await useLayoutDir(d); paintRemember(); }
   catch (e) { if (e.name !== 'AbortError') slot('sDir', 'lcErr', [e.message], 'bad'); }
 };
-// remembered connections: MC Report, layout folder, Layout Check data folder (name is kept too); the plan is chosen each week
+// remembered connections: MC Report, the other Excel files (plan, last week, CheckMc), layout folder, Layout Check data folder
+// They reconnect by themselves when the browser still allows it; otherwise the first click on the page (or the button) asks once.
+var XL_TYPES = [{ description: 'Excel', accept: { 'application/vnd.ms-excel': ['.xlsx', '.xlsm', '.xlsb'] } }];
+async function useFileHandle(h) { var f = await h.getFile(); processExcel(f); }
+$('bFiles').onclick = async function () {
+  if (!window.showOpenFilePicker) { $('fFiles').click(); return; }
+  try {
+    var hs = await window.showOpenFilePicker({ id: 'xlfiles', multiple: true, types: XL_TYPES });
+    var cur = (await KV.get('cfiles')) || [], have = {}; hs.forEach(function (h) { have[h.name] = 1; });
+    await KV.set('cfiles', cur.filter(function (h) { return !have[h.name]; }).concat(hs));       // newest picks last: they win when two plans are stored
+    UNKNOWN = []; for (var i = 0; i < hs.length; i++) await useFileHandle(hs[i]);
+    paintRemember();
+  } catch (e) { if (e.name !== 'AbortError') slot('sPlan', 'lcErr', [e.message], 'bad'); }
+};
 async function paintRemember() {
-  var h = { mc: await KV.get('cmc'), dir: await KV.get('cdir'), lc: await KV.get('cdata') }, names = [];
-  if (h.mc) names.push(t('inMc') + ': ' + h.mc.name); if (h.dir) names.push(t('inDir') + ': ' + h.dir.name); if (h.lc) names.push(t('lcTitle') + ': ' + h.lc.name);
+  var h = { mc: await KV.get('cmc'), files: (await KV.get('cfiles')) || [], dir: await KV.get('cdir'), lc: await KV.get('cdata') }, names = [];
+  if (h.mc) names.push(t('inMc') + ': ' + h.mc.name); if (h.files.length) names.push(t('remFiles') + ': ' + h.files.map(function (x) { return x.name; }).join(', '));
+  if (h.dir) names.push(t('inDir') + ': ' + h.dir.name); if (h.lc) names.push(t('lcTitle') + ': ' + h.lc.name);
   $('remBar').hidden = !names.length; $('remList').textContent = names.join(' · ');
 }
-$('bReconnect').onclick = async function () {
-  var steps = [['cmc', 'read', useMcHandle], ['cdir', 'read', useLayoutDir], ['cdata', 'readwrite', function (d) { return connectLc(d); }]], miss = [];
-  for (var i = 0; i < steps.length; i++) {
-    var h = await KV.get(steps[i][0]); if (!h) continue;
-    try { if ((await h.queryPermission({ mode: steps[i][1] })) !== 'granted' && (await h.requestPermission({ mode: steps[i][1] })) !== 'granted') { miss.push(h.name); continue; } await steps[i][2](h); }
-    catch (e) { miss.push(h.name); }
+var RECON = false, RECON_ARMED = false;
+async function reconnect(ask) {
+  if (RECON) return; RECON = true;
+  var steps = [['cmc', 'read', useMcHandle], ['cfiles', 'read', useFileHandle], ['cdir', 'read', useLayoutDir], ['cdata', 'readwrite', function (d) { return connectLc(d); }]], miss = [], done = 0, mcName = '';
+  try {
+    for (var i = 0; i < steps.length; i++) {
+      var v = await KV.get(steps[i][0]); if (!v) continue;
+      var list = Array.isArray(v) ? v : [v], keep = [];
+      if (steps[i][0] === 'cmc') mcName = v.name;
+      UNKNOWN = steps[i][0] === 'cfiles' ? [] : UNKNOWN;
+      for (var j = 0; j < list.length; j++) {
+        var h = list[j]; if (steps[i][0] === 'cfiles' && h.name === mcName) { keep.push(h); continue; }
+        try {
+          var p = await h.queryPermission({ mode: steps[i][1] });
+          if (p !== 'granted' && ask) p = await h.requestPermission({ mode: steps[i][1] });
+          if (p !== 'granted') { miss.push(h.name); keep.push(h); continue; }
+          await steps[i][2](h); keep.push(h); done++;
+        } catch (e) { if (!(steps[i][0] === 'cfiles' && e && e.name === 'NotFoundError')) keep.push(h); miss.push(h.name); }       // a moved/deleted file is forgotten
+      }
+      if (Array.isArray(v) && keep.length !== v.length) await KV.set(steps[i][0], keep);
+    }
+  } finally { RECON = false; }
+  $('remMsg').textContent = miss.length ? (ask ? t('remAgain', [miss.join(', ')]) : '') : (done ? t('remOk') : '');
+  if (miss.length && !ask && !RECON_ARMED) {                                         // ask once on the first click (a permission prompt needs a click)
+    RECON_ARMED = true;
+    document.addEventListener('pointerdown', function onFirst(ev) {
+      if (ev.target.closest && ev.target.closest('.pick,#bReconnect,#bMc,#bDir,#bLc,#bFiles,#tConnect,#tLayConnect,#sConnect,input,select,textarea')) return;
+      document.removeEventListener('pointerdown', onFirst, true); RECON_ARMED = false; reconnect(true);
+    }, true);
   }
-  $('remMsg').textContent = miss.length ? t('remAgain', [miss.join(', ')]) : t('remOk');
-};
+  if (window.quietRole) await quietRole();
+  paintRemember();
+}
+$('bReconnect').onclick = function () { reconnect(true); };
 // ---- Layout Check data folder (read + write) ----
 function readJsonFiles(dir) {
   var out = [];
@@ -2403,8 +2468,8 @@ function prepCell(x, d) {
   return '<td class="pr"' + (x.status === 'ADJUSTED' ? ' title="' + x.prep + ' → ' + x.eff + '"' : '') + '>' + x.eff + '</td>';
 }
 function statusTag(x) {
-  var cls = { PENDING: 't-warn', KEPT: 't-ok', ADJUSTED: 't-info', REMOVED: 't-bad', AUTO_SKIP: 't-ok' }[x.status];
-  return '<span class="tag ' + cls + '">' + esc(t('ps_' + x.status)) + (x.status === 'ADJUSTED' ? ' ' + x.prep + '→' + x.eff : '') + '</span>' +
+  var cls = psCls(x);
+  return '<span class="tag ' + cls + '">' + esc(psLabel(x)) + (x.status === 'ADJUSTED' ? ' ' + x.prep + '→' + x.eff : '') + '</span>' +
     x.flags.map(function (f) { return ' <span class="tag t-warn">' + esc(t('pf_' + f)) + '</span>'; }).join('');
 }
 // totals per PU for one group grid: production and prep per day
@@ -2512,7 +2577,7 @@ async function prepExport() {
   function addPrep(ws, G, pu, line, x) {
     var skip = x.status === 'AUTO_SKIP' || x.status === 'REMOVED';
     // skipped / removed prep = 0 in Excel (never a number that a SUM could pick up by mistake)
-    var row = ws.addRow([pu, line, t('pgPrepOf', [x.to]) + ' — ' + t('ps_' + x.status)].concat(G.days.map(function (d) { return x.days.indexOf(d) >= 0 ? (skip ? 0 : x.eff) : null; })));
+    var row = ws.addRow([pu, line, t('pgPrepOf', [x.to]) + ' — ' + psLabel(x)].concat(G.days.map(function (d) { return x.days.indexOf(d) >= 0 ? (skip ? 0 : x.eff) : null; })));
     row.eachCell(function (c, n) { if (n > 3 && c.value != null) { if (skip) c.font = { color: { argb: 'FF6B7280' } }; else { c.fill = Y; c.font = { bold: true, color: { argb: 'FF9A6700' } }; } } });
     row.getCell(3).font = { color: { argb: 'FF9A6700' } };
   }
@@ -2624,15 +2689,17 @@ var KV = { db: null,
   get: function (k) { return this.open().then(function (db) { return new Promise(function (res) { var r = db.transaction('kv').objectStore('kv').get(k); r.onsuccess = function () { res(r.result); }; r.onerror = function () { res(null); }; }); }).catch(function () { return null; }); },
   set: function (k, v) { return this.open().then(function (db) { return new Promise(function (res) { var tx = db.transaction('kv', 'readwrite'); tx.objectStore('kv').put(v, k); tx.oncomplete = res; tx.onerror = res; }); }).catch(function () { }); } };
 // the person always chooses the folder (the picker opens in the remembered one); "Dùng lại" reconnects the remembered folder
+var KEYMAP = { tdata: 'cdata', tlay: 'cdir' };                              // IE Tech / Supervisor use the same remembered folders as the Data tab
+async function kvDir(key) { return (await KV.get(KEYMAP[key] || key)) || (await KV.get(key)); }
 async function chooseDir(key, id, mode) {
   if (!window.showDirectoryPicker) throw new Error(t('lcNoApi'));
-  var old = await KV.get(key), opt = { id: id, mode: mode };
+  var old = await kvDir(key), opt = { id: id, mode: mode };
   if (old) opt.startIn = old;
   var h; try { h = await window.showDirectoryPicker(opt); } catch (e) { if (e.name === 'AbortError') throw e; delete opt.startIn; h = await window.showDirectoryPicker(opt); }
-  await KV.set(key, h); return h;
+  await KV.set(KEYMAP[key] || key, h); return h;
 }
 async function reuseDir(key, mode) {
-  var h = await KV.get(key); if (!h) return null;
+  var h = await kvDir(key); if (!h) return null;
   if ((await h.queryPermission({ mode: mode })) === 'granted' || (await h.requestPermission({ mode: mode })) === 'granted') return h;
   return null;
 }
@@ -2654,7 +2721,7 @@ $('tReuse').onclick = async function () {
   } catch (e) { $('tConn').className = 'small st-bad'; $('tConn').textContent = e.message; }
 };
 async function paintReuse() {
-  var d = await KV.get('tdata'), l = await KV.get('tlay'), n = [d && d.name, l && l.name].filter(Boolean);
+  var d = await kvDir('tdata'), l = await kvDir('tlay'), n = [d && d.name, l && l.name].filter(Boolean);
   $('tReuse').hidden = !n.length; $('tReuse').textContent = t('tReuseBtn', [n.join(' + ')]);
 }
 paintReuse();
@@ -2687,7 +2754,7 @@ function techRows() {
     else {
       if (r.loadDate && r.loadDate !== x.load) x.flags.push('dateMoved');
       if (r.qtyB != null && r.qtyB !== x.qtyB) { x.status = 'PENDING'; x.eff = x.prep; x.flags.push('qtyChanged'); }
-      else if (r.decision === 'REMOVE') { x.status = 'REMOVED'; x.eff = 0; }
+      else if (r.decision === 'REMOVE') { x.status = 'REMOVED'; x.eff = 0; x.sameRem = isSameRemoval(r); }
       else if (r.decision === 'ADJUST') { x.status = 'ADJUSTED'; x.eff = +r.qty || 0; }
       else { x.status = 'KEPT'; x.eff = r.qtyBActual != null ? Math.ceil(x.ratio * r.qtyBActual - 1e-9) : x.prep; if (r.qtyBActual != null) x.flags.push('layoutQty'); }
       if (r.loadDateActual || r.prepDays) {                                     // IE Tech's loading date / number of prep days move the prep days
@@ -2778,7 +2845,7 @@ function techRender() {
         var skip = x.status === 'REMOVED' || x.status === 'AUTO_SKIP';
         h += '<tr class="prow" data-k="' + esc(x.key) + '"><td class="s1"></td><td class="l s2">' + (shown ? '' : '<b>' + esc(l) + '</b>') + '</td><td class="l s3" style="color:var(--warn)">↳ ' + esc(t('pgPrepOf', [s]).replace('↳ ', '')) +
           ' <span class="muted small">' + esc(t('prLoad', [d2(x.loadActual || x.load)])) + '</span>' +
-          ' <span class="tag ' + stCls[x.status] + '">' + esc(t('ps_' + x.status)) + (x.status === 'ADJUSTED' || (x.status === 'KEPT' && x.eff !== x.prep) ? ' ' + x.prep + '→' + x.eff : '') + '</span>' +
+          ' <span class="tag ' + psCls(x) + '">' + esc(psLabel(x)) + (x.status === 'ADJUSTED' || (x.status === 'KEPT' && x.eff !== x.prep) ? ' ' + x.prep + '→' + x.eff : '') + '</span>' +
           (x.flags.indexOf('dateSet') >= 0 || x.flags.indexOf('endSet') >= 0 ? ' <span class="tag t-info">' + esc(d2(x.load)) + '→' + esc(d2(x.loadActual)) + '</span>' : '') + (x.overdue ? ' <span class="tag t-bad">' + esc(t('prOVERDUE')) + '</span>' : '') +
           '<button class="qa" data-qe="' + esc(x.key) + '" title="' + esc(t('dOpenEdit')) + '">✎</button><button class="qa" data-qk="' + esc(x.key) + '" title="' + esc(t('prKeep')) + '">✔</button><button class="qa" data-qr="' + esc(x.key) + '" title="' + esc(t('prRemove')) + '">✖</button></td>' +
           days.map(function (d) { return (x.days || []).indexOf(d) < 0 ? '<td></td>' : (skip ? '<td class="sk">' + x.prep + '</td>' : '<td class="pr">' + x.eff + '</td>'); }).join('') + '</tr>';
@@ -2851,16 +2918,21 @@ function techSetEnd(line) {
   var days = G0.days, run = runningStyle(L.styles, days); if (!run) return;
   var plan = runEnd(L.styles, run, days), e = latestEnds(TS.ends)[line + '|' + run], cur = e && e.endDate ? e.endDate : plan;
   var fmt = function (iso) { return iso ? iso.slice(8, 10) + '/' + iso.slice(5, 7) + '/' + iso.slice(0, 4) : ''; };
-  var a = window.prompt(t('eAsk', [run, line, fmt(plan)]), fmt(cur)); if (a === null) return;
-  var s = a.trim(), iso = '';
-  if (s) {
-    var m = s.match(/^(\d{1,2})[\/\-.](\d{1,2})(?:[\/\-.](\d{2,4}))?$/); if (!m) { alert(t('prBadDate')); return; }
-    var y = m[3] ? (m[3].length === 2 ? 2000 + +m[3] : +m[3]) : +plan.slice(0, 4);
-    iso = y + '-' + String(+m[2]).padStart(2, '0') + '-' + String(+m[1]).padStart(2, '0'); if (isNaN(Date.parse(iso))) { alert(t('prBadDate')); return; }
-  }
-  if (iso === plan) iso = '';
-  var rec = { line: line, style: run, endDate: iso, planEnd: plan, by: me, at: new Date().toISOString() };
-  tWrite(TS.dir, 'prep/lineends', tStamp() + '_' + me.replace(/[^\w\-]+/g, '_') + '.json', rec).then(function () { (TS.ends = TS.ends || []).push(rec); techRender(); }).catch(function (er) { alert(er.message); });
+  var dlg = $('eDlg'), inp = $('eDate');
+  $('eTitle').textContent = t('eDlgTitle', [run, line]); $('eHint').textContent = t('eDlgHint', [fmt(plan)]); inp.value = cur;
+  var close = function () { dlg.hidden = true; $('eSave').onclick = $('ePlan').onclick = $('eCancel').onclick = null; dlg.onclick = null; document.removeEventListener('keydown', onKey, true); };
+  var save = function (iso) {
+    if (iso && isNaN(Date.parse(iso + 'T00:00:00Z'))) { alert(t('prBadDate')); return; }
+    if (iso === plan) iso = '';
+    close();
+    var rec = { line: line, style: run, endDate: iso, planEnd: plan, by: me, at: new Date().toISOString() };
+    tWrite(TS.dir, 'prep/lineends', tStamp() + '_' + me.replace(/[^\w\-]+/g, '_') + '.json', rec).then(function () { (TS.ends = TS.ends || []).push(rec); techRender(); }).catch(function (er) { alert(er.message); });
+  };
+  var onKey = function (ev) { if (ev.key === 'Escape') close(); else if (ev.key === 'Enter') { ev.preventDefault(); save(inp.value); } };
+  $('eSave').onclick = function () { save(inp.value); }; $('ePlan').onclick = function () { save(''); }; $('eCancel').onclick = close;
+  dlg.onclick = function (ev) { if (ev.target === dlg) close(); };
+  document.addEventListener('keydown', onKey, true);
+  dlg.hidden = false; inp.focus();
 }
 async function writeReview(x, patch) {
   var me = $('tName').value.trim(); if (!TS.dir || !me) throw new Error(t('prNeedConn'));
@@ -2904,7 +2976,7 @@ $('dKeep').onclick = function () {
 $('dRemove').onclick = function () { drawerSave({ decision: 'REMOVE', reason: '' }); };
 $('dSame').onclick = function () {
   var x = TS.cur, me = $('tName').value.trim();
-  writeReview(x, { decision: 'REMOVE', reason: t('prR1') }).then(async function () {
+  writeReview(x, { decision: 'REMOVE', reason: t('prR1'), sameLayout: true }).then(async function () {
     if (x.from) for (const A of x.from.split(' + ')) {                // remember the pair; every machine group and line with it is skipped from now on
       const rec = { styles: [A, x.to], by: me, at: new Date().toISOString() };
       await tWrite(TS.dir, 'prep/shared', tStamp() + '.json', rec); (TS.shared = TS.shared || []).push(rec);
@@ -3068,8 +3140,8 @@ window.techRender = techRender; window.renderNotices = renderNotices;
 // Consolidator tab "Thiếu máy còn lại" (records actions) and the Supervisor role (read-only: can try actions, cannot save). Numbers come from the data folder only
 // (latest proposal per machine group + IE Tech decisions + actions): the same calculation as the IE Tech grid (groupModel in prep.js). Tables are horizontal (days in columns).
 // Every machine group that is short has its own action panel under its table; any action typed in the panel shows its result at once (preview rows in the table).
-var RS = { root: null, actions: [], actionsRaw: [], selG: null, selPU: null, view: 'short', edit: null, editG: '', forms: {}, cache: [], at: null };
-function rsForm(g) { return RS.forms[g] || (RS.forms[g] = { type: 'RENT', qty: '', from: '', to: '', pu: '', line: '', style: '', date: '', status: 'PLANNED', note: '', touched: false, active: false }); }
+var RS = { exp: {}, openPU: {}, root: null, actions: [], actionsRaw: [], selG: null, selPU: null, view: 'short', edit: null, editG: '', forms: {}, cache: [], at: null };
+function rsForm(g) { return RS.forms[g] || (RS.forms[g] = { type: 'RENT', area: '', qty: '', from: '', to: '', pu: '', line: '', style: '', date: '', status: 'PLANNED', note: '', touched: false, active: false }); }
 async function rsLoad(root) {
   RS.root = root; await tLoadAll(root); RS.actionsRaw = await pReadDir(root, 'prep/actions'); RS.actions = latestActions(RS.actionsRaw); RS.at = new Date();
 }
@@ -3099,9 +3171,15 @@ function rsRow(label, vals, days, o) {          // one horizontal row: sticky la
   return '<tr class="' + (o.cls || '') + '"' + (o.attr || '') + '><td class="s1' + (o.l1 ? ' l' : '') + '">' + (o.c1 || '') + '</td><td class="l s2">' + (o.c2 || '') + '</td><td class="l s3">' + label + '</td>' + days.map(function (d) { return rsCell(vals ? vals[d] : '', o.neg, o.cellCls); }).join('') + '</tr>';
 }
 function rsSign(v) { return v ? (v > 0 ? '+' + v : '' + v) : ''; }
+function rsAreas(X) { return (X.G0.parts || []).filter(function (p) { return p.sign < 0 && p.qty > 0; }); }      // MC STATUS columns that take machines away from production (lending, sample room, TRA, broken...)
+function rsAreaLeft(X, name, d) {                                      // machines the area still holds on day d after the confirmed take-backs
+  var p = rsAreas(X).filter(function (x) { return x.name === name; })[0], q = p ? p.qty : 0;
+  RS.actions.forEach(function (a) { if (a.type === 'AREA' && a.status === 'CONFIRMED' && a.group === X.g && a.area === name && (!a.from || d >= a.from) && (!a.to || d <= a.to)) q -= +a.qty || 0; });
+  return Math.max(0, q);
+}
 function rsActText(a) {
   if (a.type === 'DELAY') return a.from && a.to ? t('rsActDelayTxt2', [a.style, a.line, d2(a.from), d2(a.to), a.n]) : t('rsActDelayTxt', [a.style, a.line, a.n]);
-  return t('rsAt' + a.type) + (a.qty ? ' ' + (a.qty > 0 ? '+' : '') + a.qty : '') + (a.from ? ' (' + d2(a.from) + (a.to && a.to !== a.from ? '–' + d2(a.to) : '') + ')' : '') + (a.pu ? ' · ' + a.pu : '');
+  return t('rsAt' + a.type) + (a.area ? ' ' + a.area : '') + (a.qty ? ' ' + (a.qty > 0 ? '+' : '') + a.qty : '') + (a.from ? ' (' + d2(a.from) + (a.to && a.to !== a.from ? '–' + d2(a.to) : '') + ')' : '') + (a.pu ? ' · ' + a.pu : '');
 }
 function rsActLabel(a, edit, g, applied) {
   var tag = (applied ? '<span class="tag t-info">' + esc(t('rsApplied')) + '</span> ' : '') + '<span class="tag ' + (a.status === 'CONFIRMED' ? 't-ok' : a.status === 'CANCELLED' ? 't-bad' : 't-warn') + '">' + esc(t('rsSt' + a.status)) + '</span>', cx = a.status === 'CANCELLED';
@@ -3131,6 +3209,9 @@ function rsDefaults(X, f) {
     var st = rsStylesOf(X, f.line);
     if (st.indexOf(f.style) < 0) { f.style = st[1] || st[0] || ''; f.date = ''; }
     if (!f.date) { var inf = rsDelayInfo(X, f); if (inf) { var i = X.M.days.indexOf(inf.cur); f.date = X.M.days[i + 1] || inf.cur; } }
+  } else if (f.type === 'AREA') {
+    var ar = rsAreas(X); if (!ar.some(function (x) { return x.name === f.area; })) { f.area = ar[0] ? ar[0].name : ''; f.touched = false; }
+    if (!f.touched && !(RS.edit && RS.editG === X.g)) { var aq = (ar.filter(function (x) { return x.name === f.area; })[0] || {}).qty || 0; f.qty = Math.min(X.s.gap || 0, aq) || ''; f.from = X.s.first || ''; f.to = X.s.last || ''; }
   } else if (['RENT', 'BUY', 'BORROW'].indexOf(f.type) >= 0 && !f.touched && !(RS.edit && RS.editG === X.g)) { f.qty = X.s.gap || ''; f.from = X.s.first || ''; f.to = X.s.last || ''; }    // default: cover the worst gap over the short period
   return lines;
 }
@@ -3138,8 +3219,9 @@ function rsFormAction(X, f) {
   var ty = f.type, qty = f.qty === '' ? 0 : +f.qty;
   if (ty === 'DELAY') { var inf = rsDelayInfo(X, f); return inf && inf.to && inf.n > 0 ? { id: RS.edit || '__new', type: 'DELAY', group: '*', line: f.line, style: f.style, from: inf.cur, to: inf.to, n: inf.n, status: 'CONFIRMED', note: f.note } : null; }
   if (ty !== 'OTHER' && !(qty > 0)) return null;
+  if (ty === 'AREA') { var pa = rsAreas(X).filter(function (x) { return x.name === f.area; })[0]; if (!pa || qty > pa.qty) return null; }
   if (qty && (!f.from || !f.to || f.from > f.to)) return null;
-  return { id: RS.edit || '__new', type: ty, group: X.g, qty: qty || null, from: f.from, to: f.to, pu: f.pu, status: 'CONFIRMED', note: f.note };
+  return { id: RS.edit || '__new', type: ty, group: X.g, area: ty === 'AREA' ? f.area : '', qty: qty || null, from: f.from, to: f.to, pu: f.pu, status: 'CONFIRMED', note: f.note };
 }
 // instant result: the change of this action on the confirmed balance of the group (and, for a date move, on the other groups of the line)
 function rsPreview(X, f) {
@@ -3152,12 +3234,30 @@ function rsPreview(X, f) {
   });
   out.self = out.rows.filter(function (r) { return r.g === X.g; })[0]; return out;
 }
+// the lines and styles of one PU inside a machine group (like the IE Tech grid): one row per style with its machines per day, and the prepare rows of the changeovers
+function rsLineRows(X, p, days) {
+  var G = X.M.G, h = '';
+  Object.keys(G.lines).filter(function (l) { return G.lines[l].pu === p; }).sort().forEach(function (l) {
+    var L = G.lines[l], first = function (s) { return Object.keys(L.styles[s]).sort()[0] || ''; };
+    Object.keys(L.styles).sort(function (a, b) { return first(a).localeCompare(first(b)); }).forEach(function (s) {
+      var v = {}; days.forEach(function (d) { v[d] = L.styles[s][d] || ''; });
+      h += rsRow(esc(s) + ' <span class="muted small">' + esc(t('rsLoadsOn', [d2(first(s))])) + '</span>', v, days, { cls: 'part', c2: esc(l), attr: ' data-rs-r="style" data-line="' + esc(l) + '"' });
+    });
+    X.rows.filter(function (x) { return x.line === l && x.eff; }).forEach(function (x) {
+      var v = {}; days.forEach(function (d) { v[d] = (x.days || []).indexOf(d) >= 0 ? x.eff : ''; });
+      h += rsRow('↳ ' + esc(t('rsPrepOf', [x.to])), v, days, { cls: 'part', cellCls: 'pr', c2: esc(l), attr: ' data-rs-r="prepline" data-line="' + esc(l) + '"' });
+    });
+  });
+  return h;
+}
 function rsTableInner(X, days, edit, pv) {
   var m = X.M, st = X.st, puSel = RS.selPU, pus = rsPUs([X]).filter(function (p) { return !puSel || puSel[p]; });
   var h = '<table class="pg" data-rs-block="' + esc(X.g) + '"><tr><th class="l s1">PU</th><th class="l s2"></th><th class="l s3">' + t('rsThDay') + '</th>' + days.map(function (d) { return '<th>' + esc(dw(d)) + '</th>'; }).join('') + '</tr>';
   pus.forEach(function (p) {
     var pv_ = {}, rv = {}, tv = {}; days.forEach(function (d) { pv_[d] = m.prodPu[p + '|' + d] || 0; rv[d] = m.prepPu[p + '|' + d] || 0; tv[d] = pv_[d] + rv[d]; });
-    h += rsRow(esc(t('pgPuSum', [puName(p), t('rsRowProd')])), pv_, days, { cls: 'pusum', attr: ' data-rs-pu="' + esc(p) + '"', c1: esc(puName(p)), l1: 1 }) + rsRow(esc(t('pgPuSum', [puName(p), t('rsRowPrep')])), rv, days, { cls: 'pusum' }) + rsRow(esc(t('pgPuSum', [puName(p), t('rsRowTot')])), tv, days, { cls: 'tot' });
+    var open = !!(RS.exp[X.g + '|' + p] || RS.exp[X.g + '|*']);
+    h += rsRow(esc(t('pgPuSum', [puName(p), t('rsRowProd')])), pv_, days, { cls: 'pusum', attr: ' data-rs-pu="' + esc(p) + '" data-rs-pux="' + esc(X.g + '|' + p) + '" style="cursor:pointer" title="' + esc(t('rsPuxTip')) + '"', c1: (open ? '▾ ' : '▸ ') + esc(puName(p)), l1: 1 }) + rsRow(esc(t('pgPuSum', [puName(p), t('rsRowPrep')])), rv, days, { cls: 'pusum' }) + rsRow(esc(t('pgPuSum', [puName(p), t('rsRowTot')])), tv, days, { cls: 'tot' });
+    if (open) h += rsLineRows(X, p, days);
   });
   var av = {}; days.forEach(function (d) { av[d] = m.avail; });
   h += rsRow(esc(t('rsRowUse')), m.total, days, { cls: 'tot', attr: ' data-rs-r="use"' }) + rsRow(esc(t('rsRowAvail')), av, days, { cls: 'tot', attr: ' data-rs-r="avail"' }) + rsRow(esc(t('rsRowBal')), m.bal, days, { cls: 'tot', attr: ' data-rs-r="bal"', neg: 1 });
@@ -3165,6 +3265,14 @@ function rsTableInner(X, days, edit, pv) {
     var e = st.eff[a.id] || {};
     h += '<tr data-rs-r="act" data-id="' + esc(a.id) + '"><td class="s1"></td><td class="l s2"></td><td class="l s3">' + rsActLabel(a, edit, X.g, st.applied[a.id]) + '</td>' + days.map(function (d) { var v = e[d] || 0; return '<td class="' + (v < 0 ? 'neg' : (v > 0 ? 'ok' : '')) + '">' + rsSign(v) + '</td>'; }).join('') + '</tr>';
   });
+  var areas = rsAreas(X);
+  if (areas.length) {
+    h += '<tr class="part" data-rs-r="areahdr"><td class="s1"></td><td class="l s2"></td><td class="l s3" colspan="1"><b>' + esc(t('rsAreaHdr')) + '</b></td>' + days.map(function () { return '<td></td>'; }).join('') + '</tr>';
+    areas.forEach(function (p) {
+      var v = {}; days.forEach(function (d) { v[d] = rsAreaLeft(X, p.name, d); });
+      h += rsRow('− ' + esc(p.name) + ' <button class="qa" data-rs-area="' + esc(X.g + '|' + p.name) + '" title="' + esc(t('rsAreaTake')) + '">↩ ' + esc(t('rsAreaTake')) + '</button>', v, days, { cls: 'part', attr: ' data-rs-r="area" data-area="' + esc(p.name) + '"' });
+    });
+  }
   if (st.all.length) h += rsRow('<b>' + esc(t('rsRowBalC')) + '</b>', st.balC, days, { cls: 'tot', attr: ' data-rs-r="balC"', neg: 1 }) + rsRow('<b>' + esc(t('rsRowBalA')) + '</b>', st.balA, days, { cls: 'tot', attr: ' data-rs-r="balA"', neg: 1 });
   if (pv && pv.self && pv.self.changed) {                        // the action being typed: its change and the result if confirmed
     var r = pv.self;
@@ -3199,6 +3307,7 @@ function rsPanelHtml(X, edit) {
       lbl('rsWiStyle', '<select data-f="style"' + g + '>' + opt(st, f.style, function (s) { var L = X.M.G.lines[f.line], c = L && L.styles[s] ? Object.keys(L.styles[s]).sort()[0] : ''; return s + (c ? ' (' + d2(c) + ')' : ''); }) + '</select>') +
       lbl('rsDelayNew', '<input data-f="date" type="date"' + g + ' value="' + esc(f.date) + '">');
   } else {
+    if (f.type === 'AREA') h += lbl('rsFArea', '<select data-f="area"' + g + '>' + opt(rsAreas(X).map(function (x) { return x.name; }), f.area, function (n) { var pa = rsAreas(X).filter(function (x) { return x.name === n; })[0]; return n + ' (' + (pa ? pa.qty : 0) + ')'; }) + '</select>');
     h += lbl(f.type === 'OTHER' ? 'rsFQtyOpt' : 'rsFQty', '<input data-f="qty" type="number"' + g + ' style="width:90px" value="' + esc(f.qty) + '">') + lbl('rsFFrom', '<input data-f="from" type="date"' + g + ' value="' + esc(f.from) + '">') + lbl('rsFTo', '<input data-f="to" type="date"' + g + ' value="' + esc(f.to) + '">') +
       lbl('rsFPU', '<select data-f="pu"' + g + '><option value="">' + esc(t('rsFPUany')) + '</option>' + opt(pus, f.pu, puName) + '</select>');
   }
@@ -3212,6 +3321,7 @@ function rsBlock(X, days, edit) {
   var panel = X.s.gap > 0, f = rsForm(X.g); if (panel) rsDefaults(X, f);
   var pv = panel && f.active ? rsPreview(X, f) : null;                         // instant result appears as soon as the panel is used
   var h = '<div data-rs-blk="' + esc(X.g) + '"><h4 style="margin:14px 0 4px">' + esc(X.g) + ' <span class="muted small">' + esc(t('rsRowAvail')) + ' ' + (X.M.avail == null ? '' : X.M.avail) + ' · ' + esc(t('rsThDays')) + ' ' + X.s.n + '/' + X.s.of + ' · ' + esc(t('rsThWorst')) + ' ' + (X.s.gap ? '−' + X.s.gap : '0') + '</span></h4>';
+  h += '<div class="row" style="margin:0 0 4px"><button class="qa" data-rs-ex="' + esc(X.g) + '">' + esc(t(RS.exp[X.g + '|*'] ? 'rsCollapse' : 'rsExpAll')) + '</button><button class="qa" data-rs-xt="' + esc(X.g) + '" style="margin-left:auto">⬇ ' + esc(t('rsExport')) + '</button></div>';
   h += '<div class="tw" data-rs-tbl="' + esc(X.g) + '" style="max-height:60vh">' + rsTableInner(X, days, edit, pv) + '</div>';
   if (panel) h += '<div class="rsp" data-rs-panel="' + esc(X.g) + '">' + rsPanelHtml(X, edit) + '</div>';
   return h + '</div>';
@@ -3249,15 +3359,27 @@ function rsCardData() {
     var mine = conf.filter(function (a) { return a.type === 'DELAY' ? !!X.G0.lines[a.line] : a.group === X.g; });
     var left = X.s2, init = X.s;
     var concl = !init.gap && !mine.length ? t('rsConcNoNeed') : (left.gap > 0 ? t('rsConcMoreLeft', [left.gap]) : (mine.length ? t('rsConcEnough') : t('rsConcMore')));
-    return { g: X.g, init: init, left: left, acts: mine, concl: concl, more: left.gap > 0 || (init.gap > 0 && !mine.length) };
+    return { g: X.g, init: init, left: left, acts: mine, concl: concl, more: left.gap > 0 || (init.gap > 0 && !mine.length), pus: rsPuRows(X, conf, left) };
   });
-  var puMap = {}; rsPUs(M).forEach(function (p) { puMap[p] = { pu: p, acts: [], rel: [] }; });
-  conf.forEach(function (a) { var pu = a.type === 'DELAY' ? ((M.map(function (X) { return X.G0.lines[a.line]; }).filter(Boolean)[0] || {}).pu) : a.pu; if (pu && puMap[pu]) puMap[pu].acts.push(a); });
-  M.forEach(function (X) { if (!X.s.gap) return; var w = X.s.worst; Object.keys(puMap).forEach(function (p) { var n = (X.M.prodPu[p + '|' + w] || 0) + (X.M.prepPu[p + '|' + w] || 0); if (n) puMap[p].rel.push({ g: X.g, n: n, d: w, left: X.s2.gap }); }); });
   var by = {}, last = ''; conf.forEach(function (a) { by[a.by] = 1; if (String(a.at) > last) last = String(a.at); });
-  return { planned: planned.length, conf: conf.length, groups: rowsG, pus: Object.keys(puMap).map(function (k) { return puMap[k]; }), by: Object.keys(by), last: last };
+  return { planned: planned.length, conf: conf.length, groups: rowsG, by: Object.keys(by), last: last };
 }
-function rsActDetail(a) { return a.type === 'DELAY' ? (a.from && a.to ? t('rsActDelayDet', [a.style, a.line, d2(a.from), d2(a.to), a.n]) : t('rsActDelayDet0', [a.style, a.line, a.n])) : (a.qty ? (a.qty > 0 ? '+' : '') + a.qty : '') + (a.from ? ' (' + d2(a.from) + (a.to && a.to !== a.from ? '–' + d2(a.to) : '') + ')' : '') + (a.pu ? ' · ' + a.pu : ''); }
+// shortage by PU inside a machine group: who uses the machines on the worst day (and on every short day), their lines, and the actions that name the PU
+function rsPuRows(X, conf, left) {
+  var w = X.s.worst; if (!w) return [];
+  var days = X.s.days.slice(0, 31), lines = Object.keys(X.M.G.lines), tot = (X.M.total && X.M.total[w]) || 0;
+  return rsPUs([X]).map(function (p) {
+    var use = function (d) { return (X.M.prodPu[p + '|' + d] || 0) + (X.M.prepPu[p + '|' + d] || 0); }, n = use(w);
+    var acts = conf.filter(function (a) { return a.type === 'DELAY' ? (X.G0.lines[a.line] && X.G0.lines[a.line].pu === p) : (a.group === X.g && a.pu === p); });
+    var ls = lines.filter(function (l) { return X.M.G.lines[l].pu === p; }).map(function (l) {
+      var prod = 0, st = ''; Object.keys(X.M.G.lines[l].styles).forEach(function (s) { var q = X.M.G.lines[l].styles[s][w] || 0; if (q) { prod += q; st = s; } });
+      var prep = 0; X.rows.forEach(function (x) { if (x.line === l && x.eff && x.days && x.days.indexOf(w) >= 0) prep += x.eff; });
+      return { l: l, style: st, prod: prod, prep: prep };
+    }).filter(function (r) { return r.prod || r.prep; });
+    return { pu: p, n: n, pct: tot ? Math.round(100 * n / tot) : 0, acts: acts, lines: ls, days: days, series: days.map(use), w: w, more: left.gap > 0 && !acts.length };
+  }).filter(function (r) { return r.n; });
+}
+function rsActDetail(a) { return a.type === 'DELAY' ? (a.from && a.to ? t('rsActDelayDet', [a.style, a.line, d2(a.from), d2(a.to), a.n]) : t('rsActDelayDet0', [a.style, a.line, a.n])) : (a.area ? a.area + ' ' : '') + (a.qty ? (a.qty > 0 ? '+' : '') + a.qty : '') + (a.from ? ' (' + d2(a.from) + (a.to && a.to !== a.from ? '–' + d2(a.to) : '') + ')' : '') + (a.pu ? ' · ' + a.pu : ''); }
 function rsActPill(a) { var k = a.type === 'DELAY' ? 't-info' : (a.type === 'OTHER' ? 't-warn' : 't-ok'); return '<li><span class="tag ' + k + '">' + esc(t('rsAt' + a.type)) + '</span> ' + esc(rsActDetail(a)) + (a.note ? ' <span class="muted small">· ' + esc(a.note) + '</span>' : '') + '</li>'; }
 function rsCardHtml() {
   var D = rsCardData(), h = '<div class="sc-head"><h3 style="margin:0">' + esc(t('rsCardTitle')) + '</h3>';
@@ -3274,21 +3396,96 @@ function rsCardHtml() {
       '<div><small>' + esc(t('rsAfter')) + '</small><big class="' + (r.left.gap ? 'st-bad' : 'st-ok') + '">' + (r.left.gap ? '−' + r.left.gap : '0') + '</big><small>' + (r.left.n ? esc(t('rsDaysShort', [r.left.n, d2(r.left.worst)])) : '') + '</small></div></div>' +
       '<div class="sc-bar" title="' + esc(t('rsKpiDays')) + '"><i style="width:' + pct + '%"></i></div><small class="muted">' + esc(t('rsKpiDays')) + ' ' + r.init.sum + ' → ' + r.left.sum + (r.init.sum ? ' (−' + pct + '%)' : '') + '</small>' +
       (r.acts.length ? '<ul class="sc-acts">' + r.acts.map(rsActPill).join('') + '</ul>' : '<div class="sc-none">' + esc(t('rsCardNoAct')) + '</div>') +
+      rsPuHtml(r) +
       '<div class="sc-concl ' + (r.more ? 'st-bad' : 'st-ok') + '">' + esc(r.concl) + '</div></div>';
   }).join('') + '</div>';
-  h += '<h4 class="sc-h">' + esc(t('rsCardByPU')) + '</h4><div class="sc-grid" data-rs-card="pu">' + D.pus.map(function (x) {
-    var still = x.rel.some(function (r) { return r.left > 0; }), more = !x.acts.length && still, concl = x.acts.length ? t('rsConcActs') : (still ? t('rsConcMore') : t('rsCNoActPU'));
-    return '<div class="sc-card ' + (more ? 'more' : 'ok') + '"><div class="sc-top"><b>' + esc(puName(x.pu)) + '</b><span class="sc-badge ' + (more ? 'more' : 'ok') + '">' + esc(concl) + '</span></div>' +
-      (x.acts.length ? '<ul class="sc-acts">' + x.acts.map(rsActPill).join('') + '</ul>' : '<div class="sc-none">' + esc(t('rsCardNoAct')) + '</div>') +
-      (x.rel.length ? '<div class="small" style="margin-top:6px"><span class="muted">' + esc(t('rsCThRel')) + ':</span> ' + x.rel.map(function (r) { return '<span class="tag ' + (r.left > 0 ? 't-bad' : 't-info') + '">' + esc(r.g + ' ' + r.n + ' · ' + d2(r.d)) + '</span>'; }).join(' ') + '</div>' : '') + '</div>';
-  }).join('') + '</div>';
   return h;
+}
+function rsPuHtml(r) {
+  if (!r.pus.length) return '';
+  var h = '<div class="sc-pus"><div class="small muted" style="margin:8px 0 3px">' + esc(t('rsCardPUs', [d2(r.pus[0].w)])) + '</div><table class="sc-put">';
+  r.pus.forEach(function (x) {
+    var key = r.g + '|' + x.pu, open = !!RS.openPU[key];
+    h += '<tr class="sc-pu' + (open ? ' on' : '') + '" data-rs-pu2="' + esc(key) + '"><td><span class="sc-car">' + (open ? '▾' : '▸') + '</span> <b>' + esc(puName(x.pu)) + '</b></td><td class="n">' + x.n + ' <span class="muted">(' + x.pct + '%)</span></td><td>' +
+      (x.acts.length ? '<span class="tag t-ok">' + esc(t('rsConcActs')) + '</span>' : (x.more ? '<span class="tag t-bad">' + esc(t('rsConcMore')) + '</span>' : '<span class="muted">' + esc(t('rsCNoActPU')) + '</span>')) + '</td></tr>';
+    if (open) h += '<tr class="sc-pud"><td colspan="3">' + rsPuDetail(r, x) + '</td></tr>';
+  });
+  return h + '</table></div>';
+}
+function rsPuDetail(r, x) {
+  var h = '<div class="small"><b>' + esc(t('rsPuLines', [d2(x.w)])) + '</b></div><table class="sc-put2"><tr><th class="l">' + esc(t('rsPuLine')) + '</th><th class="l">' + esc(t('thStyleLbl')) + '</th><th class="n">' + esc(t('rsRowProd')) + '</th><th class="n">' + esc(t('rsRowPrep')) + '</th></tr>' +
+    x.lines.map(function (l) { return '<tr><td>' + esc(l.l) + '</td><td>' + esc(l.style) + '</td><td class="n">' + l.prod + '</td><td class="n">' + l.prep + '</td></tr>'; }).join('') + '</table>';
+  h += '<div class="small" style="margin-top:6px"><b>' + esc(t('rsPuDays')) + '</b></div><div class="small">' + x.days.map(function (d, i) { return '<span class="tag t-info">' + esc(d2(d)) + ': ' + x.series[i] + '</span>'; }).join(' ') + '</div>';
+  h += x.acts.length ? '<ul class="sc-acts" style="margin-top:6px">' + x.acts.map(rsActPill).join('') + '</ul>' : '<div class="sc-none">' + esc(t('rsCardNoAct')) + '</div>';
+  return h;
+}
+// Excel of one machine group's table (ExcelJS: formatted, with live formulas): the whole plan, all PUs with lines and styles (collapsible), areas, actions, balances
+async function rsExportTable(g) {
+  var X = RS.cache.filter(function (x) { return x.g === g; })[0]; if (!X) return;
+  var days = X.M.days, st = X.st, pus = rsPUs([X]), G = X.M.G, n = days.length, FC = 4;
+  var wb = new ExcelJS.Workbook(), ws = wb.addWorksheet(String(g).replace(/[\\\/?*\[\]:]/g, '_').slice(0, 28), { views: [{ state: 'frozen', xSplit: 3, ySplit: 3 }], pageSetup: { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0 } });
+  var fill = function (argb) { return { type: 'pattern', pattern: 'solid', fgColor: { argb: argb } }; }, thin = { style: 'thin', color: { argb: 'FFBFC5D2' } };
+  var L = function (i) { return ws.getColumn(FC + i).letter; }, lastL = L(n - 1);
+  ws.mergeCells(1, 1, 1, 3); ws.getCell(1, 1).value = g + ' · ' + t('rsRowAvail') + ' ' + (X.M.avail == null ? '' : X.M.avail) + ' · ' + t('rsThDays') + ' ' + X.s.n + '/' + X.s.of + ' · ' + t('rsThWorst') + ' ' + (X.s.gap ? '-' + X.s.gap : '0');
+  ws.getCell(1, 1).font = { bold: true, size: 13 };
+  var hr = ws.getRow(3); hr.values = ['PU', t('rsPuLine'), t('rsThDay')].concat(days.map(function (d) { return dw(d); }));
+  hr.eachCell(function (c) { c.fill = fill('FF1F3A5F'); c.font = { bold: true, color: { argb: 'FFFFFFFF' } }; c.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true }; }); hr.height = 30;
+  var put = function (r, i, f, res) { var c = ws.getCell(r, FC + i); c.value = f == null ? res : { formula: f, result: res }; c.alignment = { horizontal: 'center' }; return c; };
+  var rowAt = function () { return ws.rowCount + 1; }, label = function (r, a, b, c3, o) { var row = ws.getRow(r); row.getCell(1).value = a || ''; row.getCell(2).value = b || ''; row.getCell(3).value = c3 || ''; if (o && o.bold) row.font = { bold: true }; return row; };
+  var totRows = [];
+  pus.forEach(function (p) {
+    var styles = [], preps = [];
+    Object.keys(G.lines).filter(function (l) { return G.lines[l].pu === p; }).sort().forEach(function (l) {
+      var Ln = G.lines[l], first = function (x) { return Object.keys(Ln.styles[x]).sort()[0] || ''; };
+      Object.keys(Ln.styles).sort(function (a, b) { return first(a).localeCompare(first(b)); }).forEach(function (x) { styles.push({ l: l, lab: x + ' (' + t('rsLoadsOn', [d2(first(x))]) + ')', v: days.map(function (d) { return Ln.styles[x][d] || 0; }) }); });
+      X.rows.filter(function (x) { return x.line === l && x.eff; }).forEach(function (x) { preps.push({ l: l, lab: '↳ ' + t('rsPrepOf', [x.to]), v: days.map(function (d) { return (x.days || []).indexOf(d) >= 0 ? x.eff : 0; }) }); });
+    });
+    var r0 = rowAt(), s1 = r0 + 3, s2 = s1 + styles.length - 1, p1 = s2 + 1, p2 = p1 + preps.length - 1;
+    label(r0, puName(p), '', t('pgPuSum', [puName(p), t('rsRowProd')]), { bold: true }); label(r0 + 1, '', '', t('pgPuSum', [puName(p), t('rsRowPrep')]), { bold: true }); label(r0 + 2, '', '', t('pgPuSum', [puName(p), t('rsRowTot')]), { bold: true });
+    days.forEach(function (d, i) {
+      var pr = X.M.prodPu[p + '|' + d] || 0, pp = X.M.prepPu[p + '|' + d] || 0;
+      put(r0, i, styles.length ? 'SUM(' + L(i) + s1 + ':' + L(i) + s2 + ')' : null, pr); put(r0 + 1, i, preps.length ? 'SUM(' + L(i) + p1 + ':' + L(i) + p2 + ')' : null, pp); put(r0 + 2, i, L(i) + r0 + '+' + L(i) + (r0 + 1), pr + pp);
+    });
+    for (var k = 0; k < 2; k++) ws.getRow(r0 + k).eachCell({ includeEmpty: true }, function (c) { c.fill = fill('FFEAF2FF'); });
+    ws.getRow(r0 + 2).eachCell({ includeEmpty: true }, function (c) { c.border = { top: thin }; c.font = { bold: true }; });
+    totRows.push(r0 + 2);
+    styles.concat(preps).forEach(function (o, j) { var r = r0 + 3 + j, row = label(r, '', o.l, o.lab); row.outlineLevel = 1; row.font = { color: { argb: 'FF55606E' } }; o.v.forEach(function (v, i) { put(r, i, null, v || null); }); });
+  });
+  var rU = rowAt(), rA = rU + 1, rB = rU + 2;
+  label(rU, '', '', t('rsRowUse'), { bold: true }); label(rA, '', '', t('rsRowAvail'), { bold: true }); label(rB, '', '', t('rsRowBal'), { bold: true });
+  days.forEach(function (d, i) {
+    put(rU, i, totRows.map(function (r) { return L(i) + r; }).join('+') || null, X.M.total[d] || 0); put(rA, i, null, X.M.avail == null ? '' : X.M.avail);
+    put(rB, i, X.M.avail == null ? null : L(i) + rA + '-' + L(i) + rU, X.M.bal[d]);
+  });
+  [rU, rA, rB].forEach(function (r) { ws.getRow(r).eachCell({ includeEmpty: true }, function (c) { c.font = { bold: true }; c.fill = fill('FFF3F4F6'); c.border = { top: r === rU ? thin : undefined }; }); });
+  var neg = [{ type: 'cellIs', operator: 'lessThan', formulae: [0], style: { fill: { type: 'pattern', pattern: 'solid', bgColor: { argb: 'FFFDE2E2' } }, font: { bold: true, color: { argb: 'FFB91C1C' } } } }];
+  ws.addConditionalFormatting({ ref: L(0) + rB + ':' + lastL + rB, rules: neg });
+  var areas = rsAreas(X);
+  if (areas.length) {
+    var rh = rowAt(); label(rh, '', '', t('rsAreaHdr'), { bold: true }); ws.getRow(rh).font = { bold: true, italic: true, color: { argb: 'FF6B7280' } };
+    areas.forEach(function (pa) { var r = rowAt(); label(r, '', '', '− ' + pa.name); ws.getRow(r).font = { color: { argb: 'FF6B7280' } }; days.forEach(function (d, i) { put(r, i, null, rsAreaLeft(X, pa.name, d)); }); });
+  }
+  var acts = RS.actions.filter(function (a) { return a.status !== 'CANCELLED' && (a.type === 'DELAY' ? !!X.G0.lines[a.line] : a.group === g); });
+  if (acts.length) {
+    var a1 = rowAt(), a2 = a1 + acts.length - 1;
+    acts.forEach(function (a, j) { var e = st.eff[a.id] || {}, ap = st.applied[a.id], r = a1 + j; label(r, '', ap ? t('rsApplied') : t('rsSt' + a.status), rsActText(a)); days.forEach(function (d, i) { put(r, i, null, ap ? null : (e[d] || null)); }); });
+    var rC = a2 + 1, rP = a2 + 2, sc = t('rsStCONFIRMED').replace(/"/g, '""');
+    label(rC, '', '', t('rsRowBalC'), { bold: true }); label(rP, '', '', t('rsRowBalA'), { bold: true });
+    days.forEach(function (d, i) { var c = L(i);
+      put(rC, i, c + rB + '+SUMIF($B$' + a1 + ':$B$' + a2 + ',"' + sc + '",' + c + '$' + a1 + ':' + c + '$' + a2 + ')', st.balC[d]); put(rP, i, c + rB + '+SUM(' + c + '$' + a1 + ':' + c + '$' + a2 + ')', st.balA[d]); });
+    [rC, rP].forEach(function (r) { ws.getRow(r).eachCell({ includeEmpty: true }, function (c) { c.font = { bold: true }; c.fill = fill('FFF3F4F6'); }); ws.addConditionalFormatting({ ref: L(0) + r + ':' + lastL + r, rules: neg }); });
+  }
+  ws.getColumn(1).width = 12; ws.getColumn(2).width = 14; ws.getColumn(3).width = 52; days.forEach(function (d, i) { ws.getColumn(FC + i).width = 8; });
+  ws.properties.outlineProperties = { summaryBelow: false };
+  var buf = await wb.xlsx.writeBuffer(), a = document.createElement('a'), d0 = new Date(), p2 = function (x) { return String(x).padStart(2, '0'); };
+  a.href = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+  a.download = 'SHORTAGE_' + g + '_' + d0.getFullYear() + p2(d0.getMonth() + 1) + p2(d0.getDate()) + '.xlsx'; document.body.appendChild(a); a.click(); a.remove();
 }
 function rsExport() {
   var D = rsCardData(), a1 = [[t('rsCardTitle')], [], [t('rsCardByG')], [t('rsThGroup'), t('rsCThInit'), t('rsCThActs'), t('rsCThAfter'), t('rsCThConc')]], g = function (s) { return s.gap > 0 ? '-' + s.gap + ' (' + d2(s.worst) + ')' : t('rsEnough'); };
   D.groups.forEach(function (r) { a1.push([r.g, g(r.init), r.acts.map(rsActText).join('; '), g(r.left), r.concl]); });
-  a1.push([], [t('rsCardByPU')], [t('rsCThPU'), t('rsCThActs'), t('rsCThRel'), t('rsCThConc')]);
-  D.pus.forEach(function (x) { var still = x.rel.some(function (r) { return r.left > 0; }); a1.push([puName(x.pu), x.acts.map(rsActText).join('; '), x.rel.map(function (r) { return r.g + ' ' + r.n + ' (' + d2(r.d) + ')'; }).join(' · '), x.acts.length ? t('rsConcActs') : (still ? t('rsConcMore') : t('rsCNoActPU'))]); });
+  a1.push([], [t('rsCardByPU')], [t('rsThGroup'), t('rsCThPU'), t('rsPuUse'), t('rsCThActs'), t('rsCThConc')]);
+  D.groups.forEach(function (r) { r.pus.forEach(function (x) { a1.push([r.g, puName(x.pu), x.n + ' (' + x.pct + '%, ' + d2(x.w) + ')', x.acts.map(rsActText).join('; '), x.acts.length ? t('rsConcActs') : (x.more ? t('rsConcMore') : t('rsCNoActPU'))]); }); });
   var wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(a1), 'ACTIONS');
   var n = new Date(), p = function (x) { return String(x).padStart(2, '0'); }; XLSX.writeFile(wb, 'SHORTAGE_ACTIONS_' + n.getFullYear() + p(n.getMonth() + 1) + p(n.getDate()) + '.xlsx');
 }
@@ -3309,7 +3506,7 @@ function rsLive(cid, edit, g) {                // instant result: only the group
 function rsInput(e, cid, edit, commit) {
   var el = e.target, f = el.dataset.f, g = el.dataset.g; if (!f || !g) return;
   var F = rsForm(g); F[f] = el.value; F.active = true; if (['qty', 'from', 'to'].indexOf(f) >= 0) F.touched = true;
-  if (commit && (f === 'type' || f === 'line' || f === 'style')) { if (f === 'line') { F.style = ''; F.date = ''; } if (f === 'style') F.date = ''; if (f === 'type') { F.date = ''; } rsPaint(cid, edit); return; }
+  if (commit && (f === 'type' || f === 'line' || f === 'style' || f === 'area')) { if (f === 'area') F.touched = false; if (f === 'line') { F.style = ''; F.date = ''; } if (f === 'style') F.date = ''; if (f === 'type') { F.date = ''; } rsPaint(cid, edit); return; }
   rsLive(cid, edit, g);
 }
 function rsRepaint() { if ($('rsC') && !$('rsC').closest('[data-pane]').hidden) rsPaint('rsC', true); if ($('rsS') && !$('supView').hidden) rsPaint('rsS', false); }
@@ -3324,9 +3521,14 @@ function rsToggle(sel, k, all) {          // nothing filtered yet: the click sel
   return Object.keys(m).length && Object.keys(m).length < all.length ? m : null;
 }
 async function rsClick(e, cid, edit) {
-  var b = e.target.closest('[data-rs-g],[data-rs-refresh],[data-rs-edit],[data-rs-conf],[data-rs-cancel],[data-rs-save],[data-rs-canceledit],[data-rs-cg],[data-rs-cgall],[data-rs-cpu],[data-rs-cpuall],[data-rs-view],[data-rs-export]'); if (!b) return;
+  var b = e.target.closest('[data-rs-g],[data-rs-refresh],[data-rs-edit],[data-rs-conf],[data-rs-cancel],[data-rs-save],[data-rs-canceledit],[data-rs-cg],[data-rs-cgall],[data-rs-cpu],[data-rs-cpuall],[data-rs-view],[data-rs-export],[data-rs-pu2],[data-rs-area],[data-rs-pux],[data-rs-ex],[data-rs-xt]'); if (!b) return;
   var c = $(cid), d = b.dataset, byId = function (id) { return RS.actions.filter(function (a) { return a.id === id; })[0]; };
   try {
+    if (d.rsPux != null) { RS.exp[d.rsPux] = !RS.exp[d.rsPux]; rsLive(cid, edit, d.rsPux.split('|')[0]); return; }
+    if (d.rsEx != null) { var k0 = d.rsEx + '|*'; RS.exp[k0] = !RS.exp[k0]; rsPaint(cid, edit); return; }
+    if (d.rsXt != null) { await rsExportTable(d.rsXt); return; }
+    if (d.rsArea != null) { var ak = d.rsArea.split('|'), F2 = rsForm(ak[0]); F2.type = 'AREA'; F2.area = ak.slice(1).join('|'); F2.touched = false; F2.active = true; rsPaint(cid, edit); var pn2 = c.querySelector('[data-rs-panel="' + ak[0] + '"]'); if (pn2) pn2.scrollIntoView({ block: 'center' }); return; }
+    if (d.rsPu2 != null) { RS.openPU[d.rsPu2] = !RS.openPU[d.rsPu2]; var cs = $(cid + 'S'); if (cs) cs.innerHTML = rsCardHtml(); return; }
     if (d.rsG != null) { RS.selG = RS.cache.length > 1 ? (function () { var o = {}; o[d.rsG] = true; return o; })() : null; rsPaint(cid, edit); return; }
     if (d.rsCg != null) { RS.selG = rsToggle(RS.selG, d.rsCg, RS.cache.map(function (x) { return x.g; })); rsPaint(cid, edit); return; }
     if (d.rsCgall != null) { RS.selG = null; rsPaint(cid, edit); return; }
@@ -3339,7 +3541,7 @@ async function rsClick(e, cid, edit) {
     var user = $('uName').value.trim();
     if (d.rsEdit != null) {
       var a0 = byId(d.rsEdit); if (!a0) return; var g0 = d.rsg || a0.group; RS.edit = a0.id; RS.editG = g0;
-      RS.forms[g0] = { type: a0.type, qty: a0.qty == null ? '' : a0.qty, from: a0.type === 'DELAY' ? '' : (a0.from || ''), to: a0.type === 'DELAY' ? '' : (a0.to || ''), pu: a0.pu || '', line: a0.line || '', style: a0.style || '', date: a0.type === 'DELAY' ? (a0.to || '') : '', status: a0.status === 'CANCELLED' ? 'PLANNED' : a0.status, note: a0.note || '', touched: true, active: true };
+      RS.forms[g0] = { type: a0.type, qty: a0.qty == null ? '' : a0.qty, from: a0.type === 'DELAY' ? '' : (a0.from || ''), to: a0.type === 'DELAY' ? '' : (a0.to || ''), pu: a0.pu || '', line: a0.line || '', style: a0.style || '', date: a0.type === 'DELAY' ? (a0.to || '') : '', status: a0.status === 'CANCELLED' ? 'PLANNED' : a0.status, note: a0.note || '', area: a0.area || '', touched: true, active: true };
       rsPaint(cid, edit); var pn = c.querySelector('[data-rs-panel="' + g0 + '"]'); if (pn) pn.scrollIntoView({ block: 'center' }); return;
     }
     if (d.rsCanceledit != null) { RS.edit = null; RS.editG = ''; RS.forms[d.g] = null; rsPaint(cid, edit); return; }
@@ -3348,11 +3550,12 @@ async function rsClick(e, cid, edit) {
       await rsWrite(Object.assign({}, a, { status: d.rsConf != null ? 'CONFIRMED' : 'CANCELLED', by: user, at: new Date().toISOString() })); rsPaint(cid, edit); paintTabs(); return;
     }
     if (d.rsSave != null) {
-      var g = d.g, X = RS.cache.filter(function (x) { return x.g === g; })[0], f = rsForm(g), err = c.querySelector('[data-rs-err="' + g + '"]'), ty = f.type, qty = f.qty === '' ? 0 : +f.qty, isDelay = ty === 'DELAY', needQty = !isDelay && ty !== 'OTHER', inf = isDelay ? rsDelayInfo(X, f) : null;
+      var g = d.g, X = RS.cache.filter(function (x) { return x.g === g; })[0], f = rsForm(g), err = c.querySelector('[data-rs-err="' + g + '"]'), ty = f.type, qty = f.qty === '' ? 0 : +f.qty, isDelay = ty === 'DELAY', needQty = !isDelay && ty !== 'OTHER', inf = isDelay ? rsDelayInfo(X, f) : null, pa = ty === 'AREA' ? rsAreas(X).filter(function (x) { return x.name === f.area; })[0] : null;
       var bad = isDelay ? (!inf ? t('rsErrDelay') : inf.out ? t('rsDelayOut') : (!inf.to || inf.n <= 0) ? t('rsDelayLater') : '') : ((needQty && !(qty > 0)) ? t('rsErrQty') : (qty && (!f.from || !f.to || f.from > f.to)) ? t('rsErrDates') : (ty === 'OTHER' && !qty && !String(f.note).trim()) ? t('rsErrNote') : '');
+      if (!bad && ty === 'AREA' && (!pa || qty > pa.qty)) bad = t('rsErrArea');
       if (bad) { err.textContent = bad; return; }
       if (!user) { alert(t('lcNeedName')); return; }
-      var rec = { id: RS.edit || (tStamp() + '-' + Math.random().toString(36).slice(2, 6)), type: ty, group: isDelay ? '*' : g, qty: isDelay ? null : (qty || null), from: isDelay ? inf.cur : f.from, to: isDelay ? inf.to : f.to, pu: isDelay ? '' : f.pu, line: isDelay ? f.line : '', style: isDelay ? f.style : '', n: isDelay ? inf.n : null, status: f.status, note: String(f.note).trim(), by: user, at: new Date().toISOString() };
+      var rec = { id: RS.edit || (tStamp() + '-' + Math.random().toString(36).slice(2, 6)), type: ty, group: isDelay ? '*' : g, area: ty === 'AREA' ? f.area : '', qty: isDelay ? null : (qty || null), from: isDelay ? inf.cur : f.from, to: isDelay ? inf.to : f.to, pu: isDelay ? '' : f.pu, line: isDelay ? f.line : '', style: isDelay ? f.style : '', n: isDelay ? inf.n : null, status: f.status, note: String(f.note).trim(), by: user, at: new Date().toISOString() };
       await rsWrite(rec); RS.edit = null; RS.editG = ''; RS.forms[g] = null; rsPaint(cid, edit); paintTabs();
     }
   } catch (er) { alert(er.message || String(er)); }
@@ -3369,8 +3572,20 @@ async function supUse(d) {
 }
 $('sConnect').onclick = async function () { try { await supUse(await chooseDir('tdata', 'lcdata', 'read')); paintSupReuse(); } catch (e) { if (e.name !== 'AbortError') { $('sInfo').className = 'small st-bad'; $('sInfo').textContent = e.message; } } };
 $('sReuse').onclick = async function () { try { var d = await reuseDir('tdata', 'read'); if (d) await supUse(d); else $('sInfo').textContent = t('tReuseNone'); } catch (e) { $('sInfo').textContent = e.message; } };
-async function paintSupReuse() { var d = await KV.get('tdata'); $('sReuse').hidden = !d; if (d) $('sReuse').textContent = t('tReuseBtn', [d.name]); }
+async function paintSupReuse() { var d = await kvDir('tdata'); $('sReuse').hidden = !d; if (d) $('sReuse').textContent = t('tReuseBtn', [d.name]); }
 paintSupReuse();
+// IE Tech / Supervisor: connect the remembered folders without a click when the browser still allows it
+window.quietRole = async function () {
+  try {
+    if (ROLE === 'tech') {
+      var d = await kvDir('tdata'), l = await kvDir('tlay');
+      if (d && !TS.dir && (await d.queryPermission({ mode: 'readwrite' })) === 'granted') await useDataDir(d);
+      if (l && !TS.lay && (await l.queryPermission({ mode: 'read' })) === 'granted') await useLayDir(l);
+    } else if (ROLE === 'sup') {
+      var s = await kvDir('tdata'); if (s && !RS.root && (await s.queryPermission({ mode: 'read' })) === 'granted') await supUse(s);
+    }
+  } catch (e) { }
+};
 window.supRender = function () { if (RS.root && !$('supView').hidden) rsPaint('rsS', false); else if (!RS.root) $('rsS').innerHTML = '<div class="empty">' + esc(t('rsNeedConn')) + '</div>'; };
 </script>
 <script>// ===================== CLOSE REPORT + ACTIVITY (IE Báo cáo máy) =====================
@@ -3636,7 +3851,62 @@ var _setRole = setRole;
 setRole = function (r) { _setRole(r); $('mainTabs').hidden = r === 'tech' || r === 'sup'; if (r !== 'tech' && r !== 'sup') setTab(TAB); };
 setRole(ROLE);
 
-if (window.paintRemember) paintRemember();
+if (window.paintRemember) paintRemember().then(function () { return reconnect(false); });
+</script>
+<script>// ===================== RESIZABLE TABLE COLUMNS =====================
+// Drag the right edge of any column header to change the width; the text of that table then wraps inside the cells.
+// Widths are remembered per table (and column) while the page is open, also after the table is redrawn.
+var RZ = { w: {}, drag: null };
+function rzKey(tb) {
+  var id = tb.id, p = tb.parentElement;
+  while (!id && p) { id = p.id; p = p.parentElement; }
+  var all = id ? [].slice.call(document.querySelectorAll('#' + id + ' table, table#' + id)) : [];
+  return (id || 'page') + '#' + Math.max(0, all.indexOf(tb));
+}
+function rzHeadRow(tb) { return tb.querySelector('tr:has(th)') || null; }
+function rzApply(tb) {
+  var row = rzHeadRow(tb); if (!row) return;
+  var key = rzKey(tb), ws = RZ.w[key]; if (!ws) return;
+  var ths = [].slice.call(row.children);
+  var set = false; ths.forEach(function (th, i) { if (ws[i]) { th.style.width = th.style.minWidth = th.style.maxWidth = ws[i] + 'px'; set = true; } });
+  if (set) { tb.classList.add('rzw'); tb.style.tableLayout = 'fixed'; tb.style.width = ths.reduce(function (s, th, i) { return s + (ws[i] || th.offsetWidth); }, 0) + 'px'; }
+}
+function rzDecorate(tb) {
+  if (tb.dataset.rz || tb.closest('[data-norz]')) return;
+  var row = rzHeadRow(tb); if (!row) return;
+  tb.dataset.rz = '1';
+  [].forEach.call(row.children, function (th, i) {
+    if (th.tagName !== 'TH') return;
+    var h = document.createElement('span'); h.className = 'rzh'; h.title = t('rzHint'); h.dataset.i = i; th.appendChild(h);
+  });
+  rzApply(tb);
+}
+function rzScan() { [].forEach.call(document.querySelectorAll('table'), rzDecorate); }
+document.addEventListener('mousedown', function (e) {
+  var h = e.target.closest && e.target.closest('.rzh'); if (!h) return;
+  var tb = h.closest('table'), row = rzHeadRow(tb), ths = [].slice.call(row.children), key = rzKey(tb);
+  var ws = RZ.w[key] = RZ.w[key] || {};
+  ths.forEach(function (th, i) { if (!ws[i]) ws[i] = th.offsetWidth; });          // freeze all columns at their present width, then change only this one
+  tb.classList.add('rzw'); tb.style.tableLayout = 'fixed';
+  ths.forEach(function (th, i) { th.style.width = th.style.minWidth = th.style.maxWidth = ws[i] + 'px'; });
+  RZ.drag = { tb: tb, ths: ths, key: key, i: +h.dataset.i, x: e.clientX, w0: ws[+h.dataset.i] };
+  document.body.classList.add('rzing'); e.preventDefault(); e.stopPropagation();
+}, true);
+document.addEventListener('mousemove', function (e) {
+  var d = RZ.drag; if (!d) return;
+  var w = Math.max(28, d.w0 + e.clientX - d.x), ws = RZ.w[d.key]; ws[d.i] = w;
+  var th = d.ths[d.i]; th.style.width = th.style.minWidth = th.style.maxWidth = w + 'px';
+  d.tb.style.width = d.ths.reduce(function (s, x, i) { return s + (ws[i] || x.offsetWidth); }, 0) + 'px';
+});
+document.addEventListener('mouseup', function () { if (RZ.drag) { RZ.drag = null; document.body.classList.remove('rzing'); } });
+document.addEventListener('dblclick', function (e) {                                  // double-click the edge: back to automatic width for this table
+  var h = e.target.closest && e.target.closest('.rzh'); if (!h) return;
+  var tb = h.closest('table'); delete RZ.w[rzKey(tb)];
+  tb.classList.remove('rzw'); tb.style.tableLayout = ''; tb.style.width = ''; [].forEach.call(tb.querySelectorAll('th'), function (th) { th.style.width = th.style.minWidth = th.style.maxWidth = ''; });
+});
+var rzTimer = 0;
+new MutationObserver(function () { if (rzTimer) return; rzTimer = setTimeout(function () { rzTimer = 0; rzScan(); }, 30); }).observe(document.body, { childList: true, subtree: true });
+rzScan();
 </script>
 </body>
 </html>
