@@ -281,26 +281,67 @@ function rsPuDetail(r, x) {
   h += x.acts.length ? '<ul class="sc-acts" style="margin-top:6px">' + x.acts.map(rsActPill).join('') + '</ul>' : '<div class="sc-none">' + esc(t('rsCardNoAct')) + '</div>';
   return h;
 }
-// Excel of one machine group's table: the whole plan, all PUs with their lines and styles, areas, actions and the balances
-function rsExportTable(g) {
+// Excel of one machine group's table (ExcelJS: formatted, with live formulas): the whole plan, all PUs with lines and styles (collapsible), areas, actions, balances
+async function rsExportTable(g) {
   var X = RS.cache.filter(function (x) { return x.g === g; })[0]; if (!X) return;
-  var days = X.M.days, st = X.st, pus = rsPUs([X]), cell = function (v) { return v === '' || v == null ? '' : v; }, A = [[g + ' · ' + t('rsRowAvail') + ' ' + (X.M.avail == null ? '' : X.M.avail)], ['PU', t('rsPuLine'), t('rsThDay')].concat(days.map(function (d) { return dw(d); }))];
+  var days = X.M.days, st = X.st, pus = rsPUs([X]), G = X.M.G, n = days.length, FC = 4;
+  var wb = new ExcelJS.Workbook(), ws = wb.addWorksheet(String(g).replace(/[\\\/?*\[\]:]/g, '_').slice(0, 28), { views: [{ state: 'frozen', xSplit: 3, ySplit: 3 }], pageSetup: { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0 } });
+  var fill = function (argb) { return { type: 'pattern', pattern: 'solid', fgColor: { argb: argb } }; }, thin = { style: 'thin', color: { argb: 'FFBFC5D2' } };
+  var L = function (i) { return ws.getColumn(FC + i).letter; }, lastL = L(n - 1);
+  ws.mergeCells(1, 1, 1, 3); ws.getCell(1, 1).value = g + ' · ' + t('rsRowAvail') + ' ' + (X.M.avail == null ? '' : X.M.avail) + ' · ' + t('rsThDays') + ' ' + X.s.n + '/' + X.s.of + ' · ' + t('rsThWorst') + ' ' + (X.s.gap ? '-' + X.s.gap : '0');
+  ws.getCell(1, 1).font = { bold: true, size: 13 };
+  var hr = ws.getRow(3); hr.values = ['PU', t('rsPuLine'), t('rsThDay')].concat(days.map(function (d) { return dw(d); }));
+  hr.eachCell(function (c) { c.fill = fill('FF1F3A5F'); c.font = { bold: true, color: { argb: 'FFFFFFFF' } }; c.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true }; }); hr.height = 30;
+  var put = function (r, i, f, res) { var c = ws.getCell(r, FC + i); c.value = f == null ? res : { formula: f, result: res }; c.alignment = { horizontal: 'center' }; return c; };
+  var rowAt = function () { return ws.rowCount + 1; }, label = function (r, a, b, c3, o) { var row = ws.getRow(r); row.getCell(1).value = a || ''; row.getCell(2).value = b || ''; row.getCell(3).value = c3 || ''; if (o && o.bold) row.font = { bold: true }; return row; };
+  var totRows = [];
   pus.forEach(function (p) {
-    var pr = days.map(function (d) { return X.M.prodPu[p + '|' + d] || 0; }), pp = days.map(function (d) { return X.M.prepPu[p + '|' + d] || 0; });
-    A.push([puName(p), '', t('pgPuSum', [puName(p), t('rsRowProd')])].concat(pr), ['', '', t('pgPuSum', [puName(p), t('rsRowPrep')])].concat(pp), ['', '', t('pgPuSum', [puName(p), t('rsRowTot')])].concat(pr.map(function (v, i) { return v + pp[i]; })));
-    Object.keys(X.M.G.lines).filter(function (l) { return X.M.G.lines[l].pu === p; }).sort().forEach(function (l) {
-      var L = X.M.G.lines[l], first = function (s) { return Object.keys(L.styles[s]).sort()[0] || ''; };
-      Object.keys(L.styles).sort(function (a, b) { return first(a).localeCompare(first(b)); }).forEach(function (s) { A.push(['', l, s + ' (' + t('rsLoadsOn', [d2(first(s))]) + ')'].concat(days.map(function (d) { return cell(L.styles[s][d] || ''); }))); });
-      X.rows.filter(function (x) { return x.line === l && x.eff; }).forEach(function (x) { A.push(['', l, t('rsPrepOf', [x.to])].concat(days.map(function (d) { return (x.days || []).indexOf(d) >= 0 ? x.eff : ''; }))); });
+    var styles = [], preps = [];
+    Object.keys(G.lines).filter(function (l) { return G.lines[l].pu === p; }).sort().forEach(function (l) {
+      var Ln = G.lines[l], first = function (x) { return Object.keys(Ln.styles[x]).sort()[0] || ''; };
+      Object.keys(Ln.styles).sort(function (a, b) { return first(a).localeCompare(first(b)); }).forEach(function (x) { styles.push({ l: l, lab: x + ' (' + t('rsLoadsOn', [d2(first(x))]) + ')', v: days.map(function (d) { return Ln.styles[x][d] || 0; }) }); });
+      X.rows.filter(function (x) { return x.line === l && x.eff; }).forEach(function (x) { preps.push({ l: l, lab: '↳ ' + t('rsPrepOf', [x.to]), v: days.map(function (d) { return (x.days || []).indexOf(d) >= 0 ? x.eff : 0; }) }); });
     });
+    var r0 = rowAt(), s1 = r0 + 3, s2 = s1 + styles.length - 1, p1 = s2 + 1, p2 = p1 + preps.length - 1;
+    label(r0, puName(p), '', t('pgPuSum', [puName(p), t('rsRowProd')]), { bold: true }); label(r0 + 1, '', '', t('pgPuSum', [puName(p), t('rsRowPrep')]), { bold: true }); label(r0 + 2, '', '', t('pgPuSum', [puName(p), t('rsRowTot')]), { bold: true });
+    days.forEach(function (d, i) {
+      var pr = X.M.prodPu[p + '|' + d] || 0, pp = X.M.prepPu[p + '|' + d] || 0;
+      put(r0, i, styles.length ? 'SUM(' + L(i) + s1 + ':' + L(i) + s2 + ')' : null, pr); put(r0 + 1, i, preps.length ? 'SUM(' + L(i) + p1 + ':' + L(i) + p2 + ')' : null, pp); put(r0 + 2, i, L(i) + r0 + '+' + L(i) + (r0 + 1), pr + pp);
+    });
+    for (var k = 0; k < 2; k++) ws.getRow(r0 + k).eachCell({ includeEmpty: true }, function (c) { c.fill = fill('FFEAF2FF'); });
+    ws.getRow(r0 + 2).eachCell({ includeEmpty: true }, function (c) { c.border = { top: thin }; c.font = { bold: true }; });
+    totRows.push(r0 + 2);
+    styles.concat(preps).forEach(function (o, j) { var r = r0 + 3 + j, row = label(r, '', o.l, o.lab); row.outlineLevel = 1; row.font = { color: { argb: 'FF55606E' } }; o.v.forEach(function (v, i) { put(r, i, null, v || null); }); });
   });
-  A.push(['', '', t('rsRowUse')].concat(days.map(function (d) { return X.M.total[d]; })), ['', '', t('rsRowAvail')].concat(days.map(function () { return X.M.avail; })), ['', '', t('rsRowBal')].concat(days.map(function (d) { return X.M.bal[d]; })));
-  rsAreas(X).forEach(function (p) { A.push(['', '', '− ' + p.name].concat(days.map(function (d) { return rsAreaLeft(X, p.name, d); }))); });
-  RS.actions.filter(function (a) { return a.status !== 'CANCELLED' && (a.type === 'DELAY' ? !!X.G0.lines[a.line] : a.group === g); }).forEach(function (a) { var e = st.eff[a.id] || {}; A.push(['', '', rsActText(a) + ' · ' + t('rsSt' + a.status)].concat(days.map(function (d) { return e[d] || ''; }))); });
-  if (st.all.length) A.push(['', '', t('rsRowBalC')].concat(days.map(function (d) { return st.balC[d]; })), ['', '', t('rsRowBalA')].concat(days.map(function (d) { return st.balA[d]; })));
-  var wb = XLSX.utils.book_new(), ws = XLSX.utils.aoa_to_sheet(A); ws['!cols'] = [{ wch: 10 }, { wch: 8 }, { wch: 44 }].concat(days.map(function () { return { wch: 7 }; }));
-  XLSX.utils.book_append_sheet(wb, ws, String(g).slice(0, 28)); var n = new Date(), p2 = function (x) { return String(x).padStart(2, '0'); };
-  XLSX.writeFile(wb, 'SHORTAGE_' + g + '_' + n.getFullYear() + p2(n.getMonth() + 1) + p2(n.getDate()) + '.xlsx');
+  var rU = rowAt(), rA = rU + 1, rB = rU + 2;
+  label(rU, '', '', t('rsRowUse'), { bold: true }); label(rA, '', '', t('rsRowAvail'), { bold: true }); label(rB, '', '', t('rsRowBal'), { bold: true });
+  days.forEach(function (d, i) {
+    put(rU, i, totRows.map(function (r) { return L(i) + r; }).join('+') || null, X.M.total[d] || 0); put(rA, i, null, X.M.avail == null ? '' : X.M.avail);
+    put(rB, i, X.M.avail == null ? null : L(i) + rA + '-' + L(i) + rU, X.M.bal[d]);
+  });
+  [rU, rA, rB].forEach(function (r) { ws.getRow(r).eachCell({ includeEmpty: true }, function (c) { c.font = { bold: true }; c.fill = fill('FFF3F4F6'); c.border = { top: r === rU ? thin : undefined }; }); });
+  var neg = [{ type: 'cellIs', operator: 'lessThan', formulae: [0], style: { fill: { type: 'pattern', pattern: 'solid', bgColor: { argb: 'FFFDE2E2' } }, font: { bold: true, color: { argb: 'FFB91C1C' } } } }];
+  ws.addConditionalFormatting({ ref: L(0) + rB + ':' + lastL + rB, rules: neg });
+  var areas = rsAreas(X);
+  if (areas.length) {
+    var rh = rowAt(); label(rh, '', '', t('rsAreaHdr'), { bold: true }); ws.getRow(rh).font = { bold: true, italic: true, color: { argb: 'FF6B7280' } };
+    areas.forEach(function (pa) { var r = rowAt(); label(r, '', '', '− ' + pa.name); ws.getRow(r).font = { color: { argb: 'FF6B7280' } }; days.forEach(function (d, i) { put(r, i, null, rsAreaLeft(X, pa.name, d)); }); });
+  }
+  var acts = RS.actions.filter(function (a) { return a.status !== 'CANCELLED' && (a.type === 'DELAY' ? !!X.G0.lines[a.line] : a.group === g); });
+  if (acts.length) {
+    var a1 = rowAt(), a2 = a1 + acts.length - 1;
+    acts.forEach(function (a, j) { var e = st.eff[a.id] || {}, ap = st.applied[a.id], r = a1 + j; label(r, '', ap ? t('rsApplied') : t('rsSt' + a.status), rsActText(a)); days.forEach(function (d, i) { put(r, i, null, ap ? null : (e[d] || null)); }); });
+    var rC = a2 + 1, rP = a2 + 2, sc = t('rsStCONFIRMED').replace(/"/g, '""');
+    label(rC, '', '', t('rsRowBalC'), { bold: true }); label(rP, '', '', t('rsRowBalA'), { bold: true });
+    days.forEach(function (d, i) { var c = L(i);
+      put(rC, i, c + rB + '+SUMIF($B$' + a1 + ':$B$' + a2 + ',"' + sc + '",' + c + '$' + a1 + ':' + c + '$' + a2 + ')', st.balC[d]); put(rP, i, c + rB + '+SUM(' + c + '$' + a1 + ':' + c + '$' + a2 + ')', st.balA[d]); });
+    [rC, rP].forEach(function (r) { ws.getRow(r).eachCell({ includeEmpty: true }, function (c) { c.font = { bold: true }; c.fill = fill('FFF3F4F6'); }); ws.addConditionalFormatting({ ref: L(0) + r + ':' + lastL + r, rules: neg }); });
+  }
+  ws.getColumn(1).width = 12; ws.getColumn(2).width = 14; ws.getColumn(3).width = 52; days.forEach(function (d, i) { ws.getColumn(FC + i).width = 8; });
+  ws.properties.outlineProperties = { summaryBelow: false };
+  var buf = await wb.xlsx.writeBuffer(), a = document.createElement('a'), d0 = new Date(), p2 = function (x) { return String(x).padStart(2, '0'); };
+  a.href = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+  a.download = 'SHORTAGE_' + g + '_' + d0.getFullYear() + p2(d0.getMonth() + 1) + p2(d0.getDate()) + '.xlsx'; document.body.appendChild(a); a.click(); a.remove();
 }
 function rsExport() {
   var D = rsCardData(), a1 = [[t('rsCardTitle')], [], [t('rsCardByG')], [t('rsThGroup'), t('rsCThInit'), t('rsCThActs'), t('rsCThAfter'), t('rsCThConc')]], g = function (s) { return s.gap > 0 ? '-' + s.gap + ' (' + d2(s.worst) + ')' : t('rsEnough'); };
@@ -347,7 +388,7 @@ async function rsClick(e, cid, edit) {
   try {
     if (d.rsPux != null) { RS.exp[d.rsPux] = !RS.exp[d.rsPux]; rsLive(cid, edit, d.rsPux.split('|')[0]); return; }
     if (d.rsEx != null) { var k0 = d.rsEx + '|*'; RS.exp[k0] = !RS.exp[k0]; rsPaint(cid, edit); return; }
-    if (d.rsXt != null) { rsExportTable(d.rsXt); return; }
+    if (d.rsXt != null) { await rsExportTable(d.rsXt); return; }
     if (d.rsArea != null) { var ak = d.rsArea.split('|'), F2 = rsForm(ak[0]); F2.type = 'AREA'; F2.area = ak.slice(1).join('|'); F2.touched = false; F2.active = true; rsPaint(cid, edit); var pn2 = c.querySelector('[data-rs-panel="' + ak[0] + '"]'); if (pn2) pn2.scrollIntoView({ block: 'center' }); return; }
     if (d.rsPu2 != null) { RS.openPU[d.rsPu2] = !RS.openPU[d.rsPu2]; var cs = $(cid + 'S'); if (cs) cs.innerHTML = rsCardHtml(); return; }
     if (d.rsG != null) { RS.selG = RS.cache.length > 1 ? (function () { var o = {}; o[d.rsG] = true; return o; })() : null; rsPaint(cid, edit); return; }

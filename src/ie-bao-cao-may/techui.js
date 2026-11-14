@@ -109,7 +109,7 @@ function techRows() {
     else {
       if (r.loadDate && r.loadDate !== x.load) x.flags.push('dateMoved');
       if (r.qtyB != null && r.qtyB !== x.qtyB) { x.status = 'PENDING'; x.eff = x.prep; x.flags.push('qtyChanged'); }
-      else if (r.decision === 'REMOVE') { x.status = 'REMOVED'; x.eff = 0; }
+      else if (r.decision === 'REMOVE') { x.status = 'REMOVED'; x.eff = 0; x.sameRem = isSameRemoval(r); }
       else if (r.decision === 'ADJUST') { x.status = 'ADJUSTED'; x.eff = +r.qty || 0; }
       else { x.status = 'KEPT'; x.eff = r.qtyBActual != null ? Math.ceil(x.ratio * r.qtyBActual - 1e-9) : x.prep; if (r.qtyBActual != null) x.flags.push('layoutQty'); }
       if (r.loadDateActual || r.prepDays) {                                     // IE Tech's loading date / number of prep days move the prep days
@@ -200,7 +200,7 @@ function techRender() {
         var skip = x.status === 'REMOVED' || x.status === 'AUTO_SKIP';
         h += '<tr class="prow" data-k="' + esc(x.key) + '"><td class="s1"></td><td class="l s2">' + (shown ? '' : '<b>' + esc(l) + '</b>') + '</td><td class="l s3" style="color:var(--warn)">↳ ' + esc(t('pgPrepOf', [s]).replace('↳ ', '')) +
           ' <span class="muted small">' + esc(t('prLoad', [d2(x.loadActual || x.load)])) + '</span>' +
-          ' <span class="tag ' + stCls[x.status] + '">' + esc(t('ps_' + x.status)) + (x.status === 'ADJUSTED' || (x.status === 'KEPT' && x.eff !== x.prep) ? ' ' + x.prep + '→' + x.eff : '') + '</span>' +
+          ' <span class="tag ' + psCls(x) + '">' + esc(psLabel(x)) + (x.status === 'ADJUSTED' || (x.status === 'KEPT' && x.eff !== x.prep) ? ' ' + x.prep + '→' + x.eff : '') + '</span>' +
           (x.flags.indexOf('dateSet') >= 0 || x.flags.indexOf('endSet') >= 0 ? ' <span class="tag t-info">' + esc(d2(x.load)) + '→' + esc(d2(x.loadActual)) + '</span>' : '') + (x.overdue ? ' <span class="tag t-bad">' + esc(t('prOVERDUE')) + '</span>' : '') +
           '<button class="qa" data-qe="' + esc(x.key) + '" title="' + esc(t('dOpenEdit')) + '">✎</button><button class="qa" data-qk="' + esc(x.key) + '" title="' + esc(t('prKeep')) + '">✔</button><button class="qa" data-qr="' + esc(x.key) + '" title="' + esc(t('prRemove')) + '">✖</button></td>' +
           days.map(function (d) { return (x.days || []).indexOf(d) < 0 ? '<td></td>' : (skip ? '<td class="sk">' + x.prep + '</td>' : '<td class="pr">' + x.eff + '</td>'); }).join('') + '</tr>';
@@ -331,7 +331,7 @@ $('dKeep').onclick = function () {
 $('dRemove').onclick = function () { drawerSave({ decision: 'REMOVE', reason: '' }); };
 $('dSame').onclick = function () {
   var x = TS.cur, me = $('tName').value.trim();
-  writeReview(x, { decision: 'REMOVE', reason: t('prR1') }).then(async function () {
+  writeReview(x, { decision: 'REMOVE', reason: t('prR1'), sameLayout: true }).then(async function () {
     if (x.from) for (const A of x.from.split(' + ')) {                // remember the pair; every machine group and line with it is skipped from now on
       const rec = { styles: [A, x.to], by: me, at: new Date().toISOString() };
       await tWrite(TS.dir, 'prep/shared', tStamp() + '.json', rec); (TS.shared = TS.shared || []).push(rec);

@@ -73,5 +73,17 @@ with sync_playwright() as p:
     hp.locator(f'#tGrid [data-te="{line}"]').first.click(); hp.wait_for_timeout(300); hp.click('#ePlan'); hp.wait_for_timeout(900); hoa.push()
     rr = sorted((SHARE / 'data/prep/lineends').glob('*.json')); last = json.loads(rr[-1].read_text(encoding='utf-8'))
     check('"Theo kế hoạch" resets the end date', last.get('endDate') == '', str(last))
+    print('--- "same layout" skip is labelled as such (not just "Đã bỏ")')
+    keys = hp.evaluate("[...document.querySelectorAll('#tGrid [data-qk]')].map(b=>b.dataset.qk)")
+    hp.click(f'#tGrid [data-qk="{keys[0]}"]'); hp.wait_for_timeout(400)
+    if not hp.is_visible('#tDrawer'): hp.click(f'#tGrid [data-qe="{keys[0]}"]'); hp.wait_for_timeout(400)
+    hp.click('#dSame'); hp.wait_for_timeout(1200)
+    tags = hp.evaluate("[...document.querySelectorAll('#tGrid .tag')].map(e=>e.textContent.trim())")
+    check('IE Tech grid: the skipped row says "Cùng layout — bỏ"', any('Cùng layout' in x for x in tags) and 'Đã bỏ' not in tags, str(tags[:8]))
+    hoa.push(); mai.pull(); pg2 = mai.pg; pg2.click('#mainTabs [data-tab="prep"]'); pg2.wait_for_timeout(800)
+    from simlib import SHARE as SH
+    import json as js2
+    rv = [js2.loads(f.read_text(encoding='utf-8')) for f in (SH / 'data/prep/reviews').glob('*.json')]
+    check('the review is stored as a same-layout removal (sameLayout:true)', any(r.get('decision') == 'REMOVE' and r.get('sameLayout') for r in rv), str(rv[:1]))
     check('no page errors (Hoa)', not hoa.errs, str(hoa.errs)); br.close()
 print('RESULT', 'ALL PASS' if all(ok) else 'FAILED'); sys.exit(0 if all(ok) else 1)

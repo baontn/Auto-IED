@@ -145,6 +145,22 @@ with sync_playwright() as p:
     with mp.expect_download(timeout=20000) as dl2: mp.click('#rsC [data-rs-xt="BT1M"]')
     xp = S / 'bt1m.xlsx'; dl2.value.save_as(str(xp)); wb2 = openpyxl.load_workbook(xp); ws2 = wb2.active; col3 = [str(r[2]) for r in ws2.iter_rows(values_only=True)]
     check('Excel of the table: all PUs, styles, totals, areas', any('DMO26' in c for c in col3) and any('Tổng sử dụng' in c for c in col3) and any('BROKEN' in c for c in col3) and ws2.max_column >= 10, f'{ws2.max_row}x{ws2.max_column}')
+    wf = openpyxl.load_workbook(xp); wf2 = wf.active; wv = openpyxl.load_workbook(xp, data_only=True).active
+    rowsx = {str(r[2].value): r[0].row for r in wf2.iter_rows(min_col=1, max_col=3) if r[2].value}
+    rl = rowsx.get('Còn lại (hiện tại)'); ru = rowsx.get('Tổng sử dụng'); ra = rowsx.get('Máy có sẵn')
+    check('Excel: "Còn lại" is a formula (Available - Total used)', rl and str(wf2.cell(rl, 4).value).startswith('=') and f'D{ra}' in str(wf2.cell(rl, 4).value) and f'D{ru}' in str(wf2.cell(rl, 4).value), str(wf2.cell(rl, 4).value) if rl else '')
+    check('Excel: "Tổng sử dụng" adds the PU total rows by formula', ru and str(wf2.cell(ru, 4).value).startswith('=') and '+' in str(wf2.cell(ru, 4).value), str(wf2.cell(ru, 4).value) if ru else '')
+    nform = sum(1 for r in wf2.iter_rows() for c in r if isinstance(c.value, str) and c.value.startswith('=')); check('Excel has live formulas', nform > 30, str(nform))
+    allbal = mp.evaluate("(()=>{const X=RS.cache.filter(x=>x.g==='BT1M')[0];return X.M.days.map(d=>X.M.bal[d])})()"); cached = [wv.cell(rl, 4 + i).value for i in range(len(allbal))] if rl else []
+    check('Excel: stored results of "Còn lại" equal the screen model for every day', cached == allbal, f'{cached[:5]} vs {allbal[:5]}')
+    import subprocess as sp_, shutil as sh_
+    if sh_.which('soffice'):
+        od = S / 'lo'; od.mkdir(exist_ok=True); sp_.run(['soffice', '--headless', '--convert-to', 'xlsx', '--outdir', str(od), str(xp)], capture_output=True, timeout=120)
+        lo = openpyxl.load_workbook(od / xp.name, data_only=True).active; bad = [(c.coordinate, c.value, lo[c.coordinate].value) for r in wf2.iter_rows() for c in r if isinstance(c.value, str) and c.value.startswith('=') and lo[c.coordinate].value != wv[c.coordinate].value]
+        check('Excel: LibreOffice recalculation of every formula gives the stored result', not bad, str(bad[:4]))
+    hdr = wf2.cell(3, 1); check('Excel: header row is formatted and the panes are frozen', hdr.font.bold and hdr.fill.fgColor.rgb in ('FF1F3A5F', '001F3A5F') and wf2.freeze_panes == 'D4', f'{hdr.fill.fgColor.rgb} {wf2.freeze_panes}')
+    check('Excel: negative balances get a conditional red format', len(wf2.conditional_formatting) >= 1)
+    check('Excel: style rows are grouped (collapsible)', any(wf2.row_dimensions[r].outlineLevel == 1 for r in range(4, wf2.max_row + 1)))
     mp.click('#rsC [data-rs-ex="BT1M"]'); mp.wait_for_timeout(300)
     print('--- areas holding machines (MC STATUS columns): listed under the table, take back with an instant result')
     areas = mp.evaluate("[...document.querySelectorAll('#rsC table[data-rs-block=BT1M] tr[data-rs-r=area]')].map(r=>[r.dataset.area,[...r.children].slice(3).map(c=>c.textContent.trim())])"); print('  areas:', [(a_[0], a_[1][:3]) for a_ in areas])
