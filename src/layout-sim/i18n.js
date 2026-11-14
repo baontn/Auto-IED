@@ -33,7 +33,7 @@ var I18N = {
     mapAll: 'Tất cả', mapTodo: 'Chưa xác nhận', mapDone: 'Đã xác nhận', mapNone: 'Chưa có mã', mapLine: 'Máy trên chuyền', bMapExp: 'Xuất Excel', bMapImp: 'Nhập Excel…',
     thMName: 'Tên máy', thBrand: 'Hãng', thModel: 'Model', thQty: 'SL', thSug: 'Gợi ý', thOk: 'Xác nhận', mapOk: 'Đã xác nhận', mapCount: '{0} model · {1} máy',
     mapAttach: 'Phụ kiện gắn máy (không chiếm chỗ)', mapNoLine: 'Không dùng trên chuyền may', mapImported: 'Đã nhập {0} dòng ({1} model mới).',
-    pasteTitle: 'Dán layout từ Excel', pasteHelp: 'Trong Excel, chọn vùng layout (các hàng mã máy và hàng số công đoạn), Ctrl+C, rồi Ctrl+V vào ô dưới. Hàng số nằm phía nào của hàng mã máy thì người vận hành ngồi phía đó (có thể đổi từng hàng).',
+    pasteTitle: 'Dán layout từ Excel', pasteHelp: 'Trong Excel, chọn vùng layout (các hình hoặc các ô có mã máy và số công đoạn), Ctrl+C, rồi Ctrl+V vào cửa sổ này. Hình (shape) hoặc ảnh chụp màn hình được đọc bằng nhận dạng chữ (OCR) ngay trên máy. Hàng số nằm phía nào của hàng mã máy thì người vận hành ngồi phía đó (có thể đổi từng hàng).',
     pasteReplace: 'Thay layout hiện tại', pasteInput: 'Thêm bàn đầu vào', pasteFit: 'Chỉnh kích thước chuyền theo layout', cancel: 'Hủy', pasteGo: 'Đưa vào mặt bằng', apply: 'Áp dụng',
     pasteNone: 'Chưa nhận ra mã máy nào. Hãy sao chép cả hàng mã máy (ví dụ 3OLM, 1SLA…).', pasteFound: 'Nhận ra {0} hàng, {1} máy.', pasteRowMc: 'Máy (công đoạn)', pasteSide: 'Người vận hành ngồi',
     sideTop: 'Phía trên', sideBottom: 'Phía dưới', sideGuess: '(đoán)', pasteUnknown: 'Mã chưa có trong thư viện: {0}. Tạm dùng kích thước {1} cm.', pasteDone: 'Đã đặt {0} máy vào mặt bằng.',
@@ -48,7 +48,12 @@ var I18N = {
     erg_colGap: 'Khe giữa hai máy cạnh nhau (khi dán)', ergh_colGap: '0 = bàn sát nhau', erg_emptyPitch: 'Ô trống trong layout', ergh_emptyPitch: 'Chiều dài dành cho một ô trống khi dán',
     erg_snap: 'Bước bám lưới', ergh_snap: 'Khi kéo máy',
     expSub: '{0} máy · xuất lúc {1} · lưới 50 cm / 1 m', saved: 'Đã lưu.', opened: 'Đã mở {0}.', openErr: 'Không mở được file', newConfirm: 'Xóa layout hiện tại để bắt đầu mới?',
-    no3d: 'Trình duyệt không hiển thị được 3D (WebGL).'
+    no3d: 'Trình duyệt không hiển thị được 3D (WebGL).',
+    ocrDropTxt: 'Ctrl+V để dán ảnh / hình, hoặc kéo thả file ảnh vào đây', bOcrFile: 'Chọn file ảnh…', pasteTxtLbl: 'Kết quả dạng bảng (sửa trực tiếp nếu đọc sai; mỗi ô cách nhau bằng phím Tab):',
+    ocrLoading: 'Đang tải bộ nhận dạng chữ (lần đầu vài giây)…', ocrRunning: 'Đang đọc ảnh… {0}%', ocrNoEngine: 'Thiếu file ocr-engine.js cạnh LayoutSim.html', ocrBadImage: 'Không mở được ảnh',
+    ocrNoLib: 'Chưa có thư viện máy: không sửa được mã đọc sai (nên chọn file thư viện trước).', ocrErr: 'Không đọc được ảnh',
+    ocrDone: 'Đọc được {0} mã máy, {1} số công đoạn; {2} mã đã tự sửa theo thư viện (viền cam), {3} mã không có trong thư viện (viền đỏ). Kiểm tra lại bảng bên dưới trước khi đưa vào mặt bằng.',
+    ocrIgnored: 'bỏ qua', ocrLegend: 'Viền xanh lá: đọc đúng mã · cam: đã sửa theo thư viện · đỏ: không có trong thư viện · xanh dương: số công đoạn · xám: bỏ qua. Đưa chuột vào ô để xem chữ đọc được.'
   },
   en: {
     appTitle: 'Line layout simulator', tabPlan: '2D plan', tab3d: '3D', tabLib: 'Machine library',
@@ -82,7 +87,7 @@ var I18N = {
     mapAll: 'All', mapTodo: 'Not confirmed', mapDone: 'Confirmed', mapNone: 'No code', mapLine: 'Line machines', bMapExp: 'Export Excel', bMapImp: 'Import Excel…',
     thMName: 'Machine name', thBrand: 'Brand', thModel: 'Model', thQty: 'Qty', thSug: 'Suggested', thOk: 'Confirm', mapOk: 'Confirmed', mapCount: '{0} models · {1} machines',
     mapAttach: 'Attachment (no floor space)', mapNoLine: 'Not used on sewing lines', mapImported: 'Imported {0} rows ({1} new models).',
-    pasteTitle: 'Paste a layout from Excel', pasteHelp: 'In Excel select the layout range (machine code rows and operation number rows), Ctrl+C, then Ctrl+V below. The operator sits on the side of the code row where the numbers are (can be changed per row).',
+    pasteTitle: 'Paste a layout from Excel', pasteHelp: 'In Excel select the layout (the shapes or the cells with machine codes and operation numbers), Ctrl+C, then Ctrl+V in this window. Shapes or a screenshot are read with text recognition (OCR) on this computer. The operator sits on the side of the code row where the numbers are (can be changed per row).',
     pasteReplace: 'Replace current layout', pasteInput: 'Add input table', pasteFit: 'Fit line size to the layout', cancel: 'Cancel', pasteGo: 'Place on the plan', apply: 'Apply',
     pasteNone: 'No machine code recognised yet. Copy the machine code rows too (e.g. 3OLM, 1SLA…).', pasteFound: 'Found {0} rows, {1} machines.', pasteRowMc: 'Machines (operation)', pasteSide: 'Operator sits',
     sideTop: 'Above', sideBottom: 'Below', sideGuess: '(guess)', pasteUnknown: 'Codes not in the library: {0}. Size {1} cm used for now.', pasteDone: '{0} machines placed on the plan.',
@@ -97,7 +102,12 @@ var I18N = {
     erg_colGap: 'Gap between two machines (paste)', ergh_colGap: '0 = tables touching', erg_emptyPitch: 'Empty cell in the layout', ergh_emptyPitch: 'Length used for one empty cell when pasting',
     erg_snap: 'Snap step', ergh_snap: 'When dragging machines',
     expSub: '{0} machines · exported {1} · grid 50 cm / 1 m', saved: 'Saved.', opened: 'Opened {0}.', openErr: 'Cannot open the file', newConfirm: 'Clear the current layout and start a new one?',
-    no3d: 'This browser cannot show 3D (WebGL).'
+    no3d: 'This browser cannot show 3D (WebGL).',
+    ocrDropTxt: 'Ctrl+V to paste a picture / shapes, or drop an image file here', bOcrFile: 'Choose image file…', pasteTxtLbl: 'Result as a table (edit here if something was misread; cells are separated by Tab):',
+    ocrLoading: 'Loading text recognition (a few seconds the first time)…', ocrRunning: 'Reading the picture… {0}%', ocrNoEngine: 'File ocr-engine.js is missing next to LayoutSim.html', ocrBadImage: 'Cannot open the image',
+    ocrNoLib: 'No machine library: misread codes cannot be corrected (choose the library file first).', ocrErr: 'Cannot read the picture',
+    ocrDone: 'Read {0} machine codes and {1} operation numbers; {2} codes corrected from the library (amber), {3} codes not in the library (red). Check the table below before placing.',
+    ocrIgnored: 'ignored', ocrLegend: 'Green: code read as is · amber: corrected from the library · red: not in the library · blue: operation number · grey: ignored. Hover a box to see the text read.'
   }
 };
 function t(k, a) {

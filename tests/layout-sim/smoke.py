@@ -6,7 +6,7 @@
   python3 tests/layout-sim/smoke.py [--shots DIR]
 
 Builds a small fake machine library (sheet Machine_Needle + machine list), pastes a 2-row layout,
-then checks: placement, drag + snap, overlap / operator-zone checks, undo/redo, rotate, block rotate,
+then checks: picture paste (OCR, offline), placement, drag + snap, overlap / operator-zone checks, undo/redo, rotate, block rotate,
 save/open round trip, PNG + Excel export, English UI, i18n key completeness, 3D view, no page errors.
 --shots DIR also saves screenshots (used for the manual: manual/img/ls-*.png).
 """
@@ -29,6 +29,7 @@ MODELS = [('SLM-Single needle lockstitch machine', 'BRANDA', 'L-100', 12), ('4 T
 PASTE = ("\t31\t32\t33\t34\t36\t36\t37\t37\t38\t39\t40\t41\t97\n\t3OLM\t1SLA\t2CSM\t4CSM\t3OLM\t3OLM\t2CSM\t2CSM\t4OLB\t3OLM\t2CSM\t4OLB\tBT1M\n\n"
          "MNHD\t1SLA\t1SLA\t1SLA\t4CSM\t3OLM\t3OLM\t2CSM\t2CSM\t3OLM\t2CSM\t2CSM\t4OLB\tBT1M\n35\t32\t32\t32\t34\t36\t36\t37\t37\t39\t40\t40\t41\t97\n")
 RES = []
+NET = []
 
 def check(c, msg):
     RES.append(bool(c)); print(('PASS ' if c else 'FAIL ') + msg)
@@ -54,6 +55,11 @@ async def main():
     async with async_playwright() as p:
         b = await launch(p)
         ctx = await b.new_context(viewport={'width': 1500, 'height': 860}, accept_downloads=True, device_scale_factor=1)
+        async def route(r):
+            NET.append(r.request.url)
+            if r.request.url.startswith(('file:', 'blob:', 'data:')): await r.continue_()
+            else: await r.abort()
+        await ctx.route('**/*', route)
         pg = await ctx.new_page(); errs = []
         pg.on('pageerror', lambda e: errs.append(str(e)))
         pg.on('console', lambda m: errs.append('console:' + m.text) if m.type == 'error' else None)
@@ -112,7 +118,22 @@ async def main():
         if SHOTS:
             await pg.evaluate("()=>{SEL=[];rebuild3d();V3.tgt.set(ST.items[4].x,60,ST.items[4].y);V3.rad=900;V3.theta=-0.6;V3.phi=0.95;draw3d()}")
             await pg.wait_for_timeout(300); await pg.screenshot(path=SHOTS + '/ls-3d.png')
-        await pg.click('[data-tab="plan"]'); await pg.select_option('#lang', 'en'); await pg.wait_for_timeout(150)
+        # picture paste (OCR, offline): draw a boxed layout like the Excel shapes, with a grey cell, then read it back
+        await pg.click('[data-tab="plan"]'); await pg.evaluate('()=>openPaste()')
+        ok = await pg.evaluate("""async()=>{const top=[['31','3OLM'],['32','1SLA'],['33','2CSM'],['34','4CSM'],['36','3OLM'],['38','4OLB'],['97','BT1M']],
+          bot=[['35','MNHD'],['32','1SLA'],['34','4CSM'],['36','3OLM'],['37','2CSM'],['41','4OLB'],['97','BT1M']];
+          const cw=70,ch=40,c=document.createElement('canvas');c.width=40+8*cw;c.height=6*ch;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);
+          x.font='bold 17px Times New Roman, serif';x.textAlign='center';x.textBaseline='middle';x.strokeStyle='#000';
+          function cell(i,j,t,g){const X=20+i*cw,Y=10+j*ch;if(g){x.fillStyle='#d0d0d0';x.fillRect(X,Y,cw,ch);}x.strokeRect(X,Y,cw,ch);x.fillStyle='#000';x.fillText(t,X+cw/2,Y+ch/2);}
+          top.forEach((v,i)=>{cell(i+1,0,v[0]);cell(i+1,1,v[1],i==3);}); bot.forEach((v,i)=>{cell(i,3,v[1],i==2);cell(i,4,v[0]);});
+          const blob=await new Promise(r=>c.toBlob(r,'image/png'));const g=await ocrImage(blob);
+          const want=top.map(v=>v[1]+':'+v[0]).concat(bot.map(v=>v[1]+':'+v[0])).sort().join(' ');
+          pastePreview(); const got=[];PASTE.rows.forEach(r=>r.cells.forEach(c=>got.push(c.code+':'+c.op)));
+          return [want, got.sort().join(' '), PASTE.rows.map(r=>r.side).join(',')];}""")
+        check(ok[0] == ok[1] and ok[2] == 'top,bottom', 'OCR of a layout picture: ' + ok[1] + ' / sides ' + ok[2])
+        check(not [u for u in NET if not u.startswith(('file:', 'blob:', 'data:'))], 'no network request ' + str(NET[:3]))
+        await pg.evaluate("()=>document.getElementById('dlgPaste').close()")
+        await pg.select_option('#lang', 'en'); await pg.wait_for_timeout(150)
         check(await pg.inner_text('h1') == 'Line layout simulator', 'English UI'); await pg.select_option('#lang', 'vi')
         check(not errs, 'no page errors ' + str(errs))
         await b.close()

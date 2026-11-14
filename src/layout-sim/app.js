@@ -100,6 +100,11 @@ function cmd(c) {
 
 /* ---------- paste dialog ---------- */
 var PASTE = null;
+function openPaste() {
+  $('pasteTxt').value = ''; $('pastePrev').innerHTML = ''; $('ocrStatus').textContent = ''; $('ocrView').innerHTML = '';
+  $('pasteGo').disabled = true; $('pasteReplace').checked = true; $('pasteFit').checked = !ST.line.fixed;
+  if (!$('dlgPaste').open) $('dlgPaste').showModal();
+}
 function pastePreview() {
   var txt = $('pasteTxt').value; PASTE = parsePaste(txt);
   var unk = {}; PASTE.rows.forEach(function (r) { r.cells.forEach(function (c) { if (!LIB.codes[c.code]) unk[c.code] = 1; }); });
@@ -312,7 +317,8 @@ function startApp() {
     onSelChange(); render2d();
   });
   $('sumBody').addEventListener('click', function (e) { var c = e.target.closest('[data-code]'); if (!c) return; SEL = ST.items.filter(function (i) { return i.code === c.dataset.code; }).map(function (i) { return i.id; }); onSelChange(); render2d(); });
-  $('bPaste').onclick = function () { $('pasteTxt').value = ''; $('pastePrev').innerHTML = ''; $('pasteGo').disabled = true; $('pasteReplace').checked = true; $('pasteFit').checked = !ST.line.fixed; $('dlgPaste').showModal(); setTimeout(function () { $('pasteTxt').focus(); }, 50); };
+  $('bPaste').onclick = function () { openPaste(); setTimeout(function () { $('pasteTxt').focus(); }, 50); };
+  initImagePaste();
   $('pasteTxt').addEventListener('input', pastePreview);
   $('pasteGo').onclick = pasteGo;
   $('bAddMc').onclick = function () { var c = $('addCode').value; if (!normCode(c)) { $('addCode').focus(); return; } addMachine(c); $('addCode').value = ''; };

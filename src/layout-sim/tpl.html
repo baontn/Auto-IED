@@ -78,6 +78,11 @@ table.mini td,table.mini th{padding:3px 6px}
 table.mini sub{color:var(--muted);margin-right:3px}
 .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(20px);background:var(--text);color:var(--bg);padding:8px 16px;border-radius:10px;opacity:0;transition:.25s;pointer-events:none;z-index:50;max-width:90vw}
 .toast.show{opacity:1;transform:translateX(-50%)}.toast.bad{background:var(--bad);color:#fff}
+.drop{border:2px dashed var(--line);border-radius:10px;padding:12px;margin:8px 0;text-align:center;color:var(--muted);display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap}
+.drop.on{border-color:var(--accent);background:var(--sel)}
+.ocrwrap{position:relative;margin-top:6px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff}
+.ocrwrap img{display:block;width:100%;height:auto}.ocrwrap svg{position:absolute;inset:0;width:100%;height:100%}
+#ocrView>img{max-width:100%;opacity:.6}
 kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 4px;font-size:11px;background:var(--bg)}
 </style>
 </head>
@@ -152,7 +157,10 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
 
 <dialog id="dlgPaste"><div class="dh"><span data-t="pasteTitle">Dán layout từ Excel</span><button data-close>✕</button></div>
   <div class="db">
-    <div class="muted small" data-t="pasteHelp">Trong Excel, chọn vùng layout (các hàng mã máy và hàng số công đoạn), Ctrl+C, rồi Ctrl+V vào ô dưới. Hàng số nằm phía nào của hàng mã máy thì người vận hành ngồi phía đó (có thể đổi từng hàng).</div>
+    <div class="muted small" data-t="pasteHelp">Trong Excel, chọn vùng layout (các hình hoặc các ô có mã máy và số công đoạn), Ctrl+C, rồi Ctrl+V vào cửa sổ này. Hình (shape) hoặc ảnh chụp màn hình được đọc bằng nhận dạng chữ (OCR) ngay trên máy. Hàng số nằm phía nào của hàng mã máy thì người vận hành ngồi phía đó (có thể đổi từng hàng).</div>
+    <div id="ocrDrop" class="drop"><span data-t="ocrDropTxt">Ctrl+V để dán ảnh / hình, hoặc kéo thả file ảnh vào đây</span> <button id="bOcrFile" data-t="bOcrFile">Chọn file ảnh…</button></div>
+    <div id="ocrStatus" class="small"></div><div id="ocrView"></div>
+    <div class="small muted" style="margin-top:6px" data-t="pasteTxtLbl">Kết quả dạng bảng (sửa trực tiếp nếu đọc sai; mỗi ô cách nhau bằng phím Tab):</div>
     <textarea id="pasteTxt" spellcheck="false"></textarea>
     <div id="pastePrev" style="margin-top:8px"></div>
   </div>
@@ -169,7 +177,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
 </dialog>
 
 <datalist id="codeList"></datalist><datalist id="mapList"></datalist>
-<input type="file" id="fileOpen" accept=".json,application/json" hidden><input type="file" id="fileLib" accept=".xlsx,.xls,.xlsm" hidden><input type="file" id="fileMap" accept=".xlsx,.xls" hidden>
+<input type="file" id="fileImg" accept="image/*" hidden><input type="file" id="fileOpen" accept=".json,application/json" hidden><input type="file" id="fileLib" accept=".xlsx,.xls,.xlsm" hidden><input type="file" id="fileMap" accept=".xlsx,.xls" hidden>
 <div id="toast" class="toast"></div>
 
 <script>/*__XLSX__*/</script>
@@ -179,6 +187,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
 <script>/*__MODEL__*/</script>
 <script>/*__PLAN2D__*/</script>
 <script>/*__VIEW3D__*/</script>
+<script>/*__IMGPASTE__*/</script>
 <script>/*__APP__*/</script>
 <script>startApp();</script>
 </body>
