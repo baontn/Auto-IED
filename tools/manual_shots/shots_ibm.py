@@ -87,6 +87,7 @@ with sync_playwright() as p:
     shot(pg, 'ibm-24-residual', full=True, hl=['#rsC [data-rs-view]', '#rsC [data-rs-cg]', '#rsC [data-rs-cpu]'])
     P = '#rsC [data-rs-panel="BT1M"] '
     pg.fill(P + '[data-f="qty"]', '9'); pg.dispatch_event(P + '[data-f="qty"]', 'input'); pg.fill(P + '[data-f="note"]', 'Thuê thêm từ nhà cung cấp'); pg.wait_for_timeout(500)
+    pg.click('#rsC [data-rs-ex="BT1M"]'); pg.wait_for_timeout(500); shot(pg, 'ibm-30-styles', sel='#rsC [data-rs-blk="BT1M"] [data-rs-tbl]'); pg.click('#rsC [data-rs-ex="BT1M"]'); pg.wait_for_timeout(300); pg.fill(P + '[data-f="qty"]', '9'); pg.dispatch_event(P + '[data-f="qty"]', 'input')
     shot(pg, 'ibm-25-action-form', sel='#rsC [data-rs-blk="BT1M"]', hl=[P + '[data-f="type"]', P + '[data-f="qty"]', P + '[data-f="from"]', P + '[data-f="to"]', P + '[data-f="status"]', P + '[data-rs-save]'])
     pg.click(P + '[data-rs-save]'); pg.wait_for_timeout(1200); pg.click('#rsC tr[data-rs-r="act"] [data-rs-conf]'); pg.wait_for_timeout(900)
     pg.select_option(P + '[data-f="type"]', 'DELAY'); pg.wait_for_timeout(300); pg.select_option(P + '[data-f="line"]', 'K'); pg.wait_for_timeout(300)

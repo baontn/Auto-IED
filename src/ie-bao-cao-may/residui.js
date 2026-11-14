@@ -2,7 +2,7 @@
 // Consolidator tab "Thiếu máy còn lại" (records actions) and the Supervisor role (read-only: can try actions, cannot save). Numbers come from the data folder only
 // (latest proposal per machine group + IE Tech decisions + actions): the same calculation as the IE Tech grid (groupModel in prep.js). Tables are horizontal (days in columns).
 // Every machine group that is short has its own action panel under its table; any action typed in the panel shows its result at once (preview rows in the table).
-var RS = { openPU: {}, root: null, actions: [], actionsRaw: [], selG: null, selPU: null, view: 'short', edit: null, editG: '', forms: {}, cache: [], at: null };
+var RS = { exp: {}, openPU: {}, root: null, actions: [], actionsRaw: [], selG: null, selPU: null, view: 'short', edit: null, editG: '', forms: {}, cache: [], at: null };
 function rsForm(g) { return RS.forms[g] || (RS.forms[g] = { type: 'RENT', area: '', qty: '', from: '', to: '', pu: '', line: '', style: '', date: '', status: 'PLANNED', note: '', touched: false, active: false }); }
 async function rsLoad(root) {
   RS.root = root; await tLoadAll(root); RS.actionsRaw = await pReadDir(root, 'prep/actions'); RS.actions = latestActions(RS.actionsRaw); RS.at = new Date();
@@ -96,12 +96,30 @@ function rsPreview(X, f) {
   });
   out.self = out.rows.filter(function (r) { return r.g === X.g; })[0]; return out;
 }
+// the lines and styles of one PU inside a machine group (like the IE Tech grid): one row per style with its machines per day, and the prepare rows of the changeovers
+function rsLineRows(X, p, days) {
+  var G = X.M.G, h = '';
+  Object.keys(G.lines).filter(function (l) { return G.lines[l].pu === p; }).sort().forEach(function (l) {
+    var L = G.lines[l], first = function (s) { return Object.keys(L.styles[s]).sort()[0] || ''; };
+    Object.keys(L.styles).sort(function (a, b) { return first(a).localeCompare(first(b)); }).forEach(function (s) {
+      var v = {}; days.forEach(function (d) { v[d] = L.styles[s][d] || ''; });
+      h += rsRow(esc(s) + ' <span class="muted small">' + esc(t('rsLoadsOn', [d2(first(s))])) + '</span>', v, days, { cls: 'part', c2: esc(l), attr: ' data-rs-r="style" data-line="' + esc(l) + '"' });
+    });
+    X.rows.filter(function (x) { return x.line === l && x.eff; }).forEach(function (x) {
+      var v = {}; days.forEach(function (d) { v[d] = (x.days || []).indexOf(d) >= 0 ? x.eff : ''; });
+      h += rsRow('↳ ' + esc(t('rsPrepOf', [x.to])), v, days, { cls: 'part', cellCls: 'pr', c2: esc(l), attr: ' data-rs-r="prepline" data-line="' + esc(l) + '"' });
+    });
+  });
+  return h;
+}
 function rsTableInner(X, days, edit, pv) {
   var m = X.M, st = X.st, puSel = RS.selPU, pus = rsPUs([X]).filter(function (p) { return !puSel || puSel[p]; });
   var h = '<table class="pg" data-rs-block="' + esc(X.g) + '"><tr><th class="l s1">PU</th><th class="l s2"></th><th class="l s3">' + t('rsThDay') + '</th>' + days.map(function (d) { return '<th>' + esc(dw(d)) + '</th>'; }).join('') + '</tr>';
   pus.forEach(function (p) {
     var pv_ = {}, rv = {}, tv = {}; days.forEach(function (d) { pv_[d] = m.prodPu[p + '|' + d] || 0; rv[d] = m.prepPu[p + '|' + d] || 0; tv[d] = pv_[d] + rv[d]; });
-    h += rsRow(esc(t('pgPuSum', [puName(p), t('rsRowProd')])), pv_, days, { cls: 'pusum', attr: ' data-rs-pu="' + esc(p) + '"', c1: esc(puName(p)), l1: 1 }) + rsRow(esc(t('pgPuSum', [puName(p), t('rsRowPrep')])), rv, days, { cls: 'pusum' }) + rsRow(esc(t('pgPuSum', [puName(p), t('rsRowTot')])), tv, days, { cls: 'tot' });
+    var open = !!(RS.exp[X.g + '|' + p] || RS.exp[X.g + '|*']);
+    h += rsRow(esc(t('pgPuSum', [puName(p), t('rsRowProd')])), pv_, days, { cls: 'pusum', attr: ' data-rs-pu="' + esc(p) + '" data-rs-pux="' + esc(X.g + '|' + p) + '" style="cursor:pointer" title="' + esc(t('rsPuxTip')) + '"', c1: (open ? '▾ ' : '▸ ') + esc(puName(p)), l1: 1 }) + rsRow(esc(t('pgPuSum', [puName(p), t('rsRowPrep')])), rv, days, { cls: 'pusum' }) + rsRow(esc(t('pgPuSum', [puName(p), t('rsRowTot')])), tv, days, { cls: 'tot' });
+    if (open) h += rsLineRows(X, p, days);
   });
   var av = {}; days.forEach(function (d) { av[d] = m.avail; });
   h += rsRow(esc(t('rsRowUse')), m.total, days, { cls: 'tot', attr: ' data-rs-r="use"' }) + rsRow(esc(t('rsRowAvail')), av, days, { cls: 'tot', attr: ' data-rs-r="avail"' }) + rsRow(esc(t('rsRowBal')), m.bal, days, { cls: 'tot', attr: ' data-rs-r="bal"', neg: 1 });
@@ -165,6 +183,7 @@ function rsBlock(X, days, edit) {
   var panel = X.s.gap > 0, f = rsForm(X.g); if (panel) rsDefaults(X, f);
   var pv = panel && f.active ? rsPreview(X, f) : null;                         // instant result appears as soon as the panel is used
   var h = '<div data-rs-blk="' + esc(X.g) + '"><h4 style="margin:14px 0 4px">' + esc(X.g) + ' <span class="muted small">' + esc(t('rsRowAvail')) + ' ' + (X.M.avail == null ? '' : X.M.avail) + ' · ' + esc(t('rsThDays')) + ' ' + X.s.n + '/' + X.s.of + ' · ' + esc(t('rsThWorst')) + ' ' + (X.s.gap ? '−' + X.s.gap : '0') + '</span></h4>';
+  h += '<div class="row" style="margin:0 0 4px"><button class="qa" data-rs-ex="' + esc(X.g) + '">' + esc(t(RS.exp[X.g + '|*'] ? 'rsCollapse' : 'rsExpAll')) + '</button><button class="qa" data-rs-xt="' + esc(X.g) + '" style="margin-left:auto">⬇ ' + esc(t('rsExport')) + '</button></div>';
   h += '<div class="tw" data-rs-tbl="' + esc(X.g) + '" style="max-height:60vh">' + rsTableInner(X, days, edit, pv) + '</div>';
   if (panel) h += '<div class="rsp" data-rs-panel="' + esc(X.g) + '">' + rsPanelHtml(X, edit) + '</div>';
   return h + '</div>';
@@ -262,6 +281,27 @@ function rsPuDetail(r, x) {
   h += x.acts.length ? '<ul class="sc-acts" style="margin-top:6px">' + x.acts.map(rsActPill).join('') + '</ul>' : '<div class="sc-none">' + esc(t('rsCardNoAct')) + '</div>';
   return h;
 }
+// Excel of one machine group's table: the whole plan, all PUs with their lines and styles, areas, actions and the balances
+function rsExportTable(g) {
+  var X = RS.cache.filter(function (x) { return x.g === g; })[0]; if (!X) return;
+  var days = X.M.days, st = X.st, pus = rsPUs([X]), cell = function (v) { return v === '' || v == null ? '' : v; }, A = [[g + ' · ' + t('rsRowAvail') + ' ' + (X.M.avail == null ? '' : X.M.avail)], ['PU', t('rsPuLine'), t('rsThDay')].concat(days.map(function (d) { return dw(d); }))];
+  pus.forEach(function (p) {
+    var pr = days.map(function (d) { return X.M.prodPu[p + '|' + d] || 0; }), pp = days.map(function (d) { return X.M.prepPu[p + '|' + d] || 0; });
+    A.push([puName(p), '', t('pgPuSum', [puName(p), t('rsRowProd')])].concat(pr), ['', '', t('pgPuSum', [puName(p), t('rsRowPrep')])].concat(pp), ['', '', t('pgPuSum', [puName(p), t('rsRowTot')])].concat(pr.map(function (v, i) { return v + pp[i]; })));
+    Object.keys(X.M.G.lines).filter(function (l) { return X.M.G.lines[l].pu === p; }).sort().forEach(function (l) {
+      var L = X.M.G.lines[l], first = function (s) { return Object.keys(L.styles[s]).sort()[0] || ''; };
+      Object.keys(L.styles).sort(function (a, b) { return first(a).localeCompare(first(b)); }).forEach(function (s) { A.push(['', l, s + ' (' + t('rsLoadsOn', [d2(first(s))]) + ')'].concat(days.map(function (d) { return cell(L.styles[s][d] || ''); }))); });
+      X.rows.filter(function (x) { return x.line === l && x.eff; }).forEach(function (x) { A.push(['', l, t('rsPrepOf', [x.to])].concat(days.map(function (d) { return (x.days || []).indexOf(d) >= 0 ? x.eff : ''; }))); });
+    });
+  });
+  A.push(['', '', t('rsRowUse')].concat(days.map(function (d) { return X.M.total[d]; })), ['', '', t('rsRowAvail')].concat(days.map(function () { return X.M.avail; })), ['', '', t('rsRowBal')].concat(days.map(function (d) { return X.M.bal[d]; })));
+  rsAreas(X).forEach(function (p) { A.push(['', '', '− ' + p.name].concat(days.map(function (d) { return rsAreaLeft(X, p.name, d); }))); });
+  RS.actions.filter(function (a) { return a.status !== 'CANCELLED' && (a.type === 'DELAY' ? !!X.G0.lines[a.line] : a.group === g); }).forEach(function (a) { var e = st.eff[a.id] || {}; A.push(['', '', rsActText(a) + ' · ' + t('rsSt' + a.status)].concat(days.map(function (d) { return e[d] || ''; }))); });
+  if (st.all.length) A.push(['', '', t('rsRowBalC')].concat(days.map(function (d) { return st.balC[d]; })), ['', '', t('rsRowBalA')].concat(days.map(function (d) { return st.balA[d]; })));
+  var wb = XLSX.utils.book_new(), ws = XLSX.utils.aoa_to_sheet(A); ws['!cols'] = [{ wch: 10 }, { wch: 8 }, { wch: 44 }].concat(days.map(function () { return { wch: 7 }; }));
+  XLSX.utils.book_append_sheet(wb, ws, String(g).slice(0, 28)); var n = new Date(), p2 = function (x) { return String(x).padStart(2, '0'); };
+  XLSX.writeFile(wb, 'SHORTAGE_' + g + '_' + n.getFullYear() + p2(n.getMonth() + 1) + p2(n.getDate()) + '.xlsx');
+}
 function rsExport() {
   var D = rsCardData(), a1 = [[t('rsCardTitle')], [], [t('rsCardByG')], [t('rsThGroup'), t('rsCThInit'), t('rsCThActs'), t('rsCThAfter'), t('rsCThConc')]], g = function (s) { return s.gap > 0 ? '-' + s.gap + ' (' + d2(s.worst) + ')' : t('rsEnough'); };
   D.groups.forEach(function (r) { a1.push([r.g, g(r.init), r.acts.map(rsActText).join('; '), g(r.left), r.concl]); });
@@ -302,9 +342,12 @@ function rsToggle(sel, k, all) {          // nothing filtered yet: the click sel
   return Object.keys(m).length && Object.keys(m).length < all.length ? m : null;
 }
 async function rsClick(e, cid, edit) {
-  var b = e.target.closest('[data-rs-g],[data-rs-refresh],[data-rs-edit],[data-rs-conf],[data-rs-cancel],[data-rs-save],[data-rs-canceledit],[data-rs-cg],[data-rs-cgall],[data-rs-cpu],[data-rs-cpuall],[data-rs-view],[data-rs-export],[data-rs-pu2],[data-rs-area]'); if (!b) return;
+  var b = e.target.closest('[data-rs-g],[data-rs-refresh],[data-rs-edit],[data-rs-conf],[data-rs-cancel],[data-rs-save],[data-rs-canceledit],[data-rs-cg],[data-rs-cgall],[data-rs-cpu],[data-rs-cpuall],[data-rs-view],[data-rs-export],[data-rs-pu2],[data-rs-area],[data-rs-pux],[data-rs-ex],[data-rs-xt]'); if (!b) return;
   var c = $(cid), d = b.dataset, byId = function (id) { return RS.actions.filter(function (a) { return a.id === id; })[0]; };
   try {
+    if (d.rsPux != null) { RS.exp[d.rsPux] = !RS.exp[d.rsPux]; rsLive(cid, edit, d.rsPux.split('|')[0]); return; }
+    if (d.rsEx != null) { var k0 = d.rsEx + '|*'; RS.exp[k0] = !RS.exp[k0]; rsPaint(cid, edit); return; }
+    if (d.rsXt != null) { rsExportTable(d.rsXt); return; }
     if (d.rsArea != null) { var ak = d.rsArea.split('|'), F2 = rsForm(ak[0]); F2.type = 'AREA'; F2.area = ak.slice(1).join('|'); F2.touched = false; F2.active = true; rsPaint(cid, edit); var pn2 = c.querySelector('[data-rs-panel="' + ak[0] + '"]'); if (pn2) pn2.scrollIntoView({ block: 'center' }); return; }
     if (d.rsPu2 != null) { RS.openPU[d.rsPu2] = !RS.openPU[d.rsPu2]; var cs = $(cid + 'S'); if (cs) cs.innerHTML = rsCardHtml(); return; }
     if (d.rsG != null) { RS.selG = RS.cache.length > 1 ? (function () { var o = {}; o[d.rsG] = true; return o; })() : null; rsPaint(cid, edit); return; }
