@@ -114,9 +114,11 @@ function libReadWorkbook(wb, fileName) {
     var rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1, defval: '', raw: false });
     for (var h = 0; h < Math.min(rows.length, 15); h++) {
       var hdr = rows[h].map(function (x) { return String(x).trim().toLowerCase().replace(/\s+/g, ' '); });
-      var ic = hdr.indexOf('machine_code'), isn = hdr.indexOf('sewing name');
+      var ic = hdr.findIndex(function (x) { return /^(machine[ _]?code|mã máy|ma may|code)$/.test(x); }), isn = hdr.findIndex(function (x) { return /^(sewing ?name|machine ?name|tên máy)$/.test(x); });
+      if (ic >= 0 && hdr.findIndex(function (x) { return /dimension|kích thước|size/.test(x); }) < 0) ic = -1;
+      if (ic >= 0) isn = -1;
       if (ic >= 0) {
-        var ie = hdr.indexOf('machine_name'), iv = hdr.indexOf('machine_name_vn'), id = hdr.indexOf('dimension');
+        var ie = hdr.findIndex(function (x) { return /^machine[ _]?name$/.test(x); }), iv = hdr.findIndex(function (x) { return /name[ _]?vn|tên.*(việt|vn)/.test(x); }), id = hdr.findIndex(function (x) { return /dimension|kích thước|size/.test(x); });
         for (var r = h + 1; r < rows.length; r++) {
           var c = normCode(rows[r][ic]); if (!c || codes[c]) continue;          // first row wins on duplicates (2OLM is listed twice)
           var d = parseDim(rows[r][id]) || {};
@@ -174,7 +176,18 @@ function libLoadCache() {
 /* real models mapped to a code (confirmed or suggested), most units first */
 function modelsOfCode(code) {
   code = normCode(code);
-  return LIB.models.filter(function (m) { return m.code === code; }).sort(function (a, b) { return b.qty - a.qty; });
+  var main = LIB.models.filter(function (m) { return m.code === code; }).sort(function (a, b) { return b.qty - a.qty; });
+  // machines whose usual code is another one but that can be set up as this code (e.g. a lockstitch DDL-9000C as 1SLA)
+  var alt = LIB.models.filter(function (m) { return m.code !== code && !m.ok && (m.alt || []).indexOf(code) >= 0; }).sort(function (a, b) { return b.qty - a.qty; })
+    .map(function (m) { return Object.assign({}, m, { isAlt: true }); });
+  return main.concat(alt);
+}
+function modelsHtml(code, n, sep) {
+  var ms = modelsOfCode(code), shown = ms.slice(0, n);
+  if (!ms.length) return '';
+  var units = ms.reduce(function (s, m) { return s + m.qty; }, 0);
+  return shown.map(function (m) { return esc(m.brand + ' ' + m.model) + ' <span class="muted">×' + m.qty + (m.ok ? ' ✓' : '') + (m.isAlt ? ' (' + esc(t('altSetup')) + ')' : '') + '</span>'; }).join(sep) +
+    (ms.length > n ? sep + '<span class="muted">' + esc(t('moreModels', [ms.length - n, units])) + '</span>' : '');
 }
 function codeList() { return Object.keys(LIB.codes).sort(); }
 function codeName(code) { var o = LIB.codes[normCode(code)]; if (!o) return ''; return (LANG === 'vi' && o.vn) ? o.vn : (o.en || o.vn || ''); }

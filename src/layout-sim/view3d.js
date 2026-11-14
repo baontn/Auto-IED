@@ -262,6 +262,7 @@ function pick3d(e) {
   ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), V3.cam);
   var hits = ray.intersectObjects(V3.root.children, true), id = null;
   for (var i = 0; i < hits.length && !id; i++) { var o = hits[i].object; while (o && !o.userData.id) o = o.parent; if (o) id = o.userData.id; }
+  if (id && OPMODE) { var ti = itemById(id); if (ti && ti.kind === 'mc') { if (ti.noOp) delete ti.noOp; else ti.noOp = true; changed(); } return; }
   if (id) { if (e.shiftKey || e.ctrlKey) { var k = SEL.indexOf(id); if (k >= 0) SEL.splice(k, 1); else SEL.push(id); } else SEL = [id]; }
   else SEL = [];
   onSelChange();

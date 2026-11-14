@@ -87,15 +87,19 @@ table.mini sub{color:var(--muted);margin-right:3px}
 #selTools button{padding:3px 8px;font-size:15px;line-height:1.2}
 #selTools button.off{background:var(--badbg);color:var(--bad)}
 .calc{background:var(--sel);border-radius:8px;padding:8px 10px;margin-top:8px;font-size:13px}
+button.chipbtn{border-radius:16px;font-size:13px;padding:4px 11px;background:var(--sel);color:var(--accent);border-color:transparent}
+button.chipbtn.warn{background:var(--warnbg);color:var(--warn)}
+body.opmode #plan [data-id]{cursor:pointer!important}
 kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 4px;font-size:11px;background:var(--bg)}
 </style>
 </head>
 <body>
 <header>
-  <h1 data-t="appTitle">Mô phỏng bố trí chuyền</h1><span class="tag t-info">v1.2</span>
+  <h1 data-t="appTitle">Mô phỏng bố trí chuyền</h1><span class="tag t-info">v1.3</span>
   <nav class="tabs"><button data-tab="plan" class="on" data-t="tabPlan">Mặt bằng 2D</button><button data-tab="3d" data-t="tab3d">3D</button><button data-tab="lib" data-t="tabLib">Thư viện máy</button></nav>
   <div class="hr">
     <button id="bNew" data-t="bNew">Mới</button><button id="bOpen" data-t="bOpen">Mở…</button><button id="bSave" class="primary" data-t="bSave" data-tt="bSaveTip">Lưu…</button>
+    <button id="libChip" class="chipbtn"></button>
     <select id="lang" aria-label="Language"><option value="vi">VI</option><option value="en">EN</option></select>
   </div>
 </header>
@@ -123,6 +127,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
       <span class="sep"></span><button id="bPng3" onclick="exportImage()" data-t="bPng">Xuất ảnh</button>
       <span class="muted small" data-t="hint3d">Kéo chuột trái: xoay · chuột phải/Shift: di chuyển · lăn chuột: phóng to · bấm vào máy để chọn</span>
     </div>
+    <div id="opModeBar" class="banner" style="display:none" data-t="opModeBar">Chế độ người vận hành: bấm vào máy để bỏ / trả người vận hành. Esc hoặc bấm lại nút để thoát.</div>
     <svg id="plan" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI,Roboto,Arial,sans-serif"></svg>
     <div id="v3" style="display:none"></div>
     <div id="selTools"><button data-cmd="rotL" data-tt="ttRotL">⟲</button><button data-cmd="rotR" data-tt="ttRotR">⟳</button><button data-cmd="flip" data-tt="ttFlip">⇅ 180°</button><button data-cmd="op" data-tt="ttOp">👤</button><button data-cmd="del" data-tt="ttDel">🗑</button></div>
@@ -137,8 +142,8 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
       <div class="btns"><button id="bLineSetup" data-t="bLineSetup">Thiết lập chuyền theo số máy…</button></div>
     </div>
     <div class="card"><h3 data-t="opCardTitle">Người vận hành</h3>
-      <div class="muted small" data-t="opCardHelp">Một người làm nhiều máy: bỏ người ở các máy đó (chọn máy rồi bấm 👤, phím W, hoặc nhập công đoạn).</div>
-      <div class="btns"><input id="opOps" style="flex:1;min-width:90px" data-tp="opOpsPh" placeholder="VD: 36, 37"><button id="bOpOff" data-t="bOpOff">Bỏ người</button><button id="bOpOn" data-t="bOpOn">Có người</button></div>
+      <div class="muted small" data-t="opCardHelp">Một người làm 2 máy: bật chế độ dưới đây rồi bấm vào từng máy không có người riêng (bấm lại để trả người). Hoặc chọn máy rồi bấm 👤 / phím W.</div>
+      <div class="btns"><button id="bOpMode" data-t="bOpMode">👤 Bấm máy để bật/tắt người</button><button id="bOpAll" data-t="bOpAll">Tất cả có người</button></div>
     </div>
     <div class="card"><h3 data-t="selTitle">Đang chọn</h3><div id="selBody"></div></div>
     <div class="card"><h3 id="issHead"></h3><ul id="issList"></ul></div>
@@ -169,6 +174,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
   <div class="db">
     <div class="muted small" data-t="pasteHelp">Trong Excel, chọn vùng layout (các hình hoặc các ô có mã máy và số công đoạn), Ctrl+C, rồi Ctrl+V vào cửa sổ này. Hình (shape) hoặc ảnh chụp màn hình được đọc bằng nhận dạng chữ (OCR) ngay trên máy. Hàng số nằm phía nào của hàng mã máy thì người vận hành ngồi phía đó (có thể đổi từng hàng).</div>
     <div id="ocrDrop" class="drop"><span data-t="ocrDropTxt">Ctrl+V để dán ảnh / hình, hoặc kéo thả file ảnh vào đây</span> <button id="bOcrFile" data-t="bOcrFile">Chọn file ảnh…</button></div>
+    <div id="pasteLib" class="banner" style="display:none"><span data-t="pasteLibNeed">Chưa có thư viện máy trên trình duyệt này: chọn file Excel thư viện để đọc đúng mã và kích thước.</span><button id="bLib3" class="primary" data-t="bLib">Chọn file Excel thư viện…</button></div>
     <div id="ocrStatus" class="small"></div><div id="ocrView"></div>
     <div class="small muted" style="margin-top:6px" data-t="pasteTxtLbl">Kết quả dạng bảng (sửa trực tiếp nếu đọc sai; mỗi ô cách nhau bằng phím Tab):</div>
     <textarea id="pasteTxt" spellcheck="false"></textarea>
@@ -244,8 +250,9 @@ var I18N = {
     lsHelp: 'Nhập chiều dài chuyền bằng số máy chuẩn đặt nối nhau (mỗi máy chuẩn 107 cm). Chương trình tạo bàn giữa dài bằng số máy × 107 cm; hai hàng máy đặt hai bên bàn giữa khi dán layout.',
     lsUnits: 'Số máy chuẩn', lsUnit: 'Máy chuẩn (cm)', lsTable: 'Bàn giữa rộng (cm)', lsStart: 'Đầu chuyền (cm)', lsEnd: 'Cuối chuyền (cm)', lsWidth: 'Chuyền rộng (cm)',
     lsCalc: 'Dài chuyền = {0} + {1} × {2} + {3} = {4} cm · bàn giữa {5} × {6} cm · rộng {7} cm (để trống ô "Chuyền rộng" để tự tính: bàn giữa + hai bên máy, vùng người vận hành, lối đi).',
-    opCardTitle: 'Người vận hành', opCardHelp: 'Một người làm nhiều máy: bỏ người ở các máy đó (chọn máy rồi bấm 👤, phím W, hoặc nhập công đoạn).', opOpsPh: 'VD: 36, 37',
-    bOpOff: 'Bỏ người', bOpOn: 'Có người', opDone: 'Đã đổi {0} máy.', fHasOp: 'Có người vận hành riêng', bOpToggle: 'Bật/tắt người', noOpMark: '(không người)',
+    opCardTitle: 'Người vận hành', opCardHelp: 'Một người làm 2 máy: bật chế độ dưới đây rồi bấm vào từng máy không có người riêng (bấm lại để trả người). Hoặc chọn máy rồi bấm 👤 / phím W.',
+    bOpMode: '👤 Bấm máy để bật/tắt người', bOpModeOn: '✓ Đang bật/tắt người (bấm để thoát)', bOpAll: 'Tất cả có người', opModeBar: 'Chế độ người vận hành: bấm vào máy để bỏ / trả người vận hành. Esc hoặc bấm lại nút để thoát.',
+    altSetup: 'đổi cài đặt', moreModels: '+{0} model khác, tổng {1} máy', noModels: 'chưa có model nào gán mã này (xem tab Thư viện máy)', noRegister: 'chưa đọc danh sách máy (Sewing Name / brand / model)', libChip: '{0} mã · {1} model', libChipNone: 'Chưa có thư viện máy', pasteLibNeed: 'Chưa có thư viện máy trên trình duyệt này: chọn file Excel thư viện để đọc đúng mã và kích thước.', fHasOp: 'Có người vận hành riêng', bOpToggle: 'Bật/tắt người', noOpMark: '(không người)',
     ttRotL: 'Xoay trái 90° (Shift+R)', ttRotR: 'Xoay phải 90° (R)', ttFlip: 'Quay đầu 180° (F)', ttOp: 'Bật/tắt người vận hành (W)', ttDel: 'Xóa (Delete)',
     appTitle: 'Mô phỏng bố trí chuyền', tabPlan: 'Mặt bằng 2D', tab3d: '3D', tabLib: 'Thư viện máy',
     bNew: 'Mới', bOpen: 'Mở…', bSave: 'Lưu…', bSaveTip: 'Lưu layout thành file .layout.json (Ctrl+S)',
@@ -305,8 +312,9 @@ var I18N = {
     lsHelp: 'Enter the line length as a number of standard machines placed end to end (one standard machine = 107 cm). A central table of machines × 107 cm is created; the two machine rows are placed on both sides of it when you paste a layout.',
     lsUnits: 'Standard machines', lsUnit: 'Standard machine (cm)', lsTable: 'Central table width (cm)', lsStart: 'Line start (cm)', lsEnd: 'Line end (cm)', lsWidth: 'Line width (cm)',
     lsCalc: 'Line length = {0} + {1} × {2} + {3} = {4} cm · central table {5} × {6} cm · width {7} cm (leave "Line width" empty to compute it: table + machines, operator zones and aisles on both sides).',
-    opCardTitle: 'Operators', opCardHelp: 'One person runs several machines: remove the operator on those machines (select them and press 👤, key W, or type the operations).', opOpsPh: 'e.g. 36, 37',
-    bOpOff: 'No operator', bOpOn: 'Operator', opDone: '{0} machines changed.', fHasOp: 'Own operator', bOpToggle: 'Operator on/off', noOpMark: '(no operator)',
+    opCardTitle: 'Operators', opCardHelp: 'One person runs 2 machines: turn on the mode below and click each machine that has no operator of its own (click again to give it back). Or select machines and press 👤 / key W.',
+    bOpMode: '👤 Click machines to set operators', bOpModeOn: '✓ Setting operators (click to stop)', bOpAll: 'Operator everywhere', opModeBar: 'Operator mode: click a machine to remove / give back its operator. Esc or the button again to stop.',
+    altSetup: 'other set-up', moreModels: '+{0} more models, {1} machines in total', noModels: 'no model mapped to this code yet (see Machine library tab)', noRegister: 'machine list (Sewing Name / brand / model) not read', libChip: '{0} codes · {1} models', libChipNone: 'No machine library', pasteLibNeed: 'No machine library in this browser: choose the library Excel to read codes and sizes correctly.', fHasOp: 'Own operator', bOpToggle: 'Operator on/off', noOpMark: '(no operator)',
     ttRotL: 'Turn left 90° (Shift+R)', ttRotR: 'Turn right 90° (R)', ttFlip: 'Turn around 180° (F)', ttOp: 'Operator on/off (W)', ttDel: 'Delete (Delete)',
     appTitle: 'Line layout simulator', tabPlan: '2D plan', tab3d: '3D', tabLib: 'Machine library',
     bNew: 'New', bOpen: 'Open…', bSave: 'Save…', bSaveTip: 'Save the layout as a .layout.json file (Ctrl+S)',
@@ -491,9 +499,11 @@ function libReadWorkbook(wb, fileName) {
     var rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1, defval: '', raw: false });
     for (var h = 0; h < Math.min(rows.length, 15); h++) {
       var hdr = rows[h].map(function (x) { return String(x).trim().toLowerCase().replace(/\s+/g, ' '); });
-      var ic = hdr.indexOf('machine_code'), isn = hdr.indexOf('sewing name');
+      var ic = hdr.findIndex(function (x) { return /^(machine[ _]?code|mã máy|ma may|code)$/.test(x); }), isn = hdr.findIndex(function (x) { return /^(sewing ?name|machine ?name|tên máy)$/.test(x); });
+      if (ic >= 0 && hdr.findIndex(function (x) { return /dimension|kích thước|size/.test(x); }) < 0) ic = -1;
+      if (ic >= 0) isn = -1;
       if (ic >= 0) {
-        var ie = hdr.indexOf('machine_name'), iv = hdr.indexOf('machine_name_vn'), id = hdr.indexOf('dimension');
+        var ie = hdr.findIndex(function (x) { return /^machine[ _]?name$/.test(x); }), iv = hdr.findIndex(function (x) { return /name[ _]?vn|tên.*(việt|vn)/.test(x); }), id = hdr.findIndex(function (x) { return /dimension|kích thước|size/.test(x); });
         for (var r = h + 1; r < rows.length; r++) {
           var c = normCode(rows[r][ic]); if (!c || codes[c]) continue;          // first row wins on duplicates (2OLM is listed twice)
           var d = parseDim(rows[r][id]) || {};
@@ -551,7 +561,18 @@ function libLoadCache() {
 /* real models mapped to a code (confirmed or suggested), most units first */
 function modelsOfCode(code) {
   code = normCode(code);
-  return LIB.models.filter(function (m) { return m.code === code; }).sort(function (a, b) { return b.qty - a.qty; });
+  var main = LIB.models.filter(function (m) { return m.code === code; }).sort(function (a, b) { return b.qty - a.qty; });
+  // machines whose usual code is another one but that can be set up as this code (e.g. a lockstitch DDL-9000C as 1SLA)
+  var alt = LIB.models.filter(function (m) { return m.code !== code && !m.ok && (m.alt || []).indexOf(code) >= 0; }).sort(function (a, b) { return b.qty - a.qty; })
+    .map(function (m) { return Object.assign({}, m, { isAlt: true }); });
+  return main.concat(alt);
+}
+function modelsHtml(code, n, sep) {
+  var ms = modelsOfCode(code), shown = ms.slice(0, n);
+  if (!ms.length) return '';
+  var units = ms.reduce(function (s, m) { return s + m.qty; }, 0);
+  return shown.map(function (m) { return esc(m.brand + ' ' + m.model) + ' <span class="muted">×' + m.qty + (m.ok ? ' ✓' : '') + (m.isAlt ? ' (' + esc(t('altSetup')) + ')' : '') + '</span>'; }).join(sep) +
+    (ms.length > n ? sep + '<span class="muted">' + esc(t('moreModels', [ms.length - n, units])) + '</span>' : '');
 }
 function codeList() { return Object.keys(LIB.codes).sort(); }
 function codeName(code) { var o = LIB.codes[normCode(code)]; if (!o) return ''; return (LANG === 'vi' && o.vn) ? o.vn : (o.en || o.vn || ''); }
@@ -770,13 +791,6 @@ function setupLine(o) {
   else { c = { id: uid(), kind: 'obj', role: 'center', name: t('centerTable'), H: 75, rot: 0, color: '#d9cdb0' }; ST.items.unshift(c); }
   c.L = o.units * o.unit; c.W = o.tableW; c.x = nx; c.y = ny;
 }
-/* operators on/off for the machines whose operation is in the list ("36, 37+38") */
-function opList(txt) { return String(txt || '').split(/[\s,;+\/]+/).map(function (x) { return x.trim(); }).filter(Boolean); }
-function setOperatorByOps(txt, on) {
-  var ops = opList(txt), n = 0;
-  ST.items.forEach(function (it) { if (it.kind === 'mc' && ops.indexOf(String(it.op).trim()) >= 0) { if (on) delete it.noOp; else it.noOp = true; n++; } });
-  return n;
-}
 /* ---------- undo / persistence ---------- */
 function snap() { return JSON.stringify({ line: ST.line, erg: ST.erg, items: ST.items, seq: ST.seq }); }
 function restore(s) { var o = JSON.parse(s); ST.line = o.line; ST.erg = Object.assign({}, ERG_DEF, o.erg || {}); ST.items = o.items || []; ST.seq = o.seq || 1; }
@@ -933,6 +947,11 @@ function init2d() {
   svg.addEventListener('pointerdown', function (e) {
     svg.setPointerCapture(e.pointerId);
     var p = toWorld(e), g = e.target.closest ? e.target.closest('[data-id]') : null;
+    if (g && e.button === 0 && OPMODE) {           // operator mode: a click toggles this machine's operator
+      var ti = itemById(g.getAttribute('data-id'));
+      if (ti && ti.kind === 'mc') { if (ti.noOp) delete ti.noOp; else ti.noOp = true; changed(); }
+      DRAG = null; return;
+    }
     if (g && e.button === 0) {
       var id = g.getAttribute('data-id');
       if (e.shiftKey || e.ctrlKey) { var k = SEL.indexOf(id); if (k >= 0) SEL.splice(k, 1); else SEL.push(id); }
@@ -1335,6 +1354,7 @@ function pick3d(e) {
   ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), V3.cam);
   var hits = ray.intersectObjects(V3.root.children, true), id = null;
   for (var i = 0; i < hits.length && !id; i++) { var o = hits[i].object; while (o && !o.userData.id) o = o.parent; if (o) id = o.userData.id; }
+  if (id && OPMODE) { var ti = itemById(id); if (ti && ti.kind === 'mc') { if (ti.noOp) delete ti.noOp; else ti.noOp = true; changed(); } return; }
   if (id) { if (e.shiftKey || e.ctrlKey) { var k = SEL.indexOf(id); if (k >= 0) SEL.splice(k, 1); else SEL.push(id); } else SEL = [id]; }
   else SEL = [];
   onSelChange();
@@ -1678,14 +1698,14 @@ function renderSel() {
   } else if (its.length === 1) {
     var it = its[0], d = itemDim(it);
     if (it.kind === 'mc') {
-      var fam = famOf(it.code), ms = modelsOfCode(it.code).slice(0, 4);
+      var fam = famOf(it.code), mh = modelsHtml(it.code, 4, ' · ');
       h += '<div class="grid2">' + fld('fCode', t('fCode'), it.code, 'list="codeList" autocomplete="off"') + fld('fOp', t('fOp'), it.op || '') + '</div>';
       h += '<div class="small">' + esc(codeName(it.code) || t('notInLib')) + '</div>';
       h += '<label class="ck" style="margin-top:4px"><input type="checkbox" id="fHasOp"' + (it.noOp ? '' : ' checked') + '> ' + esc(t('fHasOp')) + '</label>';
       h += '<div class="grid3">' + fld('fL', t('fLen'), d.L, 'type="number" step="0.5" title="' + esc(t('fDimTip')) + '"') + fld('fW', t('fWid'), d.W, 'type="number" step="0.5" title="' + esc(t('fDimTip')) + '"') +
         '<label class="f"><span>' + esc(t('fFam')) + '</span><select id="fFam">' + FAMS.map(function (f) { return '<option value="' + f + '"' + (f === fam ? ' selected' : '') + '>' + esc(t('fam_' + f)) + '</option>'; }).join('') + '</select></label></div>';
       h += '<div class="muted small">' + (d.known ? '' : '⚠ ' + esc(t('dimDefault')) + ' ') + esc(t('fDimTip')) + '</div>';
-      if (ms.length) h += '<div class="small models"><b>' + esc(t('realModels')) + ':</b> ' + ms.map(function (m) { return esc(m.brand + ' ' + m.model) + ' <span class="muted">×' + m.qty + (m.ok ? ' ✓' : '') + '</span>'; }).join(' · ') + '</div>';
+      h += '<div class="small models"><b>' + esc(t('realModels')) + ':</b> ' + (mh || '<span class="muted">' + esc(LIB.models.length ? t('noModels') : t('noRegister')) + '</span>') + '</div>';
     } else {
       h += '<div class="grid2">' + fld('fName', t('fName'), it.name || '') + '<label class="f"><span>' + esc(t('fColor')) + '</span><input id="fColor" type="color" value="' + esc(it.color || '#c9ccd3') + '"></label></div>';
       h += '<div class="grid3">' + fld('fL', t('fLen'), it.L, 'type="number" step="1"') + fld('fW', t('fWid'), it.W, 'type="number" step="1"') + fld('fH', t('fHei'), it.H || 75, 'type="number" step="1"') + '</div>';
@@ -1811,10 +1831,23 @@ function libFile(f) {
   };
   rd.readAsArrayBuffer(f);
 }
+/* operator mode: each click on a machine gives / removes its own operator */
+var OPMODE = false;
+function setOpMode(on) {
+  OPMODE = !!on; document.body.classList.toggle('opmode', OPMODE);
+  $('bOpMode').classList.toggle('primary', OPMODE); $('bOpMode').textContent = t(OPMODE ? 'bOpModeOn' : 'bOpMode');
+  $('opModeBar').style.display = OPMODE ? '' : 'none';
+  if (OPMODE) { SEL = []; onSelChange(); }
+  render2d();
+}
 function fillCodeList() {
   $('codeList').innerHTML = codeList().map(function (c) { return '<option value="' + esc(c) + '">' + esc(codeName(c)) + '</option>'; }).join('');
   $('mapList').innerHTML = '<option value="#ATTACH">' + esc(t('mapAttach')) + '</option><option value="#NOLINE">' + esc(t('mapNoLine')) + '</option>' + $('codeList').innerHTML;
   $('libBanner').style.display = codeList().length ? 'none' : '';
+  var nC = codeList().length;
+  $('libChip').textContent = nC ? '📚 ' + t('libChip', [nC, LIB.models.length]) : '📚 ' + t('libChipNone');
+  $('libChip').className = 'chipbtn' + (nC ? '' : ' warn');
+  $('pasteLib').style.display = nC ? 'none' : '';
 }
 function renderLib() {
   var codes = codeList(), used = {};
@@ -1822,12 +1855,12 @@ function renderLib() {
   $('libInfo').textContent = codes.length ? t('libInfo', [LIB.file || '?', (LIB.loadedAt || '').slice(0, 10), codes.length, LIB.models.length, LIB.models.filter(function (m) { return m.ok; }).length]) : t('libEmpty');
   var q = ($('codeQ').value || '').toLowerCase();
   $('codeTb').innerHTML = codes.filter(function (c) { var o = LIB.codes[c]; return !q || (c + ' ' + o.en + ' ' + o.vn).toLowerCase().indexOf(q) >= 0; }).map(function (c) {
-    var o = LIB.codes[c], f = famOf(c), ms = modelsOfCode(c).slice(0, 3);
+    var o = LIB.codes[c], f = famOf(c);
     return '<tr data-c="' + esc(c) + '"><td><b>' + esc(c) + '</b>' + (o.custom ? ' <span class="tag t-info">' + esc(t('custom')) + '</span>' : '') + '</td><td class="small">' + esc(o.vn) + '<div class="muted">' + esc(o.en) + '</div></td>' +
       '<td class="n">' + esc(o.L ? o.L + ' × ' + o.W : '—') + '</td>' +
       '<td style="white-space:nowrap"><input class="w60" type="number" step="0.5" data-k="Lo" value="' + (o.Lo || '') + '" placeholder="' + (o.L || '') + '"> × <input class="w60" type="number" step="0.5" data-k="Wo" value="' + (o.Wo || '') + '" placeholder="' + (o.W || '') + '"></td>' +
       '<td><select data-k="fam">' + FAMS.map(function (x) { return '<option value="' + x + '"' + (x === f ? ' selected' : '') + '>' + esc(t('fam_' + x)) + '</option>'; }).join('') + '</select></td>' +
-      '<td class="small">' + ms.map(function (m) { return esc(m.brand + ' ' + m.model) + ' <span class="muted">×' + m.qty + '</span>'; }).join('<br>') + '</td><td class="n">' + (used[c] || '') + '</td></tr>';
+      '<td class="small">' + modelsHtml(c, 3, '<br>') + '</td><td class="n">' + (used[c] || '') + '</td></tr>';
   }).join('');
   renderMap();
 }
@@ -1945,7 +1978,7 @@ function onKey(e) {
   else if (k === 'Delete' || k === 'Backspace') deleteSel();
   else if (k === 'ArrowLeft') nudgeSel(-st, 0); else if (k === 'ArrowRight') nudgeSel(st, 0);
   else if (k === 'ArrowUp') nudgeSel(0, -st); else if (k === 'ArrowDown') nudgeSel(0, st);
-  else if (k === 'Escape') { SEL = []; onSelChange(); render2d(); }
+  else if (k === 'Escape') { if (OPMODE) setOpMode(false); SEL = []; onSelChange(); render2d(); }
   else done = false;
   if (done) { e.preventDefault(); renderSel(); }
 }
@@ -1988,8 +2021,16 @@ function startApp() {
   $('lsOk').onclick = applyLineSetup;
   $('selTools').addEventListener('pointerdown', function (e) { e.stopPropagation(); });
   $('selTools').addEventListener('click', function (e) { var b = e.target.closest('button[data-cmd]'); if (b) cmd(b.dataset.cmd); });
-  $('bOpOff').onclick = function () { var n = setOperatorByOps($('opOps').value, false); changed(); toast(t('opDone', [n])); };
-  $('bOpOn').onclick = function () { var n = setOperatorByOps($('opOps').value, true); changed(); toast(t('opDone', [n])); }; $('ergOk').onclick = function () { applyErg(false); }; $('ergReset').onclick = function () { applyErg(true); };
+  $('bOpMode').onclick = function () { setOpMode(!OPMODE); };
+  $('bOpAll').onclick = function () { ST.items.forEach(function (i) { delete i.noOp; }); changed(); };
+  $('libChip').onclick = function () { if (codeList().length) setTab('lib'); else { $('fileLib').value = ''; $('fileLib').click(); } };
+  $('bLib3').onclick = function () { $('fileLib').value = ''; $('fileLib').click(); };
+  document.addEventListener('dragover', function (e) { if (e.dataTransfer && [].some.call(e.dataTransfer.types || [], function (x) { return x === 'Files'; })) e.preventDefault(); });
+  document.addEventListener('drop', function (e) {
+    var f = e.dataTransfer && e.dataTransfer.files[0]; if (!f) return;
+    if (/\.(xlsx|xlsm|xls)$/i.test(f.name)) { e.preventDefault(); libFile(f); }
+    else if (/\.json$/i.test(f.name)) { e.preventDefault(); openFile(f); }
+  }); $('ergOk').onclick = function () { applyErg(false); }; $('ergReset').onclick = function () { applyErg(true); };
   document.querySelectorAll('dialog [data-close]').forEach(function (b) { b.onclick = function () { b.closest('dialog').close(); }; });
   $('bSave').onclick = saveFile;
   $('bOpen').onclick = function () { $('fileOpen').value = ''; $('fileOpen').click(); }; $('fileOpen').onchange = function () { openFile(this.files[0]); };

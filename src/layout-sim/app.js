@@ -52,14 +52,14 @@ function renderSel() {
   } else if (its.length === 1) {
     var it = its[0], d = itemDim(it);
     if (it.kind === 'mc') {
-      var fam = famOf(it.code), ms = modelsOfCode(it.code).slice(0, 4);
+      var fam = famOf(it.code), mh = modelsHtml(it.code, 4, ' · ');
       h += '<div class="grid2">' + fld('fCode', t('fCode'), it.code, 'list="codeList" autocomplete="off"') + fld('fOp', t('fOp'), it.op || '') + '</div>';
       h += '<div class="small">' + esc(codeName(it.code) || t('notInLib')) + '</div>';
       h += '<label class="ck" style="margin-top:4px"><input type="checkbox" id="fHasOp"' + (it.noOp ? '' : ' checked') + '> ' + esc(t('fHasOp')) + '</label>';
       h += '<div class="grid3">' + fld('fL', t('fLen'), d.L, 'type="number" step="0.5" title="' + esc(t('fDimTip')) + '"') + fld('fW', t('fWid'), d.W, 'type="number" step="0.5" title="' + esc(t('fDimTip')) + '"') +
         '<label class="f"><span>' + esc(t('fFam')) + '</span><select id="fFam">' + FAMS.map(function (f) { return '<option value="' + f + '"' + (f === fam ? ' selected' : '') + '>' + esc(t('fam_' + f)) + '</option>'; }).join('') + '</select></label></div>';
       h += '<div class="muted small">' + (d.known ? '' : '⚠ ' + esc(t('dimDefault')) + ' ') + esc(t('fDimTip')) + '</div>';
-      if (ms.length) h += '<div class="small models"><b>' + esc(t('realModels')) + ':</b> ' + ms.map(function (m) { return esc(m.brand + ' ' + m.model) + ' <span class="muted">×' + m.qty + (m.ok ? ' ✓' : '') + '</span>'; }).join(' · ') + '</div>';
+      h += '<div class="small models"><b>' + esc(t('realModels')) + ':</b> ' + (mh || '<span class="muted">' + esc(LIB.models.length ? t('noModels') : t('noRegister')) + '</span>') + '</div>';
     } else {
       h += '<div class="grid2">' + fld('fName', t('fName'), it.name || '') + '<label class="f"><span>' + esc(t('fColor')) + '</span><input id="fColor" type="color" value="' + esc(it.color || '#c9ccd3') + '"></label></div>';
       h += '<div class="grid3">' + fld('fL', t('fLen'), it.L, 'type="number" step="1"') + fld('fW', t('fWid'), it.W, 'type="number" step="1"') + fld('fH', t('fHei'), it.H || 75, 'type="number" step="1"') + '</div>';
@@ -185,10 +185,23 @@ function libFile(f) {
   };
   rd.readAsArrayBuffer(f);
 }
+/* operator mode: each click on a machine gives / removes its own operator */
+var OPMODE = false;
+function setOpMode(on) {
+  OPMODE = !!on; document.body.classList.toggle('opmode', OPMODE);
+  $('bOpMode').classList.toggle('primary', OPMODE); $('bOpMode').textContent = t(OPMODE ? 'bOpModeOn' : 'bOpMode');
+  $('opModeBar').style.display = OPMODE ? '' : 'none';
+  if (OPMODE) { SEL = []; onSelChange(); }
+  render2d();
+}
 function fillCodeList() {
   $('codeList').innerHTML = codeList().map(function (c) { return '<option value="' + esc(c) + '">' + esc(codeName(c)) + '</option>'; }).join('');
   $('mapList').innerHTML = '<option value="#ATTACH">' + esc(t('mapAttach')) + '</option><option value="#NOLINE">' + esc(t('mapNoLine')) + '</option>' + $('codeList').innerHTML;
   $('libBanner').style.display = codeList().length ? 'none' : '';
+  var nC = codeList().length;
+  $('libChip').textContent = nC ? '📚 ' + t('libChip', [nC, LIB.models.length]) : '📚 ' + t('libChipNone');
+  $('libChip').className = 'chipbtn' + (nC ? '' : ' warn');
+  $('pasteLib').style.display = nC ? 'none' : '';
 }
 function renderLib() {
   var codes = codeList(), used = {};
@@ -196,12 +209,12 @@ function renderLib() {
   $('libInfo').textContent = codes.length ? t('libInfo', [LIB.file || '?', (LIB.loadedAt || '').slice(0, 10), codes.length, LIB.models.length, LIB.models.filter(function (m) { return m.ok; }).length]) : t('libEmpty');
   var q = ($('codeQ').value || '').toLowerCase();
   $('codeTb').innerHTML = codes.filter(function (c) { var o = LIB.codes[c]; return !q || (c + ' ' + o.en + ' ' + o.vn).toLowerCase().indexOf(q) >= 0; }).map(function (c) {
-    var o = LIB.codes[c], f = famOf(c), ms = modelsOfCode(c).slice(0, 3);
+    var o = LIB.codes[c], f = famOf(c);
     return '<tr data-c="' + esc(c) + '"><td><b>' + esc(c) + '</b>' + (o.custom ? ' <span class="tag t-info">' + esc(t('custom')) + '</span>' : '') + '</td><td class="small">' + esc(o.vn) + '<div class="muted">' + esc(o.en) + '</div></td>' +
       '<td class="n">' + esc(o.L ? o.L + ' × ' + o.W : '—') + '</td>' +
       '<td style="white-space:nowrap"><input class="w60" type="number" step="0.5" data-k="Lo" value="' + (o.Lo || '') + '" placeholder="' + (o.L || '') + '"> × <input class="w60" type="number" step="0.5" data-k="Wo" value="' + (o.Wo || '') + '" placeholder="' + (o.W || '') + '"></td>' +
       '<td><select data-k="fam">' + FAMS.map(function (x) { return '<option value="' + x + '"' + (x === f ? ' selected' : '') + '>' + esc(t('fam_' + x)) + '</option>'; }).join('') + '</select></td>' +
-      '<td class="small">' + ms.map(function (m) { return esc(m.brand + ' ' + m.model) + ' <span class="muted">×' + m.qty + '</span>'; }).join('<br>') + '</td><td class="n">' + (used[c] || '') + '</td></tr>';
+      '<td class="small">' + modelsHtml(c, 3, '<br>') + '</td><td class="n">' + (used[c] || '') + '</td></tr>';
   }).join('');
   renderMap();
 }
@@ -319,7 +332,7 @@ function onKey(e) {
   else if (k === 'Delete' || k === 'Backspace') deleteSel();
   else if (k === 'ArrowLeft') nudgeSel(-st, 0); else if (k === 'ArrowRight') nudgeSel(st, 0);
   else if (k === 'ArrowUp') nudgeSel(0, -st); else if (k === 'ArrowDown') nudgeSel(0, st);
-  else if (k === 'Escape') { SEL = []; onSelChange(); render2d(); }
+  else if (k === 'Escape') { if (OPMODE) setOpMode(false); SEL = []; onSelChange(); render2d(); }
   else done = false;
   if (done) { e.preventDefault(); renderSel(); }
 }
@@ -362,8 +375,16 @@ function startApp() {
   $('lsOk').onclick = applyLineSetup;
   $('selTools').addEventListener('pointerdown', function (e) { e.stopPropagation(); });
   $('selTools').addEventListener('click', function (e) { var b = e.target.closest('button[data-cmd]'); if (b) cmd(b.dataset.cmd); });
-  $('bOpOff').onclick = function () { var n = setOperatorByOps($('opOps').value, false); changed(); toast(t('opDone', [n])); };
-  $('bOpOn').onclick = function () { var n = setOperatorByOps($('opOps').value, true); changed(); toast(t('opDone', [n])); }; $('ergOk').onclick = function () { applyErg(false); }; $('ergReset').onclick = function () { applyErg(true); };
+  $('bOpMode').onclick = function () { setOpMode(!OPMODE); };
+  $('bOpAll').onclick = function () { ST.items.forEach(function (i) { delete i.noOp; }); changed(); };
+  $('libChip').onclick = function () { if (codeList().length) setTab('lib'); else { $('fileLib').value = ''; $('fileLib').click(); } };
+  $('bLib3').onclick = function () { $('fileLib').value = ''; $('fileLib').click(); };
+  document.addEventListener('dragover', function (e) { if (e.dataTransfer && [].some.call(e.dataTransfer.types || [], function (x) { return x === 'Files'; })) e.preventDefault(); });
+  document.addEventListener('drop', function (e) {
+    var f = e.dataTransfer && e.dataTransfer.files[0]; if (!f) return;
+    if (/\.(xlsx|xlsm|xls)$/i.test(f.name)) { e.preventDefault(); libFile(f); }
+    else if (/\.json$/i.test(f.name)) { e.preventDefault(); openFile(f); }
+  }); $('ergOk').onclick = function () { applyErg(false); }; $('ergReset').onclick = function () { applyErg(true); };
   document.querySelectorAll('dialog [data-close]').forEach(function (b) { b.onclick = function () { b.closest('dialog').close(); }; });
   $('bSave').onclick = saveFile;
   $('bOpen').onclick = function () { $('fileOpen').value = ''; $('fileOpen').click(); }; $('fileOpen').onchange = function () { openFile(this.files[0]); };

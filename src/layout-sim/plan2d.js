@@ -126,6 +126,11 @@ function init2d() {
   svg.addEventListener('pointerdown', function (e) {
     svg.setPointerCapture(e.pointerId);
     var p = toWorld(e), g = e.target.closest ? e.target.closest('[data-id]') : null;
+    if (g && e.button === 0 && OPMODE) {           // operator mode: a click toggles this machine's operator
+      var ti = itemById(g.getAttribute('data-id'));
+      if (ti && ti.kind === 'mc') { if (ti.noOp) delete ti.noOp; else ti.noOp = true; changed(); }
+      DRAG = null; return;
+    }
     if (g && e.button === 0) {
       var id = g.getAttribute('data-id');
       if (e.shiftKey || e.ctrlKey) { var k = SEL.indexOf(id); if (k >= 0) SEL.splice(k, 1); else SEL.push(id); }

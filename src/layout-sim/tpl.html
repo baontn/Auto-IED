@@ -87,6 +87,9 @@ table.mini sub{color:var(--muted);margin-right:3px}
 #selTools button{padding:3px 8px;font-size:15px;line-height:1.2}
 #selTools button.off{background:var(--badbg);color:var(--bad)}
 .calc{background:var(--sel);border-radius:8px;padding:8px 10px;margin-top:8px;font-size:13px}
+button.chipbtn{border-radius:16px;font-size:13px;padding:4px 11px;background:var(--sel);color:var(--accent);border-color:transparent}
+button.chipbtn.warn{background:var(--warnbg);color:var(--warn)}
+body.opmode #plan [data-id]{cursor:pointer!important}
 kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 4px;font-size:11px;background:var(--bg)}
 </style>
 </head>
@@ -96,6 +99,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
   <nav class="tabs"><button data-tab="plan" class="on" data-t="tabPlan">Mặt bằng 2D</button><button data-tab="3d" data-t="tab3d">3D</button><button data-tab="lib" data-t="tabLib">Thư viện máy</button></nav>
   <div class="hr">
     <button id="bNew" data-t="bNew">Mới</button><button id="bOpen" data-t="bOpen">Mở…</button><button id="bSave" class="primary" data-t="bSave" data-tt="bSaveTip">Lưu…</button>
+    <button id="libChip" class="chipbtn"></button>
     <select id="lang" aria-label="Language"><option value="vi">VI</option><option value="en">EN</option></select>
   </div>
 </header>
@@ -123,6 +127,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
       <span class="sep"></span><button id="bPng3" onclick="exportImage()" data-t="bPng">Xuất ảnh</button>
       <span class="muted small" data-t="hint3d">Kéo chuột trái: xoay · chuột phải/Shift: di chuyển · lăn chuột: phóng to · bấm vào máy để chọn</span>
     </div>
+    <div id="opModeBar" class="banner" style="display:none" data-t="opModeBar">Chế độ người vận hành: bấm vào máy để bỏ / trả người vận hành. Esc hoặc bấm lại nút để thoát.</div>
     <svg id="plan" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI,Roboto,Arial,sans-serif"></svg>
     <div id="v3" style="display:none"></div>
     <div id="selTools"><button data-cmd="rotL" data-tt="ttRotL">⟲</button><button data-cmd="rotR" data-tt="ttRotR">⟳</button><button data-cmd="flip" data-tt="ttFlip">⇅ 180°</button><button data-cmd="op" data-tt="ttOp">👤</button><button data-cmd="del" data-tt="ttDel">🗑</button></div>
@@ -137,8 +142,8 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
       <div class="btns"><button id="bLineSetup" data-t="bLineSetup">Thiết lập chuyền theo số máy…</button></div>
     </div>
     <div class="card"><h3 data-t="opCardTitle">Người vận hành</h3>
-      <div class="muted small" data-t="opCardHelp">Một người làm nhiều máy: bỏ người ở các máy đó (chọn máy rồi bấm 👤, phím W, hoặc nhập công đoạn).</div>
-      <div class="btns"><input id="opOps" style="flex:1;min-width:90px" data-tp="opOpsPh" placeholder="VD: 36, 37"><button id="bOpOff" data-t="bOpOff">Bỏ người</button><button id="bOpOn" data-t="bOpOn">Có người</button></div>
+      <div class="muted small" data-t="opCardHelp">Một người làm 2 máy: bật chế độ dưới đây rồi bấm vào từng máy không có người riêng (bấm lại để trả người). Hoặc chọn máy rồi bấm 👤 / phím W.</div>
+      <div class="btns"><button id="bOpMode" data-t="bOpMode">👤 Bấm máy để bật/tắt người</button><button id="bOpAll" data-t="bOpAll">Tất cả có người</button></div>
     </div>
     <div class="card"><h3 data-t="selTitle">Đang chọn</h3><div id="selBody"></div></div>
     <div class="card"><h3 id="issHead"></h3><ul id="issList"></ul></div>
@@ -169,6 +174,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
   <div class="db">
     <div class="muted small" data-t="pasteHelp">Trong Excel, chọn vùng layout (các hình hoặc các ô có mã máy và số công đoạn), Ctrl+C, rồi Ctrl+V vào cửa sổ này. Hình (shape) hoặc ảnh chụp màn hình được đọc bằng nhận dạng chữ (OCR) ngay trên máy. Hàng số nằm phía nào của hàng mã máy thì người vận hành ngồi phía đó (có thể đổi từng hàng).</div>
     <div id="ocrDrop" class="drop"><span data-t="ocrDropTxt">Ctrl+V để dán ảnh / hình, hoặc kéo thả file ảnh vào đây</span> <button id="bOcrFile" data-t="bOcrFile">Chọn file ảnh…</button></div>
+    <div id="pasteLib" class="banner" style="display:none"><span data-t="pasteLibNeed">Chưa có thư viện máy trên trình duyệt này: chọn file Excel thư viện để đọc đúng mã và kích thước.</span><button id="bLib3" class="primary" data-t="bLib">Chọn file Excel thư viện…</button></div>
     <div id="ocrStatus" class="small"></div><div id="ocrView"></div>
     <div class="small muted" style="margin-top:6px" data-t="pasteTxtLbl">Kết quả dạng bảng (sửa trực tiếp nếu đọc sai; mỗi ô cách nhau bằng phím Tab):</div>
     <textarea id="pasteTxt" spellcheck="false"></textarea>

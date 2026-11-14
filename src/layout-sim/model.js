@@ -212,13 +212,6 @@ function setupLine(o) {
   else { c = { id: uid(), kind: 'obj', role: 'center', name: t('centerTable'), H: 75, rot: 0, color: '#d9cdb0' }; ST.items.unshift(c); }
   c.L = o.units * o.unit; c.W = o.tableW; c.x = nx; c.y = ny;
 }
-/* operators on/off for the machines whose operation is in the list ("36, 37+38") */
-function opList(txt) { return String(txt || '').split(/[\s,;+\/]+/).map(function (x) { return x.trim(); }).filter(Boolean); }
-function setOperatorByOps(txt, on) {
-  var ops = opList(txt), n = 0;
-  ST.items.forEach(function (it) { if (it.kind === 'mc' && ops.indexOf(String(it.op).trim()) >= 0) { if (on) delete it.noOp; else it.noOp = true; n++; } });
-  return n;
-}
 /* ---------- undo / persistence ---------- */
 function snap() { return JSON.stringify({ line: ST.line, erg: ST.erg, items: ST.items, seq: ST.seq }); }
 function restore(s) { var o = JSON.parse(s); ST.line = o.line; ST.erg = Object.assign({}, ERG_DEF, o.erg || {}); ST.items = o.items || []; ST.seq = o.seq || 1; }
