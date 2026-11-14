@@ -279,7 +279,7 @@ function shortSummary(bal, days) {
   return { n: neg.length, of: days.length, days: neg, worst: worst, gap: worst ? -bal[worst] : 0, first: neg[0] || null, last: neg[neg.length - 1] || null, sum: neg.reduce(function (s, d) { return s - bal[d]; }, 0) };
 }
 // actions of the Consolidator (one record per change, latest per id wins)
-var ACTION_TYPES = ['RENT', 'BUY', 'BORROW', 'DELAY', 'OTHER'], ACTION_QTY = ['RENT', 'BUY', 'BORROW', 'OTHER'];     // DELAY moves a style (line, style, n working days); OTHER carries machines only when qty is given
+var ACTION_TYPES = ['RENT', 'BUY', 'BORROW', 'AREA', 'DELAY', 'OTHER'], ACTION_QTY = ['RENT', 'BUY', 'BORROW', 'AREA', 'OTHER'];     // AREA = take machines back from an area that holds them (MC STATUS: lending, sample room, TRA...)     // DELAY moves a style (line, style, n working days); OTHER carries machines only when qty is given
 function latestActions(list) {
   var m = {}; (list || []).slice().sort(function (a, b) { return String(a.at).localeCompare(String(b.at)); }).forEach(function (r) { if (r && r.id) m[r.id] = r; });
   return Object.keys(m).map(function (k) { return m[k]; }).sort(function (a, b) { return String(a.id).localeCompare(String(b.id)); });

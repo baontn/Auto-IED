@@ -635,6 +635,7 @@ table.rzw td,table.rzw th{white-space:normal!important;overflow-wrap:anywhere;wo
 <script>// ===================== TEXTS (VI / EN) =====================
 var I18N = {
   vi: {
+    rsAtAREA: 'Thu hồi từ khu vực', rsFArea: 'Khu vực (số máy đang giữ)', rsErrArea: 'Chọn khu vực và số máy thu hồi không vượt quá số máy khu vực đang giữ.', rsAreaHdr: 'Khu vực đang giữ máy (đã trừ khỏi "Máy có sẵn")', rsAreaTake: 'Thu hồi',
     rsCardPUs: 'Thiếu theo PU (máy dùng ngày tệ nhất {0}) — bấm vào PU để xem chi tiết', rsPuUse: 'Máy PU dùng ngày tệ nhất', rsPuLines: 'Chuyền và mã hàng của PU ngày {0}', rsPuLine: 'Chuyền', thStyleLbl: 'Mã hàng', rsPuDays: 'Máy PU dùng theo từng ngày thiếu',
     homeLink: 'Trang chủ', rzHint: 'Kéo để đổi độ rộng cột; bấm đúp để trở về tự động', eDlgTitle: 'Ngày kết thúc của mã đang chạy {0} trên chuyền {1}', eDlgHint: 'Theo kế hoạch: {0}. Chọn ngày trên lịch rồi bấm Lưu, hoặc bấm "Theo kế hoạch" để dùng ngày của kế hoạch.', eSave: 'Lưu', ePlan: 'Theo kế hoạch', eCancel: 'Hủy', pickFilesRem: 'Chọn file Excel… (ghi nhớ)', remFiles: 'File Excel',
     rsApplied: 'Đã vào kế hoạch',
@@ -822,6 +823,7 @@ var I18N = {
     c_Added: 'Mới', c_Changed: 'Thay đổi', c_Unchanged: 'Không đổi'
   },
   en: {
+    rsAtAREA: 'Take back from area', rsFArea: 'Area (machines held)', rsErrArea: 'Choose an area and a quantity not above the machines the area holds.', rsAreaHdr: 'Areas holding machines (already taken off "Available")', rsAreaTake: 'Take back',
     rsCardPUs: 'Shortage by PU (machines used on the worst day {0}) — click a PU for details', rsPuUse: 'Machines the PU uses on the worst day', rsPuLines: 'Lines and styles of the PU on {0}', rsPuLine: 'Line', thStyleLbl: 'Style', rsPuDays: 'Machines the PU uses on each short day',
     homeLink: 'Home', rzHint: 'Drag to resize the column; double-click to reset', eDlgTitle: 'End date of the running style {0} on line {1}', eDlgHint: 'Per plan: {0}. Pick a date on the calendar and press Save, or press "Per plan" to use the plan date.', eSave: 'Save', ePlan: 'Per plan', eCancel: 'Cancel', pickFilesRem: 'Choose Excel files… (remembered)', remFiles: 'Excel files',
     rsApplied: 'Already in the plan',
@@ -1791,7 +1793,7 @@ function shortSummary(bal, days) {
   return { n: neg.length, of: days.length, days: neg, worst: worst, gap: worst ? -bal[worst] : 0, first: neg[0] || null, last: neg[neg.length - 1] || null, sum: neg.reduce(function (s, d) { return s - bal[d]; }, 0) };
 }
 // actions of the Consolidator (one record per change, latest per id wins)
-var ACTION_TYPES = ['RENT', 'BUY', 'BORROW', 'DELAY', 'OTHER'], ACTION_QTY = ['RENT', 'BUY', 'BORROW', 'OTHER'];     // DELAY moves a style (line, style, n working days); OTHER carries machines only when qty is given
+var ACTION_TYPES = ['RENT', 'BUY', 'BORROW', 'AREA', 'DELAY', 'OTHER'], ACTION_QTY = ['RENT', 'BUY', 'BORROW', 'AREA', 'OTHER'];     // AREA = take machines back from an area that holds them (MC STATUS: lending, sample room, TRA...)     // DELAY moves a style (line, style, n working days); OTHER carries machines only when qty is given
 function latestActions(list) {
   var m = {}; (list || []).slice().sort(function (a, b) { return String(a.at).localeCompare(String(b.at)); }).forEach(function (r) { if (r && r.id) m[r.id] = r; });
   return Object.keys(m).map(function (k) { return m[k]; }).sort(function (a, b) { return String(a.id).localeCompare(String(b.id)); });
@@ -3133,7 +3135,7 @@ window.techRender = techRender; window.renderNotices = renderNotices;
 // (latest proposal per machine group + IE Tech decisions + actions): the same calculation as the IE Tech grid (groupModel in prep.js). Tables are horizontal (days in columns).
 // Every machine group that is short has its own action panel under its table; any action typed in the panel shows its result at once (preview rows in the table).
 var RS = { openPU: {}, root: null, actions: [], actionsRaw: [], selG: null, selPU: null, view: 'short', edit: null, editG: '', forms: {}, cache: [], at: null };
-function rsForm(g) { return RS.forms[g] || (RS.forms[g] = { type: 'RENT', qty: '', from: '', to: '', pu: '', line: '', style: '', date: '', status: 'PLANNED', note: '', touched: false, active: false }); }
+function rsForm(g) { return RS.forms[g] || (RS.forms[g] = { type: 'RENT', area: '', qty: '', from: '', to: '', pu: '', line: '', style: '', date: '', status: 'PLANNED', note: '', touched: false, active: false }); }
 async function rsLoad(root) {
   RS.root = root; await tLoadAll(root); RS.actionsRaw = await pReadDir(root, 'prep/actions'); RS.actions = latestActions(RS.actionsRaw); RS.at = new Date();
 }
@@ -3163,9 +3165,15 @@ function rsRow(label, vals, days, o) {          // one horizontal row: sticky la
   return '<tr class="' + (o.cls || '') + '"' + (o.attr || '') + '><td class="s1' + (o.l1 ? ' l' : '') + '">' + (o.c1 || '') + '</td><td class="l s2">' + (o.c2 || '') + '</td><td class="l s3">' + label + '</td>' + days.map(function (d) { return rsCell(vals ? vals[d] : '', o.neg, o.cellCls); }).join('') + '</tr>';
 }
 function rsSign(v) { return v ? (v > 0 ? '+' + v : '' + v) : ''; }
+function rsAreas(X) { return (X.G0.parts || []).filter(function (p) { return p.sign < 0 && p.qty > 0; }); }      // MC STATUS columns that take machines away from production (lending, sample room, TRA, broken...)
+function rsAreaLeft(X, name, d) {                                      // machines the area still holds on day d after the confirmed take-backs
+  var p = rsAreas(X).filter(function (x) { return x.name === name; })[0], q = p ? p.qty : 0;
+  RS.actions.forEach(function (a) { if (a.type === 'AREA' && a.status === 'CONFIRMED' && a.group === X.g && a.area === name && (!a.from || d >= a.from) && (!a.to || d <= a.to)) q -= +a.qty || 0; });
+  return Math.max(0, q);
+}
 function rsActText(a) {
   if (a.type === 'DELAY') return a.from && a.to ? t('rsActDelayTxt2', [a.style, a.line, d2(a.from), d2(a.to), a.n]) : t('rsActDelayTxt', [a.style, a.line, a.n]);
-  return t('rsAt' + a.type) + (a.qty ? ' ' + (a.qty > 0 ? '+' : '') + a.qty : '') + (a.from ? ' (' + d2(a.from) + (a.to && a.to !== a.from ? '–' + d2(a.to) : '') + ')' : '') + (a.pu ? ' · ' + a.pu : '');
+  return t('rsAt' + a.type) + (a.area ? ' ' + a.area : '') + (a.qty ? ' ' + (a.qty > 0 ? '+' : '') + a.qty : '') + (a.from ? ' (' + d2(a.from) + (a.to && a.to !== a.from ? '–' + d2(a.to) : '') + ')' : '') + (a.pu ? ' · ' + a.pu : '');
 }
 function rsActLabel(a, edit, g, applied) {
   var tag = (applied ? '<span class="tag t-info">' + esc(t('rsApplied')) + '</span> ' : '') + '<span class="tag ' + (a.status === 'CONFIRMED' ? 't-ok' : a.status === 'CANCELLED' ? 't-bad' : 't-warn') + '">' + esc(t('rsSt' + a.status)) + '</span>', cx = a.status === 'CANCELLED';
@@ -3195,6 +3203,9 @@ function rsDefaults(X, f) {
     var st = rsStylesOf(X, f.line);
     if (st.indexOf(f.style) < 0) { f.style = st[1] || st[0] || ''; f.date = ''; }
     if (!f.date) { var inf = rsDelayInfo(X, f); if (inf) { var i = X.M.days.indexOf(inf.cur); f.date = X.M.days[i + 1] || inf.cur; } }
+  } else if (f.type === 'AREA') {
+    var ar = rsAreas(X); if (!ar.some(function (x) { return x.name === f.area; })) { f.area = ar[0] ? ar[0].name : ''; f.touched = false; }
+    if (!f.touched && !(RS.edit && RS.editG === X.g)) { var aq = (ar.filter(function (x) { return x.name === f.area; })[0] || {}).qty || 0; f.qty = Math.min(X.s.gap || 0, aq) || ''; f.from = X.s.first || ''; f.to = X.s.last || ''; }
   } else if (['RENT', 'BUY', 'BORROW'].indexOf(f.type) >= 0 && !f.touched && !(RS.edit && RS.editG === X.g)) { f.qty = X.s.gap || ''; f.from = X.s.first || ''; f.to = X.s.last || ''; }    // default: cover the worst gap over the short period
   return lines;
 }
@@ -3202,8 +3213,9 @@ function rsFormAction(X, f) {
   var ty = f.type, qty = f.qty === '' ? 0 : +f.qty;
   if (ty === 'DELAY') { var inf = rsDelayInfo(X, f); return inf && inf.to && inf.n > 0 ? { id: RS.edit || '__new', type: 'DELAY', group: '*', line: f.line, style: f.style, from: inf.cur, to: inf.to, n: inf.n, status: 'CONFIRMED', note: f.note } : null; }
   if (ty !== 'OTHER' && !(qty > 0)) return null;
+  if (ty === 'AREA') { var pa = rsAreas(X).filter(function (x) { return x.name === f.area; })[0]; if (!pa || qty > pa.qty) return null; }
   if (qty && (!f.from || !f.to || f.from > f.to)) return null;
-  return { id: RS.edit || '__new', type: ty, group: X.g, qty: qty || null, from: f.from, to: f.to, pu: f.pu, status: 'CONFIRMED', note: f.note };
+  return { id: RS.edit || '__new', type: ty, group: X.g, area: ty === 'AREA' ? f.area : '', qty: qty || null, from: f.from, to: f.to, pu: f.pu, status: 'CONFIRMED', note: f.note };
 }
 // instant result: the change of this action on the confirmed balance of the group (and, for a date move, on the other groups of the line)
 function rsPreview(X, f) {
@@ -3229,6 +3241,14 @@ function rsTableInner(X, days, edit, pv) {
     var e = st.eff[a.id] || {};
     h += '<tr data-rs-r="act" data-id="' + esc(a.id) + '"><td class="s1"></td><td class="l s2"></td><td class="l s3">' + rsActLabel(a, edit, X.g, st.applied[a.id]) + '</td>' + days.map(function (d) { var v = e[d] || 0; return '<td class="' + (v < 0 ? 'neg' : (v > 0 ? 'ok' : '')) + '">' + rsSign(v) + '</td>'; }).join('') + '</tr>';
   });
+  var areas = rsAreas(X);
+  if (areas.length) {
+    h += '<tr class="part" data-rs-r="areahdr"><td class="s1"></td><td class="l s2"></td><td class="l s3" colspan="1"><b>' + esc(t('rsAreaHdr')) + '</b></td>' + days.map(function () { return '<td></td>'; }).join('') + '</tr>';
+    areas.forEach(function (p) {
+      var v = {}; days.forEach(function (d) { v[d] = rsAreaLeft(X, p.name, d); });
+      h += rsRow('− ' + esc(p.name) + ' <button class="qa" data-rs-area="' + esc(X.g + '|' + p.name) + '" title="' + esc(t('rsAreaTake')) + '">↩ ' + esc(t('rsAreaTake')) + '</button>', v, days, { cls: 'part', attr: ' data-rs-r="area" data-area="' + esc(p.name) + '"' });
+    });
+  }
   if (st.all.length) h += rsRow('<b>' + esc(t('rsRowBalC')) + '</b>', st.balC, days, { cls: 'tot', attr: ' data-rs-r="balC"', neg: 1 }) + rsRow('<b>' + esc(t('rsRowBalA')) + '</b>', st.balA, days, { cls: 'tot', attr: ' data-rs-r="balA"', neg: 1 });
   if (pv && pv.self && pv.self.changed) {                        // the action being typed: its change and the result if confirmed
     var r = pv.self;
@@ -3263,6 +3283,7 @@ function rsPanelHtml(X, edit) {
       lbl('rsWiStyle', '<select data-f="style"' + g + '>' + opt(st, f.style, function (s) { var L = X.M.G.lines[f.line], c = L && L.styles[s] ? Object.keys(L.styles[s]).sort()[0] : ''; return s + (c ? ' (' + d2(c) + ')' : ''); }) + '</select>') +
       lbl('rsDelayNew', '<input data-f="date" type="date"' + g + ' value="' + esc(f.date) + '">');
   } else {
+    if (f.type === 'AREA') h += lbl('rsFArea', '<select data-f="area"' + g + '>' + opt(rsAreas(X).map(function (x) { return x.name; }), f.area, function (n) { var pa = rsAreas(X).filter(function (x) { return x.name === n; })[0]; return n + ' (' + (pa ? pa.qty : 0) + ')'; }) + '</select>');
     h += lbl(f.type === 'OTHER' ? 'rsFQtyOpt' : 'rsFQty', '<input data-f="qty" type="number"' + g + ' style="width:90px" value="' + esc(f.qty) + '">') + lbl('rsFFrom', '<input data-f="from" type="date"' + g + ' value="' + esc(f.from) + '">') + lbl('rsFTo', '<input data-f="to" type="date"' + g + ' value="' + esc(f.to) + '">') +
       lbl('rsFPU', '<select data-f="pu"' + g + '><option value="">' + esc(t('rsFPUany')) + '</option>' + opt(pus, f.pu, puName) + '</select>');
   }
@@ -3333,7 +3354,7 @@ function rsPuRows(X, conf, left) {
     return { pu: p, n: n, pct: tot ? Math.round(100 * n / tot) : 0, acts: acts, lines: ls, days: days, series: days.map(use), w: w, more: left.gap > 0 && !acts.length };
   }).filter(function (r) { return r.n; });
 }
-function rsActDetail(a) { return a.type === 'DELAY' ? (a.from && a.to ? t('rsActDelayDet', [a.style, a.line, d2(a.from), d2(a.to), a.n]) : t('rsActDelayDet0', [a.style, a.line, a.n])) : (a.qty ? (a.qty > 0 ? '+' : '') + a.qty : '') + (a.from ? ' (' + d2(a.from) + (a.to && a.to !== a.from ? '–' + d2(a.to) : '') + ')' : '') + (a.pu ? ' · ' + a.pu : ''); }
+function rsActDetail(a) { return a.type === 'DELAY' ? (a.from && a.to ? t('rsActDelayDet', [a.style, a.line, d2(a.from), d2(a.to), a.n]) : t('rsActDelayDet0', [a.style, a.line, a.n])) : (a.area ? a.area + ' ' : '') + (a.qty ? (a.qty > 0 ? '+' : '') + a.qty : '') + (a.from ? ' (' + d2(a.from) + (a.to && a.to !== a.from ? '–' + d2(a.to) : '') + ')' : '') + (a.pu ? ' · ' + a.pu : ''); }
 function rsActPill(a) { var k = a.type === 'DELAY' ? 't-info' : (a.type === 'OTHER' ? 't-warn' : 't-ok'); return '<li><span class="tag ' + k + '">' + esc(t('rsAt' + a.type)) + '</span> ' + esc(rsActDetail(a)) + (a.note ? ' <span class="muted small">· ' + esc(a.note) + '</span>' : '') + '</li>'; }
 function rsCardHtml() {
   var D = rsCardData(), h = '<div class="sc-head"><h3 style="margin:0">' + esc(t('rsCardTitle')) + '</h3>';
@@ -3398,7 +3419,7 @@ function rsLive(cid, edit, g) {                // instant result: only the group
 function rsInput(e, cid, edit, commit) {
   var el = e.target, f = el.dataset.f, g = el.dataset.g; if (!f || !g) return;
   var F = rsForm(g); F[f] = el.value; F.active = true; if (['qty', 'from', 'to'].indexOf(f) >= 0) F.touched = true;
-  if (commit && (f === 'type' || f === 'line' || f === 'style')) { if (f === 'line') { F.style = ''; F.date = ''; } if (f === 'style') F.date = ''; if (f === 'type') { F.date = ''; } rsPaint(cid, edit); return; }
+  if (commit && (f === 'type' || f === 'line' || f === 'style' || f === 'area')) { if (f === 'area') F.touched = false; if (f === 'line') { F.style = ''; F.date = ''; } if (f === 'style') F.date = ''; if (f === 'type') { F.date = ''; } rsPaint(cid, edit); return; }
   rsLive(cid, edit, g);
 }
 function rsRepaint() { if ($('rsC') && !$('rsC').closest('[data-pane]').hidden) rsPaint('rsC', true); if ($('rsS') && !$('supView').hidden) rsPaint('rsS', false); }
@@ -3413,9 +3434,10 @@ function rsToggle(sel, k, all) {          // nothing filtered yet: the click sel
   return Object.keys(m).length && Object.keys(m).length < all.length ? m : null;
 }
 async function rsClick(e, cid, edit) {
-  var b = e.target.closest('[data-rs-g],[data-rs-refresh],[data-rs-edit],[data-rs-conf],[data-rs-cancel],[data-rs-save],[data-rs-canceledit],[data-rs-cg],[data-rs-cgall],[data-rs-cpu],[data-rs-cpuall],[data-rs-view],[data-rs-export],[data-rs-pu2]'); if (!b) return;
+  var b = e.target.closest('[data-rs-g],[data-rs-refresh],[data-rs-edit],[data-rs-conf],[data-rs-cancel],[data-rs-save],[data-rs-canceledit],[data-rs-cg],[data-rs-cgall],[data-rs-cpu],[data-rs-cpuall],[data-rs-view],[data-rs-export],[data-rs-pu2],[data-rs-area]'); if (!b) return;
   var c = $(cid), d = b.dataset, byId = function (id) { return RS.actions.filter(function (a) { return a.id === id; })[0]; };
   try {
+    if (d.rsArea != null) { var ak = d.rsArea.split('|'), F2 = rsForm(ak[0]); F2.type = 'AREA'; F2.area = ak.slice(1).join('|'); F2.touched = false; F2.active = true; rsPaint(cid, edit); var pn2 = c.querySelector('[data-rs-panel="' + ak[0] + '"]'); if (pn2) pn2.scrollIntoView({ block: 'center' }); return; }
     if (d.rsPu2 != null) { RS.openPU[d.rsPu2] = !RS.openPU[d.rsPu2]; var cs = $(cid + 'S'); if (cs) cs.innerHTML = rsCardHtml(); return; }
     if (d.rsG != null) { RS.selG = RS.cache.length > 1 ? (function () { var o = {}; o[d.rsG] = true; return o; })() : null; rsPaint(cid, edit); return; }
     if (d.rsCg != null) { RS.selG = rsToggle(RS.selG, d.rsCg, RS.cache.map(function (x) { return x.g; })); rsPaint(cid, edit); return; }
@@ -3429,7 +3451,7 @@ async function rsClick(e, cid, edit) {
     var user = $('uName').value.trim();
     if (d.rsEdit != null) {
       var a0 = byId(d.rsEdit); if (!a0) return; var g0 = d.rsg || a0.group; RS.edit = a0.id; RS.editG = g0;
-      RS.forms[g0] = { type: a0.type, qty: a0.qty == null ? '' : a0.qty, from: a0.type === 'DELAY' ? '' : (a0.from || ''), to: a0.type === 'DELAY' ? '' : (a0.to || ''), pu: a0.pu || '', line: a0.line || '', style: a0.style || '', date: a0.type === 'DELAY' ? (a0.to || '') : '', status: a0.status === 'CANCELLED' ? 'PLANNED' : a0.status, note: a0.note || '', touched: true, active: true };
+      RS.forms[g0] = { type: a0.type, qty: a0.qty == null ? '' : a0.qty, from: a0.type === 'DELAY' ? '' : (a0.from || ''), to: a0.type === 'DELAY' ? '' : (a0.to || ''), pu: a0.pu || '', line: a0.line || '', style: a0.style || '', date: a0.type === 'DELAY' ? (a0.to || '') : '', status: a0.status === 'CANCELLED' ? 'PLANNED' : a0.status, note: a0.note || '', area: a0.area || '', touched: true, active: true };
       rsPaint(cid, edit); var pn = c.querySelector('[data-rs-panel="' + g0 + '"]'); if (pn) pn.scrollIntoView({ block: 'center' }); return;
     }
     if (d.rsCanceledit != null) { RS.edit = null; RS.editG = ''; RS.forms[d.g] = null; rsPaint(cid, edit); return; }
@@ -3438,11 +3460,12 @@ async function rsClick(e, cid, edit) {
       await rsWrite(Object.assign({}, a, { status: d.rsConf != null ? 'CONFIRMED' : 'CANCELLED', by: user, at: new Date().toISOString() })); rsPaint(cid, edit); paintTabs(); return;
     }
     if (d.rsSave != null) {
-      var g = d.g, X = RS.cache.filter(function (x) { return x.g === g; })[0], f = rsForm(g), err = c.querySelector('[data-rs-err="' + g + '"]'), ty = f.type, qty = f.qty === '' ? 0 : +f.qty, isDelay = ty === 'DELAY', needQty = !isDelay && ty !== 'OTHER', inf = isDelay ? rsDelayInfo(X, f) : null;
+      var g = d.g, X = RS.cache.filter(function (x) { return x.g === g; })[0], f = rsForm(g), err = c.querySelector('[data-rs-err="' + g + '"]'), ty = f.type, qty = f.qty === '' ? 0 : +f.qty, isDelay = ty === 'DELAY', needQty = !isDelay && ty !== 'OTHER', inf = isDelay ? rsDelayInfo(X, f) : null, pa = ty === 'AREA' ? rsAreas(X).filter(function (x) { return x.name === f.area; })[0] : null;
       var bad = isDelay ? (!inf ? t('rsErrDelay') : inf.out ? t('rsDelayOut') : (!inf.to || inf.n <= 0) ? t('rsDelayLater') : '') : ((needQty && !(qty > 0)) ? t('rsErrQty') : (qty && (!f.from || !f.to || f.from > f.to)) ? t('rsErrDates') : (ty === 'OTHER' && !qty && !String(f.note).trim()) ? t('rsErrNote') : '');
+      if (!bad && ty === 'AREA' && (!pa || qty > pa.qty)) bad = t('rsErrArea');
       if (bad) { err.textContent = bad; return; }
       if (!user) { alert(t('lcNeedName')); return; }
-      var rec = { id: RS.edit || (tStamp() + '-' + Math.random().toString(36).slice(2, 6)), type: ty, group: isDelay ? '*' : g, qty: isDelay ? null : (qty || null), from: isDelay ? inf.cur : f.from, to: isDelay ? inf.to : f.to, pu: isDelay ? '' : f.pu, line: isDelay ? f.line : '', style: isDelay ? f.style : '', n: isDelay ? inf.n : null, status: f.status, note: String(f.note).trim(), by: user, at: new Date().toISOString() };
+      var rec = { id: RS.edit || (tStamp() + '-' + Math.random().toString(36).slice(2, 6)), type: ty, group: isDelay ? '*' : g, area: ty === 'AREA' ? f.area : '', qty: isDelay ? null : (qty || null), from: isDelay ? inf.cur : f.from, to: isDelay ? inf.to : f.to, pu: isDelay ? '' : f.pu, line: isDelay ? f.line : '', style: isDelay ? f.style : '', n: isDelay ? inf.n : null, status: f.status, note: String(f.note).trim(), by: user, at: new Date().toISOString() };
       await rsWrite(rec); RS.edit = null; RS.editG = ''; RS.forms[g] = null; rsPaint(cid, edit); paintTabs();
     }
   } catch (er) { alert(er.message || String(er)); }
