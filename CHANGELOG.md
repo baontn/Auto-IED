@@ -3,6 +3,7 @@
 Dates are the build dates in the working sessions (Nov 2026). "LC" = Layout Check, "IBM" = IE Báo cáo máy (IE_BaoCaoMay.html).
 
 ## Docs
+- **English** The home page has a VI/EN switch (remembered) and both manuals exist in English (`manual/*.en.html`) with VI/EN links in their headers.
 - **Manuals** New illustrated HTML manuals for both tools (`manual/`), screenshots taken from synthetic demo data (`tools/manual_shots/`); Crystal logo on the home page. Old text guides, slide deck (v7.7) and the English guide removed.
 
 ## IBM

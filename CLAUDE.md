@@ -26,10 +26,10 @@ tools/build_ie_bao_cao_may.py   python3 tools/build_ie_bao_cao_may.py   -> regen
 tests/                   Playwright (python) harnesses, see section 7
 index.html               landing page for GitHub Pages;  update.bat = `git pull` for the shared-folder option
 logo.png icon.png         Crystal logo (copied from the Time Study app) used by index.html and manual/*.html
-manual/                  User manuals (Vietnamese, HTML, hand-written) with screenshots in manual/img/ (taken from SYNTHETIC demo data by tools/manual_shots/, see its README); linked from index.html
+manual/                  User manuals in Vietnamese (`*.html`) AND English (`*.en.html`), HTML, hand-written; the home page `index.html` also has a VI/EN switch (localStorage `ie_site_lang`, shared with the manuals). KEEP BOTH LANGUAGES IN SYNC when a manual changes; the screenshots show the Vietnamese UI and are shared with screenshots in manual/img/ (taken from SYNTHETIC demo data by tools/manual_shots/, see its README); linked from index.html
 ```
 
-Release routine for IBM: edit `src/...` -> bump `src/ie-bao-cao-may/VERSION` -> `python3 tools/build_ie_bao_cao_may.py` -> `node --check` each src JS -> run smoke/regression tests -> update `manual/ie-bao-cao-may.html` (and retake screenshots if the UI changed, `tools/manual_shots/README.md`), `CHANGELOG.md`, `index.html` version tag -> commit/push. For LC: edit the HTML, change the `#verTag` text, update `manual/layout-check.html`, `CHANGELOG.md` and `index.html`.
+Release routine for IBM: edit `src/...` -> bump `src/ie-bao-cao-may/VERSION` -> `python3 tools/build_ie_bao_cao_may.py` -> `node --check` each src JS -> run smoke/regression tests -> update `manual/ie-bao-cao-may.html` AND `manual/ie-bao-cao-may.en.html` (and retake screenshots if the UI changed, `tools/manual_shots/README.md`), `CHANGELOG.md`, `index.html` version tag -> commit/push. For LC: edit the HTML, change the `#verTag` text, update `manual/layout-check.html` AND `manual/layout-check.en.html`, `CHANGELOG.md` and `index.html`.
 
 ## 3. Style of work the user expects
 
