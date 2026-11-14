@@ -59,17 +59,29 @@ function ocrPrepare(img) {
 /* ---------- code correction against the library ---------- */
 var CONF = { O: '0DQC', '0': 'ODQC', D: '0O', Q: '0O', I: '1LT', '1': 'ILT7', L: '1I', S: '586', '5': 'S6', B: '8', '8': 'BS', Z: '2', '2': 'Z', G: '6C', '6': 'GCS', A: '4', '4': 'A', T: '7I1', '7': 'T1', C: 'G0O6' };
 function subCost(a, b) { if (a === b) return 0; return (CONF[a] && CONF[a].indexOf(b) >= 0) ? 0.3 : 1; }
+/* OCR.seen = codes read exactly elsewhere in the same picture (preferred when two codes are equally close) */
+function codeWeight(c) {
+  var w = (OCR.seen && OCR.seen[c]) ? 1000 : 0;
+  LIB.models.forEach(function (m) { if (m.code === c) w += m.qty; });
+  return w;
+}
 function fixCode(raw) {
   var s = String(raw || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
   if (s.length !== 4) return null;
   if (LIB.codes[s]) return { code: s, cost: 0 };
-  var bestC = null, best = 9, tie = false;
+  var cand = [];
   Object.keys(LIB.codes).forEach(function (c) {
     if (c.length !== 4) return;
     var cost = 0; for (var i = 0; i < 4 && cost < 2; i++) cost += subCost(s[i], c[i]);
-    if (cost < best - 1e-9) { best = cost; bestC = c; tie = false; } else if (Math.abs(cost - best) < 1e-9) tie = true;
+    if (cost < 2) cand.push({ c: c, cost: Math.round(cost * 10) / 10 });
   });
-  if (bestC && best <= 1 && !(tie && best >= 1)) return { code: bestC, cost: best };
+  cand.sort(function (x, y) { return x.cost - y.cost; });
+  if (cand.length) {
+    var best = cand[0].cost, tied = cand.filter(function (x) { return x.cost === best; }), second = cand.filter(function (x) { return x.cost > best; })[0];
+    if (tied.length > 1) tied.sort(function (x, y) { return codeWeight(y.c) - codeWeight(x.c); });
+    var clearTie = tied.length === 1 || codeWeight(tied[0].c) > codeWeight(tied[1].c);
+    if (clearTie && (best <= 1 || (best <= 1.6 && (!second || second.cost - best >= 0.7)))) return { code: tied[0].c, cost: best };
+  }
   if (/^[0-9A-Z]{4}$/.test(s) && /[A-Z]/.test(s)) return { code: s, cost: 2, unknown: true };
   return null;
 }
@@ -91,6 +103,8 @@ function fixNum(raw) {
 function median(a) { if (!a.length) return 0; var b = a.slice().sort(function (x, y) { return x - y; }); return b[b.length >> 1]; }
 function ocrToGrid(words) {
   var codes = [], nums = [], other = [];
+  OCR.seen = {};
+  words.forEach(function (w) { var r = String(w.text || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); if (LIB.codes[r]) OCR.seen[r] = 1; });
   words.forEach(function (w) {
     var raw = String(w.text || '').toUpperCase().replace(/[^A-Z0-9]/g, ''), b = w.bbox;
     if (!raw) return;
@@ -104,7 +118,7 @@ function ocrToGrid(words) {
     var fc = raw.length >= 4 && raw.length <= 6 ? fixCodeLoose(raw) : null, fn = fixNum(raw);
     if (w.reread) tok.reread = true;
     if (fc && !(fn && raw.length <= 3)) { tok.code = fc.code; tok.cost = fc.cost; tok.unknown = !!fc.unknown; codes.push(tok); }
-    else if (fn) { tok.num = fn; nums.push(tok); }
+    else if (fn) { tok.num = fn; tok.doubt = (w.confidence != null && w.confidence < 55); nums.push(tok); }
     else other.push(tok);
   });
   if (!codes.length) return { rows: [], tsv: '', codes: codes, nums: nums, other: other };
@@ -124,6 +138,8 @@ function ocrToGrid(words) {
   function colOf(x) { return Math.max(0, Math.round((x - minX) / pitch)); }
   codes.forEach(function (c) { c.col = colOf(c.cx); });
   // numbers: attach to the nearest code row (above or below) and the code in the same column
+  var lens = nums.map(function (n) { return n.num.length; }), mainLen = median(lens);
+  nums.forEach(function (n) { if (mainLen >= 2 && n.num.length === 1) n.doubt = true; });
   rows.forEach(function (r) { r.up = 0; r.dn = 0; r.ops = {}; r.dys = []; });
   nums.forEach(function (n) {
     var best = null, bd = Infinity;
@@ -131,15 +147,18 @@ function ocrToGrid(words) {
     if (!best || bd > hMed * 4 || bd < hMed * 0.5) return;
     var col = colOf(n.cx), hit = best.items.filter(function (c) { return c.col === col; })[0];
     if (!hit) return;
-    if (best.ops[col] == null) best.ops[col] = n.num;
+    n.used = true; n.col = col;
+    if (n.doubt) { if (n.cy < best.cy) best.up++; else best.dn++; best.dys.push(n.cy - best.cy); return; }
+    if (best.ops[col] == null || n.reread) best.ops[col] = n.num;
     n.used = true;
     if (n.cy < best.cy) best.up++; else best.dn++;
     best.dys.push(n.cy - best.cy);
   });
-  var nCols = Math.max.apply(null, codes.map(function (c) { return c.col; })) + 1, lines = [];
+  var nCols = Math.max.apply(null, codes.map(function (c) { return c.col; })) + 1, lines = [], chosen = [], nOps = 0;
   function line(arr) { var a = []; for (var i = 0; i < nCols; i++) a.push(arr[i] == null ? '' : arr[i]); return a.join('\t'); }
   rows.forEach(function (r, i) {
-    var cm = {}; r.items.forEach(function (c) { if (cm[c.col] == null) cm[c.col] = c.code; });
+    var cm = {}, cc = {}, ct = {}; r.items.forEach(function (c) { var k = c.unknown ? 9 : (c.reread ? -1 : c.cost); if (cm[c.col] == null || k < cc[c.col]) { cm[c.col] = c.code; cc[c.col] = k; ct[c.col] = c; } });
+    Object.keys(ct).forEach(function (k) { chosen.push(ct[k]); }); nOps += Object.keys(r.ops).length;
     var hasNum = Object.keys(r.ops).length > 0, top = hasNum ? r.up >= r.dn : i < rows.length / 2;
     if (i) lines.push('');
     if (top && hasNum) lines.push(line(r.ops));
@@ -149,7 +168,7 @@ function ocrToGrid(words) {
   // cells where a machine is expected but nothing was read: another row has a machine in that column, or a number is next to it
   var missing = [], colsUsed = {}; codes.forEach(function (c) { colsUsed[c.col] = 1; });
   rows.forEach(function (r) {
-    var have = {}; r.items.forEach(function (c) { have[c.col] = 1; });
+    var have = {}; r.items.forEach(function (c) { if (!c.unknown) have[c.col] = 1; });
     var lo = Math.min.apply(null, r.items.map(function (c) { return c.col; })), hi = Math.max.apply(null, r.items.map(function (c) { return c.col; }));
     for (var c = 0; c < nCols; c++) {
       if (have[c]) continue;
@@ -166,7 +185,7 @@ function ocrToGrid(words) {
       r.items.forEach(function (c) { if (r.ops[c.col] == null) missing.push({ kind: 'num', x: c.cx, y: r.cy + dy, w: pitch * 0.9, h: hMed * 2.2, col: c.col }); });
     }
   });
-  return { rows: rows, tsv: lines.join('\n') + '\n', codes: codes, nums: nums, other: other, pitch: pitch, missing: missing };
+  return { rows: rows, tsv: lines.join('\n') + '\n', codes: codes, nums: nums, other: other, pitch: pitch, missing: missing, chosen: chosen, nOps: nOps };
 }
 
 /* ---------- UI ---------- */
@@ -192,8 +211,8 @@ function ocrImage(blob) {
   }).then(function (words) {
     var g = ocrToGrid(words); OCR.last = g;
     ocrDrawBoxes(img, g);
-    var fixed = g.codes.filter(function (c) { return c.cost > 0 && !c.unknown; }).length, unk = g.codes.filter(function (c) { return c.unknown; }).length;
-    st.className = 'small'; st.textContent = t('ocrDone', [g.codes.length, g.nums.filter(function (n) { return n.used; }).length, fixed, unk]);
+    var ch = g.chosen || [], fixed = ch.filter(function (c) { return (c.cost > 0 || c.reread) && !c.unknown; }).length, unk = ch.filter(function (c) { return c.unknown; }).length;
+    st.className = 'small'; st.textContent = t('ocrDone', [ch.length, g.nOps || 0, fixed, unk]);
     var ta = document.getElementById('pasteTxt'); ta.value = g.tsv; pastePreview();
     return g;
   }).catch(function (e) { console.error(e); st.className = 'small t-bad tagline'; st.textContent = t('ocrErr') + ': ' + (e && e.message || e); });

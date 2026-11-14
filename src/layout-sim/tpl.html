@@ -31,7 +31,7 @@ header h1{font-size:16px;margin:0 6px 0 0}
 .hr{margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 #paneWork{flex:1;display:grid;grid-template-columns:1fr 330px;min-height:0}
 @media (max-width:900px){#paneWork{grid-template-columns:1fr;grid-template-rows:60vh auto}}
-.stage{display:flex;flex-direction:column;min-width:0;min-height:0;border-right:1px solid var(--line)}
+.stage{position:relative;display:flex;flex-direction:column;min-width:0;min-height:0;border-right:1px solid var(--line)}
 .toolbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:7px 10px;background:var(--panel);border-bottom:1px solid var(--line)}
 .toolbar .sep{width:1px;height:22px;background:var(--line);margin:0 2px}
 .toolbar label{display:flex;gap:4px;align-items:center;font-size:13px}
@@ -83,6 +83,10 @@ table.mini sub{color:var(--muted);margin-right:3px}
 .ocrwrap{position:relative;margin-top:6px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff}
 .ocrwrap img{display:block;width:100%;height:auto}.ocrwrap svg{position:absolute;inset:0;width:100%;height:100%}
 #ocrView>img{max-width:100%;opacity:.6}
+#selTools{position:absolute;z-index:4;display:none;gap:3px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:3px;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+#selTools button{padding:3px 8px;font-size:15px;line-height:1.2}
+#selTools button.off{background:var(--badbg);color:var(--bad)}
+.calc{background:var(--sel);border-radius:8px;padding:8px 10px;margin-top:8px;font-size:13px}
 kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 4px;font-size:11px;background:var(--bg)}
 </style>
 </head>
@@ -121,6 +125,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
     </div>
     <svg id="plan" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI,Roboto,Arial,sans-serif"></svg>
     <div id="v3" style="display:none"></div>
+    <div id="selTools"><button data-cmd="rotL" data-tt="ttRotL">⟲</button><button data-cmd="rotR" data-tt="ttRotR">⟳</button><button data-cmd="flip" data-tt="ttFlip">⇅ 180°</button><button data-cmd="op" data-tt="ttOp">👤</button><button data-cmd="del" data-tt="ttDel">🗑</button></div>
     <div class="hint"><span data-t="hint2d">Kéo máy để di chuyển · R / Shift+R xoay 90° · F quay đầu · Delete xóa · Ctrl+D nhân bản · mũi tên dịch 1 cm (Shift 10 cm) · Shift+kéo chọn vùng · lăn chuột phóng to · kéo nền để di chuyển · Alt khi kéo: bỏ bám lưới</span> <span id="zoomTxt" class="muted"></span></div>
   </div>
   <aside>
@@ -129,6 +134,11 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
       <label class="f"><span data-t="lnLen">Dài (cm)</span><input id="lnL" type="number" step="10"></label><label class="f"><span data-t="lnWid">Rộng (cm)</span><input id="lnW" type="number" step="10"></label>
       <label class="f"><span>&nbsp;</span><button id="bErg" data-t="bErg">Công thái học…</button></label></div>
       <div class="muted small" id="lnUsed"></div>
+      <div class="btns"><button id="bLineSetup" data-t="bLineSetup">Thiết lập chuyền theo số máy…</button></div>
+    </div>
+    <div class="card"><h3 data-t="opCardTitle">Người vận hành</h3>
+      <div class="muted small" data-t="opCardHelp">Một người làm nhiều máy: bỏ người ở các máy đó (chọn máy rồi bấm 👤, phím W, hoặc nhập công đoạn).</div>
+      <div class="btns"><input id="opOps" style="flex:1;min-width:90px" data-tp="opOpsPh" placeholder="VD: 36, 37"><button id="bOpOff" data-t="bOpOff">Bỏ người</button><button id="bOpOn" data-t="bOpOn">Có người</button></div>
     </div>
     <div class="card"><h3 data-t="selTitle">Đang chọn</h3><div id="selBody"></div></div>
     <div class="card"><h3 id="issHead"></h3><ul id="issList"></ul></div>
@@ -170,6 +180,22 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
     <label class="ck"><input type="checkbox" id="pasteFit"><span data-t="pasteFit">Chỉnh kích thước chuyền theo layout</span></label>
     <button data-close data-t="cancel">Hủy</button><button id="pasteGo" class="primary" data-t="pasteGo" disabled>Đưa vào mặt bằng</button>
   </div>
+</dialog>
+<dialog id="dlgLine"><div class="dh"><span data-t="lsTitle">Thiết lập chuyền</span><button data-close>✕</button></div>
+  <div class="db">
+    <div class="muted small" data-t="lsHelp">Nhập chiều dài chuyền bằng số máy chuẩn đặt nối nhau (mỗi máy chuẩn 107 cm). Chương trình tạo bàn giữa dài bằng số máy × 107 cm; hai hàng máy đặt hai bên bàn giữa khi dán layout.</div>
+    <div class="grid3" style="margin-top:8px">
+      <label class="f" style="grid-column:span 3"><span data-t="lnName">Tên chuyền</span><input id="lsName"></label>
+      <label class="f"><span data-t="lsUnits">Số máy chuẩn</span><input id="lsUnits" type="number" min="1" step="1"></label>
+      <label class="f"><span data-t="lsUnit">Máy chuẩn (cm)</span><input id="lsUnit" type="number" min="10" step="1"></label>
+      <label class="f"><span data-t="lsTable">Bàn giữa rộng (cm)</span><input id="lsTable" type="number" min="0" step="1"></label>
+      <label class="f"><span data-t="lsStart">Đầu chuyền (cm)</span><input id="lsStart" type="number" min="0" step="10"></label>
+      <label class="f"><span data-t="lsEnd">Cuối chuyền (cm)</span><input id="lsEnd" type="number" min="0" step="10"></label>
+      <label class="f"><span data-t="lsWidth">Chuyền rộng (cm)</span><input id="lsWidth" type="number" min="50" step="10"></label>
+    </div>
+    <div class="calc" id="lsCalc"></div>
+  </div>
+  <div class="df"><button data-close data-t="cancel">Hủy</button><button id="lsOk" class="primary" data-t="apply">Áp dụng</button></div>
 </dialog>
 <dialog id="dlgErg"><div class="dh"><span data-t="ergTitle">Công thái học và khoảng cách</span><button data-close>✕</button></div>
   <div class="db"><div class="muted small" data-t="ergHelp">Vùng người vận hành được vẽ phía trước mỗi máy và kiểm tra chồng lấn. Giá trị mặc định là đề xuất; IE chỉnh theo tiêu chuẩn nhà máy.</div><div id="ergBody"></div></div>

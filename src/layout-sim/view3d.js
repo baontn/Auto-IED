@@ -161,8 +161,9 @@ function buildObject(it) {
 function textSprite(t1, t2) {
   var cv = document.createElement('canvas'); cv.width = 256; cv.height = 128; var x = cv.getContext('2d');
   x.fillStyle = 'rgba(20,24,31,.78)'; x.beginPath(); if (x.roundRect) x.roundRect(8, 14, 240, 100, 18); else x.rect(8, 14, 240, 100); x.fill();
-  x.fillStyle = '#fff'; x.textAlign = 'center'; x.font = 'bold 50px Segoe UI, Arial'; x.fillText(t1, 128, t2 ? 64 : 82);
-  if (t2) { x.font = '600 34px Segoe UI, Arial'; x.fillStyle = '#ffd36b'; x.fillText(t2, 128, 104); }
+  x.textAlign = 'center';
+  if (t2) { x.font = 'bold 60px Segoe UI, Arial'; x.fillStyle = '#ffd36b'; x.fillText(t2, 128, 66); x.font = '600 32px Segoe UI, Arial'; x.fillStyle = '#fff'; x.fillText(t1, 128, 104); }
+  else { x.font = 'bold 50px Segoe UI, Arial'; x.fillStyle = '#fff'; x.fillText(t1, 128, 82); }
   var tx = new THREE.CanvasTexture(cv), s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tx, depthTest: false }));
   s.scale.set(48, 24, 1); s.renderOrder = 10; return s;
 }
@@ -240,7 +241,7 @@ function rebuild3d() {
     if (it.kind === 'mc') {
       var S = shapes(it), fam = famOf(it.code);
       g = buildMachine(fam, d.L, d.W, H, S.seatX);
-      buildChair(g, S.seatX, d.W / 2 + e.chairGap + e.chairD / 2, e, V3.people);
+      if (!it.noOp) buildChair(g, S.seatX, d.W / 2 + e.chairGap + e.chairD / 2, e, V3.people);
       if (V3.labels) { var sp = textSprite(it.code, it.op || ''); sp.position.set(0, H + 85, 0); g.add(sp); }
     } else {
       g = buildObject(it);

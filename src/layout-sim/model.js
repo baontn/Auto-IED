@@ -11,6 +11,7 @@ var ERG_DEF = {
   emptyPitch: 107,// width of an empty cell in the pasted grid
   snap: 5
 };
+var LINE_DEF = { units: 17, unit: 107, tableW: 30, start: 120, end: 30 };
 var ST = { line: { name: '', length: 2400, width: 600, fixed: false }, erg: Object.assign({}, ERG_DEF), items: [], seq: 1 };
 var SEL = [];            // selected ids (not saved)
 var UNDO = [], REDO = [];
@@ -35,6 +36,8 @@ function shapes(it) {
     sx = Math.max(-d.L / 2 + e.opW / 2, Math.min(d.L / 2 - e.opW / 2, sx));
     if (d.L < e.opW) sx = 0;
     r.seatX = sx;
+    r.front = rotPt(it, sx, d.W / 2);
+    if (it.noOp) return r;                    // station without its own operator (one worker runs two machines)
     r.zone = obb(it, sx, d.W / 2 + e.opDepth / 2, e.opW / 2, e.opDepth / 2);
     r.chair = rotPt(it, sx, d.W / 2 + e.chairGap + e.chairD / 2);
     r.aisle = e.aisle > 0 ? obb(it, sx, d.W / 2 + e.opDepth + e.aisle / 2, e.opW / 2, e.aisle / 2) : null;
@@ -103,7 +106,7 @@ function label(it) { return it.kind === 'mc' ? (it.code + (it.op ? ' (' + it.op 
 function flowPath() {
   var mc = ST.items.filter(function (it) { return it.kind === 'mc' && it.op !== '' && !isNaN(parseFloat(it.op)); });
   mc.sort(function (a, b) { return parseFloat(a.op) - parseFloat(b.op) || a.x - b.x; });
-  var pts = mc.map(function (it) { return shapes(it).chair; }), dist = 0;
+  var pts = mc.map(function (it) { var s = shapes(it); return s.chair || s.front; }), dist = 0;
   for (var i = 1; i < pts.length; i++) dist += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y);
   return { pts: pts, dist: dist, n: mc.length };
 }
@@ -156,24 +159,66 @@ function buildFromPaste(p, opt) {
   // columns left of the first machine column (empty in every row, e.g. a label column) take no space
   var inputL = 60, x0 = opt.x0 + (opt.addInput ? inputL + 40 : 0), xs = [], acc = x0;
   for (c = firstCol; c < p.nCols; c++) { xs[c] = acc + pitch[c] / 2; acc += pitch[c] + e.colGap; }
-  var y = opt.y0;
+  var y = opt.y0, ct = opt.center;
+  if (ct) {   // a central table: columns start at its left end, first row above it, second row below it (backs against the table)
+    var shift = (ct.x - ct.L / 2) - x0;
+    for (c = firstCol; c < p.nCols; c++) xs[c] += shift;
+    var tTop = ct.y - ct.W / 2, tBot = ct.y + ct.W / 2, ys = [];
+    p.rows.forEach(function (r, k) {
+      if (k > 1) return;
+      r.cells.forEach(function (x) {
+        var W = dimOf(x.code).W, top = r.side === 'top', yy;
+        if (k === 0) yy = top ? tTop - W / 2 : tTop - e.opDepth - W / 2; else yy = top ? tBot + e.opDepth + W / 2 : tBot + W / 2;
+        items.push({ id: uid(), kind: 'mc', code: x.code, op: x.op, x: n1(xs[x.col]), y: n1(yy), rot: top ? 180 : 0 });
+        ys.push(yy - W / 2 - (top ? e.opDepth : 0), yy + W / 2 + (top ? 0 : e.opDepth));
+      });
+    });
+    y = (ys.length ? Math.max.apply(null, ys) : tBot) + e.rowGap;
+    if (opt.addInput && items.length) {
+      var y0i = Math.min.apply(null, ys), hh = Math.max.apply(null, ys) - y0i;
+      items.unshift({ id: uid(), kind: 'obj', name: 'Input', L: inputL, W: Math.round(hh), H: 75, x: ct.x - ct.L / 2 - 40 - inputL / 2, y: y0i + hh / 2, rot: 0, color: '#8fb3d9' });
+    }
+    p = { rows: p.rows.slice(2), nCols: p.nCols };
+    opt = Object.assign({}, opt, { addInput: false });
+  }
   p.rows.forEach(function (r) {
     var Wmax = 0; r.cells.forEach(function (x) { Wmax = Math.max(Wmax, dimOf(x.code).W); });
     if (!Wmax) return;
     var top = r.side === 'top', front = top ? y + e.opDepth : y + Wmax;
     r.cells.forEach(function (x) {
       var W = dimOf(x.code).W;
-      items.push({ id: uid(), kind: 'mc', code: x.code, op: x.op, x: Math.round(xs[x.col] * 10) / 10, y: top ? front + W / 2 : front - W / 2, rot: top ? 180 : 0 });
+      items.push({ id: uid(), kind: 'mc', code: x.code, op: x.op, x: n1(xs[x.col]), y: top ? front + W / 2 : front - W / 2, rot: top ? 180 : 0 });
     });
     y = (top ? front + Wmax : front + e.opDepth) + e.rowGap;
   });
   if (opt.addInput && items.length) {
     var h = y - e.rowGap - opt.y0;
+    if (h <= 0) return items;
     items.unshift({ id: uid(), kind: 'obj', name: 'Input', L: inputL, W: Math.round(h), H: 75, x: opt.x0 + inputL / 2, y: opt.y0 + h / 2, rot: 0, color: '#8fb3d9' });
   }
   return items;
 }
 
+/* ---------- line set-up in standard machine units ---------- */
+function centerTable() { for (var i = 0; i < ST.items.length; i++) if (ST.items[i].role === 'center') return ST.items[i]; return null; }
+function lineAutoWidth(tableW) { var e = ST.erg; return Math.ceil(tableW + 2 * (DEF_DIM.W + 1 + e.opDepth + Math.max(e.aisle, 40))); }
+/* o = {name, units, unit, tableW, start, end, width}: line length = start + units x unit + end, central table units x unit long */
+function setupLine(o) {
+  var L = Math.round(o.start + o.units * o.unit + o.end), W = Math.round(o.width || lineAutoWidth(o.tableW));
+  var dx = 0, dy = 0, c = centerTable(), nx = o.start + o.units * o.unit / 2, ny = W / 2;
+  if (c) { dx = nx - c.x; dy = ny - c.y; }
+  ST.line = { name: o.name || '', length: L, width: W, fixed: true, units: o.units, unit: o.unit, tableW: o.tableW, start: o.start, end: o.end };
+  if (c) ST.items.forEach(function (it) { it.x = n1(it.x + dx); it.y = n1(it.y + dy); });   // keep machines placed around the table
+  else { c = { id: uid(), kind: 'obj', role: 'center', name: t('centerTable'), H: 75, rot: 0, color: '#d9cdb0' }; ST.items.unshift(c); }
+  c.L = o.units * o.unit; c.W = o.tableW; c.x = nx; c.y = ny;
+}
+/* operators on/off for the machines whose operation is in the list ("36, 37+38") */
+function opList(txt) { return String(txt || '').split(/[\s,;+\/]+/).map(function (x) { return x.trim(); }).filter(Boolean); }
+function setOperatorByOps(txt, on) {
+  var ops = opList(txt), n = 0;
+  ST.items.forEach(function (it) { if (it.kind === 'mc' && ops.indexOf(String(it.op).trim()) >= 0) { if (on) delete it.noOp; else it.noOp = true; n++; } });
+  return n;
+}
 /* ---------- undo / persistence ---------- */
 function snap() { return JSON.stringify({ line: ST.line, erg: ST.erg, items: ST.items, seq: ST.seq }); }
 function restore(s) { var o = JSON.parse(s); ST.line = o.line; ST.erg = Object.assign({}, ERG_DEF, o.erg || {}); ST.items = o.items || []; ST.seq = o.seq || 1; }

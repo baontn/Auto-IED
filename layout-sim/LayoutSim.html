@@ -31,7 +31,7 @@ header h1{font-size:16px;margin:0 6px 0 0}
 .hr{margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 #paneWork{flex:1;display:grid;grid-template-columns:1fr 330px;min-height:0}
 @media (max-width:900px){#paneWork{grid-template-columns:1fr;grid-template-rows:60vh auto}}
-.stage{display:flex;flex-direction:column;min-width:0;min-height:0;border-right:1px solid var(--line)}
+.stage{position:relative;display:flex;flex-direction:column;min-width:0;min-height:0;border-right:1px solid var(--line)}
 .toolbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:7px 10px;background:var(--panel);border-bottom:1px solid var(--line)}
 .toolbar .sep{width:1px;height:22px;background:var(--line);margin:0 2px}
 .toolbar label{display:flex;gap:4px;align-items:center;font-size:13px}
@@ -83,12 +83,16 @@ table.mini sub{color:var(--muted);margin-right:3px}
 .ocrwrap{position:relative;margin-top:6px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff}
 .ocrwrap img{display:block;width:100%;height:auto}.ocrwrap svg{position:absolute;inset:0;width:100%;height:100%}
 #ocrView>img{max-width:100%;opacity:.6}
+#selTools{position:absolute;z-index:4;display:none;gap:3px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:3px;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+#selTools button{padding:3px 8px;font-size:15px;line-height:1.2}
+#selTools button.off{background:var(--badbg);color:var(--bad)}
+.calc{background:var(--sel);border-radius:8px;padding:8px 10px;margin-top:8px;font-size:13px}
 kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 4px;font-size:11px;background:var(--bg)}
 </style>
 </head>
 <body>
 <header>
-  <h1 data-t="appTitle">Mô phỏng bố trí chuyền</h1><span class="tag t-info">v1.1</span>
+  <h1 data-t="appTitle">Mô phỏng bố trí chuyền</h1><span class="tag t-info">v1.2</span>
   <nav class="tabs"><button data-tab="plan" class="on" data-t="tabPlan">Mặt bằng 2D</button><button data-tab="3d" data-t="tab3d">3D</button><button data-tab="lib" data-t="tabLib">Thư viện máy</button></nav>
   <div class="hr">
     <button id="bNew" data-t="bNew">Mới</button><button id="bOpen" data-t="bOpen">Mở…</button><button id="bSave" class="primary" data-t="bSave" data-tt="bSaveTip">Lưu…</button>
@@ -121,6 +125,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
     </div>
     <svg id="plan" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI,Roboto,Arial,sans-serif"></svg>
     <div id="v3" style="display:none"></div>
+    <div id="selTools"><button data-cmd="rotL" data-tt="ttRotL">⟲</button><button data-cmd="rotR" data-tt="ttRotR">⟳</button><button data-cmd="flip" data-tt="ttFlip">⇅ 180°</button><button data-cmd="op" data-tt="ttOp">👤</button><button data-cmd="del" data-tt="ttDel">🗑</button></div>
     <div class="hint"><span data-t="hint2d">Kéo máy để di chuyển · R / Shift+R xoay 90° · F quay đầu · Delete xóa · Ctrl+D nhân bản · mũi tên dịch 1 cm (Shift 10 cm) · Shift+kéo chọn vùng · lăn chuột phóng to · kéo nền để di chuyển · Alt khi kéo: bỏ bám lưới</span> <span id="zoomTxt" class="muted"></span></div>
   </div>
   <aside>
@@ -129,6 +134,11 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
       <label class="f"><span data-t="lnLen">Dài (cm)</span><input id="lnL" type="number" step="10"></label><label class="f"><span data-t="lnWid">Rộng (cm)</span><input id="lnW" type="number" step="10"></label>
       <label class="f"><span>&nbsp;</span><button id="bErg" data-t="bErg">Công thái học…</button></label></div>
       <div class="muted small" id="lnUsed"></div>
+      <div class="btns"><button id="bLineSetup" data-t="bLineSetup">Thiết lập chuyền theo số máy…</button></div>
+    </div>
+    <div class="card"><h3 data-t="opCardTitle">Người vận hành</h3>
+      <div class="muted small" data-t="opCardHelp">Một người làm nhiều máy: bỏ người ở các máy đó (chọn máy rồi bấm 👤, phím W, hoặc nhập công đoạn).</div>
+      <div class="btns"><input id="opOps" style="flex:1;min-width:90px" data-tp="opOpsPh" placeholder="VD: 36, 37"><button id="bOpOff" data-t="bOpOff">Bỏ người</button><button id="bOpOn" data-t="bOpOn">Có người</button></div>
     </div>
     <div class="card"><h3 data-t="selTitle">Đang chọn</h3><div id="selBody"></div></div>
     <div class="card"><h3 id="issHead"></h3><ul id="issList"></ul></div>
@@ -170,6 +180,22 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
     <label class="ck"><input type="checkbox" id="pasteFit"><span data-t="pasteFit">Chỉnh kích thước chuyền theo layout</span></label>
     <button data-close data-t="cancel">Hủy</button><button id="pasteGo" class="primary" data-t="pasteGo" disabled>Đưa vào mặt bằng</button>
   </div>
+</dialog>
+<dialog id="dlgLine"><div class="dh"><span data-t="lsTitle">Thiết lập chuyền</span><button data-close>✕</button></div>
+  <div class="db">
+    <div class="muted small" data-t="lsHelp">Nhập chiều dài chuyền bằng số máy chuẩn đặt nối nhau (mỗi máy chuẩn 107 cm). Chương trình tạo bàn giữa dài bằng số máy × 107 cm; hai hàng máy đặt hai bên bàn giữa khi dán layout.</div>
+    <div class="grid3" style="margin-top:8px">
+      <label class="f" style="grid-column:span 3"><span data-t="lnName">Tên chuyền</span><input id="lsName"></label>
+      <label class="f"><span data-t="lsUnits">Số máy chuẩn</span><input id="lsUnits" type="number" min="1" step="1"></label>
+      <label class="f"><span data-t="lsUnit">Máy chuẩn (cm)</span><input id="lsUnit" type="number" min="10" step="1"></label>
+      <label class="f"><span data-t="lsTable">Bàn giữa rộng (cm)</span><input id="lsTable" type="number" min="0" step="1"></label>
+      <label class="f"><span data-t="lsStart">Đầu chuyền (cm)</span><input id="lsStart" type="number" min="0" step="10"></label>
+      <label class="f"><span data-t="lsEnd">Cuối chuyền (cm)</span><input id="lsEnd" type="number" min="0" step="10"></label>
+      <label class="f"><span data-t="lsWidth">Chuyền rộng (cm)</span><input id="lsWidth" type="number" min="50" step="10"></label>
+    </div>
+    <div class="calc" id="lsCalc"></div>
+  </div>
+  <div class="df"><button data-close data-t="cancel">Hủy</button><button id="lsOk" class="primary" data-t="apply">Áp dụng</button></div>
 </dialog>
 <dialog id="dlgErg"><div class="dh"><span data-t="ergTitle">Công thái học và khoảng cách</span><button data-close>✕</button></div>
   <div class="db"><div class="muted small" data-t="ergHelp">Vùng người vận hành được vẽ phía trước mỗi máy và kiểm tra chồng lấn. Giá trị mặc định là đề xuất; IE chỉnh theo tiêu chuẩn nhà máy.</div><div id="ergBody"></div></div>
@@ -214,6 +240,13 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 var LANG = 'vi';
 var I18N = {
   vi: {
+    expErr: 'Không xuất được ảnh.', centerTable: 'Bàn giữa', bLineSetup: 'Thiết lập chuyền theo số máy…', lsTitle: 'Thiết lập chuyền',
+    lsHelp: 'Nhập chiều dài chuyền bằng số máy chuẩn đặt nối nhau (mỗi máy chuẩn 107 cm). Chương trình tạo bàn giữa dài bằng số máy × 107 cm; hai hàng máy đặt hai bên bàn giữa khi dán layout.',
+    lsUnits: 'Số máy chuẩn', lsUnit: 'Máy chuẩn (cm)', lsTable: 'Bàn giữa rộng (cm)', lsStart: 'Đầu chuyền (cm)', lsEnd: 'Cuối chuyền (cm)', lsWidth: 'Chuyền rộng (cm)',
+    lsCalc: 'Dài chuyền = {0} + {1} × {2} + {3} = {4} cm · bàn giữa {5} × {6} cm · rộng {7} cm (để trống ô "Chuyền rộng" để tự tính: bàn giữa + hai bên máy, vùng người vận hành, lối đi).',
+    opCardTitle: 'Người vận hành', opCardHelp: 'Một người làm nhiều máy: bỏ người ở các máy đó (chọn máy rồi bấm 👤, phím W, hoặc nhập công đoạn).', opOpsPh: 'VD: 36, 37',
+    bOpOff: 'Bỏ người', bOpOn: 'Có người', opDone: 'Đã đổi {0} máy.', fHasOp: 'Có người vận hành riêng', bOpToggle: 'Bật/tắt người', noOpMark: '(không người)',
+    ttRotL: 'Xoay trái 90° (Shift+R)', ttRotR: 'Xoay phải 90° (R)', ttFlip: 'Quay đầu 180° (F)', ttOp: 'Bật/tắt người vận hành (W)', ttDel: 'Xóa (Delete)',
     appTitle: 'Mô phỏng bố trí chuyền', tabPlan: 'Mặt bằng 2D', tab3d: '3D', tabLib: 'Thư viện máy',
     bNew: 'Mới', bOpen: 'Mở…', bSave: 'Lưu…', bSaveTip: 'Lưu layout thành file .layout.json (Ctrl+S)',
     libNeed: 'Chưa có thư viện máy: chọn file Excel thư viện máy (sheet Machine_Needle có cột Machine_Code, Dimension).', bLib: 'Chọn file Excel thư viện…',
@@ -222,16 +255,16 @@ var I18N = {
     bUndoTip: 'Hoàn tác (Ctrl+Z)', bRedoTip: 'Làm lại (Ctrl+Y)', bFit: 'Vừa màn hình', optFlow: 'Đường đi', optSnap: 'Bám lưới', optAisle: 'Lối đi sau lưng',
     bPng: 'Xuất ảnh', bPrint: 'In', b3Reset: 'Góc nhìn mặc định', b3Top: 'Nhìn từ trên', opt3People: 'Người vận hành', opt3Labels: 'Nhãn',
     hint3d: 'Kéo chuột trái: xoay · chuột phải/Shift: di chuyển · lăn chuột: phóng to · bấm vào máy để chọn',
-    hint2d: 'Kéo máy để di chuyển · R / Shift+R xoay 90° · F quay đầu · Delete xóa · Ctrl+D nhân bản · mũi tên dịch 1 cm (Shift 10 cm) · Shift+kéo chọn vùng · lăn chuột phóng to · kéo nền để di chuyển · giữ Alt khi kéo: bỏ bám lưới',
+    hint2d: 'Kéo máy để di chuyển · R / Shift+R xoay 90° · F quay đầu · Delete xóa · W bật/tắt người · Ctrl+D nhân bản · mũi tên dịch 1 cm (Shift 10 cm) · Shift+kéo chọn vùng · lăn chuột phóng to · kéo nền để di chuyển · giữ Alt khi kéo: bỏ bám lưới',
     lnTitle: 'Chuyền', lnName: 'Tên chuyền', lnLen: 'Dài (cm)', lnWid: 'Rộng (cm)', bErg: 'Công thái học…', lnUsed: 'Layout chiếm: {0} × {1} cm (tính cả vùng người vận hành)', lineNoName: 'Chuyền chưa đặt tên',
     selTitle: 'Đang chọn', sumTitle: 'Tổng hợp', issTitle: 'Kiểm tra', issNone: 'Không có lỗi',
-    selNone: 'Bấm vào một máy để xem và sửa. Shift+bấm để chọn nhiều máy. Đường viền xanh nét đứt phía trước máy là vùng người vận hành (ghế + chỗ ngồi), chấm đỏ là vị trí kim.',
+    selNone: 'Bấm vào một máy để xem và sửa; các nút xoay hiện ngay cạnh máy. Shift+bấm để chọn nhiều máy. Đường viền xanh nét đứt phía trước máy là vùng người vận hành (ghế + chỗ ngồi), chấm đỏ là vị trí kim.',
     selMany: 'Đã chọn {0} đối tượng', fCode: 'Mã máy', fOp: 'Công đoạn', fName: 'Tên', fColor: 'Màu', fLen: 'Dài (cm)', fWid: 'Rộng (cm)', fHei: 'Cao (cm)', fRot: 'Góc (°)', fFam: 'Kiểu 3D',
     fDimTip: 'Sửa kích thước/kiểu ở đây áp dụng cho mọi máy cùng mã.', dimDefault: 'Mã chưa có kích thước, đang dùng mặc định.', notInLib: 'Mã không có trong thư viện', realModels: 'Model thực tế',
     dimSaved: 'Đã lưu cho mã {0} (mọi máy cùng mã)',
     bFlip: 'Quay đầu 180°', bDup: 'Nhân bản', bDel: 'Xóa', bGrp90: 'Xoay cả cụm 90°', bGrp180: 'Xoay cả cụm 180°', bGrpTip: 'Xoay cả nhóm đã chọn quanh tâm nhóm, giữ nguyên cách sắp xếp',
     bAlign: 'Thẳng hàng', bAlignTip: 'Đưa các máy đã chọn về cùng hàng với máy chọn đầu tiên', bPack: 'Xếp sát nhau', bPackTip: 'Xếp các máy đã chọn sát nhau từ trái sang phải',
-    sumMc: '{0} máy', sumFlow: 'đường đi theo thứ tự công đoạn: {0} m',
+    sumMc: '{0} máy · {1} người', sumFlow: 'đường đi theo thứ tự công đoạn: {0} m',
     isUnknown: 'Mã {0}: chưa có kích thước trong thư viện (dùng mặc định).', isOut: '{0}: nằm ngoài phạm vi chuyền.', isOverlap: '{0} chồng lên {1}.',
     isSeat: '{0}: vùng người vận hành bị {1} chiếm chỗ.', isSeat2: 'Vùng người vận hành của {0} và {1} chồng nhau.', isAisle: '{0}: lối đi sau lưng (< {1} cm) bị {2} chắn.',
     fam_lockstitch: 'Máy 1 kim / 2 kim', fam_overlock: 'Máy vắt sổ', fam_coverstitch: 'Máy trần đè mặt phẳng', fam_cylinder: 'Máy cùi trỏ', fam_bartack: 'Máy đính bọ / nút',
@@ -268,6 +301,13 @@ var I18N = {
     ocrIgnored: 'bỏ qua', ocrLegend: 'Viền xanh lá: đọc đúng mã · cam: đã sửa theo thư viện · đỏ: không có trong thư viện · xanh dương: số công đoạn · xám: bỏ qua. Đưa chuột vào ô để xem chữ đọc được.'
   },
   en: {
+    expErr: 'Could not export the image.', centerTable: 'Central table', bLineSetup: 'Set up line by machine count…', lsTitle: 'Line set-up',
+    lsHelp: 'Enter the line length as a number of standard machines placed end to end (one standard machine = 107 cm). A central table of machines × 107 cm is created; the two machine rows are placed on both sides of it when you paste a layout.',
+    lsUnits: 'Standard machines', lsUnit: 'Standard machine (cm)', lsTable: 'Central table width (cm)', lsStart: 'Line start (cm)', lsEnd: 'Line end (cm)', lsWidth: 'Line width (cm)',
+    lsCalc: 'Line length = {0} + {1} × {2} + {3} = {4} cm · central table {5} × {6} cm · width {7} cm (leave "Line width" empty to compute it: table + machines, operator zones and aisles on both sides).',
+    opCardTitle: 'Operators', opCardHelp: 'One person runs several machines: remove the operator on those machines (select them and press 👤, key W, or type the operations).', opOpsPh: 'e.g. 36, 37',
+    bOpOff: 'No operator', bOpOn: 'Operator', opDone: '{0} machines changed.', fHasOp: 'Own operator', bOpToggle: 'Operator on/off', noOpMark: '(no operator)',
+    ttRotL: 'Turn left 90° (Shift+R)', ttRotR: 'Turn right 90° (R)', ttFlip: 'Turn around 180° (F)', ttOp: 'Operator on/off (W)', ttDel: 'Delete (Delete)',
     appTitle: 'Line layout simulator', tabPlan: '2D plan', tab3d: '3D', tabLib: 'Machine library',
     bNew: 'New', bOpen: 'Open…', bSave: 'Save…', bSaveTip: 'Save the layout as a .layout.json file (Ctrl+S)',
     libNeed: 'No machine library yet: choose the machine library Excel file (sheet Machine_Needle with Machine_Code, Dimension).', bLib: 'Choose library Excel…',
@@ -276,16 +316,16 @@ var I18N = {
     bUndoTip: 'Undo (Ctrl+Z)', bRedoTip: 'Redo (Ctrl+Y)', bFit: 'Fit to screen', optFlow: 'Flow', optSnap: 'Snap', optAisle: 'Aisle behind operators',
     bPng: 'Export image', bPrint: 'Print', b3Reset: 'Default view', b3Top: 'Top view', opt3People: 'Operators', opt3Labels: 'Labels',
     hint3d: 'Left drag: orbit · right drag/Shift: pan · wheel: zoom · click a machine to select it',
-    hint2d: 'Drag a machine to move · R / Shift+R rotate 90° · F turn around · Delete remove · Ctrl+D duplicate · arrows move 1 cm (Shift 10 cm) · Shift+drag box select · wheel zoom · drag the floor to pan · hold Alt while dragging: no snap',
+    hint2d: 'Drag a machine to move · R / Shift+R rotate 90° · F turn around · Delete remove · W operator on/off · Ctrl+D duplicate · arrows move 1 cm (Shift 10 cm) · Shift+drag box select · wheel zoom · drag the floor to pan · hold Alt while dragging: no snap',
     lnTitle: 'Line', lnName: 'Line name', lnLen: 'Length (cm)', lnWid: 'Width (cm)', bErg: 'Ergonomics…', lnUsed: 'Layout uses: {0} × {1} cm (operator zones included)', lineNoName: 'Unnamed line',
     selTitle: 'Selection', sumTitle: 'Summary', issTitle: 'Checks', issNone: 'No problems',
-    selNone: 'Click a machine to see and edit it. Shift+click to select several. The dashed blue area in front of a machine is the operator zone (chair + seat space); the red dot is the needle.',
+    selNone: 'Click a machine to see and edit it; turn buttons appear next to it. Shift+click to select several. The dashed blue area in front of a machine is the operator zone (chair + seat space); the red dot is the needle.',
     selMany: '{0} items selected', fCode: 'Machine code', fOp: 'Operation', fName: 'Name', fColor: 'Colour', fLen: 'Length (cm)', fWid: 'Width (cm)', fHei: 'Height (cm)', fRot: 'Angle (°)', fFam: '3D type',
     fDimTip: 'Size/type changed here apply to every machine with this code.', dimDefault: 'No size for this code, default used.', notInLib: 'Code not in the library', realModels: 'Real models',
     dimSaved: 'Saved for code {0} (every machine with this code)',
     bFlip: 'Turn around 180°', bDup: 'Duplicate', bDel: 'Delete', bGrp90: 'Rotate block 90°', bGrp180: 'Rotate block 180°', bGrpTip: 'Rotate the selection as one block around its centre, keeping the arrangement',
     bAlign: 'Align row', bAlignTip: 'Put the selected machines on the row of the first selected one', bPack: 'Pack', bPackTip: 'Place the selected machines side by side from left to right',
-    sumMc: '{0} machines', sumFlow: 'flow in operation order: {0} m',
+    sumMc: '{0} machines · {1} operators', sumFlow: 'flow in operation order: {0} m',
     isUnknown: 'Code {0}: no size in the library (default used).', isOut: '{0}: outside the line area.', isOverlap: '{0} overlaps {1}.',
     isSeat: '{0}: operator zone blocked by {1}.', isSeat2: 'Operator zones of {0} and {1} overlap.', isAisle: '{0}: aisle behind the operator (< {1} cm) blocked by {2}.',
     fam_lockstitch: 'Lockstitch / twin needle', fam_overlock: 'Overlock', fam_coverstitch: 'Flat bed coverstitch', fam_cylinder: 'Cylinder bed', fam_bartack: 'Bartack / button',
@@ -529,6 +569,7 @@ var ERG_DEF = {
   emptyPitch: 107,// width of an empty cell in the pasted grid
   snap: 5
 };
+var LINE_DEF = { units: 17, unit: 107, tableW: 30, start: 120, end: 30 };
 var ST = { line: { name: '', length: 2400, width: 600, fixed: false }, erg: Object.assign({}, ERG_DEF), items: [], seq: 1 };
 var SEL = [];            // selected ids (not saved)
 var UNDO = [], REDO = [];
@@ -553,6 +594,8 @@ function shapes(it) {
     sx = Math.max(-d.L / 2 + e.opW / 2, Math.min(d.L / 2 - e.opW / 2, sx));
     if (d.L < e.opW) sx = 0;
     r.seatX = sx;
+    r.front = rotPt(it, sx, d.W / 2);
+    if (it.noOp) return r;                    // station without its own operator (one worker runs two machines)
     r.zone = obb(it, sx, d.W / 2 + e.opDepth / 2, e.opW / 2, e.opDepth / 2);
     r.chair = rotPt(it, sx, d.W / 2 + e.chairGap + e.chairD / 2);
     r.aisle = e.aisle > 0 ? obb(it, sx, d.W / 2 + e.opDepth + e.aisle / 2, e.opW / 2, e.aisle / 2) : null;
@@ -621,7 +664,7 @@ function label(it) { return it.kind === 'mc' ? (it.code + (it.op ? ' (' + it.op 
 function flowPath() {
   var mc = ST.items.filter(function (it) { return it.kind === 'mc' && it.op !== '' && !isNaN(parseFloat(it.op)); });
   mc.sort(function (a, b) { return parseFloat(a.op) - parseFloat(b.op) || a.x - b.x; });
-  var pts = mc.map(function (it) { return shapes(it).chair; }), dist = 0;
+  var pts = mc.map(function (it) { var s = shapes(it); return s.chair || s.front; }), dist = 0;
   for (var i = 1; i < pts.length; i++) dist += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y);
   return { pts: pts, dist: dist, n: mc.length };
 }
@@ -674,24 +717,66 @@ function buildFromPaste(p, opt) {
   // columns left of the first machine column (empty in every row, e.g. a label column) take no space
   var inputL = 60, x0 = opt.x0 + (opt.addInput ? inputL + 40 : 0), xs = [], acc = x0;
   for (c = firstCol; c < p.nCols; c++) { xs[c] = acc + pitch[c] / 2; acc += pitch[c] + e.colGap; }
-  var y = opt.y0;
+  var y = opt.y0, ct = opt.center;
+  if (ct) {   // a central table: columns start at its left end, first row above it, second row below it (backs against the table)
+    var shift = (ct.x - ct.L / 2) - x0;
+    for (c = firstCol; c < p.nCols; c++) xs[c] += shift;
+    var tTop = ct.y - ct.W / 2, tBot = ct.y + ct.W / 2, ys = [];
+    p.rows.forEach(function (r, k) {
+      if (k > 1) return;
+      r.cells.forEach(function (x) {
+        var W = dimOf(x.code).W, top = r.side === 'top', yy;
+        if (k === 0) yy = top ? tTop - W / 2 : tTop - e.opDepth - W / 2; else yy = top ? tBot + e.opDepth + W / 2 : tBot + W / 2;
+        items.push({ id: uid(), kind: 'mc', code: x.code, op: x.op, x: n1(xs[x.col]), y: n1(yy), rot: top ? 180 : 0 });
+        ys.push(yy - W / 2 - (top ? e.opDepth : 0), yy + W / 2 + (top ? 0 : e.opDepth));
+      });
+    });
+    y = (ys.length ? Math.max.apply(null, ys) : tBot) + e.rowGap;
+    if (opt.addInput && items.length) {
+      var y0i = Math.min.apply(null, ys), hh = Math.max.apply(null, ys) - y0i;
+      items.unshift({ id: uid(), kind: 'obj', name: 'Input', L: inputL, W: Math.round(hh), H: 75, x: ct.x - ct.L / 2 - 40 - inputL / 2, y: y0i + hh / 2, rot: 0, color: '#8fb3d9' });
+    }
+    p = { rows: p.rows.slice(2), nCols: p.nCols };
+    opt = Object.assign({}, opt, { addInput: false });
+  }
   p.rows.forEach(function (r) {
     var Wmax = 0; r.cells.forEach(function (x) { Wmax = Math.max(Wmax, dimOf(x.code).W); });
     if (!Wmax) return;
     var top = r.side === 'top', front = top ? y + e.opDepth : y + Wmax;
     r.cells.forEach(function (x) {
       var W = dimOf(x.code).W;
-      items.push({ id: uid(), kind: 'mc', code: x.code, op: x.op, x: Math.round(xs[x.col] * 10) / 10, y: top ? front + W / 2 : front - W / 2, rot: top ? 180 : 0 });
+      items.push({ id: uid(), kind: 'mc', code: x.code, op: x.op, x: n1(xs[x.col]), y: top ? front + W / 2 : front - W / 2, rot: top ? 180 : 0 });
     });
     y = (top ? front + Wmax : front + e.opDepth) + e.rowGap;
   });
   if (opt.addInput && items.length) {
     var h = y - e.rowGap - opt.y0;
+    if (h <= 0) return items;
     items.unshift({ id: uid(), kind: 'obj', name: 'Input', L: inputL, W: Math.round(h), H: 75, x: opt.x0 + inputL / 2, y: opt.y0 + h / 2, rot: 0, color: '#8fb3d9' });
   }
   return items;
 }
 
+/* ---------- line set-up in standard machine units ---------- */
+function centerTable() { for (var i = 0; i < ST.items.length; i++) if (ST.items[i].role === 'center') return ST.items[i]; return null; }
+function lineAutoWidth(tableW) { var e = ST.erg; return Math.ceil(tableW + 2 * (DEF_DIM.W + 1 + e.opDepth + Math.max(e.aisle, 40))); }
+/* o = {name, units, unit, tableW, start, end, width}: line length = start + units x unit + end, central table units x unit long */
+function setupLine(o) {
+  var L = Math.round(o.start + o.units * o.unit + o.end), W = Math.round(o.width || lineAutoWidth(o.tableW));
+  var dx = 0, dy = 0, c = centerTable(), nx = o.start + o.units * o.unit / 2, ny = W / 2;
+  if (c) { dx = nx - c.x; dy = ny - c.y; }
+  ST.line = { name: o.name || '', length: L, width: W, fixed: true, units: o.units, unit: o.unit, tableW: o.tableW, start: o.start, end: o.end };
+  if (c) ST.items.forEach(function (it) { it.x = n1(it.x + dx); it.y = n1(it.y + dy); });   // keep machines placed around the table
+  else { c = { id: uid(), kind: 'obj', role: 'center', name: t('centerTable'), H: 75, rot: 0, color: '#d9cdb0' }; ST.items.unshift(c); }
+  c.L = o.units * o.unit; c.W = o.tableW; c.x = nx; c.y = ny;
+}
+/* operators on/off for the machines whose operation is in the list ("36, 37+38") */
+function opList(txt) { return String(txt || '').split(/[\s,;+\/]+/).map(function (x) { return x.trim(); }).filter(Boolean); }
+function setOperatorByOps(txt, on) {
+  var ops = opList(txt), n = 0;
+  ST.items.forEach(function (it) { if (it.kind === 'mc' && ops.indexOf(String(it.op).trim()) >= 0) { if (on) delete it.noOp; else it.noOp = true; n++; } });
+  return n;
+}
 /* ---------- undo / persistence ---------- */
 function snap() { return JSON.stringify({ line: ST.line, erg: ST.erg, items: ST.items, seq: ST.seq }); }
 function restore(s) { var o = JSON.parse(s); ST.line = o.line; ST.erg = Object.assign({}, ERG_DEF, o.erg || {}); ST.items = o.items || []; ST.seq = o.seq || 1; }
@@ -753,7 +838,7 @@ function planMarkup(o) {
     var S = shapes(it), d = { L: S.L, W: S.W }, sel = !o.exp && SEL.indexOf(it.id) >= 0;
     var stroke = sel ? P.accent : bad[it.id] ? P.bad : warn[it.id] ? P.warn : P.edge, wd = (sel || bad[it.id] || warn[it.id] ? 2.5 : 1) * sw;
     var g = ['<g data-id="' + it.id + '" transform="translate(' + n1(it.x) + ' ' + n1(it.y) + ') rotate(' + (it.rot || 0) + ')" style="cursor:move">'];
-    if (it.kind === 'mc') {
+    if (it.kind === 'mc' && S.zone) {
       var sx = S.seatX;
       if (OPT.aisles || sel) g.push('<rect x="' + (sx - e.opW / 2) + '" y="' + (d.W / 2 + e.opDepth) + '" width="' + e.opW + '" height="' + e.aisle + '" fill="' + P.aisle + '" stroke="' + P.warn + '" stroke-width="' + sw + '" stroke-dasharray="' + 3 * sw + ' ' + 3 * sw + '"/>');
       g.push('<rect x="' + (sx - e.opW / 2) + '" y="' + d.W / 2 + '" width="' + e.opW + '" height="' + e.opDepth + '" fill="' + P.zone + '" stroke="' + P.zoneEdge + '" stroke-width="' + sw + '" stroke-dasharray="' + 4 * sw + ' ' + 3 * sw + '"/>');
@@ -771,21 +856,33 @@ function planMarkup(o) {
     h.push(g.join(''));
     labels.push({ it: it, fam: fam });
   });
-  // labels on top, never rotated
-  labels.forEach(function (l) {
-    var it = l.it, f = it.kind === 'mc' ? fs : fs * 0.9;
-    var t1 = it.kind === 'mc' ? it.code : (it.name || ''), t2 = it.kind === 'mc' ? (it.op || '') : (it.L + '×' + it.W);
-    h.push('<g pointer-events="none" font-weight="700" text-anchor="middle" fill="#14181f" stroke="rgba(255,255,255,.75)" stroke-width="' + f * 0.18 + '" paint-order="stroke">' +
-      '<text x="' + n1(it.x) + '" y="' + n1(it.y + (t2 ? -f * 0.05 : f * 0.35)) + '" font-size="' + f + '">' + esc(t1) + '</text>' +
-      (t2 ? '<text x="' + n1(it.x) + '" y="' + n1(it.y + f * 0.95) + '" font-size="' + f * 0.8 + '" font-weight="600">' + esc(t2) + '</text>' : '') + '</g>');
-  });
   if (OPT.flow) {
     var fp = flowPath();
     if (fp.pts.length > 1) {
       h.push('<polyline points="' + fp.pts.map(function (p) { return n1(p.x) + ',' + n1(p.y); }).join(' ') + '" fill="none" stroke="' + P.flow + '" stroke-opacity=".75" stroke-width="' + 2 * sw + '" stroke-dasharray="' + 6 * sw + ' ' + 4 * sw + '" pointer-events="none"/>');
-      fp.pts.forEach(function (p, i) { h.push('<circle cx="' + n1(p.x) + '" cy="' + n1(p.y) + '" r="' + (i ? 3 : 5) * sw * 1.4 + '" fill="' + P.flow + '" pointer-events="none"/>'); });
+      fp.pts.forEach(function (p, i) { h.push('<circle cx="' + n1(p.x) + '" cy="' + n1(p.y) + '" r="' + (i ? 2.5 : 4) * sw + '" fill="' + P.flow + '" pointer-events="none"/>'); });
     }
   }
+  // labels on top, never rotated
+  labels.forEach(function (l) {
+    var it = l.it, S = shapes(it), halo = '" fill="#14181f" stroke="rgba(255,255,255,.8)" paint-order="stroke" text-anchor="middle" font-weight="700" pointer-events="none"';
+    if (it.kind !== 'mc') {
+      var f0 = fs * 0.9;
+      h.push('<text x="' + n1(it.x) + '" y="' + n1(it.y - f0 * 0.1) + '" font-size="' + f0 + '" stroke-width="' + f0 * 0.18 + halo + '>' + esc(it.name || '') + '</text>' +
+        '<text x="' + n1(it.x) + '" y="' + n1(it.y + f0 * 0.85) + '" font-size="' + f0 * 0.75 + '" stroke-width="' + f0 * 0.15 + halo + '>' + esc(it.L + '×' + it.W) + '</text>');
+      return;
+    }
+    // machine code on the table; the operation number (big) on the operator's seat, or on the table when the station has no operator
+    var fc = fs * 0.85, fo = fs * 1.7, op = String(it.op || '');
+    if (S.chair) {
+      h.push('<text x="' + n1(it.x) + '" y="' + n1(it.y + fc * 0.35) + '" font-size="' + fc + '" stroke-width="' + fc * 0.18 + halo + '>' + esc(it.code) + '</text>');
+      if (op) h.push('<text x="' + n1(S.chair.x) + '" y="' + n1(S.chair.y + fo * 0.36) + '" font-size="' + fo + '" stroke-width="' + fo * 0.16 + halo.replace('#14181f', '#0b3d91') + '>' + esc(op) + '</text>');
+    } else {
+      var fo2 = fs * 1.35;
+      h.push('<text x="' + n1(it.x) + '" y="' + n1(it.y - fc * 0.25) + '" font-size="' + fc + '" stroke-width="' + fc * 0.18 + halo + '>' + esc(it.code) + '</text>');
+      if (op) h.push('<text x="' + n1(it.x) + '" y="' + n1(it.y + fo2 * 0.85) + '" font-size="' + fo2 + '" stroke-width="' + fo2 * 0.16 + halo.replace('#14181f', '#0b3d91') + '>' + esc(op) + '</text>');
+    }
+  });
   if (BOXR && !o.exp) {
     var bx = Math.min(BOXR.a.x, BOXR.b.x), by = Math.min(BOXR.a.y, BOXR.b.y);
     h.push('<rect x="' + bx + '" y="' + by + '" width="' + Math.abs(BOXR.a.x - BOXR.b.x) + '" height="' + Math.abs(BOXR.a.y - BOXR.b.y) + '" fill="rgba(31,111,235,.08)" stroke="' + P.accent + '" stroke-width="' + sw + '" stroke-dasharray="' + 4 * sw + '"/>');
@@ -816,6 +913,7 @@ function render2d() {
   svg.setAttribute('viewBox', V.x + ' ' + V.y + ' ' + (w / V.s) + ' ' + (h / V.s));
   svg.innerHTML = planMarkup({ s: V.s, P: pal(false) });
   var z = document.getElementById('zoomTxt'); if (z) z.textContent = Math.round(V.s * 100) / 100 + ' px/cm';
+  placeSelTools();
 }
 function toWorld(ev) { var r = svgEl().getBoundingClientRect(); return { x: V.x + (ev.clientX - r.left) / V.s, y: V.y + (ev.clientY - r.top) / V.s }; }
 function fitView() {
@@ -885,6 +983,30 @@ function init2d() {
   window.addEventListener('resize', function () { render2d(); resize3d(); });
 }
 
+/* small buttons next to the selected machine(s): turn, turn around, operator on/off, delete */
+function placeSelTools() {
+  var tb = document.getElementById('selTools'); if (!tb) return;
+  var its = selItems();
+  if (!its.length || (DRAG && DRAG.moved) || TAB !== 'plan') { tb.style.display = 'none'; return; }
+  var x0 = Infinity, y0 = Infinity, x1 = -Infinity;
+  its.forEach(function (it) { corners(shapes(it).table).forEach(function (p) { x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); y0 = Math.min(y0, p.y); }); });
+  var svg = svgEl(), host = tb.parentNode, rs = svg.getBoundingClientRect(), rh = host.getBoundingClientRect();
+  var sx = (x0 + x1) / 2 * 1, px = ((sx - V.x) * V.s) + rs.left - rh.left, py = ((y0 - V.y) * V.s) + rs.top - rh.top - 8;
+  var mc = its.filter(function (i) { return i.kind === 'mc'; });
+  var bOp = tb.querySelector('[data-cmd="op"]'); bOp.style.display = mc.length ? '' : 'none';
+  bOp.classList.toggle('off', mc.length > 0 && mc.every(function (i) { return i.noOp; }));
+  tb.style.display = 'flex';
+  var w = tb.offsetWidth, h = tb.offsetHeight;
+  px = Math.max(rs.left - rh.left + 4, Math.min(rs.right - rh.left - w - 4, px - w / 2));
+  if (py - h < rs.top - rh.top + 4) py = ((Math.max.apply(null, its.map(function (it) { return Math.max.apply(null, corners(shapes(it).table).map(function (p) { return p.y; })); })) - V.y) * V.s) + rs.top - rh.top + h + 12;
+  tb.style.left = px + 'px'; tb.style.top = (py - h) + 'px';
+}
+function toggleOperator() {
+  var mc = selItems().filter(function (i) { return i.kind === 'mc'; }); if (!mc.length) return;
+  var turnOn = mc.every(function (i) { return i.noOp; });
+  mc.forEach(function (i) { if (turnOn) delete i.noOp; else i.noOp = true; });
+  changed();
+}
 /* ---------- edit commands (2D and 3D share them) ---------- */
 function rotateSel(deg) {
   selItems().forEach(function (it) { it.rot = (((it.rot || 0) + deg) % 360 + 360) % 360; });
@@ -945,6 +1067,7 @@ function exportPng(cb) {
     var c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(img, 0, 0);
     cb(c.toDataURL('image/png'));
   };
+  img.onerror = function () { toast(t('expErr'), true); };
   img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
 }
 </script>
@@ -1111,8 +1234,9 @@ function buildObject(it) {
 function textSprite(t1, t2) {
   var cv = document.createElement('canvas'); cv.width = 256; cv.height = 128; var x = cv.getContext('2d');
   x.fillStyle = 'rgba(20,24,31,.78)'; x.beginPath(); if (x.roundRect) x.roundRect(8, 14, 240, 100, 18); else x.rect(8, 14, 240, 100); x.fill();
-  x.fillStyle = '#fff'; x.textAlign = 'center'; x.font = 'bold 50px Segoe UI, Arial'; x.fillText(t1, 128, t2 ? 64 : 82);
-  if (t2) { x.font = '600 34px Segoe UI, Arial'; x.fillStyle = '#ffd36b'; x.fillText(t2, 128, 104); }
+  x.textAlign = 'center';
+  if (t2) { x.font = 'bold 60px Segoe UI, Arial'; x.fillStyle = '#ffd36b'; x.fillText(t2, 128, 66); x.font = '600 32px Segoe UI, Arial'; x.fillStyle = '#fff'; x.fillText(t1, 128, 104); }
+  else { x.font = 'bold 50px Segoe UI, Arial'; x.fillStyle = '#fff'; x.fillText(t1, 128, 82); }
   var tx = new THREE.CanvasTexture(cv), s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tx, depthTest: false }));
   s.scale.set(48, 24, 1); s.renderOrder = 10; return s;
 }
@@ -1190,7 +1314,7 @@ function rebuild3d() {
     if (it.kind === 'mc') {
       var S = shapes(it), fam = famOf(it.code);
       g = buildMachine(fam, d.L, d.W, H, S.seatX);
-      buildChair(g, S.seatX, d.W / 2 + e.chairGap + e.chairD / 2, e, V3.people);
+      if (!it.noOp) buildChair(g, S.seatX, d.W / 2 + e.chairGap + e.chairD / 2, e, V3.people);
       if (V3.labels) { var sp = textSprite(it.code, it.op || ''); sp.position.set(0, H + 85, 0); g.add(sp); }
     } else {
       g = buildObject(it);
@@ -1278,17 +1402,29 @@ function ocrPrepare(img) {
 /* ---------- code correction against the library ---------- */
 var CONF = { O: '0DQC', '0': 'ODQC', D: '0O', Q: '0O', I: '1LT', '1': 'ILT7', L: '1I', S: '586', '5': 'S6', B: '8', '8': 'BS', Z: '2', '2': 'Z', G: '6C', '6': 'GCS', A: '4', '4': 'A', T: '7I1', '7': 'T1', C: 'G0O6' };
 function subCost(a, b) { if (a === b) return 0; return (CONF[a] && CONF[a].indexOf(b) >= 0) ? 0.3 : 1; }
+/* OCR.seen = codes read exactly elsewhere in the same picture (preferred when two codes are equally close) */
+function codeWeight(c) {
+  var w = (OCR.seen && OCR.seen[c]) ? 1000 : 0;
+  LIB.models.forEach(function (m) { if (m.code === c) w += m.qty; });
+  return w;
+}
 function fixCode(raw) {
   var s = String(raw || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
   if (s.length !== 4) return null;
   if (LIB.codes[s]) return { code: s, cost: 0 };
-  var bestC = null, best = 9, tie = false;
+  var cand = [];
   Object.keys(LIB.codes).forEach(function (c) {
     if (c.length !== 4) return;
     var cost = 0; for (var i = 0; i < 4 && cost < 2; i++) cost += subCost(s[i], c[i]);
-    if (cost < best - 1e-9) { best = cost; bestC = c; tie = false; } else if (Math.abs(cost - best) < 1e-9) tie = true;
+    if (cost < 2) cand.push({ c: c, cost: Math.round(cost * 10) / 10 });
   });
-  if (bestC && best <= 1 && !(tie && best >= 1)) return { code: bestC, cost: best };
+  cand.sort(function (x, y) { return x.cost - y.cost; });
+  if (cand.length) {
+    var best = cand[0].cost, tied = cand.filter(function (x) { return x.cost === best; }), second = cand.filter(function (x) { return x.cost > best; })[0];
+    if (tied.length > 1) tied.sort(function (x, y) { return codeWeight(y.c) - codeWeight(x.c); });
+    var clearTie = tied.length === 1 || codeWeight(tied[0].c) > codeWeight(tied[1].c);
+    if (clearTie && (best <= 1 || (best <= 1.6 && (!second || second.cost - best >= 0.7)))) return { code: tied[0].c, cost: best };
+  }
   if (/^[0-9A-Z]{4}$/.test(s) && /[A-Z]/.test(s)) return { code: s, cost: 2, unknown: true };
   return null;
 }
@@ -1310,6 +1446,8 @@ function fixNum(raw) {
 function median(a) { if (!a.length) return 0; var b = a.slice().sort(function (x, y) { return x - y; }); return b[b.length >> 1]; }
 function ocrToGrid(words) {
   var codes = [], nums = [], other = [];
+  OCR.seen = {};
+  words.forEach(function (w) { var r = String(w.text || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); if (LIB.codes[r]) OCR.seen[r] = 1; });
   words.forEach(function (w) {
     var raw = String(w.text || '').toUpperCase().replace(/[^A-Z0-9]/g, ''), b = w.bbox;
     if (!raw) return;
@@ -1323,7 +1461,7 @@ function ocrToGrid(words) {
     var fc = raw.length >= 4 && raw.length <= 6 ? fixCodeLoose(raw) : null, fn = fixNum(raw);
     if (w.reread) tok.reread = true;
     if (fc && !(fn && raw.length <= 3)) { tok.code = fc.code; tok.cost = fc.cost; tok.unknown = !!fc.unknown; codes.push(tok); }
-    else if (fn) { tok.num = fn; nums.push(tok); }
+    else if (fn) { tok.num = fn; tok.doubt = (w.confidence != null && w.confidence < 55); nums.push(tok); }
     else other.push(tok);
   });
   if (!codes.length) return { rows: [], tsv: '', codes: codes, nums: nums, other: other };
@@ -1343,6 +1481,8 @@ function ocrToGrid(words) {
   function colOf(x) { return Math.max(0, Math.round((x - minX) / pitch)); }
   codes.forEach(function (c) { c.col = colOf(c.cx); });
   // numbers: attach to the nearest code row (above or below) and the code in the same column
+  var lens = nums.map(function (n) { return n.num.length; }), mainLen = median(lens);
+  nums.forEach(function (n) { if (mainLen >= 2 && n.num.length === 1) n.doubt = true; });
   rows.forEach(function (r) { r.up = 0; r.dn = 0; r.ops = {}; r.dys = []; });
   nums.forEach(function (n) {
     var best = null, bd = Infinity;
@@ -1350,15 +1490,18 @@ function ocrToGrid(words) {
     if (!best || bd > hMed * 4 || bd < hMed * 0.5) return;
     var col = colOf(n.cx), hit = best.items.filter(function (c) { return c.col === col; })[0];
     if (!hit) return;
-    if (best.ops[col] == null) best.ops[col] = n.num;
+    n.used = true; n.col = col;
+    if (n.doubt) { if (n.cy < best.cy) best.up++; else best.dn++; best.dys.push(n.cy - best.cy); return; }
+    if (best.ops[col] == null || n.reread) best.ops[col] = n.num;
     n.used = true;
     if (n.cy < best.cy) best.up++; else best.dn++;
     best.dys.push(n.cy - best.cy);
   });
-  var nCols = Math.max.apply(null, codes.map(function (c) { return c.col; })) + 1, lines = [];
+  var nCols = Math.max.apply(null, codes.map(function (c) { return c.col; })) + 1, lines = [], chosen = [], nOps = 0;
   function line(arr) { var a = []; for (var i = 0; i < nCols; i++) a.push(arr[i] == null ? '' : arr[i]); return a.join('\t'); }
   rows.forEach(function (r, i) {
-    var cm = {}; r.items.forEach(function (c) { if (cm[c.col] == null) cm[c.col] = c.code; });
+    var cm = {}, cc = {}, ct = {}; r.items.forEach(function (c) { var k = c.unknown ? 9 : (c.reread ? -1 : c.cost); if (cm[c.col] == null || k < cc[c.col]) { cm[c.col] = c.code; cc[c.col] = k; ct[c.col] = c; } });
+    Object.keys(ct).forEach(function (k) { chosen.push(ct[k]); }); nOps += Object.keys(r.ops).length;
     var hasNum = Object.keys(r.ops).length > 0, top = hasNum ? r.up >= r.dn : i < rows.length / 2;
     if (i) lines.push('');
     if (top && hasNum) lines.push(line(r.ops));
@@ -1368,7 +1511,7 @@ function ocrToGrid(words) {
   // cells where a machine is expected but nothing was read: another row has a machine in that column, or a number is next to it
   var missing = [], colsUsed = {}; codes.forEach(function (c) { colsUsed[c.col] = 1; });
   rows.forEach(function (r) {
-    var have = {}; r.items.forEach(function (c) { have[c.col] = 1; });
+    var have = {}; r.items.forEach(function (c) { if (!c.unknown) have[c.col] = 1; });
     var lo = Math.min.apply(null, r.items.map(function (c) { return c.col; })), hi = Math.max.apply(null, r.items.map(function (c) { return c.col; }));
     for (var c = 0; c < nCols; c++) {
       if (have[c]) continue;
@@ -1385,7 +1528,7 @@ function ocrToGrid(words) {
       r.items.forEach(function (c) { if (r.ops[c.col] == null) missing.push({ kind: 'num', x: c.cx, y: r.cy + dy, w: pitch * 0.9, h: hMed * 2.2, col: c.col }); });
     }
   });
-  return { rows: rows, tsv: lines.join('\n') + '\n', codes: codes, nums: nums, other: other, pitch: pitch, missing: missing };
+  return { rows: rows, tsv: lines.join('\n') + '\n', codes: codes, nums: nums, other: other, pitch: pitch, missing: missing, chosen: chosen, nOps: nOps };
 }
 
 /* ---------- UI ---------- */
@@ -1411,8 +1554,8 @@ function ocrImage(blob) {
   }).then(function (words) {
     var g = ocrToGrid(words); OCR.last = g;
     ocrDrawBoxes(img, g);
-    var fixed = g.codes.filter(function (c) { return c.cost > 0 && !c.unknown; }).length, unk = g.codes.filter(function (c) { return c.unknown; }).length;
-    st.className = 'small'; st.textContent = t('ocrDone', [g.codes.length, g.nums.filter(function (n) { return n.used; }).length, fixed, unk]);
+    var ch = g.chosen || [], fixed = ch.filter(function (c) { return (c.cost > 0 || c.reread) && !c.unknown; }).length, unk = ch.filter(function (c) { return c.unknown; }).length;
+    st.className = 'small'; st.textContent = t('ocrDone', [ch.length, g.nOps || 0, fixed, unk]);
     var ta = document.getElementById('pasteTxt'); ta.value = g.tsv; pastePreview();
     return g;
   }).catch(function (e) { console.error(e); st.className = 'small t-bad tagline'; st.textContent = t('ocrErr') + ': ' + (e && e.message || e); });
@@ -1488,7 +1631,7 @@ function num(v, d) { var n = parseFloat(String(v).replace(',', '.')); return isF
 function toast(msg, bad) { var e = $('toast'); e.textContent = msg; e.className = 'toast show' + (bad ? ' bad' : ''); clearTimeout(e._t); e._t = setTimeout(function () { e.className = 'toast'; }, 3200); }
 
 function changed() { runChecks(); commit(); render2d(); renderSide(); if (TAB === '3d') rebuild3d(); }
-function onSelChange() { renderSel(); if (TAB === '3d') rebuild3d(); }
+function onSelChange() { renderSel(); placeSelTools(); if (TAB === '3d') rebuild3d(); }
 function renderAll() { runChecks(); render2d(); renderSide(); if (TAB === '3d') rebuild3d(); if (TAB === 'lib') renderLib(); }
 
 function setTab(tb) {
@@ -1505,6 +1648,7 @@ function setTab(tb) {
     resize3d(); rebuild3d(); if (first) view3dReset(false);
   }
   if (tb === 'lib') renderLib();
+  placeSelTools();
 }
 
 /* ---------- side panel ---------- */
@@ -1522,8 +1666,8 @@ function renderIssues() {
 function renderSum() {
   var cnt = {}, n = 0;
   ST.items.forEach(function (it) { if (it.kind === 'mc') { cnt[it.code] = (cnt[it.code] || 0) + 1; n++; } });
-  var fp = flowPath();
-  $('sumBody').innerHTML = '<div>' + esc(t('sumMc', [n])) + (fp.n > 1 ? ' · ' + esc(t('sumFlow', [(fp.dist / 100).toFixed(1)])) : '') + '</div><div class="chips">' +
+  var fp = flowPath(), nw = ST.items.filter(function (it) { return it.kind === 'mc' && !it.noOp; }).length;
+  $('sumBody').innerHTML = '<div>' + esc(t('sumMc', [n, nw])) + (fp.n > 1 ? ' · ' + esc(t('sumFlow', [(fp.dist / 100).toFixed(1)])) : '') + '</div><div class="chips">' +
     Object.keys(cnt).sort(function (a, b) { return cnt[b] - cnt[a] || (a < b ? -1 : 1); }).map(function (c) { return '<span class="chip" data-code="' + esc(c) + '" title="' + esc(codeName(c)) + '"><i style="background:' + FAM_COL[famOf(c)] + '"></i>' + esc(c) + ' <b>' + cnt[c] + '</b></span>'; }).join('') + '</div>';
 }
 function fld(id, lab, val, attrs) { return '<label class="f"><span>' + esc(lab) + '</span><input id="' + id + '" value="' + esc(val) + '" ' + (attrs || '') + '></label>'; }
@@ -1537,6 +1681,7 @@ function renderSel() {
       var fam = famOf(it.code), ms = modelsOfCode(it.code).slice(0, 4);
       h += '<div class="grid2">' + fld('fCode', t('fCode'), it.code, 'list="codeList" autocomplete="off"') + fld('fOp', t('fOp'), it.op || '') + '</div>';
       h += '<div class="small">' + esc(codeName(it.code) || t('notInLib')) + '</div>';
+      h += '<label class="ck" style="margin-top:4px"><input type="checkbox" id="fHasOp"' + (it.noOp ? '' : ' checked') + '> ' + esc(t('fHasOp')) + '</label>';
       h += '<div class="grid3">' + fld('fL', t('fLen'), d.L, 'type="number" step="0.5" title="' + esc(t('fDimTip')) + '"') + fld('fW', t('fWid'), d.W, 'type="number" step="0.5" title="' + esc(t('fDimTip')) + '"') +
         '<label class="f"><span>' + esc(t('fFam')) + '</span><select id="fFam">' + FAMS.map(function (f) { return '<option value="' + f + '"' + (f === fam ? ' selected' : '') + '>' + esc(t('fam_' + f)) + '</option>'; }).join('') + '</select></label></div>';
       h += '<div class="muted small">' + (d.known ? '' : '⚠ ' + esc(t('dimDefault')) + ' ') + esc(t('fDimTip')) + '</div>';
@@ -1549,7 +1694,7 @@ function renderSel() {
     h += '<div class="btns"><button data-cmd="rotL" title="Shift+R">⟲ 90°</button><button data-cmd="rotR" title="R">⟳ 90°</button><button data-cmd="flip" title="F">' + esc(t('bFlip')) + '</button><button data-cmd="dup" title="Ctrl+D">' + esc(t('bDup')) + '</button><button data-cmd="del" class="danger" title="Delete">' + esc(t('bDel')) + '</button></div>';
   } else {
     h += '<div><b>' + esc(t('selMany', [its.length])) + '</b></div>';
-    h += '<div class="btns"><button data-cmd="rotL">⟲ 90°</button><button data-cmd="rotR">⟳ 90°</button><button data-cmd="flip">' + esc(t('bFlip')) + '</button></div>';
+    h += '<div class="btns"><button data-cmd="rotL">⟲ 90°</button><button data-cmd="rotR">⟳ 90°</button><button data-cmd="flip">' + esc(t('bFlip')) + '</button><button data-cmd="op" title="W">👤 ' + esc(t('bOpToggle')) + '</button></div>';
     h += '<div class="btns"><button data-cmd="grpR" title="' + esc(t('bGrpTip')) + '">' + esc(t('bGrp90')) + '</button><button data-cmd="grp180" title="' + esc(t('bGrpTip')) + '">' + esc(t('bGrp180')) + '</button></div>';
     h += '<div class="btns"><button data-cmd="align" title="' + esc(t('bAlignTip')) + '">' + esc(t('bAlign')) + '</button><button data-cmd="pack" title="' + esc(t('bPackTip')) + '">' + esc(t('bPack')) + '</button><button data-cmd="dup">' + esc(t('bDup')) + '</button><button data-cmd="del" class="danger">' + esc(t('bDel')) + '</button></div>';
   }
@@ -1561,6 +1706,7 @@ function onSelField(e) {
   var it = its[0], id = e.target.id, v = e.target.value;
   if (id === 'fCode') { var c = normCode(v); if (!c) return; it.code = c; }
   else if (id === 'fOp') it.op = v.trim();
+  else if (id === 'fHasOp') { if (e.target.checked) delete it.noOp; else it.noOp = true; }
   else if (id === 'fName') it.name = v;
   else if (id === 'fColor') it.color = v;
   else if (id === 'fX') it.x = num(v, it.x);
@@ -1577,7 +1723,7 @@ function onSelField(e) {
 }
 function cmd(c) {
   ({ rotL: function () { rotateSel(-90); }, rotR: function () { rotateSel(90); }, flip: function () { rotateSel(180); }, dup: duplicateSel, del: deleteSel,
-    grpR: function () { rotateGroup(90); }, grp180: function () { rotateGroup(180); }, align: alignSel, pack: packSel }[c] || function () {})();
+    op: toggleOperator, grpR: function () { rotateGroup(90); }, grp180: function () { rotateGroup(180); }, align: alignSel, pack: packSel }[c] || function () {})();
   renderSel();
 }
 
@@ -1606,15 +1752,37 @@ function pastePreview() {
 function pasteGo() {
   if (!PASTE || !PASTE.nMc) return;
   document.querySelectorAll('#pastePrev select[data-row]').forEach(function (s) { PASTE.rows[+s.dataset.row].side = s.value; });
-  var replace = $('pasteReplace').checked, y0 = 60;
+  var replace = $('pasteReplace').checked, y0 = 60, ct = centerTable();
   if (!replace) { var b = bbox(ST.items); if (b) y0 = Math.round(b.y1 + 60); }
-  var items = buildFromPaste(PASTE, { addInput: $('pasteInput').checked, x0: 60, y0: y0 });
-  if (replace) ST.items = items; else ST.items = ST.items.concat(items);
+  var useCt = ct && (replace || ST.items.length === 1);
+  var items = buildFromPaste(PASTE, { addInput: $('pasteInput').checked, x0: 60, y0: y0, center: useCt ? ct : null });
+  if (replace) ST.items = (ct ? [ct] : []).concat(items); else ST.items = ST.items.concat(items);
   if ($('pasteFit').checked) { var bb = bbox(ST.items); ST.line.length = Math.ceil((bb.x1 + 60) / 10) * 10; ST.line.width = Math.ceil((bb.y1 + 60) / 10) * 10; }
   SEL = items.map(function (i) { return i.id; });
   $('dlgPaste').close(); changed(); fitView(); if (TAB === '3d') view3dReset(false);
   toast(t('pasteDone', [items.filter(function (i) { return i.kind === 'mc'; }).length]));
 }
+
+/* ---------- line set-up (standard machine units + central table) ---------- */
+function lineVals() {
+  var L = ST.line;
+  return { name: $('lsName').value.trim(), units: Math.max(1, Math.round(num($('lsUnits').value, L.units || LINE_DEF.units))), unit: Math.max(10, num($('lsUnit').value, LINE_DEF.unit)),
+    tableW: Math.max(0, num($('lsTable').value, LINE_DEF.tableW)), start: Math.max(0, num($('lsStart').value, LINE_DEF.start)), end: Math.max(0, num($('lsEnd').value, LINE_DEF.end)),
+    width: num($('lsWidth').value, 0) };
+}
+function lineCalc() {
+  var o = lineVals(), L = o.start + o.units * o.unit + o.end, W = o.width || lineAutoWidth(o.tableW);
+  $('lsWidth').placeholder = lineAutoWidth(o.tableW);
+  $('lsCalc').innerHTML = esc(t('lsCalc', [o.start, o.units, o.unit, o.end, Math.round(L), Math.round(o.units * o.unit), o.tableW, Math.round(W)]));
+}
+function openLineSetup() {
+  var L = ST.line, ct = centerTable();
+  $('lsName').value = L.name || ''; $('lsUnits').value = L.units || LINE_DEF.units; $('lsUnit').value = L.unit || LINE_DEF.unit;
+  $('lsTable').value = ct ? ct.W : (L.tableW != null ? L.tableW : LINE_DEF.tableW); $('lsStart').value = L.start != null ? L.start : LINE_DEF.start; $('lsEnd').value = L.end != null ? L.end : LINE_DEF.end;
+  $('lsWidth').value = L.units ? L.width : '';
+  lineCalc(); $('dlgLine').showModal();
+}
+function applyLineSetup() { setupLine(lineVals()); $('dlgLine').close(); changed(); fitView(); if (TAB === '3d') view3dReset(false); }
 
 /* ---------- ergonomics dialog ---------- */
 var ERG_KEYS = ['opDepth', 'opW', 'chairGap', 'chairW', 'chairD', 'seatH', 'aisle', 'tableH', 'rowGap', 'colGap', 'emptyPitch', 'snap'];
@@ -1773,6 +1941,7 @@ function onKey(e) {
   else if (ctl) done = false;
   else if (k === 'r' || k === 'R') rotateSel(e.shiftKey ? -90 : 90);
   else if (k === 'f' || k === 'F') rotateSel(180);
+  else if (k === 'w' || k === 'W') toggleOperator();
   else if (k === 'Delete' || k === 'Backspace') deleteSel();
   else if (k === 'ArrowLeft') nudgeSel(-st, 0); else if (k === 'ArrowRight') nudgeSel(st, 0);
   else if (k === 'ArrowUp') nudgeSel(0, -st); else if (k === 'ArrowDown') nudgeSel(0, st);
@@ -1813,7 +1982,14 @@ function startApp() {
   $('optFlow').checked = OPT.flow; $('optFlow').onchange = function () { OPT.flow = this.checked; render2d(); };
   $('optSnap').checked = OPT.snap; $('optSnap').onchange = function () { OPT.snap = this.checked; };
   $('optAisle').checked = OPT.aisles; $('optAisle').onchange = function () { OPT.aisles = this.checked; render2d(); };
-  $('bErg').onclick = openErg; $('ergOk').onclick = function () { applyErg(false); }; $('ergReset').onclick = function () { applyErg(true); };
+  $('bErg').onclick = openErg;
+  $('bLineSetup').onclick = openLineSetup;
+  ['lsUnits', 'lsUnit', 'lsTable', 'lsStart', 'lsEnd', 'lsWidth'].forEach(function (id) { $(id).oninput = lineCalc; });
+  $('lsOk').onclick = applyLineSetup;
+  $('selTools').addEventListener('pointerdown', function (e) { e.stopPropagation(); });
+  $('selTools').addEventListener('click', function (e) { var b = e.target.closest('button[data-cmd]'); if (b) cmd(b.dataset.cmd); });
+  $('bOpOff').onclick = function () { var n = setOperatorByOps($('opOps').value, false); changed(); toast(t('opDone', [n])); };
+  $('bOpOn').onclick = function () { var n = setOperatorByOps($('opOps').value, true); changed(); toast(t('opDone', [n])); }; $('ergOk').onclick = function () { applyErg(false); }; $('ergReset').onclick = function () { applyErg(true); };
   document.querySelectorAll('dialog [data-close]').forEach(function (b) { b.onclick = function () { b.closest('dialog').close(); }; });
   $('bSave').onclick = saveFile;
   $('bOpen').onclick = function () { $('fileOpen').value = ''; $('fileOpen').click(); }; $('fileOpen').onchange = function () { openFile(this.files[0]); };
@@ -1831,7 +2007,7 @@ function startApp() {
   document.addEventListener('keydown', onKey);
   init2d();
   runChecks(); renderSide();
-  requestAnimationFrame(function () { fitView(); });
+  requestAnimationFrame(function () { fitView(); if (!ST.line.fixed && !ST.items.length) openLineSetup(); });
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () { render2d(); if (TAB === '3d') rebuild3d(); });
 }
 </script>
