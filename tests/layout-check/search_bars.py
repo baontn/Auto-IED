@@ -58,5 +58,9 @@ with sync_playwright() as p:
     sty = next((x for x in a0 if x), None)
     if sty:
         pg.fill('#aSearch', sty[-8:].lower()); pg.wait_for_timeout(500); ar = arows(); check('Activity search keeps only that style', ar and all(sty[-8:].upper() in re.sub(r'[^0-9A-Z]', '', x.upper()) or sty[-8:].upper() in x.upper() for x in ar), str(len(ar)))
+    check('header has a Home link', pg.get_attribute('#btnHome', 'href') == '../index.html')
+    pg.click('#btnLogout'); pg.wait_for_selector('#login:not([hidden])'); pg.wait_for_timeout(300)
+    hs = pg.eval_on_selector_all('#login .toolnav a', 'els=>els.map(e=>e.getAttribute("href")+"|"+e.textContent)')
+    check('after logout the login screen links to the home page and to IE Bao cao may', len(hs) == 2 and hs[0].startswith('../index.html') and 'IE_BaoCaoMay.html' in hs[1] and all(h.split('|')[1] for h in hs), str(hs))
     check('no page errors', not errs, str(errs)); br.close()
 print('RESULT', 'ALL PASS' if all(ok) else 'FAILED'); sys.exit(0 if all(ok) else 1)

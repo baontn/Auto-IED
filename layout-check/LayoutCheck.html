@@ -107,6 +107,7 @@ details summary{cursor:pointer;color:var(--accent)}
 .vact{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .linebar{padding:6px 12px;border-bottom:1px solid var(--line);display:flex;gap:6px;align-items:center}
 .linebar button{flex:1;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.toolnav{justify-content:center;gap:10px;margin-top:2px}.toolnav a,.homebtn{color:var(--accent,#2563eb);text-decoration:none}.toolnav a:hover,.homebtn:hover{text-decoration:underline}.homebtn{font-size:13px;padding:0 4px}
 .stbar{padding:6px 12px;border-bottom:1px solid var(--line)}.stbar input{width:100%;box-sizing:border-box}
 .linepanel{border-bottom:1px solid var(--line);padding:8px 12px;display:flex;flex-direction:column;gap:6px}
 .linegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:2px 6px;max-height:240px;overflow:auto}
@@ -139,6 +140,7 @@ tr.tot td{font-weight:700;border-top:2px solid var(--text);border-bottom:none;ba
     </div>
     <button class="primary" id="lgStart" data-i18n="start"></button>
     <div class="muted small" data-i18n="nameNote"></div>
+    <div class="row small toolnav"><a href="../index.html" data-i18n="homeLink"></a><span class="muted">·</span><a href="../ie-bao-cao-may/IE_BaoCaoMay.html" data-i18n="openIbm"></a></div>
   </div>
 </div>
 
@@ -158,7 +160,7 @@ tr.tot td{font-weight:700;border-top:2px solid var(--text);border-bottom:none;ba
 
 <!-- ============ TOP BAR ============ -->
 <header>
-  <h1 data-i18n="appTitle"></h1><span class="tag t-info" id="verTag" title="Version">V4.3.3</span>
+  <h1 data-i18n="appTitle"></h1><span class="tag t-info" id="verTag" title="Version">V4.3.4</span>
   <nav class="tabs">
     <button data-tab="check" data-i18n="tabCheck"></button>
     <button data-tab="variation" data-i18n="tabVar"></button>
@@ -177,6 +179,7 @@ tr.tot td{font-weight:700;border-top:2px solid var(--text);border-bottom:none;ba
     <button id="btnReload" data-i18n="refresh" data-i18n-title="refreshTip"></button>
     <button id="btnPlan" data-i18n="loadPlan" data-i18n-title="loadPlanTip"></button>
     <button id="btnSettings" data-i18n-title="settings">⚙</button>
+    <a id="btnHome" class="homebtn" href="../index.html" data-i18n="homeLink" data-i18n-title="homeTip"></a>
     <button id="btnLogout" data-i18n="logout"></button>
   </div>
 </header>
@@ -350,7 +353,7 @@ const I18N = {
     verifyAllOk: '✅ {0}: all variations closed — variation = 0.', verifySome: '⚠ {0}: {1} variation(s) still different:\n{2}',
     askLayoutNote: 'What must the IE change in the layout?', sentBack: '{0} sent back to IE to fix the layout.',
     thFoundAt: 'Found at', thFoundBy: 'Found by', thType: 'Type', thClosedBy: 'Closed by', thClosedAt: 'Closed at', thLastAction: 'Last action',
-    lineFilter: 'My lines:', allLines: 'All lines', linesN: '{0} lines', pickLines: 'Tick the lines you are in charge of', searchLine: 'Search line… (e.g. J, K)', searchStyle: 'Search style…', noMatch: 'No style matches the search.',
+    lineFilter: 'My lines:', allLines: 'All lines', linesN: '{0} lines', pickLines: 'Tick the lines you are in charge of', searchLine: 'Search line… (e.g. J, K)', searchStyle: 'Search style…', homeLink: 'All tools', homeTip: 'Back to the home page with all tools', openIbm: 'Open IE Báo cáo máy', noMatch: 'No style matches the search.',
     selectAll: '✓ Tick all shown', selectNone: 'Clear (show all lines)', done: 'Done', toCheckOf: 'To check ({0} of {1})',
     noLinesForPU: 'No line of this PU in the plan.', aSET_LINES: 'Set my lines',
     layoutFolder: 'Layout folder', layoutFolderOpt: 'optional — the big folder where IEs save layouts', notSetOpt: 'not set (optional)',
@@ -449,7 +452,7 @@ const I18N = {
     verifyAllOk: '✅ {0}: tất cả sai lệch đã đóng — sai lệch = 0.', verifySome: '⚠ {0}: còn {1} sai lệch:\n{2}',
     askLayoutNote: 'IE cần sửa gì trên layout?', sentBack: '{0} đã trả lại IE để sửa layout.',
     thFoundAt: 'Ngày phát hiện', thFoundBy: 'Người phát hiện', thType: 'Loại', thClosedBy: 'Người đóng', thClosedAt: 'Ngày đóng', thLastAction: 'Thao tác cuối',
-    lineFilter: 'Chuyền phụ trách:', allLines: 'Tất cả chuyền', linesN: '{0} chuyền', pickLines: 'Chọn các chuyền bạn phụ trách', searchLine: 'Tìm chuyền… (vd: J, K)', searchStyle: 'Tìm mã hàng…', noMatch: 'Không có mã hàng nào khớp.',
+    lineFilter: 'Chuyền phụ trách:', allLines: 'Tất cả chuyền', linesN: '{0} chuyền', pickLines: 'Chọn các chuyền bạn phụ trách', searchLine: 'Tìm chuyền… (vd: J, K)', searchStyle: 'Tìm mã hàng…', homeLink: 'Trang chủ', homeTip: 'Về trang chủ có tất cả công cụ', openIbm: 'Mở IE Báo cáo máy', noMatch: 'Không có mã hàng nào khớp.',
     selectAll: '✓ Chọn tất cả đang hiển thị', selectNone: 'Bỏ lọc (hiện tất cả chuyền)', done: 'Xong', toCheckOf: 'Cần kiểm tra ({0}/{1})',
     noLinesForPU: 'Không có chuyền nào của PU này trong kế hoạch.', aSET_LINES: 'Chọn chuyền phụ trách',
     layoutFolder: 'Thư mục layout', layoutFolderOpt: 'không bắt buộc — thư mục chung nơi IE lưu layout', notSetOpt: 'chưa chọn (không bắt buộc)',
