@@ -19,19 +19,34 @@ a.btn{display:inline-block;margin:8px 8px 0 0;padding:7px 14px;background:var(--
 a.btn.sec{background:var(--sel);color:var(--accent)}
 .tag{background:var(--sel);color:var(--accent);border-radius:10px;padding:1px 8px;font-size:12px;margin-left:6px}
 ul{margin:8px 0 0 18px;padding:0}a{color:var(--accent)}
+.lang{display:flex;gap:4px}.lang button{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:8px;padding:3px 10px;font:inherit;font-size:13px;cursor:pointer}.lang button.on{background:var(--accent);color:var(--accent-tx);border-color:var(--accent)}
 </style></head><body>
-<header><img id="logo" src="logo.png" alt="Crystal" onerror="this.remove()"><b>Công cụ IE · Crystal</b></header>
+<header><img id="logo" src="logo.png" alt="Crystal" onerror="this.remove()"><b data-t="hdr">Công cụ IE · Crystal</b><div class="lang" role="group" aria-label="Language"><button data-lang="vi">VI</button><button data-lang="en">EN</button></div></header>
 <main>
-<h1>Công cụ IE</h1>
-<div class="muted">Mở bằng Chrome hoặc Edge. Dữ liệu (layout, thư mục data, kết quả kiểm tra) vẫn nằm trên máy và thư mục chung của bạn; trang này chỉ cung cấp chương trình.</div>
+<h1 data-t="h1">Công cụ IE</h1>
+<div class="muted" data-t="intro">Mở bằng Chrome hoặc Edge. Dữ liệu (layout, thư mục data, kết quả kiểm tra) vẫn nằm trên máy và thư mục chung của bạn; trang này chỉ cung cấp chương trình.</div>
 
 <div class="card"><h2>Layout Check <span class="tag">V4.3.4</span></h2>
-<div class="muted">Kiểm tra layout so với CSDL máy theo nhóm máy: Nhân viên IE, IE Báo cáo máy, IE Tech, Giám sát.</div>
-<a class="btn" href="layout-check/LayoutCheck.html">Mở Layout Check</a><a class="btn sec" href="manual/layout-check.html">📖 Hướng dẫn sử dụng</a></div>
+<div class="muted" data-t="lcDesc">Kiểm tra layout so với CSDL máy theo nhóm máy: Nhân viên IE, IE Báo cáo máy, IE Tech, Giám sát.</div>
+<a class="btn" href="layout-check/LayoutCheck.html" data-t="openLc">Mở Layout Check</a><a class="btn sec" id="manLc" href="manual/layout-check.html" data-t="manual">📖 Hướng dẫn sử dụng</a></div>
 
 <div class="card"><h2>IE Báo cáo máy <span class="tag">v7.10</span></h2>
-<div class="muted">Cập nhật MACHINE DATABASE, phân tích thiếu máy, chuẩn bị máy, IE Tech duyệt, chốt báo cáo, nhật ký.</div>
-<a class="btn" href="ie-bao-cao-may/IE_BaoCaoMay.html">Mở IE Báo cáo máy</a><a class="btn sec" href="manual/ie-bao-cao-may.html">📖 Hướng dẫn sử dụng</a></div>
+<div class="muted" data-t="ibmDesc">Cập nhật MACHINE DATABASE, phân tích thiếu máy, chuẩn bị máy, IE Tech duyệt, chốt báo cáo, nhật ký.</div>
+<a class="btn" href="ie-bao-cao-may/IE_BaoCaoMay.html" data-t="openIbm">Mở IE Báo cáo máy</a><a class="btn sec" id="manIbm" href="manual/ie-bao-cao-may.html" data-t="manual">📖 Hướng dẫn sử dụng</a></div>
 
-<div class="muted">Lần đầu mở bằng đường dẫn này, chọn lại các thư mục (trình duyệt ghi nhớ theo địa chỉ trang). Sau khi cập nhật, nhấn Ctrl+F5 để lấy bản mới.</div>
-</main></body></html>
+<div class="muted" data-t="foot">Lần đầu mở bằng đường dẫn này, chọn lại các thư mục (trình duyệt ghi nhớ theo địa chỉ trang). Sau khi cập nhật, nhấn Ctrl+F5 để lấy bản mới.</div>
+</main>
+<script>
+var T={vi:{},en:{hdr:'IE tools · Crystal',h1:'IE tools',intro:'Open in Chrome or Edge. Your data (layouts, the data folder, check results) stays on your computer and shared folder; this page only provides the programs.',
+lcDesc:'Check layouts against the machine database by machine group: IE officer, Consolidator, IE Tech, Supervisor.',openLc:'Open Layout Check',manual:'📖 User guide',
+ibmDesc:'Update the MACHINE DATABASE, analyse machine shortage, prep machines, IE Tech review, close the report, activity log.',openIbm:'Open IE Báo cáo máy',
+foot:'The first time you open it from this address, choose the folders again (the browser remembers per page address). After an update, press Ctrl+F5 to get the new version.',
+title:'IE tools: Layout Check and IE Báo cáo máy'}};
+var els=[].slice.call(document.querySelectorAll('[data-t]')); els.forEach(function(e){T.vi[e.dataset.t]=e.innerHTML;}); T.vi.title=document.title;
+function lang(){try{var l=localStorage.getItem('ie_site_lang');if(l==='vi'||l==='en')return l;}catch(e){}return 'vi';}
+function setLang(l){try{localStorage.setItem('ie_site_lang',l);}catch(e){}
+  els.forEach(function(e){e.innerHTML=T[l][e.dataset.t];}); document.title=T[l].title; document.documentElement.lang=l;
+  document.getElementById('manLc').href='manual/layout-check'+(l==='en'?'.en':'')+'.html'; document.getElementById('manIbm').href='manual/ie-bao-cao-may'+(l==='en'?'.en':'')+'.html';
+  [].forEach.call(document.querySelectorAll('.lang button'),function(b){b.classList.toggle('on',b.dataset.lang===l);});}
+[].forEach.call(document.querySelectorAll('.lang button'),function(b){b.onclick=function(){setLang(b.dataset.lang);};}); setLang(lang());
+</script></body></html>

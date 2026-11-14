@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Layout Check: User guide</title><link rel="icon" href="../icon.png"><link rel="stylesheet" href="manual.css"></head><body>
+<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>Layout Check V4.3.4: User guide</b><a href="layout-check.html" title="Tiếng Việt" onclick="try{localStorage.setItem('ie_site_lang','vi')}catch(e){}">VI</a><a href="ie-bao-cao-may.en.html">IE Báo cáo máy ›</a><a href="../index.html">‹ Home</a></header>
+<div class="wrap">
+<nav class="toc"><b>Contents</b>
+<a href="#intro">1. Introduction</a>
+<a href="#setup">2. First-time setup</a>
+<a href="#sup">3. Supervisor: load the plan</a>
+<a href="#ie">4. IE officer: check a style</a>
+<a class="sub" href="#ie-pick">Pick a style and a layout</a>
+<a class="sub" href="#ie-result">Read the result, save Pass / Fail</a>
+<a class="sub" href="#ie-pdf">Layout that exists only as a PDF</a>
+<a href="#cons">5. Consolidator: handle differences</a>
+<a href="#tech">6. IE Tech: fix the layout</a>
+<a href="#recheck">7. IE officer: re-check</a>
+<a href="#follow">8. Follow-up: Status, Activity log</a>
+<a href="#rules">9. Rules to remember</a>
+<a href="#problems">10. Common problems</a>
+</nav>
+<main>
+<section id="intro"><h1>Layout Check</h1>
+<p class="lead">Compare the machine list in the layout file with the Machine Database before a style loads on the line. Runs in Chrome or Edge and sends no data anywhere.</p>
+<h2>1. Introduction</h2>
+<p>Every style goes through a check loop with 4 roles:</p>
+<table><tr><th>Role</th><th>What to do</th></tr>
+<tr><td><b>IE officer</b></td><td>Open the layout, compare with the database, save <span class="tag t-ok">Pass</span>, <span class="tag t-warn">Accept with remark</span> or <span class="tag t-bad">Fail</span>. <b>Only an IE officer saving Pass completes a style.</b></td></tr>
+<tr><td><b>Consolidator</b></td><td>Decide whether a difference comes from the database or from the layout; fix the database.</td></tr>
+<tr><td><b>IE Tech</b></td><td>Fix the layout file when asked, or confirm that the layout is correct and the database is wrong.</td></tr>
+<tr><td><b>Supervisor</b></td><td>Load the weekly plan, follow every step, handle styles that went over 2 rounds.</td></tr></table>
+<div class="note">The pictures in this guide use <b>synthetic demo data</b> (styles DMO26-…, lines A, B, K, J, D, E), not company data. Screenshots show the Vietnamese screen; switch the tool to English with the <b>EN</b> button.</div>
+</section>
+
+<section id="setup"><h2>2. First-time setup on each computer</h2>
+<ol>
+<li>Open <code>LayoutCheck.html</code> (or <code>Open LayoutCheck.bat</code>) with Microsoft Edge or Google Chrome. When using the intranet / GitHub Pages version: open the link given by the team.</li>
+<li>Type your <b>Name</b> (always type it the same way), choose your <b>Role</b> and <b>PU</b>.</li>
+<li>Click <span class="btn">Choose…</span> at <b>Data folder</b>, pick the shared <code>data</code> folder, click <span class="btn">Allow</span>.</li>
+<li>Click <span class="btn">Choose…</span> at <b>Machine Database</b>, pick the Machine Database file.</li>
+<li>(Optional) click <span class="btn">Choose…</span> at <b>Layout folder</b>, pick the shared folder where IEs save layouts (the big folder that contains all layouts).</li>
+<li>Click <span class="btn">Start</span>.</li></ol>
+<figure><a href="img/lc-01-login.png"><img src="img/lc-01-login.png" alt="Login screen" loading="lazy"></a><figcaption>Login screen: name, role, PU and the three folders/files (marked in red). A ✅ means it is chosen.</figcaption></figure>
+<div class="ok">From the next time you only need to type your name (it is remembered) and click <span class="btn">Start</span>, then click <span class="btn">Allow</span> if the browser asks.</div>
+<p>The list of PUs comes from the <code>PU</code> column of <code>data\Linemapping.xlsx</code> (columns <code>Line</code>, <code>PU</code>). When a PU is added or split, edit only this file; no software change is needed. The PU name must be written the same way on every row (for example <code>PU2 SPORT</code>); after editing, choose the data folder again or reopen the page.</p>
+</section>
+
+<section id="sup"><h2>3. Supervisor: load the weekly plan</h2>
+<ol>
+<li>Log in as <b>Supervisor</b>.</li>
+<li>Click <span class="btn">📥 Load plan</span> and choose the weekly plan file (sheet <code>MasterPlan-Full</code>, columns <code>Line</code>, <code>Style No</code>, <code>Date</code>).</li>
+<li>If a message says some lines have no PU: add them to <code>data\Linemapping.xlsx</code>, then click <span class="btn">⟳ Refresh</span>.</li>
+<li>Follow the <b>Status</b> tab and the <b>Activity log</b>.</li></ol>
+<figure><a href="img/lc-02-supervisor-status.png"><img src="img/lc-02-supervisor-status.png" alt="Supervisor loads the plan" loading="lazy"></a><figcaption>After the plan is loaded, the Status tab shows the progress of each PU and the list of styles that load this week. The message box tells the number of styles and new styles.</figcaption></figure>
+</section>
+
+<section id="ie"><h2>4. IE officer: check a style</h2>
+<h3 id="ie-pick">4.1 Pick a style and a layout</h3>
+<ol>
+<li>Log in as <b>IE officer</b> and choose the right PU. The left column <b>To check</b> lists the styles that load first this week on the PU's lines; the <span class="tag t-bad">Urgent</span> label = loads within the next 3 days.</li>
+<li>First time: click <b>My lines</b> in the left column, tick the lines you are in charge of, click <span class="btn">Done</span>. The choice is saved on this computer; <span class="btn">Clear (show all lines)</span> shows every line of the PU. The <b>Search line</b> box accepts several entries separated by commas or spaces: type <code>J, K</code> to show every line that starts with J or K; <span class="btn">✓ Tick all shown</span> ticks only the lines currently shown.</li>
+<li><b>Switching tools:</b> the <b>All tools</b> button at the top (and the two links "All tools" and "Open IE Báo cáo máy" on the login screen, also after logging out) takes you to the home page or to IE Báo cáo máy.</li>
+<li><b>Search style:</b> every tab (Check, Variation log, Status, Activity log) has a style search box; type part of the name, case and dashes do not matter (for example <code>00202</code>). It only filters what is shown; the counts on the tabs do not change.</li>
+<li>Click a style. In <b>1. Machine Database</b> the machines of the database appear automatically ("Show machine list").</li>
+<li>In <b>2. Layout file</b> the tool lists the files whose name contains the style: click <span class="btn">Open</span> on the right file (label "Same style"). If you do not see it: type part of the file name in the search box, click <span class="btn">⟳ Rescan</span> (when you just saved a new file) or <span class="btn">📂 Browse…</span>.</li>
+<li>Check the sheets: sheets with a machine table are ticked automatically and the total of the chosen sheets is shown below. You can <span class="btn">＋ Add another file</span> if the layout is split into several files.</li></ol>
+<div class="ok" id="dbauto"><b>The database refreshes itself (V4.3.2):</b> when the Consolidator pastes a new database into the Machine Database file, Layout Check re-reads the file when you open a style, open a layout or come back to the window, and shows "The Machine Database file changed (…): it was reloaded". No need to click "Refresh" and no more false Fail from an old database. If the file is open or being saved in Excel, Layout Check keeps the old data, tells you once and tries again later.</div>
+<figure><a href="img/lc-03-ie-list.png"><img src="img/lc-03-ie-list.png" alt="List to check" loading="lazy"></a><figcaption>The <b>To check</b> list of PU1 with the labels "New this week" and "Urgent".</figcaption></figure>
+<figure><a href="img/lc-04-lines.png"><img src="img/lc-04-lines.png" alt="My lines filter" loading="lazy"></a><figcaption>Choose your lines so the list shows only the styles of those lines.</figcaption></figure>
+<figure><a href="img/lc-05-style-step2.png"><img src="img/lc-05-style-step2.png" alt="Steps 1 and 2" loading="lazy"></a><figcaption>Step 1 (Machine Database) and step 2 (Layout file). Click <b>Open</b> on the file with the right style.</figcaption></figure>
+
+<h3 id="ie-result">4.2 Read the result and save</h3>
+<p>Layout Check compares <b>by machine group</b> (the database lists groups, the layout lists machine codes):</p>
+<ul>
+<li><span class="tag t-ok">Matches by machine group</span>: every group has the same total, even if the machine codes inside the group differ. <b>You can save Pass.</b> The differing machine codes are still listed for reference.</li>
+<li><span class="tag t-bad">… machine group(s) differ</span>: some group has a different total. <b>Pass cannot be chosen.</b> The result lists the differing groups and each machine code.</li>
+<li>Machine codes that have no group in the database are compared code by code.</li>
+<li>The warning "the machine list at the bottom of the layout differs from the operation table" (a big layout split into smaller layouts) is only a warning and <b>does not block Pass</b>.</li></ul>
+<figure><a href="img/lc-06-pass-by-group.png"><img src="img/lc-06-pass-by-group.png" alt="Matches by machine group" loading="lazy"></a><figcaption>Example of a match by machine group: 1NLB and 1NLS differ but belong to the same group 1NLM, so the totals are equal (30 = 30). The <b>Pass</b> button lights up.</figcaption></figure>
+<figure><a href="img/lc-07-fail-differences.png"><img src="img/lc-07-fail-differences.png" alt="Differences" loading="lazy"></a><figcaption>Example of differences: 4OLM and BT1M have 1 machine more than the database. The <b>Pass</b> button is locked; write a comment and click <b>Fail</b>.</figcaption></figure>
+<p>In <b>4. Your decision</b>:</p>
+<table><tr><th>Button</th><th>Use when</th><th>Comment</th></tr>
+<tr><td><span class="tag t-ok">✅ Pass</span></td><td>Layout = database by machine group</td><td>Comment is optional. The style is complete.</td></tr>
+<tr><td><span class="tag t-warn">⚠ Accept with remark</span></td><td>The differences are known; the Consolidator will align the database</td><td>A comment is <b>required</b>.</td></tr>
+<tr><td><span class="tag t-bad">❌ Fail</span></td><td>The layout or the database must be corrected</td><td>A comment is <b>required</b> (what must be fixed, who was informed).</td></tr></table>
+<div class="note">A style that is Passed or Accepted disappears from the list. A Failed style stays until it is fixed and checked again. Every difference is sent to the Consolidator in the <b>Variation log</b>.</div>
+
+<h3 id="ie-pdf">4.3 Layout that exists only as a PDF (manual check)</h3>
+<p>Use this when an old layout no longer has an Excel file, only a PDF.</p>
+<ol>
+<li>In step 2 click <span class="btn">📂 Browse…</span> and choose the <code>.pdf</code> file (or pick the PDF in the suggestion list). The PDF appears in the right-hand column so you can read and type at the same time; <span class="btn">View PDF here</span> reopens the pane, "Open in new tab" opens the PDF in its own tab, the ✕ closes the pane.</li>
+<li>Enter the machine list: type the <b>Machine code</b> and <b>Qty</b> and click <span class="btn">Add</span> (or Enter in the Qty box; the machine code box suggests the codes found in the database). Or open <b>Paste a machine list (copied from the PDF)</b>, paste lines of "machine code  quantity" and click <span class="btn">Read list</span>. Total lines and headings are ignored. If the PDF is a scanned picture whose text cannot be copied, type it by hand.</li>
+<li>You <b>must</b> tick "I compared every line with the PDF file" before saving Pass or Accepted.</li></ol>
+<figure><a href="img/lc-19-pdf-card.png"><img src="img/lc-19-pdf-card.png" alt="Manual PDF entry card" loading="lazy"></a><figcaption>The manual entry card for a PDF: Machine code / Qty / Add boxes, the PDF on the right. <i>(The screenshot was taken in a browser without a PDF viewer, so the PDF pane is empty.)</i></figcaption></figure>
+<figure><a href="img/lc-20-pdf-entered.png"><img src="img/lc-20-pdf-entered.png" alt="Entered list" loading="lazy"></a><figcaption>After pasting a list: the table of entered machines, the total and the comparison result; the result carries the label for a layout typed by hand from a PDF.</figcaption></figure>
+</section>
+
+<section id="cons"><h2>5. Consolidator: handle differences</h2>
+<p>Log in as <b>Consolidator</b>; the tab <b>🛠 Variation log</b> shows the Failed styles. Every card shows: who found it, the IE's comment, the table of differing machines (DB at check, Layout, DB now, Still to fix) and which step the style is "Now with".</p>
+<figure><a href="img/lc-09-variation-card.png"><img src="img/lc-09-variation-card.png" alt="Variation log" loading="lazy"></a><figcaption>A variation card with the three handling buttons (marked in red).</figcaption></figure>
+<ol>
+<li><b>Database is wrong</b> (layout is right): fix the database in the <b>IE Báo cáo máy</b> tool (see the guide of that tool), or click <span class="btn">📋 Copy corrected machine list</span>, open the Machine Database file, paste at the end of the <code>Machine Database</code> sheet, save and <b>close</b> the Excel file; then click <span class="btn">✅ Database updated — verify</span>. When the database matches the layout (difference = 0) the style moves to the IE re-check step automatically.</li>
+<li><b>Layout is wrong</b>: click <span class="btn">↩ Layout must be fixed</span> and write what must be fixed. The style goes to IE Tech.</li></ol>
+<div class="warn">Always <b>close the Machine Database file</b> before clicking "verify". Do not rename or delete the folders inside <code>data</code> (activity, validations, variations).</div>
+</section>
+
+<section id="tech"><h2>6. IE Tech: fix the layout</h2>
+<p>Log in as <b>IE Tech</b>; the first tab becomes <b>🔧 Layouts to fix</b> and shows only the styles of your PU for which a layout fix was requested. The top of the page shows the Consolidator's request and the machines in dispute.</p>
+<figure><a href="img/lc-12-tech-style.png"><img src="img/lc-12-tech-style.png" alt="IE Tech screen" loading="lazy"></a><figcaption>IE Tech screen: the layout fix request (yellow box), the machines in dispute from the previous check (marked "was wrong") and the two decision buttons.</figcaption></figure>
+<p>There are two ways to answer:</p>
+<ul>
+<li><span class="btn">✔ Layout is correct — database is wrong</span> (comment required): sends it back to the Consolidator to fix the database.</li>
+<li><b>Fix the layout file</b> in the shared folder, open the file again (click <span class="btn">Remove</span> on the old file, then <span class="btn">📂 Browse…</span> or choose it from the list), then click <span class="btn">✔ I fixed the layout — check now</span>. The system compares at once: when no difference is left the style goes to the IE officer for re-check; if differences remain, fix further or choose "Layout is correct — database is wrong".</li></ul>
+<figure><a href="img/lc-13-tech-fixed.png"><img src="img/lc-13-tech-fixed.png" alt="Layout fixed" loading="lazy"></a><figcaption>After opening the corrected layout file: no difference left; click "I fixed the layout — check now".</figcaption></figure>
+<div class="note">When you open the new file, remember to <b>remove the old layout file</b> from the list; if both stay, the machines of the two files are added together and a large difference appears.</div>
+</section>
+
+<section id="recheck"><h2>7. IE officer: re-check</h2>
+<p>A style that was fixed is at the <b>top of the list</b> with the label <span class="tag t-ok">Fixed — waiting for IE re-check</span>. The layout file of last time opens again by itself and the machines that were wrong are highlighted. Save <b>Pass</b> to complete; Fail returns to the Consolidator step (next round).</p>
+<figure><a href="img/lc-14-recheck-list.png"><img src="img/lc-14-recheck-list.png" alt="Waiting for re-check" loading="lazy"></a><figcaption>A style fixed by IE Tech returns to the IE officer's list.</figcaption></figure>
+<figure><a href="img/lc-15-recheck-pass.png"><img src="img/lc-15-recheck-pass.png" alt="Re-check passed" loading="lazy"></a><figcaption>Re-check: the layout now matches the database; click Pass.</figcaption></figure>
+<h3>The steps of a style</h3>
+<table><tr><th>Step</th><th>Who has it</th><th>Goes to</th></tr>
+<tr><td>1. To check</td><td>IE officer</td><td>Pass/Accept → <b>Done</b>. Fail with machine differences → step 2. Fail without machine differences (the layout itself is doubtful) → step 3.</td></tr>
+<tr><td>2. With Consolidator</td><td>Consolidator</td><td>Database wrong: fix the database, when it matches → step 4. Layout wrong: "Layout must be fixed" → step 3.</td></tr>
+<tr><td>3. With IE Tech</td><td>IE Tech</td><td>"Layout is correct — database is wrong" → step 2. Layout fixed with no difference left → step 4.</td></tr>
+<tr><td>4. Fixed — re-check</td><td>IE officer</td><td>Pass → Done. Fail → step 2 (next round).</td></tr></table>
+<p>Other labels: <span class="tag t-ok">Approved by Consolidator</span> (the database was updated from the layout; the IE officer still checks), <span class="tag t-bad">2 rounds — to Supervisor</span> (Failed 2 times in a row). The number on each tab = the number of styles waiting for that user.</p>
+</section>
+
+<section id="follow"><h2>8. Follow-up: Status, Activity log</h2>
+<figure><a href="img/lc-16-status.png"><img src="img/lc-16-status.png" alt="Status" loading="lazy"></a><figcaption>The <b>Status</b> tab (Supervisor): progress of each PU, the number of styles waiting for the Consolidator / IE Tech / IE re-check / over 2 rounds, and the "Now with" column for each style. <b>Export to Excel</b> saves the report.</figcaption></figure>
+<figure><a href="img/lc-17-activity.png"><img src="img/lc-17-activity.png" alt="Activity log" loading="lazy"></a><figcaption>The <b>Activity log</b> tab: who did what, when and on which style; filter by person and action.</figcaption></figure>
+<figure><a href="img/lc-18-variation-closed.png"><img src="img/lc-18-variation-closed.png" alt="Closed variations" loading="lazy"></a><figcaption>The <b>Variation log</b> tab with the status filter (Not closed / Closed) to see variations that were handled.</figcaption></figure>
+<p>Styles over 2 rounds: the Supervisor talks to the parties; the Supervisor can perform the actions of the Consolidator and of IE Tech.</p>
+</section>
+
+<section id="rules"><h2>9. Rules to remember</h2>
+<ul>
+<li>Only an IE officer saving Pass/Accept completes a style. The IE Báo cáo máy tool only writes an "Approved" note (it does not count as a check).</li>
+<li>The database uses only the rows with the <b>latest date</b> of each style.</li>
+<li>A Pass already stored in <code>data\validations</code> is never rewritten.</li>
+<li>A computer using an older Layout Check keeps working (it just does not show the newer labels).</li>
+<li>Do not rename or delete the folders <code>activity</code>, <code>validations</code>, <code>variations</code>, <code>approvals</code> in <code>data</code>.</li></ul>
+</section>
+
+<section id="problems"><h2>10. Common problems</h2>
+<table><tr><th>Symptom</th><th>What to do</th></tr>
+<tr><td>You cannot see the layout file of the style</td><td>Type part of the file name in the search box, click "⟳ Rescan", or "📂 Browse…".</td></tr>
+<tr><td>"This style is not in the Machine Database"</td><td>Check the style in the <code>Machine Database</code> sheet; similar styles (same first 11 characters) are shown as hints.</td></tr>
+<tr><td>The layout shows differences although the database was just updated</td><td>Since V4.3.2 the file is reloaded when it changes; if it persists, click "⟳ Refresh". Check that the Machine Database file was saved (not still unsaved in Excel).</td></tr>
+<tr><td>The browser asks for the folder permission again</td><td>Click "Allow".</td></tr>
+<tr><td>The list of PUs is wrong</td><td>Edit <code>Linemapping.xlsx</code> in the data folder, choose the data folder again or reopen the page.</td></tr>
+<tr><td>The old screen shows after the web page was updated</td><td>Press Ctrl+F5.</td></tr>
+<tr><td>A line has no PU</td><td>Add the line to <code>Linemapping.xlsx</code>, click "⟳ Refresh".</td></tr></table>
+</section>
+</main></div></body></html>

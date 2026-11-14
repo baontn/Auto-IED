@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IE Báo cáo máy: User guide</title><link rel="icon" href="../icon.png"><link rel="stylesheet" href="manual.css"></head><body>
+<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>IE Báo cáo máy v7.10: User guide</b><a href="ie-bao-cao-may.html" title="Tiếng Việt" onclick="try{localStorage.setItem('ie_site_lang','vi')}catch(e){}">VI</a><a href="layout-check.en.html">Layout Check ›</a><a href="../index.html">‹ Home</a></header>
+<div class="wrap">
+<nav class="toc"><b>Contents</b>
+<a href="#intro">1. Introduction</a>
+<a href="#setup">2. One-time setup (MC Report)</a>
+<a href="#weekly">3. Update the MACHINE DATABASE</a>
+<a class="sub" href="#b1">Step 1: Input data</a>
+<a class="sub" href="#b2">Step 2: Scan layouts</a>
+<a class="sub" href="#b3">Step 3: Review and save</a>
+<a class="sub" href="#keep">Confirm keeping the current data</a>
+<a class="sub" href="#overlay">Shortage uses the changes just approved</a>
+<a class="sub" href="#b4">Step 4: Put the data into the MC Report</a>
+<a href="#shortage">4. Shortage and prep machines</a>
+<a href="#tech">5. IE Tech: review prep</a>
+<a href="#resid">6. Remaining shortage, actions</a>
+<a href="#close">7. Close the report, export Excel</a>
+<a href="#notices">8. Variation notices and Activity</a>
+<a href="#rules">9. Rules</a>
+<a href="#files">10. Saved files and the data folder</a>
+<a href="#problems">11. Common problems</a>
+</nav>
+<main>
+<section id="intro"><h1>IE Báo cáo máy</h1>
+<p class="lead">Update the MACHINE DATABASE from layouts and costing, analyse machine shortage by day, prepare changeover machines. Runs in Chrome or Edge, needs no network, sends no data anywhere.</p>
+<h2>1. Introduction</h2>
+<p>The tool does three main jobs, matching the tabs at the top of the page:</p>
+<table><tr><th>Tab</th><th>Used for</th></tr>
+<tr><td><b>Data</b></td><td>Choose the MC Report, the Master plan, the layout folder, the <code>data</code> folder of Layout Check, and type your name. A ✓ shows when everything is loaded.</td></tr>
+<tr><td><b>Update database</b></td><td>Scan layouts, review changes, <b>Save MACHINE DATABASE</b> (the save bar only shows on this tab). The number on the tab = items to review.</td></tr>
+<tr><td><b>Shortage &amp; prep</b></td><td>Rank the risk of machine shortage, detail by day, send to IE Tech for review, close the report, export Excel.</td></tr>
+<tr><td><b>Remaining shortage</b></td><td>The shortage left after IE Tech's review (horizontal tables, choose machine group / PU), the actions to solve it (rent, buy, borrow, take back, move the plan) recorded right under the table of every short machine group with an instant result, and the summary card (section 6).</td></tr>
+<tr><td><b>Variation notices</b></td><td>Notices from IE Tech. The number on the tab = notices not handled yet.</td></tr>
+<tr><td><b>Activity</b></td><td>History of the prep-machine actions by machine group and by line.</td></tr></table>
+<p><b>Back to the home page:</b> click <b>Home</b> at the top right. <b>Resize columns:</b> in every table, drag the right edge of a column header to change the width (the text in the table wraps); double-click that edge to go back to automatic.</p>
+<p>At the top right there are three <b>role</b> buttons (<b>Consolidator</b> / <b>IE Tech</b> / <b>Supervisor</b>) and the language button <b>VI / EN</b>. The IE Tech role sees only the "Review prep" screen (section 5); the Supervisor role only views "Remaining shortage" (section 6).</p>
+<div class="note">A style is <b>complete</b> only when an IE officer saves Pass/Accept in <a href="layout-check.en.html">Layout Check</a>. IE Báo cáo máy never writes "Pass"; it only writes an "Approved" note.<br>The pictures in this guide use <b>synthetic demo data</b> (styles DMO26-…, lines A, B, K, J, D, E), not company data. Screenshots show the Vietnamese screen; switch the tool to English with the <b>EN</b> button.</div>
+</section>
+
+<section id="setup"><h2>2. One-time setup in the MC Report</h2>
+<ol>
+<li>The MACHINE DATABASE stays as the table <code>Table1</code>. <b>Do not rename it.</b></li>
+<li><b>Data &gt; Get Data &gt; From Other Sources &gt; Blank Query &gt; Advanced Editor</b>, paste the content of <code>PowerQuery\costing_query.pq</code>, edit the 4 setting lines (<code>PlanFile</code>, <code>CostingFile</code>, <code>Server</code>, <code>Database</code>) &gt; Done &gt; rename the query to <code>COSTING PROPOSAL</code> &gt; <b>Close &amp; Load To… &gt; Table &gt; New worksheet</b> &gt; rename the sheet to <code>COSTING PROPOSAL</code>.</li>
+<li><b>Data &gt; Get Data &gt; Query Options &gt; CURRENT WORKBOOK &gt; Privacy</b> &gt; choose "Ignore the Privacy Levels".</li>
+<li>First refresh: enter the SQL account (choose Database, the read account used by the costing macro); in the "Native database query" dialog choose <b>Run</b>.</li></ol>
+<p>Optional: <code>PowerQuery\machinedb_latest_query.pq</code> reads the MACHINE DATABASE from the latest saved file in a fixed folder (see section 3, step 4b).</p>
+<p>The MC Report used with the tool needs the sheets: <code>MACHINE DATABASE</code>, <code>MACHINE GROUP</code> (required); <code>COSTING PROPOSAL</code> (if missing, costing is skipped); <code>MACHINE BY LINE</code>, <code>MC STATUS</code>, <code>PU LIST</code> (for the Shortage &amp; prep tab).</p>
+</section>
+
+<section id="weekly"><h2>3. Update the MACHINE DATABASE (weekly)</h2>
+<p>Before you start: open the MC Report, <b>Data &gt; Refresh All &gt; Save</b>.</p>
+<h3 id="b1">Step 1: Input data (Data tab)</h3>
+<ol>
+<li>Open <code>IE_BaoCaoMay.html</code> with Chrome or Edge.</li>
+<li><span class="btn">MC Report… (remembered)</span>: choose the MC Report file. The tool remembers this file for the following weeks.</li>
+<li><span class="btn">Choose Excel files… (remembered)</span>: choose this week's Master plan, last week's file and CheckMc (you can pick several files at once; the tool recognises each file by its sheet names and remembers these files). The button "or choose Excel files… (not remembered)" is for when you do not want them remembered.</li>
+<li><span class="btn">Choose layout folder… (remembered)</span>: the root folder that holds layouts (sub-folders are scanned too; the folders <code>Old layout</code>, <code>/old/</code>, <code>backup</code> are skipped). If Chrome asks "Upload", choose Upload (the data is only read on this computer). "or choose the old way" selects without remembering.</li>
+<li><span class="btn">Connect Layout Check data folder…</span> (optional but recommended): choose the shared <code>data</code> folder, click Allow (view and edit). Type your <b>Name</b>.</li></ol>
+<figure><a href="img/ibm-01-data.png"><img src="img/ibm-01-data.png" alt="Data tab" loading="lazy"></a><figcaption>The Data tab: the choose buttons (marked in red) and the status of each source. Example: MC Report 16 styles, Master plan 18 styles, 16 layout files, Layout Check has 3 checks.</figcaption></figure>
+<div class="ok"><b>From the next time:</b> the tool reconnects the remembered MC Report, Excel files, layout folder and data folder by itself when the browser still allows it; if the browser needs to ask for permission, click on the page once (or "🔁 Reconnect"). IE Tech and Supervisor share these folders. Each week you only need to choose the new Master plan again if its file name is different. The previous scan state comes from the data folder; you do not need to choose "the file saved last time". The first time you can also choose <code>CheckMc.xlsm</code> to compare with the latest CheckMc scan.</div>
+<h3 id="b2">Step 2: Scan layouts (Update database tab)</h3>
+<p>Click <span class="btn">Start</span>. The tool scans layouts first; styles without a layout use costing. The progress bar shows the number of files scanned. The scan works like the CheckMc macro (<code>RunWeeklyIncrementalScan</code>); for Man-Machine files only Man-Machine-Ass/Prep are used; hidden sheets and sheets named "F T S C" / "F-S-T-C" are not scanned.</p>
+<h3 id="b3">Step 3: Review and save</h3>
+<p>The scan result is split into cards (click a card to see it):</p>
+<table><tr><th>Card</th><th>Meaning</th></tr>
+<tr><td><b>To review</b></td><td>Styles with new data or data different from the database; sorted by loading date. Labels: <i>New</i>, <i>Layout changed</i>, <i>Costing → Layout</i>, <i>Costing</i>, <i>Manual data</i>, <i>From Layout Check</i>, <i>Waiting for layout fix</i>.</td></tr>
+<tr><td><b>Still missing</b></td><td>Styles in the plan that have no layout, no costing and are not in the database. How to handle is written in the last column.</td></tr>
+<tr><td><b>Data issues</b></td><td>To be fixed at the source (for example a machine code that is not in MACHINE GROUP; a row pasted twice in the database can be marked to keep one copy).</td></tr>
+<tr><td><b>No change</b></td><td>The layout matches the database (compared by machine group).</td></tr>
+<tr><td><b>Confirmed to keep</b></td><td>Styles for which you chose "Keep current data" and confirmed it (see below). The card only shows when there are confirmed items.</td></tr>
+<tr><td><b>Checked (Layout Check)</b></td><td>The IE officer saved Pass/Accept, the layout did not change and the database matches: no review again.</td></tr>
+<tr><td><b>Scan log</b></td><td>The result of each file.</td></tr></table>
+<figure><a href="img/ibm-03-review.png"><img src="img/ibm-03-review.png" alt="Review changes" loading="lazy"></a><figcaption>The <b>To review</b> card: every style has a <b>Data source</b> (choose another layout, costing, or keep the current data), the <b>Machines</b> column and the <b>Note</b>. Green chip = added, yellow = quantity changed (old→new), red struck = removed.</figcaption></figure>
+<ul>
+<li>Every layout file is one option, with the file's modified date. Below are the sheets that have a machine table (hidden sheets are not included): by default every Man-Machine sheet is ticked, otherwise the first sheet that names the style. Tick / untick to add sheets together; the machine count and the comparison update at once.</li>
+<li>Tick ✓ row by row, or click <span class="btn">Approve all items shown</span>. <span class="btn">Clear selection</span> unticks everything.</li>
+<li>Quick filters: <b>New</b>, <b>Costing</b>, <b>Manual data</b>, and the search box for style/file.</li></ul>
+<figure><a href="img/ibm-04-missing.png"><img src="img/ibm-04-missing.png" alt="Still missing" loading="lazy"></a><figcaption>The <b>Still missing</b> card: the style DMO26-00207-2401 loads on line K on 25/11 and has no layout, no costing and no data. A source must be added (for example refresh COSTING PROPOSAL).</figcaption></figure>
+<figure><a href="img/ibm-06-scanlog.png"><img src="img/ibm-06-scanlog.png" alt="Scan log" loading="lazy"></a><figcaption>The <b>Scan log</b> card: the result of each layout file (which file could be read, which style, whether it changed since last time).</figcaption></figure>
+<p>When you have chosen, click <span class="btn">Save MACHINE DATABASE</span> in the bottom bar. The file is saved as <code>MACHINE_DATABASE_yyyymmdd_hhmm.xlsx</code>.</p>
+<figure><a href="img/ibm-07-approve-all.png"><img src="img/ibm-07-approve-all.png" alt="Approve all" loading="lazy"></a><figcaption>After "Approve all items shown": the bottom bar tells the number of chosen changes.</figcaption></figure>
+<figure><a href="img/ibm-08-saved.png"><img src="img/ibm-08-saved.png" alt="Saved" loading="lazy"></a><figcaption>After saving: the message with the number of changes, the number of database rows, the scan state written to Layout Check, the number of "Approved" notes written, and the next step.</figcaption></figure>
+<h3 id="keep">Keep current data and confirm keeping</h3>
+<p>When a layout is new or different but you want to <b>keep the database as it is</b> (for example manual data that an IE already checked, or a layout that is not final), do this:</p>
+<ol>
+<li>In the <b>Data source</b> column of the style, choose <b>Keep current data</b> (the last line of the list).</li>
+<li>Tick the ✓ box at the start of the row. The bottom bar shows "<b>1 keep confirmation</b>" and the button <span class="btn">Confirm keep (1)</span>.</li>
+<li>Click <span class="btn">Confirm keep</span>. You can also click <span class="btn">Save MACHINE DATABASE</span>: the ticked keep items are remembered at the same time.</li></ol>
+<figure><a href="img/ibm-22-keep-select.png"><img src="img/ibm-22-keep-select.png" alt="Confirm keep" loading="lazy"></a><figcaption>"Keep current data" is chosen for DMO26-00105-1201, the ✓ box is ticked and the <b>Confirm keep (1)</b> button shows in the bottom bar.</figcaption></figure>
+<p>The style moves to the <b>Confirmed to keep</b> card and <b>does not show again under "To review"</b> in the following scans. It shows again only when one of two things changes:</p>
+<ul>
+<li><b>The content of the layout changes</b> (a different machine code or quantity): the note says "The layout changed after … confirmed keeping the current data".</li>
+<li><b>The style's data in the database changes</b> (for example someone updated the machine count): the note says "The database changed after … confirmed keeping the current data".</li></ul>
+<p>When it shows again, the old confirmation is <b>cleared</b>; to keep it again, confirm again. Only re-saving the file, a new modified date or a layout format change does <b>not</b> make the style show again.</p>
+<figure><a href="img/ibm-23-keep-list.png"><img src="img/ibm-23-keep-list.png" alt="Confirmed to keep" loading="lazy"></a><figcaption>The <b>Confirmed to keep</b> card: who confirmed, when and the machines kept. The <b>Undo confirmation</b> button returns the style to "To review".</figcaption></figure>
+<ul>
+<li>The confirmation is stored in <code>data\machinedb\keeps.json</code> (shared with the people using the same data folder). If the data folder is not connected, the confirmation is stored only in this computer's browser.</li>
+<li>You cannot confirm keeping when the style has no current data (a new style): the ✓ box is locked because there is nothing to keep.</li>
+<li>"Approve all items shown" does <b>not</b> confirm keeping automatically; tick each style.</li></ul>
+<h3 id="overlay">Shortage uses the changes just approved</h3>
+<p>After you click <span class="btn">Save MACHINE DATABASE</span>, the <b>Shortage &amp; prep</b> tab calculates the machine demand <b>including the changes just approved</b>; there is no need to wait for pasting into <code>Table1</code> and Refresh All. The line "Demand calculated from" says so: "<i>incl. N changes just approved (the database in the MC Report is not updated yet)</i>".</p>
+<ul>
+<li>The detail table that was open is cleared; click <b>Open detail for selected groups</b> again to see the new numbers.</li>
+<li>A proposal sent to IE Tech in the meantime records the basis; IE Tech sees the line "Proposal based on a database that includes N changes just approved…" above the table.</li>
+<li>You still must paste into <code>Table1</code> and Refresh All (step 4). When the updated MC Report is loaded again, the note disappears by itself and the numbers do not change.</li></ul>
+<h3 id="b4">Step 4: Put the data into the MC Report</h3>
+<p>Choose one way:</p>
+<ol type="a"><li>Paste the <code>MACHINE DATABASE</code> sheet of the file just saved into the table <code>Table1</code> (replace all rows); or</li>
+<li><b>Recommended:</b> save the files in a fixed folder and use <code>machinedb_latest_query.pq</code>.</li></ol>
+<p>Then <b>Refresh All</b> in the MC Report. Keep the file just saved (the scan state is also written to the data folder if Layout Check is connected).</p>
+<div class="warn">A style that is "Approved" in IE Báo cáo máy but not yet in the database will remind you: "check that it was pasted into Table1".</div>
+</section>
+
+<section id="shortage"><h2>4. Shortage and prep machines</h2>
+<p>The <b>Shortage &amp; prep</b> tab needs an MC Report with the sheets <code>MACHINE BY LINE</code>, <code>MC STATUS</code>, <code>PU LIST</code> and a loaded Master plan. You do not need to scan layouts first. Only working days are counted (no Sundays).</p>
+<h3>4.1 Rank the shortage risk</h3>
+<ol>
+<li>Set <b>From date</b>, <b>Weeks</b>, <b>Common margin %</b> (default 10%). By default only machine groups that may be short are shown; tick "Show all groups" to see everything.</li>
+<li><b>Available</b> = the column "MC used for PDN" of the MC STATUS sheet, summed per machine group. <b>Peak demand</b> = the production demand per day plus the common margin. A negative <b>Lowest left</b> (red) is a shortage risk.</li>
+<li>Tick the machine groups to look at, enter the <b>Prep ratio %</b> (default BT1M 50%, other groups 0) and the <b>Days</b> (default 3). <span class="btn">Save prep ratio</span> to share it with everyone.</li>
+<li>Click <span class="btn">Open detail for selected groups</span>.</li></ol>
+<figure><a href="img/ibm-09-rank.png"><img src="img/ibm-09-rank.png" alt="Shortage risk ranking" loading="lazy"></a><figcaption>The ranking table: BT1M (has 21, needs 24, short 3, first on 13/11) and ZZM (has 3, needs 5). The red frames: the tick boxes, the prep ratio and the button that opens the detail. The line "Demand calculated from" tells that the demand comes from the plan × MACHINE DATABASE, and how it differs from MACHINE BY LINE in the MC Report.</figcaption></figure>
+<p><b>Available detail:</b> below the "Available" line are the columns of the MC STATUS formula: plus signs (Machine in house, RENT, BORROW) and minus signs (BROKEN, LENDING, TRA, PDC-Sample, Strapline, Line borrow, ATH transfer, PU3-Sample, PU2 keep…). If the formula changes, the tool reads the signs again.</p>
+<h3>4.2 Detail by day</h3>
+<figure><a href="img/ibm-10-detail.png"><img src="img/ibm-10-detail.png" alt="Detail by day" loading="lazy"></a><figcaption>A horizontal table by day for every machine group: line → style with the production machines; the yellow <b>↳ prepare</b> rows (label "With IE Tech", loading date); a prep that was removed is struck through. At the bottom: Production, Preparation, Total used by PU, available machines and <b>Left</b> (red when negative).</figcaption></figure>
+<h3>4.3 Prep rules</h3>
+<ul>
+<li>A new style that loads on a line (it did not run on the previous working day) needs <b>ROUNDUP(ratio × machines of that style)</b> during <b>N working days</b> before the loading date (Sundays skipped).</li>
+<li>No prep when the two styles share a layout file, or are in the "Same layout" list, or IE Tech removes it.</li>
+<li>The first day of the plan has no prep (the style is already running). For a line that works on Sunday: Sunday has production but the prep days still skip Sunday. Every changeover has only one prep row.</li>
+<li>Prep is counted only for the selected machine groups.</li></ul>
+<h3>4.4 Send to IE Tech</h3>
+<p>Click <span class="btn">Send prep to IE Tech</span>: the proposal is written to <code>data\prep\proposals</code>. IE Tech only sees the latest proposal of every machine group.</p>
+<figure><a href="img/ibm-11-sent.png"><img src="img/ibm-11-sent.png" alt="Sent to IE Tech" loading="lazy"></a><figcaption>The message "15 prep rows sent to IE Tech". Open the detail again to see the approved numbers.</figcaption></figure>
+</section>
+
+<section id="tech"><h2>5. IE Tech: review prep</h2>
+<h3>5.1 Connect</h3>
+<ol>
+<li>Click the role button <b>IE Tech</b>. First time: <span class="btn">Choose data folder…</span> (the shared <code>data</code> folder) and <span class="btn">Choose layout folder…</span> (the root folder that holds layouts). The browser remembers these two folders. You can type the network path of the layout folder to open the original file in Excel.</li>
+<li>Type your <b>Name</b>, choose your <b>PU</b> (taken from PU LIST and the proposals sent) and type your <b>Lines</b>: type the start of the line codes separated by commas (<code>K</code> = every K line; <code>K,J</code>; <code>K05</code>). Empty = all lines.</li></ol>
+<figure><a href="img/ibm-12-tech.png"><img src="img/ibm-12-tech.png" alt="IE Tech screen" loading="lazy"></a><figcaption>The IE Tech screen: (1) connection and scope, (2) review prep with the statistics cards <i>Waiting / Overdue / Kept / Adjusted / Removed</i>, the machine-group buttons (the number beside them = rows waiting) and the table by day.</figcaption></figure>
+<h3>5.2 Review row by row</h3>
+<p>On every prep row (yellow):</p>
+<table><tr><th>Button</th><th>Effect</th></tr>
+<tr><td><span class="btn">✔</span></td><td><b>Keep</b> (one click).</td></tr>
+<tr><td><span class="btn">✖</span></td><td><b>Remove</b> (one click, no reason needed).</td></tr>
+<tr><td><span class="btn">✎</span> or click the row</td><td>Opens the right-hand panel to adjust.</td></tr></table>
+<figure><a href="img/ibm-15-tech-decisions.png"><img src="img/ibm-15-tech-decisions.png" alt="IE Tech decisions" loading="lazy"></a><figcaption>After reviewing: the cards <i>Kept 3, Adjusted 0, Removed 1</i>; the removed row shows "Removed" and its number is struck through. The table always keeps its scroll position after Keep/Remove/Save. A row skipped with "Same layout" is labelled "Same layout — skipped" instead of "Removed".</figcaption></figure>
+<h3>5.3 The adjust panel on the right</h3>
+<figure><a href="img/ibm-13-drawer.png"><img src="img/ibm-13-drawer.png" alt="Adjust panel" loading="lazy"></a><figcaption>The right-hand panel (type only what differs): prep machines, layout quantity, loading date, prep days, the buttons Save / Remove prep / Same layout, and the layout search box.</figcaption></figure>
+<ul>
+<li><b>Prep machines</b>: the number IE Tech decides.</li>
+<li><b>Layout quantity</b>: if different from the database, the prep number is recalculated from it and <b>the Consolidator automatically receives a notice</b> in the Variation notices tab.</li>
+<li><b>Loading date</b>: the real date; the prep days move back with it (N working days before, Sundays skipped) and the production on the line moves too. The card shows "loads 15/11 → 18/11". A row not reviewed yet counts as "Keep" when you change the date.</li>
+<li><b>Prep days</b>.</li>
+<li><span class="btn">Save</span>, <span class="btn">✖ Remove prep</span>, <span class="btn">Same layout (remove and remember)</span>: remembered by <b>style pair</b> (previous style → next style) and applied at once to every machine group and every line with the same pair; when the Consolidator clicks "Open detail" it is read again. To prep one specific row again: click Keep or Adjust on that row (it has priority).</li></ul>
+<h3>5.4 Find and view the layout</h3>
+<p>The <b>Find layout</b> box (the file list of the layout folder, remembered for 8 hours; <span class="btn">⟳ Rescan</span> to refresh). Empty = suggestions by file name (Same style &gt; Style without size &gt; Same article); type part of a name to search. Click a file to see the machines of the machine group being viewed ("Show all machines of the layout" to see all), one column per sheet, with the file's modified date.</p>
+<figure><a href="img/ibm-14-layout-viewer.png"><img src="img/ibm-14-layout-viewer.png" alt="View the layout" loading="lazy"></a><figcaption>Viewing a layout in the right-hand panel: BT1M for the chosen sheets is 3 machines, the database has 2. The button <b>Use 3 as layout quantity</b> fills this number into the "Layout quantity" box; "Download a copy" opens the file in Excel.</figcaption></figure>
+<h3>5.5 Change the end date of the running style</h3>
+<p>On the row of the running style of every line (the style running on the first day of the table) there is the text "ends dd/mm" and a <span class="btn">✎</span> button. Clicking ✎ opens a date box with a <b>calendar</b> (like the loading-date box of a prep row): choose the date and click <span class="btn">Save</span>; click <span class="btn">Per plan</span> (or pick exactly the plan date) to return to the plan. The running style stops after that date (if later than the plan it keeps running with the last machine count); the next style loads on the next working day and its prep moves; it applies to <b>every machine group of the line</b>.</p>
+<h3>5.6 Finish the review</h3>
+<p>When you have reviewed the scope you are viewing (PU, your lines, all machine groups), click <span class="btn">✔ Finish review</span>. If rows are not reviewed yet, the system warns the number of rows and lines; you can still finish (those rows keep the proposed number). You can finish again after reviewing more.</p>
+<figure><a href="img/ibm-16-tech-done.png"><img src="img/ibm-16-tech-done.png" alt="Review finished" loading="lazy"></a><figcaption>After "Finish review": the message "finished at …" beside the button.</figcaption></figure>
+<div class="note"><b>Decisions are kept for next week</b> when the style sequence on the line does not change (same line, previous style, next style, machine group), even if the dates change. If the machine count of the next style in the database changes, the row goes back to "Waiting".</div>
+</section>
+
+<section id="resid"><h2>6. Remaining shortage, actions</h2>
+<p>After IE Tech's review, a machine group that is still short needs a decision: rent, buy, borrow or move the plan with PPC. This screen gathers the numbers for the decision maker (Supervisor) and lets the Consolidator record the actions.</p>
+<h3>6.1 Open the screen</h3>
+<ul>
+<li><b>Consolidator:</b> the tab <b>Remaining shortage</b> (the data folder must be connected; the number on the tab = machine groups still short).</li>
+<li><b>Supervisor (view only):</b> click the role <b>Supervisor</b> &rarr; <span class="btn">Choose data folder…</span> (or "🔁 Reuse") &rarr; choose the shared <code>data</code> folder. No MC Report or Master plan needed.</li></ul>
+<p>The numbers come from the latest proposal of each machine group and IE Tech's decisions, using <b>exactly the calculation of the IE Tech table</b>. Click <span class="btn">Refresh</span> to read again when someone has just saved.</p>
+<h3>6.2 View the numbers: horizontal table by day</h3>
+<figure><a href="img/ibm-24-residual.png"><img src="img/ibm-24-residual.png" alt="Remaining shortage" loading="lazy"></a><figcaption>The summary table of the machine groups at the top; below it the <b>horizontal</b> table (days in columns) of every machine group, like the IE Tech table. Red frames: the choose buttons.</figcaption></figure>
+<ul>
+<li><b>Choose machine groups and PUs:</b> click a machine group (or PU) to view only that one; click more to add or remove; <span class="btn">All machine groups</span> / <span class="btn">All PUs</span> clears the filter. Clicking a row of the summary table also selects that machine group. <b>Choosing a PU only filters the PU rows</b>; "Available" and "Left" are always for the whole machine group (the available machines are not split by PU).</li>
+<li><span class="btn">Short days only</span> (default): every machine group shows from its <b>first short day to its last short day</b>. If there is a period with enough machines between two short periods, the <b>days with enough machines in between are still shown</b>. <span class="btn">Whole plan</span>: shows all the days of the proposal.</li>
+<li>The rows of every machine group: Production / Preparation / Total per PU, <b>Total used</b>, <b>Available</b>, <b>Left (now)</b>, the <b>action rows</b>, then <b>Left after confirmed actions</b> and <b>Left incl. planned</b> (the last two only show when there are actions).</li>
+<li><b>See the lines and styles of each PU:</b> click a PU row (the ▸ sign) to show the lines and styles of that PU, like the IE Tech table: one row per style with the machines per day, plus the "prepare" rows. The button <span class="btn">Show all styles</span> opens every PU of the machine group. The button <span class="btn">⬇ Export Excel</span> on every machine group saves that table as a formatted Excel file (header, frozen first columns/rows, short cells with a light red background, style rows grouped so they can be collapsed) with <b>formulas</b> (Production = sum of the styles, PU total, Total used, Left = Available − Total used, Left after actions…), so when you edit a number in Excel the total rows recalculate. Contents: the whole plan, every PU, line, style, area, action.</li>
+<li><b>Areas holding machines:</b> under the "Left (now)" row are the areas that take machines out of production according to MC STATUS (for example lending, broken, TRA, sample room): one row per area with the number of machines it holds (this number is already taken off "Available"). Click <span class="btn">↩ Take back</span> on an area row to open the action box with the type "Take back from area".</li>
+<li><b>Negative numbers (shortage) have a light red background and red text</b> so they are easy to see; this also applies to the "Left" row in IE Tech's table.</li></ul>
+<figure><a href="img/ibm-30-styles.png"><img src="img/ibm-30-styles.png" alt="Lines and styles of a PU" loading="lazy"></a><figcaption>Click a PU row to show its lines, styles and prepare rows.</figcaption></figure>
+<table><tr><th>Column of the summary table</th><th>Meaning</th></tr>
+<tr><td><b>Days short</b></td><td>The number of working days with "Left" &lt; 0 out of the days of the proposal.</td></tr>
+<tr><td><b>Worst gap</b></td><td>The machines short on the worst day (with the date). <b>From – to</b>: the first and last short day.</td></tr>
+<tr><td><b>After confirmed actions</b></td><td>The shortage left when only the confirmed actions are counted.</td></tr>
+<tr><td><b>Incl. planned</b></td><td>The shortage left when the planned actions are counted too.</td></tr>
+<tr><td><b>Not reviewed</b></td><td>The number of prep rows IE Tech has not reviewed (the numbers may still change).</td></tr></table>
+<h3>6.3 Actions: every short machine group has its own box, the result shows at once</h3>
+<p>Under the table of <b>every machine group that is still short</b> there is a box <b>Action for &lt;machine group&gt;</b>. Just choose the type and enter the machines or dates: the <b>"Try"</b> rows in the table above and the line <b>"Result now"</b> (worst gap and days short, before &rarr; after) update at once, nothing is saved yet. Until you enter something the table has no try rows. Only the Consolidator has the <span class="btn">Add action</span> button (type your <b>Name</b> in the Data tab first); the Supervisor can try but cannot save.</p>
+<figure><a href="img/ibm-25-action-form.png"><img src="img/ibm-25-action-form.png" alt="Action box and try rows" loading="lazy"></a><figcaption>BT1M: rent 9 machines from the first short day to the last short day. The two rows "Try: change" and "Try: left if confirmed" show at once; the line "Result now" at the end of the box: worst gap −9 &rarr; 0, days short 13 &rarr; 0.</figcaption></figure>
+<table><tr><th>Type</th><th>Effect on the numbers</th></tr>
+<tr><td><b>Rent</b>, <b>Buy</b>, <b>Borrow</b></td><td>Adds machines of the machine group in the date range entered (filled automatically from the biggest shortage and the short period). You can write the <b>receiving PU</b> (optional) so the summary card shows it by PU.</td></tr>
+<tr><td><b>Take back from area</b></td><td>Choose the area (the machines it holds are written in brackets), the number of machines to take back (not more than the area holds) and the date range: these machines are added to "Left" in that range and the area row goes down by the same amount (when confirmed). The area name is written in the action and in the summary card.</td></tr>
+<tr><td><b>Delay plan</b></td><td>Choose the <b>line</b>, the <b>style</b> and the <b>new loading date</b> (a Sunday moves to a working day; the box says "+n working days"). <b>The whole line moves</b>: that style and every style after it load later; the previous style keeps running; the prep moves. It really changes <b>every machine group</b> that uses the line; the instant result tells how much the other machine groups change.</td></tr>
+<tr><td><b>Other</b></td><td>A note is required. If you enter machines (+ or −) and a date range, they are added/subtracted as above; otherwise it is only recorded.</td></tr></table>
+<figure><a href="img/ibm-26-delay-preview.png"><img src="img/ibm-26-delay-preview.png" alt="Delay plan in the action box" loading="lazy"></a><figcaption>Delay plan is in the same box: choose the line, the style and the new loading date. The try rows and "Result now" show the real effect on the table.</figcaption></figure>
+<div class="warn"><b>Delaying the plan may not solve the shortage</b> (for example the peak use falls on another day, or the days short increase because the previous style runs longer). Read the line "Result now" (worst gap and days short) before you suggest it to PPC.</div>
+<ul>
+<li><b>Planned</b> = not sure yet; <b>Confirmed</b> = the machines are there / PPC agreed to the delay. The two states are counted in two separate rows ("after confirmed actions" and "incl. planned").</li>
+<li>Every action is a row in the horizontal table and shows its <b>real change per day</b>. The button <span class="btn">✎</span> edits, <span class="btn">✔</span> confirms (Planned &rarr; Confirmed), <span class="btn">✖</span> cancels (the row is struck through and has no effect).</li>
+<li><b>A delay that is already in the new plan:</b> when the new MC Report / Master plan already loads the style on or after the new date, the action gets the label <b>"Already in the plan"</b> and is <b>not counted any more</b> (to avoid moving twice).</li>
+<li>Every change is written as a file in <code>data\prep\actions</code> and also shows in the <b>Activity</b> tab (type "Shortage action").</li></ul>
+<h3>6.4 The summary card</h3>
+<p>When <b>every action is confirmed</b> (no Planned action left) and there is at least one action, the screen creates the card <b>Summary of the shortage actions</b>: four tiles (machine groups with enough machines, groups for IE to check further, confirmed actions, machine-days short before &rarr; after) and one card for <b>every machine group</b> (shortage before &rarr; after, progress bar, list of actions). <b>The shortage by PU is inside the machine group card</b>: every PU shows the machines it uses on the worst day, its share and its status; <b>click a PU</b> to see its lines, styles, the production/prep machines of that day, the machines per short day and the PU's actions (click again to close). A machine group or PU without actions that is still short says <b>"IE check further"</b>; a machine group still short after the actions says "Still short −x: IE check further". The button <span class="btn">Export Excel</span> saves the card as a file.</p>
+<figure><a href="img/ibm-27-actions-and-card.png"><img src="img/ibm-27-actions-and-card.png" alt="Summary card" loading="lazy"></a><figcaption>The summary card: BT1M goes from −9 to −2 thanks to Rent +9 and Delay plan but still needs IE to check further; ZZM does not have enough machines yet.</figcaption></figure>
+<h3>6.5 The Supervisor role</h3>
+<figure><a href="img/ibm-28-supervisor.png"><img src="img/ibm-28-supervisor.png" alt="Supervisor role" loading="lazy"></a><figcaption>The <b>Supervisor</b> role: the same horizontal tables, the action boxes (to try and see the instant result) and the summary card, but actions cannot be saved.</figcaption></figure>
+</section>
+
+<section id="close"><h2>7. Close the report, export Excel</h2>
+<p>Go back to the <b>Consolidator</b> role, the <b>Shortage &amp; prep</b> tab, click <span class="btn">Open detail for selected groups</span> to see IE Tech's decisions (labels <i>Kept</i>, <i>Adjusted 1→2</i>, <i>Removed</i>, <i>Same layout — skipped</i>, <i>by layout qty</i>, "date set by IE Tech").</p>
+<figure><a href="img/ibm-17-detail-approved.png"><img src="img/ibm-17-detail-approved.png" alt="Approved detail" loading="lazy"></a><figcaption>The detail after IE Tech's review. The line "IE Tech finished: Hoa · PU1 · … 2 not reviewed" tells who finished, which scope, and how many rows are not reviewed.</figcaption></figure>
+<h3>Close the report</h3>
+<p>Conditions: the data folder is connected in the Data tab and your name is typed.</p>
+<ol>
+<li>Click <span class="btn">🔒 Close report…</span>. The table per PU shows: the number of prep rows, <b>not reviewed</b>, Keep / Adjust / Remove, IE Tech finished (who, when), unhandled notices. <span class="btn">Refresh</span> to read again.</li>
+<li>The red line at the bottom tells what is still open: rows not reviewed, unhandled notices, PUs not finished.</li>
+<li>Type a note (optional) and click <span class="btn">🔒 Close report</span>. If something is still open the system warns you; you can still close.</li></ol>
+<figure><a href="img/ibm-18-close.png"><img src="img/ibm-18-close.png" alt="Close the report" loading="lazy"></a><figcaption>The box "Close the machine prep report" checks every PU (PU1: 2 rows not reviewed; PU2 SPORT and PU3 not finished; 1 unhandled notice). Red frames: the note box and the close button.</figcaption></figure>
+<figure><a href="img/ibm-19-closed.png"><img src="img/ibm-19-closed.png" alt="Closed" loading="lazy"></a><figcaption>After closing: "Closed by … at …" shows beside the button.</figcaption></figure>
+<ul>
+<li>Closing does <b>not lock</b> the data. If IE Tech or the Consolidator changes something afterwards, the row shows "N changes after closing"; then close again.</li>
+<li>The closing record is stored in <code>data\prep\closed</code>.</li></ul>
+<h3>Export Excel</h3>
+<p>Click <span class="btn">Export Excel</span> (after "Open detail"): one sheet per machine group coloured like the current detail sheet; the sheet <code>PREP BY PU</code> in exactly the TTL DEMAND BY PU layout (Combine.MACHINE | PU | day) to add to the report; the sheet <code>NOT REVIEWED</code> lists the rows IE Tech has not reviewed; the sheet <code>STATUS</code> (who closed, when, the note, the table per PU). The file name has <code>CHOT</code> (<code>PREP_DEMAND_CHOT_…</code>) only when the report is closed and nothing changed afterwards. Removed prep rows are exported as 0.</p>
+</section>
+
+<section id="notices"><h2>8. Variation notices and Activity</h2>
+<h3>Variation notices from IE Tech</h3>
+<p>When IE Tech enters a "Layout quantity" that differs from the database, a notice shows in the <b>Variation notices</b> tab. Check the layout, fix the database in step 3 if it is right, then click <span class="btn">Database fixed</span> or <span class="btn">Not correct</span>. When the database matches IE Tech's number, the status column says "Database matches" by itself. IE Tech sees the result in the table "Notices I sent".</p>
+<figure><a href="img/ibm-20-notices.png"><img src="img/ibm-20-notices.png" alt="Variation notices" loading="lazy"></a><figcaption>A notice from IE Tech: BT1M, database at notice 2, layout 3, database now 2.</figcaption></figure>
+<h3>Activity</h3>
+<p>Contents: proposals sent, IE Tech's decisions (Keep, Adjust, Remove, Same layout, loading date change, prep days, layout quantity, end date change), notices and answers, finished reviews, closed reports, database approvals. The data folder must be connected; click "⟳" to read again.</p>
+<figure><a href="img/ibm-21-activity.png"><img src="img/ibm-21-activity.png" alt="Activity" loading="lazy"></a><figcaption>The <b>Activity</b> tab.</figcaption></figure>
+<ul>
+<li>Filters: <b>From date / To date</b> (default the last 30 days), PU, person, action, line, style or text; the machine-group buttons at the top show only that group.</li>
+<li>Three views: <b>Detail</b>, <b>By machine group</b>, <b>By line</b> (counts Keep, Adjust, Remove, Same layout, Notices, Finished and the latest action; click a row to see the detail).</li>
+<li><span class="btn">Export Excel</span>: three sheets LOG, BY MACHINE GROUP, BY LINE following the current filters.</li></ul>
+</section>
+
+<section id="rules"><h2>9. Rules</h2>
+<table><tr><th>Topic</th><th>Rule</th></tr>
+<tr><td>Source order</td><td>Layout first. With no layout, costing is used (only for styles with no layout and no data). Manual data (REMARK <code>IETL</code>, <code>SMS</code>, <code>PDF</code>, <code>tt</code>, <code>E</code>) is replaced only when the reviewer chooses.</td></tr>
+<tr><td>Style</td><td>Read from the cells B3, D3, D4 (normal layout), B11 (Man-Machine), then the file name. Combined codes are split: <code>3801.3802.3803</code>, <code>3801-3803</code>, <code>3901.04</code>, <code>00115_116_117</code>, line breaks. Special customer codes (SP…, S2xxx, F2xxx, DS…) are kept as written.</td></tr>
+<tr><td>Variant 48HC / 16HC / ln</td><td>Taken from the text "48HC"/"16HC" in the layout, the file name, the folder; if absent, from the plan (with a note to check). Only D lines run 48HC.</td></tr>
+<tr><td>Several layouts for one style</td><td>Bulk/Final &gt; Initial, then higher OBD, then the newer file.</td></tr>
+<tr><td>Costing</td><td>Factor 48 for styles with the suffix 48HC, otherwise 24; operations 31–97, 100, 103, 116; rounding: decimal part ≤ 0.20 rounds down, otherwise up, minimum 1.</td></tr>
+<tr><td>Layout – database comparison</td><td><b>By machine group</b> (groups come from the MACHINE GROUP sheet): the same total machines in every group is a match; different machine codes inside the same group do not create a proposal and do not remove "Checked". Machine codes with no group are compared one by one.</td></tr>
+<tr><td>Database data</td><td>Only the rows with the <b>latest date</b> of each style are used.</td></tr>
+<tr><td>The latest decision applies</td><td>The tool reads again the exact file and sheet of the Layout Check record: machines in the file = record and database = record → "Checked"; the file was edited after the check → "To review", IE re-checks; a file different from the one the IE checked → "Data issue: the layout file differs from the file the IE checked".</td></tr>
+<tr><td>Remaining shortage</td><td>Calculated exactly like the IE Tech table (latest proposal of each machine group + IE Tech decisions). Rent/Buy/Borrow (and Other with machines) add machines by day, Take back adds machines held by an area, Delay plan moves the whole line from the chosen style (Confirmed and Planned counted separately; a delay already in the new plan is not counted any more); every short machine group has its own action box with an instant result; only the Consolidator records actions, the Supervisor can only try. The summary card is created when every action is confirmed.</td></tr>
+<tr><td>Numbers right after saving</td><td>The shortage report also counts the changes just approved (with a label), even if the MC Report is not updated yet.</td></tr>
+<tr><td>Hash</td><td><b>File Hash</b> (SHA-256 of the whole file): same as last time = skipped. <b>Content Hash</b> (machines and quantities only): changes of format, notes, sheet names or the style cell do not count as a change.</td></tr></table>
+</section>
+
+<section id="files"><h2>10. Saved files and the data folder</h2>
+<p>The file <code>MACHINE_DATABASE_yyyymmdd_hhmm.xlsx</code> has these sheets:</p>
+<table><tr><th>Sheet</th><th>Contents</th></tr>
+<tr><td><code>MACHINE DATABASE</code></td><td>The whole database after applying the approved changes (paste into <code>Table1</code>).</td></tr>
+<tr><td><code>CHANGES</code></td><td>The change log (old, new, source, file, approval date).</td></tr>
+<tr><td><code>EXCEPTIONS</code></td><td>Data issues and missing styles.</td></tr>
+<tr><td><code>LAYOUT DATA</code>, <code>NEW CHANGED</code>, <code>SCAN STATE</code></td><td>The current layout data, the files that are new/changed in this run, the scan state.</td></tr></table>
+<p>The <code>data</code> folder is shared with Layout Check: <code>machinedb\scanstate.json</code> (hash of each layout file), <code>validations\*.json</code> (Layout Check decisions), <code>approvals\*.json</code> ("Approved" notes, not counted as a check), <code>prep\</code> (<code>proposals</code>, <code>reviews</code>, <code>shared</code>, <code>notices</code>, <code>noticeres</code>, <code>complete</code>, <code>closed</code>, <code>lineends</code>, <code>actions</code>, <code>rules.json</code>), <code>machinedb\keeps.json</code> (keep confirmations).</p>
+</section>
+
+<section id="problems"><h2>11. Common problems</h2>
+<table><tr><th>Symptom</th><th>What to do</th></tr>
+<tr><td>"The MC Report needs the sheets MACHINE DATABASE and MACHINE GROUP"</td><td>Choose the right MC Report file; check the sheet names.</td></tr>
+<tr><td>"no COSTING PROPOSAL sheet (costing skipped)"</td><td>Add the COSTING PROPOSAL query (section 2) if you need costing.</td></tr>
+<tr><td>"Machine code not in MACHINE GROUP"</td><td>Add the machine code to the MACHINE GROUP sheet and scan again.</td></tr>
+<tr><td>The Shortage tab says data is missing</td><td>The MC Report needs <code>MACHINE BY LINE</code>, <code>MC STATUS</code>, <code>PU LIST</code> and the Master plan must be loaded.</td></tr>
+<tr><td>IE Tech does not see the PU / prep rows</td><td>Check that the right data folder is connected, the PU is in PU LIST (same name as in <code>Linemapping.xlsx</code>), and the Consolidator has clicked "Send to IE Tech".</td></tr>
+<tr><td>The browser asks for the folder permission again</td><td>Click "🔁 Reconnect" or Allow.</td></tr>
+<tr><td>The old screen shows after the web page was updated</td><td>Press Ctrl+F5. The first time you open it from a new address, choose the folders again (the browser remembers per page address).</td></tr></table>
+</section>
+</main></div></body></html>
