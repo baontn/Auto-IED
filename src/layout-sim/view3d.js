@@ -252,6 +252,12 @@ function rebuild3d() {
     g.position.set(it.x, 0, it.y); g.rotation.y = -(it.rot || 0) * Math.PI / 180;
     g.userData.id = it.id; root.add(g);
   });
+  // shared operators: double arrow on the floor between the operator and the far machine
+  opLinks().forEach(function (l) {
+    if (!l.far) return;
+    var a = new THREE.Vector3(l.p1.x, 4, l.p1.y), b = new THREE.Vector3(l.p2.x, 4, l.p2.y), mid = a.clone().add(b).multiplyScalar(0.5), half = a.distanceTo(b) / 2;
+    [[b, a], [a, b]].forEach(function (pr) { var dir = pr[0].clone().sub(mid).normalize(); root.add(new THREE.ArrowHelper(dir, mid, half, 0x7c3aed, Math.min(30, half * 0.4), 18)); });
+  });
   var s = V3.sun, m = Math.max(L, W) * 0.75 + 300;
   s.position.set(L / 2 - 600, 1800, W / 2 + 900); s.target.position.set(L / 2, 0, W / 2);
   s.shadow.camera.left = -m; s.shadow.camera.right = m; s.shadow.camera.top = m; s.shadow.camera.bottom = -m; s.shadow.camera.near = 100; s.shadow.camera.far = 6000; s.shadow.camera.updateProjectionMatrix();
@@ -262,7 +268,7 @@ function pick3d(e) {
   ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), V3.cam);
   var hits = ray.intersectObjects(V3.root.children, true), id = null;
   for (var i = 0; i < hits.length && !id; i++) { var o = hits[i].object; while (o && !o.userData.id) o = o.parent; if (o) id = o.userData.id; }
-  if (id && OPMODE) { var ti = itemById(id); if (ti && ti.kind === 'mc') { if (ti.noOp) delete ti.noOp; else ti.noOp = true; changed(); } return; }
+  if (id && OPMODE) { var ti = itemById(id); if (ti && ti.kind === 'mc') { opToggleOne(ti); changed(); } return; }
   if (id) { if (e.shiftKey || e.ctrlKey) { var k = SEL.indexOf(id); if (k >= 0) SEL.splice(k, 1); else SEL.push(id); } else SEL = [id]; }
   else SEL = [];
   onSelChange();

@@ -212,6 +212,32 @@ function setupLine(o) {
   else { c = { id: uid(), kind: 'obj', role: 'center', name: t('centerTable'), H: 75, rot: 0, color: '#d9cdb0' }; ST.items.unshift(c); }
   c.L = o.units * o.unit; c.W = o.tableW; c.x = nx; c.y = ny;
 }
+/* ---------- shared operators: it.by = id of the machine whose operator also runs this one ---------- */
+function homeOf(it) { var h = it && it.by ? itemById(it.by) : null; return h && !h.noOp ? h : null; }
+function satellitesOf(home) { return ST.items.filter(function (i) { return i.by === home.id && i.noOp; }); }
+function opToggleOne(it) { if (it.noOp) { delete it.noOp; delete it.by; } else { it.noOp = true; delete it.by; } ST.items.forEach(function (i) { if (i.by === it.id && it.noOp) delete i.by; }); }
+/* one operator for all the given machines (the first one keeps the operator), or split them when they already share one */
+function opShare(list) {
+  if (list.length < 2) { if (list[0]) opToggleOne(list[0]); return 'one'; }
+  var home = list.filter(function (i) { return !i.noOp; })[0] || list[0], ids = list.map(function (i) { return i.id; });
+  var grouped = list.every(function (i) { return i === home ? !i.noOp : (i.noOp && i.by === home.id); });
+  if (grouped) { list.forEach(function (i) { delete i.noOp; delete i.by; }); return 'split'; }
+  delete home.noOp; delete home.by;
+  list.forEach(function (i) { if (i !== home) { i.noOp = true; i.by = home.id; } });
+  ST.items.forEach(function (i) { if (i.by && ids.indexOf(i.by) >= 0 && ids.indexOf(i.id) < 0) i.by = home.id; });
+  return 'share';
+}
+/* operator links to draw: home seat <-> each machine it also runs; far = the tables are not next to each other */
+function opLinks() {
+  var out = [];
+  ST.items.forEach(function (it) {
+    var h = homeOf(it); if (!it.noOp || !h) return;
+    var a = shapes(h), b = shapes(it), big = { cx: a.table.cx, cy: a.table.cy, hx: a.table.hx + 25, hy: a.table.hy + 25, a: a.table.a };
+    var p1 = a.chair || a.front, p2 = b.front;
+    out.push({ home: h, sat: it, p1: p1, p2: p2, far: !(overlap(big, b.table) > 0), dist: Math.hypot(p2.x - p1.x, p2.y - p1.y) });
+  });
+  return out;
+}
 /* ---------- undo / persistence ---------- */
 function snap() { return JSON.stringify({ line: ST.line, erg: ST.erg, items: ST.items, seq: ST.seq }); }
 function restore(s) { var o = JSON.parse(s); ST.line = o.line; ST.erg = Object.assign({}, ERG_DEF, o.erg || {}); ST.items = o.items || []; ST.seq = o.seq || 1; }

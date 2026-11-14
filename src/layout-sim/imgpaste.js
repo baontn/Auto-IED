@@ -53,7 +53,7 @@ function ocrPrepare(img) {
   for (xx = 0; xx < W; xx++) { run = 0; for (y = 0; y <= H; y++) { if (y < H && dark[y * W + xx]) run++; else { if (run >= minRun) for (q = y - run; q < y; q++) kill[q * W + xx] = 1; run = 0; } } }
   for (j = 0, i = 0; j < W * H; j++, i += 4) { var on = dark[j] && !kill[j]; p[i] = p[i + 1] = p[i + 2] = on ? 0 : 255; p[i + 3] = 255; }
   x.putImageData(d, 0, 0);
-  return { canvas: c, grey: grey, k: k };
+  return { canvas: c, grey: grey, k: k, lines: kill, W: W, H: H };
 }
 
 /* ---------- code correction against the library ---------- */
@@ -134,8 +134,21 @@ function ocrToGrid(words) {
   // cell pitch = median distance between neighbours in a row
   var gaps = []; rows.forEach(function (r) { for (var i = 1; i < r.items.length; i++) gaps.push(r.items[i].cx - r.items[i - 1].cx); });
   var pitch = median(gaps.filter(function (g) { return g > hMed; })) || median(codes.map(function (c) { return c.x1 - c.x0; })) * 1.4 || 50;
-  var minX = Math.min.apply(null, codes.map(function (c) { return c.cx; }).concat(nums.map(function (n) { return n.cx; })));
-  function colOf(x) { return Math.max(0, Math.round((x - minX) / pitch)); }
+  var minX = Math.min.apply(null, codes.map(function (c) { return c.cx; }));
+  // columns = clusters of machine x-centres (exact with boxes); a wide gap between clusters keeps empty columns
+  var xs = codes.map(function (c) { return c.cx; }).sort(function (a, b) { return a - b; });
+  var tol = Math.max(4, 0.45 * median(codes.map(function (c) { return c.x1 - c.x0; }))), cl = [];
+  xs.forEach(function (x) { var l = cl[cl.length - 1]; if (l && x - l.max <= tol) { l.max = x; l.sum += x; l.n++; } else cl.push({ max: x, sum: x, n: 1 }); });
+  var cen = cl.map(function (c) { return c.sum / c.n; }), diffs = [];
+  for (var di = 1; di < cen.length; di++) diffs.push(cen[di] - cen[di - 1]);
+  var step = median(diffs) || pitch, centers = [];
+  cen.forEach(function (x, i) { if (i) { var gap = Math.round((x - cen[i - 1]) / step) - 1; for (var g2 = 1; g2 <= gap; g2++) centers.push(cen[i - 1] + g2 * (x - cen[i - 1]) / (gap + 1)); } centers.push(x); });
+  pitch = step;
+  function colOf(x) {
+    var bi = 0, bd = Infinity; centers.forEach(function (c, i) { var d = Math.abs(x - c); if (d < bd) { bd = d; bi = i; } });
+    if (x < centers[0] - step * 0.6) return -1;      // left of the first machine column: not a cell of the grid
+    return bi;
+  }
   codes.forEach(function (c) { c.col = colOf(c.cx); });
   // numbers: attach to the nearest code row (above or below) and the code in the same column
   var lens = nums.map(function (n) { return n.num.length; }), mainLen = median(lens);
@@ -176,7 +189,7 @@ function ocrToGrid(words) {
       if (!(numNear || (colsUsed[c] && c > lo && c < hi))) continue;
       // centre of the cell: same column in another row, else between the two neighbours, else from the pitch
       var same = codes.filter(function (o) { return o.col === c; })[0], L = r.items.filter(function (o) { return o.col === c - 1; })[0], R = r.items.filter(function (o) { return o.col === c + 1; })[0];
-      var x = same ? same.cx : (L && R) ? (L.cx + R.cx) / 2 : L ? L.cx + pitch : R ? R.cx - pitch : minX + c * pitch;
+      var x = same ? same.cx : (L && R) ? (L.cx + R.cx) / 2 : L ? L.cx + pitch : R ? R.cx - pitch : (centers[c] != null ? centers[c] : minX + c * pitch);
       missing.push({ kind: 'code', x: x, y: r.cy, w: pitch * 1.0, h: hMed * 2.4, col: c });
     }
     // operation numbers not read next to a machine of this row
@@ -204,10 +217,10 @@ function ocrImage(blob) {
   }).then(function (w) {
     ocrProgress(0);
     var prep = ocrPrepare(img);
-    return w.recognize(prep.canvas).then(function (r) { return { r: r, k: prep.k, canvas: prep.canvas, grey: prep.grey, w: w }; });
+    return w.recognize(prep.canvas).then(function (r) { return { r: r, k: prep.k, canvas: prep.canvas, grey: prep.grey, w: w, prep: prep }; });
   }).then(function (o) {
     var words = (o.r.data.words || []).map(function (w) { return { text: w.text, confidence: w.confidence, bbox: { x0: w.bbox.x0 / o.k, x1: w.bbox.x1 / o.k, y0: w.bbox.y0 / o.k, y1: w.bbox.y1 / o.k } }; });
-    return ocrReread(o, words);
+    return ocrCells(o, words).then(function (ws) { return ocrReread(o, ws); });
   }).then(function (words) {
     var g = ocrToGrid(words); OCR.last = g;
     ocrDrawBoxes(img, g);
@@ -217,6 +230,97 @@ function ocrImage(blob) {
     return g;
   }).catch(function (e) { console.error(e); st.className = 'small t-bad tagline'; st.textContent = t('ocrErr') + ': ' + (e && e.message || e); });
 }
+/* boxes of the layout: areas closed by border lines (Excel shapes / cells); returned in prepared-canvas pixels */
+function boxCells(prep) {
+  var W = prep.W, H = prep.H, k = prep.k, L = prep.lines, r = Math.max(1, Math.round(k * 0.7)), wall = new Uint8Array(W * H), x, y, i;
+  for (y = 0; y < H; y++) for (x = 0; x < W; x++) if (L[y * W + x]) {
+    for (var dy = -r; dy <= r; dy++) { var yy = y + dy; if (yy < 0 || yy >= H) continue; for (var dx = -r; dx <= r; dx++) { var xx = x + dx; if (xx >= 0 && xx < W) wall[yy * W + xx] = 1; } }
+  }
+  var lab = new Int32Array(W * H), q = new Int32Array(W * H), cells = [], id = 0;
+  for (var st = 0; st < W * H; st++) {
+    if (wall[st] || lab[st]) continue;
+    id++; var qh = 0, qt = 0; q[qt++] = st; lab[st] = id;
+    var x0 = W, x1 = 0, y0 = H, y1 = 0, n = 0, edge = false;
+    while (qh < qt) {
+      var v = q[qh++]; x = v % W; y = (v / W) | 0; n++;
+      if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+      if (x === 0 || y === 0 || x === W - 1 || y === H - 1) edge = true;
+      if (x > 0 && !wall[v - 1] && !lab[v - 1]) { lab[v - 1] = id; q[qt++] = v - 1; }
+      if (x < W - 1 && !wall[v + 1] && !lab[v + 1]) { lab[v + 1] = id; q[qt++] = v + 1; }
+      if (y > 0 && !wall[v - W] && !lab[v - W]) { lab[v - W] = id; q[qt++] = v - W; }
+      if (y < H - 1 && !wall[v + W] && !lab[v + W]) { lab[v + W] = id; q[qt++] = v + W; }
+    }
+    var bw = x1 - x0 + 1, bh = y1 - y0 + 1;
+    if (!edge && bw >= 12 * k && bh >= 10 * k && bw <= W * 0.4 && bh <= H * 0.6 && n / (bw * bh) > 0.6) cells.push({ x0: x0, y0: y0, x1: x1, y1: y1 });
+  }
+  return cells;
+}
+/* one box copied to its own small picture with a fixed text size (zoom independent) and white margin:
+   [grey, black-and-white thresholded inside the box (grey fills become white)] */
+function cropNorm(src, rect, targetH) {
+  targetH = targetH || 64; var s = targetH / rect.height, pad = 16;
+  if (rect.width * s > 900) s = 900 / rect.width;
+  var w = Math.round(rect.width * s) + 2 * pad, h = Math.round(rect.height * s) + 2 * pad;
+  var a = document.createElement('canvas'); a.width = w; a.height = h;
+  var x = a.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, w, h); x.imageSmoothingQuality = 'high';
+  x.drawImage(src, rect.left, rect.top, rect.width, rect.height, pad, pad, w - 2 * pad, h - 2 * pad);
+  var b = document.createElement('canvas'); b.width = w; b.height = h; var y = b.getContext('2d'); y.drawImage(a, 0, 0);
+  var d = y.getImageData(0, 0, w, h), p = d.data, hist = new Array(256).fill(0), n = w * h, i;
+  for (i = 0; i < p.length; i += 4) hist[(p[i] * 0.299 + p[i + 1] * 0.587 + p[i + 2] * 0.114) | 0]++;
+  var sum = 0; for (i = 0; i < 256; i++) sum += i * hist[i];
+  var sB = 0, wB = 0, best = 0, th = 128;
+  for (i = 0; i < 256; i++) { wB += hist[i]; if (!wB) continue; var wF = n - wB; if (!wF) break; sB += i * hist[i]; var mB = sB / wB, mF = (sum - sB) / wF, bt = wB * wF * (mB - mF) * (mB - mF); if (bt > best) { best = bt; th = i; } }
+  for (i = 0; i < p.length; i += 4) { var v = ((p[i] * 0.299 + p[i + 1] * 0.587 + p[i + 2] * 0.114) | 0) < th ? 0 : 255; p[i] = p[i + 1] = p[i + 2] = v; }
+  y.putImageData(d, 0, 0);
+  return [a, b];
+}
+function classifyText(txt) {
+  var c = txt.length >= 4 && txt.length <= 6 ? fixCodeLoose(txt) : null;
+  if (c && !c.unknown) return 3; if (/^\d{1,3}$/.test(txt)) return 2; if (fixNum(txt) && txt.length <= 3) return 1.5; if (c) return 1; return 0;
+}
+/* read each box alone (one line of text), so the result does not depend on the zoom of the picture */
+function ocrCells(o, words) {
+  var cells = boxCells(o.prep), w = o.w, k = o.k, out = [], inset = Math.max(2, Math.round(k * 1.2));
+  if (cells.length < 4) return Promise.resolve(words);
+  var n = 0;
+  return w.setParameters({ tessedit_pageseg_mode: '7' }).then(function () {
+    return cells.reduce(function (pr, c) {
+      return pr.then(function () {
+        ocrProgressCells(++n, cells.length);
+        var rect = { left: c.x0 + inset, top: c.y0 + inset, width: Math.max(8, c.x1 - c.x0 - 2 * inset), height: Math.max(8, c.y1 - c.y0 - 2 * inset) }, best = null;
+        function better(a, b) {   // valid code > number > unknown; a longer number wins (a lost first digit is the usual error); then confidence
+          if (!b) return true; if (a.score !== b.score) return a.score > b.score;
+          if (a.score === 2 && a.txt.length !== b.txt.length) return a.txt.length > b.txt.length;
+          return a.conf > b.conf;
+        }
+        function readAll(vars) {
+          return vars.reduce(function (p2, src) {
+            return p2.then(function () {
+              return w.recognize(src).then(function (r) {
+                var txt = String(r.data.text || '').toUpperCase().replace(/[^A-Z0-9]/g, ''), cand = { txt: txt, score: classifyText(txt) - ((r.data.confidence || 0) < 30 ? 0.6 : 0), conf: r.data.confidence || 0 };
+                if (txt && better(cand, best)) best = cand;
+              });
+            });
+          }, Promise.resolve());
+        }
+        return readAll(cropNorm(o.grey, rect, 64)).then(function () {
+          if (!best || best.score < 2 || best.conf < 50 || (best.score === 2 && best.txt.length === 1)) return readAll(cropNorm(o.grey, rect, 40).concat(cropNorm(o.grey, rect, 96)));
+        }).then(function () {
+          c.read = best;
+          if (best && best.score > 0.5) out.push({ text: best.txt, confidence: best.conf, cell: true, bbox: { x0: c.x0 / k, x1: c.x1 / k, y0: c.y0 / k, y1: c.y1 / k } });
+        });
+      });
+    }, Promise.resolve());
+  }).then(function () { return w.setParameters({ tessedit_pageseg_mode: '11' }); }).then(function () {
+    // keep the words of the first pass that lie outside every box that was read (shapes without borders)
+    var keep = words.filter(function (wd) {
+      var cx = (wd.bbox.x0 + wd.bbox.x1) / 2 * k, cy = (wd.bbox.y0 + wd.bbox.y1) / 2 * k;
+      return !cells.some(function (c) { return c.read && c.read.score > 0.5 && cx >= c.x0 && cx <= c.x1 && cy >= c.y0 && cy <= c.y1; });
+    });
+    return keep.concat(out);
+  });
+}
+function ocrProgressCells(i, n) { var e = document.getElementById('ocrStatus'); if (e) e.textContent = t('ocrCells', [i, n]); }
 /* second pass: read each expected-but-empty cell alone as one line of text */
 function ocrReread(o, words) {
   var g = ocrToGrid(words), miss = (g.missing || []).slice(0, 40), W = o.canvas.width, H = o.canvas.height;

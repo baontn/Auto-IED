@@ -2,14 +2,14 @@
 var LANG = 'vi';
 var I18N = {
   vi: {
-    expErr: 'Không xuất được ảnh.', centerTable: 'Bàn giữa', bLineSetup: 'Thiết lập chuyền theo số máy…', lsTitle: 'Thiết lập chuyền',
+    ocrCells: 'Đang đọc từng ô… {0}/{1}', opShared: 'Một người chạy {0} máy (người ngồi ở {1}).', opSplit: 'Đã tách: {0} máy, mỗi máy một người.', sumMulti: '{0} người chạy nhiều máy', runBy: 'Do người ở máy {0} vận hành', alsoRuns: 'Người này chạy thêm: {0}', bOpShare: '1 người cho các máy này', bOpSplit: 'Tách: mỗi máy 1 người', expErr: 'Không xuất được ảnh.', centerTable: 'Bàn giữa', bLineSetup: 'Thiết lập chuyền theo số máy…', lsTitle: 'Thiết lập chuyền',
     lsHelp: 'Nhập chiều dài chuyền bằng số máy chuẩn đặt nối nhau (mỗi máy chuẩn 107 cm). Chương trình tạo bàn giữa dài bằng số máy × 107 cm; hai hàng máy đặt hai bên bàn giữa khi dán layout.',
     lsUnits: 'Số máy chuẩn', lsUnit: 'Máy chuẩn (cm)', lsTable: 'Bàn giữa rộng (cm)', lsStart: 'Đầu chuyền (cm)', lsEnd: 'Cuối chuyền (cm)', lsWidth: 'Chuyền rộng (cm)',
     lsCalc: 'Dài chuyền = {0} + {1} × {2} + {3} = {4} cm · bàn giữa {5} × {6} cm · rộng {7} cm (để trống ô "Chuyền rộng" để tự tính: bàn giữa + hai bên máy, vùng người vận hành, lối đi).',
-    opCardTitle: 'Người vận hành', opCardHelp: 'Một người làm 2 máy: bật chế độ dưới đây rồi bấm vào từng máy không có người riêng (bấm lại để trả người). Hoặc chọn máy rồi bấm 👤 / phím W.',
+    opCardTitle: 'Người vận hành', opCardHelp: 'Một người làm nhiều máy: chọn các máy (Shift+bấm, máy có người bấm trước) rồi bấm 👤 hoặc phím W; máy ở xa được nối bằng mũi tên 2 đầu và khoảng cách đi lại. Bấm 👤 lần nữa để tách. Chế độ dưới đây: mỗi lần bấm vào máy là bật/tắt người của máy đó.',
     bOpMode: '👤 Bấm máy để bật/tắt người', bOpModeOn: '✓ Đang bật/tắt người (bấm để thoát)', bOpAll: 'Tất cả có người', opModeBar: 'Chế độ người vận hành: bấm vào máy để bỏ / trả người vận hành. Esc hoặc bấm lại nút để thoát.',
     altSetup: 'đổi cài đặt', moreModels: '+{0} model khác, tổng {1} máy', noModels: 'chưa có model nào gán mã này (xem tab Thư viện máy)', noRegister: 'chưa đọc danh sách máy (Sewing Name / brand / model)', libChip: '{0} mã · {1} model', libChipNone: 'Chưa có thư viện máy', pasteLibNeed: 'Chưa có thư viện máy trên trình duyệt này: chọn file Excel thư viện để đọc đúng mã và kích thước.', fHasOp: 'Có người vận hành riêng', bOpToggle: 'Bật/tắt người', noOpMark: '(không người)',
-    ttRotL: 'Xoay trái 90° (Shift+R)', ttRotR: 'Xoay phải 90° (R)', ttFlip: 'Quay đầu 180° (F)', ttOp: 'Bật/tắt người vận hành (W)', ttDel: 'Xóa (Delete)',
+    ttRotL: 'Xoay trái 90° (Shift+R)', ttRotR: 'Xoay phải 90° (R)', ttFlip: 'Quay đầu 180° (F)', ttOp: 'Người vận hành (W): 1 máy = bật/tắt; nhiều máy = 1 người cho các máy đó', ttDel: 'Xóa (Delete)',
     appTitle: 'Mô phỏng bố trí chuyền', tabPlan: 'Mặt bằng 2D', tab3d: '3D', tabLib: 'Thư viện máy',
     bNew: 'Mới', bOpen: 'Mở…', bSave: 'Lưu…', bSaveTip: 'Lưu layout thành file .layout.json (Ctrl+S)',
     libNeed: 'Chưa có thư viện máy: chọn file Excel thư viện máy (sheet Machine_Needle có cột Machine_Code, Dimension).', bLib: 'Chọn file Excel thư viện…',
@@ -64,14 +64,14 @@ var I18N = {
     ocrIgnored: 'bỏ qua', ocrLegend: 'Viền xanh lá: đọc đúng mã · cam: đã sửa theo thư viện · đỏ: không có trong thư viện · xanh dương: số công đoạn · xám: bỏ qua. Đưa chuột vào ô để xem chữ đọc được.'
   },
   en: {
-    expErr: 'Could not export the image.', centerTable: 'Central table', bLineSetup: 'Set up line by machine count…', lsTitle: 'Line set-up',
+    ocrCells: 'Reading each box… {0}/{1}', opShared: 'One operator runs {0} machines (seated at {1}).', opSplit: 'Split: {0} machines, one operator each.', sumMulti: '{0} operators run several machines', runBy: 'Run by the operator of {0}', alsoRuns: 'This operator also runs: {0}', bOpShare: 'One operator for these machines', bOpSplit: 'Split: one operator each', expErr: 'Could not export the image.', centerTable: 'Central table', bLineSetup: 'Set up line by machine count…', lsTitle: 'Line set-up',
     lsHelp: 'Enter the line length as a number of standard machines placed end to end (one standard machine = 107 cm). A central table of machines × 107 cm is created; the two machine rows are placed on both sides of it when you paste a layout.',
     lsUnits: 'Standard machines', lsUnit: 'Standard machine (cm)', lsTable: 'Central table width (cm)', lsStart: 'Line start (cm)', lsEnd: 'Line end (cm)', lsWidth: 'Line width (cm)',
     lsCalc: 'Line length = {0} + {1} × {2} + {3} = {4} cm · central table {5} × {6} cm · width {7} cm (leave "Line width" empty to compute it: table + machines, operator zones and aisles on both sides).',
-    opCardTitle: 'Operators', opCardHelp: 'One person runs 2 machines: turn on the mode below and click each machine that has no operator of its own (click again to give it back). Or select machines and press 👤 / key W.',
+    opCardTitle: 'Operators', opCardHelp: 'One person runs several machines: select them (Shift+click, the machine with the operator first) and press 👤 or key W; machines apart are linked by a double arrow with the walking distance. Press 👤 again to split. The mode below: each click on a machine turns its operator on/off.',
     bOpMode: '👤 Click machines to set operators', bOpModeOn: '✓ Setting operators (click to stop)', bOpAll: 'Operator everywhere', opModeBar: 'Operator mode: click a machine to remove / give back its operator. Esc or the button again to stop.',
     altSetup: 'other set-up', moreModels: '+{0} more models, {1} machines in total', noModels: 'no model mapped to this code yet (see Machine library tab)', noRegister: 'machine list (Sewing Name / brand / model) not read', libChip: '{0} codes · {1} models', libChipNone: 'No machine library', pasteLibNeed: 'No machine library in this browser: choose the library Excel to read codes and sizes correctly.', fHasOp: 'Own operator', bOpToggle: 'Operator on/off', noOpMark: '(no operator)',
-    ttRotL: 'Turn left 90° (Shift+R)', ttRotR: 'Turn right 90° (R)', ttFlip: 'Turn around 180° (F)', ttOp: 'Operator on/off (W)', ttDel: 'Delete (Delete)',
+    ttRotL: 'Turn left 90° (Shift+R)', ttRotR: 'Turn right 90° (R)', ttFlip: 'Turn around 180° (F)', ttOp: 'Operator (W): one machine = on/off; several = one operator for all of them', ttDel: 'Delete (Delete)',
     appTitle: 'Line layout simulator', tabPlan: '2D plan', tab3d: '3D', tabLib: 'Machine library',
     bNew: 'New', bOpen: 'Open…', bSave: 'Save…', bSaveTip: 'Save the layout as a .layout.json file (Ctrl+S)',
     libNeed: 'No machine library yet: choose the machine library Excel file (sheet Machine_Needle with Machine_Code, Dimension).', bLib: 'Choose library Excel…',

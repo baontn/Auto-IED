@@ -49,6 +49,16 @@ function planMarkup(o) {
     h.push(g.join(''));
     labels.push({ it: it, fam: fam });
   });
+  // one operator for several machines: thin link when next to each other, double arrow (walking distance) when apart
+  opLinks().forEach(function (l) {
+    var col = '#7c3aed', a = l.p1, b = l.p2;
+    if (!l.far) { h.push('<line x1="' + n1(a.x) + '" y1="' + n1(a.y) + '" x2="' + n1(b.x) + '" y2="' + n1(b.y) + '" stroke="' + col + '" stroke-width="' + 2 * sw + '" stroke-dasharray="' + 3 * sw + ' ' + 2 * sw + '" pointer-events="none"/><circle cx="' + n1(b.x) + '" cy="' + n1(b.y) + '" r="' + 4 * sw + '" fill="' + col + '" pointer-events="none"/>'); return; }
+    var dx = b.x - a.x, dy = b.y - a.y, L0 = Math.hypot(dx, dy) || 1, ux = dx / L0, uy = dy / L0, hs = Math.min(L0 / 3, 12 * sw), hw = hs * 0.55;
+    function head(p, sx) { var bx = p.x - sx * ux * hs, by = p.y - sx * uy * hs; return '<polygon points="' + n1(p.x) + ',' + n1(p.y) + ' ' + n1(bx - uy * hw) + ',' + n1(by + ux * hw) + ' ' + n1(bx + uy * hw) + ',' + n1(by - ux * hw) + '" fill="' + col + '" pointer-events="none"/>'; }
+    h.push('<line x1="' + n1(a.x + ux * hs) + '" y1="' + n1(a.y + uy * hs) + '" x2="' + n1(b.x - ux * hs) + '" y2="' + n1(b.y - uy * hs) + '" stroke="' + col + '" stroke-width="' + 3 * sw + '" pointer-events="none"/>' + head(a, -1) + head(b, 1));
+    var mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2, f = fs * 0.85;
+    h.push('<text x="' + n1(mx) + '" y="' + n1(my - f * 0.3) + '" font-size="' + f + '" font-weight="700" fill="' + col + '" stroke="rgba(255,255,255,.85)" stroke-width="' + f * 0.2 + '" paint-order="stroke" text-anchor="middle" pointer-events="none">' + (l.dist / 100).toFixed(1) + ' m</text>');
+  });
   if (OPT.flow) {
     var fp = flowPath();
     if (fp.pts.length > 1) {
@@ -128,7 +138,7 @@ function init2d() {
     var p = toWorld(e), g = e.target.closest ? e.target.closest('[data-id]') : null;
     if (g && e.button === 0 && OPMODE) {           // operator mode: a click toggles this machine's operator
       var ti = itemById(g.getAttribute('data-id'));
-      if (ti && ti.kind === 'mc') { if (ti.noOp) delete ti.noOp; else ti.noOp = true; changed(); }
+      if (ti && ti.kind === 'mc') { opToggleOne(ti); changed(); }
       DRAG = null; return;
     }
     if (g && e.button === 0) {
@@ -200,10 +210,10 @@ function placeSelTools() {
   tb.style.left = px + 'px'; tb.style.top = (py - h) + 'px';
 }
 function toggleOperator() {
-  var mc = selItems().filter(function (i) { return i.kind === 'mc'; }); if (!mc.length) return;
-  var turnOn = mc.every(function (i) { return i.noOp; });
-  mc.forEach(function (i) { if (turnOn) delete i.noOp; else i.noOp = true; });
-  changed();
+  // keep the click order: the first selected machine keeps the operator
+  var mc = SEL.map(itemById).filter(function (i) { return i && i.kind === 'mc'; }); if (!mc.length) return;
+  var r = opShare(mc); changed();
+  if (r === 'share') toast(t('opShared', [mc.length, label(mc[0])])); else if (r === 'split') toast(t('opSplit', [mc.length]));
 }
 /* ---------- edit commands (2D and 3D share them) ---------- */
 function rotateSel(deg) {
@@ -221,11 +231,11 @@ function rotateGroup(deg) {
   });
   changed();
 }
-function deleteSel() { if (!SEL.length) return; ST.items = ST.items.filter(function (it) { return SEL.indexOf(it.id) < 0; }); SEL = []; changed(); onSelChange(); }
+function deleteSel() { if (!SEL.length) return; ST.items = ST.items.filter(function (it) { return SEL.indexOf(it.id) < 0; }); ST.items.forEach(function (i) { if (i.by && !itemById(i.by)) delete i.by; }); SEL = []; changed(); onSelChange(); }
 function duplicateSel() {
   var its = selItems(); if (!its.length) return;
   var b = bbox(its), dy = b ? (b.y1 - b.y0) + 20 : 100, ids = [];
-  its.forEach(function (it) { var c = JSON.parse(JSON.stringify(it)); c.id = uid(); c.y = n1(c.y + dy); ST.items.push(c); ids.push(c.id); });
+  its.forEach(function (it) { var c = JSON.parse(JSON.stringify(it)); c.id = uid(); c.y = n1(c.y + dy); delete c.by; ST.items.push(c); ids.push(c.id); });
   SEL = ids; changed(); onSelChange();
 }
 function nudgeSel(dx, dy) { selItems().forEach(function (it) { it.x = n1(it.x + dx); it.y = n1(it.y + dy); }); if (SEL.length) changed(); }
