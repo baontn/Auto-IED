@@ -2,7 +2,7 @@
 // Consolidator tab "Thiếu máy còn lại" (records actions) and the Supervisor role (read-only: can try actions, cannot save). Numbers come from the data folder only
 // (latest proposal per machine group + IE Tech decisions + actions): the same calculation as the IE Tech grid (groupModel in prep.js). Tables are horizontal (days in columns).
 // Every machine group that is short has its own action panel under its table; any action typed in the panel shows its result at once (preview rows in the table).
-var RS = { root: null, actions: [], actionsRaw: [], selG: null, selPU: null, view: 'short', edit: null, editG: '', forms: {}, cache: [], at: null };
+var RS = { openPU: {}, root: null, actions: [], actionsRaw: [], selG: null, selPU: null, view: 'short', edit: null, editG: '', forms: {}, cache: [], at: null };
 function rsForm(g) { return RS.forms[g] || (RS.forms[g] = { type: 'RENT', qty: '', from: '', to: '', pu: '', line: '', style: '', date: '', status: 'PLANNED', note: '', touched: false, active: false }); }
 async function rsLoad(root) {
   RS.root = root; await tLoadAll(root); RS.actionsRaw = await pReadDir(root, 'prep/actions'); RS.actions = latestActions(RS.actionsRaw); RS.at = new Date();
@@ -183,13 +183,25 @@ function rsCardData() {
     var mine = conf.filter(function (a) { return a.type === 'DELAY' ? !!X.G0.lines[a.line] : a.group === X.g; });
     var left = X.s2, init = X.s;
     var concl = !init.gap && !mine.length ? t('rsConcNoNeed') : (left.gap > 0 ? t('rsConcMoreLeft', [left.gap]) : (mine.length ? t('rsConcEnough') : t('rsConcMore')));
-    return { g: X.g, init: init, left: left, acts: mine, concl: concl, more: left.gap > 0 || (init.gap > 0 && !mine.length) };
+    return { g: X.g, init: init, left: left, acts: mine, concl: concl, more: left.gap > 0 || (init.gap > 0 && !mine.length), pus: rsPuRows(X, conf, left) };
   });
-  var puMap = {}; rsPUs(M).forEach(function (p) { puMap[p] = { pu: p, acts: [], rel: [] }; });
-  conf.forEach(function (a) { var pu = a.type === 'DELAY' ? ((M.map(function (X) { return X.G0.lines[a.line]; }).filter(Boolean)[0] || {}).pu) : a.pu; if (pu && puMap[pu]) puMap[pu].acts.push(a); });
-  M.forEach(function (X) { if (!X.s.gap) return; var w = X.s.worst; Object.keys(puMap).forEach(function (p) { var n = (X.M.prodPu[p + '|' + w] || 0) + (X.M.prepPu[p + '|' + w] || 0); if (n) puMap[p].rel.push({ g: X.g, n: n, d: w, left: X.s2.gap }); }); });
   var by = {}, last = ''; conf.forEach(function (a) { by[a.by] = 1; if (String(a.at) > last) last = String(a.at); });
-  return { planned: planned.length, conf: conf.length, groups: rowsG, pus: Object.keys(puMap).map(function (k) { return puMap[k]; }), by: Object.keys(by), last: last };
+  return { planned: planned.length, conf: conf.length, groups: rowsG, by: Object.keys(by), last: last };
+}
+// shortage by PU inside a machine group: who uses the machines on the worst day (and on every short day), their lines, and the actions that name the PU
+function rsPuRows(X, conf, left) {
+  var w = X.s.worst; if (!w) return [];
+  var days = X.s.days.slice(0, 31), lines = Object.keys(X.M.G.lines), tot = (X.M.total && X.M.total[w]) || 0;
+  return rsPUs([X]).map(function (p) {
+    var use = function (d) { return (X.M.prodPu[p + '|' + d] || 0) + (X.M.prepPu[p + '|' + d] || 0); }, n = use(w);
+    var acts = conf.filter(function (a) { return a.type === 'DELAY' ? (X.G0.lines[a.line] && X.G0.lines[a.line].pu === p) : (a.group === X.g && a.pu === p); });
+    var ls = lines.filter(function (l) { return X.M.G.lines[l].pu === p; }).map(function (l) {
+      var prod = 0, st = ''; Object.keys(X.M.G.lines[l].styles).forEach(function (s) { var q = X.M.G.lines[l].styles[s][w] || 0; if (q) { prod += q; st = s; } });
+      var prep = 0; X.rows.forEach(function (x) { if (x.line === l && x.eff && x.days && x.days.indexOf(w) >= 0) prep += x.eff; });
+      return { l: l, style: st, prod: prod, prep: prep };
+    }).filter(function (r) { return r.prod || r.prep; });
+    return { pu: p, n: n, pct: tot ? Math.round(100 * n / tot) : 0, acts: acts, lines: ls, days: days, series: days.map(use), w: w, more: left.gap > 0 && !acts.length };
+  }).filter(function (r) { return r.n; });
 }
 function rsActDetail(a) { return a.type === 'DELAY' ? (a.from && a.to ? t('rsActDelayDet', [a.style, a.line, d2(a.from), d2(a.to), a.n]) : t('rsActDelayDet0', [a.style, a.line, a.n])) : (a.qty ? (a.qty > 0 ? '+' : '') + a.qty : '') + (a.from ? ' (' + d2(a.from) + (a.to && a.to !== a.from ? '–' + d2(a.to) : '') + ')' : '') + (a.pu ? ' · ' + a.pu : ''); }
 function rsActPill(a) { var k = a.type === 'DELAY' ? 't-info' : (a.type === 'OTHER' ? 't-warn' : 't-ok'); return '<li><span class="tag ' + k + '">' + esc(t('rsAt' + a.type)) + '</span> ' + esc(rsActDetail(a)) + (a.note ? ' <span class="muted small">· ' + esc(a.note) + '</span>' : '') + '</li>'; }
@@ -208,21 +220,34 @@ function rsCardHtml() {
       '<div><small>' + esc(t('rsAfter')) + '</small><big class="' + (r.left.gap ? 'st-bad' : 'st-ok') + '">' + (r.left.gap ? '−' + r.left.gap : '0') + '</big><small>' + (r.left.n ? esc(t('rsDaysShort', [r.left.n, d2(r.left.worst)])) : '') + '</small></div></div>' +
       '<div class="sc-bar" title="' + esc(t('rsKpiDays')) + '"><i style="width:' + pct + '%"></i></div><small class="muted">' + esc(t('rsKpiDays')) + ' ' + r.init.sum + ' → ' + r.left.sum + (r.init.sum ? ' (−' + pct + '%)' : '') + '</small>' +
       (r.acts.length ? '<ul class="sc-acts">' + r.acts.map(rsActPill).join('') + '</ul>' : '<div class="sc-none">' + esc(t('rsCardNoAct')) + '</div>') +
+      rsPuHtml(r) +
       '<div class="sc-concl ' + (r.more ? 'st-bad' : 'st-ok') + '">' + esc(r.concl) + '</div></div>';
   }).join('') + '</div>';
-  h += '<h4 class="sc-h">' + esc(t('rsCardByPU')) + '</h4><div class="sc-grid" data-rs-card="pu">' + D.pus.map(function (x) {
-    var still = x.rel.some(function (r) { return r.left > 0; }), more = !x.acts.length && still, concl = x.acts.length ? t('rsConcActs') : (still ? t('rsConcMore') : t('rsCNoActPU'));
-    return '<div class="sc-card ' + (more ? 'more' : 'ok') + '"><div class="sc-top"><b>' + esc(puName(x.pu)) + '</b><span class="sc-badge ' + (more ? 'more' : 'ok') + '">' + esc(concl) + '</span></div>' +
-      (x.acts.length ? '<ul class="sc-acts">' + x.acts.map(rsActPill).join('') + '</ul>' : '<div class="sc-none">' + esc(t('rsCardNoAct')) + '</div>') +
-      (x.rel.length ? '<div class="small" style="margin-top:6px"><span class="muted">' + esc(t('rsCThRel')) + ':</span> ' + x.rel.map(function (r) { return '<span class="tag ' + (r.left > 0 ? 't-bad' : 't-info') + '">' + esc(r.g + ' ' + r.n + ' · ' + d2(r.d)) + '</span>'; }).join(' ') + '</div>' : '') + '</div>';
-  }).join('') + '</div>';
+  return h;
+}
+function rsPuHtml(r) {
+  if (!r.pus.length) return '';
+  var h = '<div class="sc-pus"><div class="small muted" style="margin:8px 0 3px">' + esc(t('rsCardPUs', [d2(r.pus[0].w)])) + '</div><table class="sc-put">';
+  r.pus.forEach(function (x) {
+    var key = r.g + '|' + x.pu, open = !!RS.openPU[key];
+    h += '<tr class="sc-pu' + (open ? ' on' : '') + '" data-rs-pu2="' + esc(key) + '"><td><span class="sc-car">' + (open ? '▾' : '▸') + '</span> <b>' + esc(puName(x.pu)) + '</b></td><td class="n">' + x.n + ' <span class="muted">(' + x.pct + '%)</span></td><td>' +
+      (x.acts.length ? '<span class="tag t-ok">' + esc(t('rsConcActs')) + '</span>' : (x.more ? '<span class="tag t-bad">' + esc(t('rsConcMore')) + '</span>' : '<span class="muted">' + esc(t('rsCNoActPU')) + '</span>')) + '</td></tr>';
+    if (open) h += '<tr class="sc-pud"><td colspan="3">' + rsPuDetail(r, x) + '</td></tr>';
+  });
+  return h + '</table></div>';
+}
+function rsPuDetail(r, x) {
+  var h = '<div class="small"><b>' + esc(t('rsPuLines', [d2(x.w)])) + '</b></div><table class="sc-put2"><tr><th class="l">' + esc(t('rsPuLine')) + '</th><th class="l">' + esc(t('thStyleLbl')) + '</th><th class="n">' + esc(t('rsRowProd')) + '</th><th class="n">' + esc(t('rsRowPrep')) + '</th></tr>' +
+    x.lines.map(function (l) { return '<tr><td>' + esc(l.l) + '</td><td>' + esc(l.style) + '</td><td class="n">' + l.prod + '</td><td class="n">' + l.prep + '</td></tr>'; }).join('') + '</table>';
+  h += '<div class="small" style="margin-top:6px"><b>' + esc(t('rsPuDays')) + '</b></div><div class="small">' + x.days.map(function (d, i) { return '<span class="tag t-info">' + esc(d2(d)) + ': ' + x.series[i] + '</span>'; }).join(' ') + '</div>';
+  h += x.acts.length ? '<ul class="sc-acts" style="margin-top:6px">' + x.acts.map(rsActPill).join('') + '</ul>' : '<div class="sc-none">' + esc(t('rsCardNoAct')) + '</div>';
   return h;
 }
 function rsExport() {
   var D = rsCardData(), a1 = [[t('rsCardTitle')], [], [t('rsCardByG')], [t('rsThGroup'), t('rsCThInit'), t('rsCThActs'), t('rsCThAfter'), t('rsCThConc')]], g = function (s) { return s.gap > 0 ? '-' + s.gap + ' (' + d2(s.worst) + ')' : t('rsEnough'); };
   D.groups.forEach(function (r) { a1.push([r.g, g(r.init), r.acts.map(rsActText).join('; '), g(r.left), r.concl]); });
-  a1.push([], [t('rsCardByPU')], [t('rsCThPU'), t('rsCThActs'), t('rsCThRel'), t('rsCThConc')]);
-  D.pus.forEach(function (x) { var still = x.rel.some(function (r) { return r.left > 0; }); a1.push([puName(x.pu), x.acts.map(rsActText).join('; '), x.rel.map(function (r) { return r.g + ' ' + r.n + ' (' + d2(r.d) + ')'; }).join(' · '), x.acts.length ? t('rsConcActs') : (still ? t('rsConcMore') : t('rsCNoActPU'))]); });
+  a1.push([], [t('rsCardByPU')], [t('rsThGroup'), t('rsCThPU'), t('rsPuUse'), t('rsCThActs'), t('rsCThConc')]);
+  D.groups.forEach(function (r) { r.pus.forEach(function (x) { a1.push([r.g, puName(x.pu), x.n + ' (' + x.pct + '%, ' + d2(x.w) + ')', x.acts.map(rsActText).join('; '), x.acts.length ? t('rsConcActs') : (x.more ? t('rsConcMore') : t('rsCNoActPU'))]); }); });
   var wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(a1), 'ACTIONS');
   var n = new Date(), p = function (x) { return String(x).padStart(2, '0'); }; XLSX.writeFile(wb, 'SHORTAGE_ACTIONS_' + n.getFullYear() + p(n.getMonth() + 1) + p(n.getDate()) + '.xlsx');
 }
@@ -258,9 +283,10 @@ function rsToggle(sel, k, all) {          // nothing filtered yet: the click sel
   return Object.keys(m).length && Object.keys(m).length < all.length ? m : null;
 }
 async function rsClick(e, cid, edit) {
-  var b = e.target.closest('[data-rs-g],[data-rs-refresh],[data-rs-edit],[data-rs-conf],[data-rs-cancel],[data-rs-save],[data-rs-canceledit],[data-rs-cg],[data-rs-cgall],[data-rs-cpu],[data-rs-cpuall],[data-rs-view],[data-rs-export]'); if (!b) return;
+  var b = e.target.closest('[data-rs-g],[data-rs-refresh],[data-rs-edit],[data-rs-conf],[data-rs-cancel],[data-rs-save],[data-rs-canceledit],[data-rs-cg],[data-rs-cgall],[data-rs-cpu],[data-rs-cpuall],[data-rs-view],[data-rs-export],[data-rs-pu2]'); if (!b) return;
   var c = $(cid), d = b.dataset, byId = function (id) { return RS.actions.filter(function (a) { return a.id === id; })[0]; };
   try {
+    if (d.rsPu2 != null) { RS.openPU[d.rsPu2] = !RS.openPU[d.rsPu2]; var cs = $(cid + 'S'); if (cs) cs.innerHTML = rsCardHtml(); return; }
     if (d.rsG != null) { RS.selG = RS.cache.length > 1 ? (function () { var o = {}; o[d.rsG] = true; return o; })() : null; rsPaint(cid, edit); return; }
     if (d.rsCg != null) { RS.selG = rsToggle(RS.selG, d.rsCg, RS.cache.map(function (x) { return x.g; })); rsPaint(cid, edit); return; }
     if (d.rsCgall != null) { RS.selG = null; rsPaint(cid, edit); return; }

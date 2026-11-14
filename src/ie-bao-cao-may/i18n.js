@@ -1,6 +1,7 @@
 // ===================== TEXTS (VI / EN) =====================
 var I18N = {
   vi: {
+    rsCardPUs: 'Thiếu theo PU (máy dùng ngày tệ nhất {0}) — bấm vào PU để xem chi tiết', rsPuUse: 'Máy PU dùng ngày tệ nhất', rsPuLines: 'Chuyền và mã hàng của PU ngày {0}', rsPuLine: 'Chuyền', thStyleLbl: 'Mã hàng', rsPuDays: 'Máy PU dùng theo từng ngày thiếu',
     homeLink: 'Trang chủ', rzHint: 'Kéo để đổi độ rộng cột; bấm đúp để trở về tự động', eDlgTitle: 'Ngày kết thúc của mã đang chạy {0} trên chuyền {1}', eDlgHint: 'Theo kế hoạch: {0}. Chọn ngày trên lịch rồi bấm Lưu, hoặc bấm "Theo kế hoạch" để dùng ngày của kế hoạch.', eSave: 'Lưu', ePlan: 'Theo kế hoạch', eCancel: 'Hủy', pickFilesRem: 'Chọn file Excel… (ghi nhớ)', remFiles: 'File Excel',
     rsApplied: 'Đã vào kế hoạch',
     rsActDelayDet: '{0} chuyền {1}: vào chuyền {2} → {3} (+{4} ngày làm việc)', rsActDelayDet0: '{0} chuyền {1} (+{2} ngày làm việc)',
@@ -187,6 +188,7 @@ var I18N = {
     c_Added: 'Mới', c_Changed: 'Thay đổi', c_Unchanged: 'Không đổi'
   },
   en: {
+    rsCardPUs: 'Shortage by PU (machines used on the worst day {0}) — click a PU for details', rsPuUse: 'Machines the PU uses on the worst day', rsPuLines: 'Lines and styles of the PU on {0}', rsPuLine: 'Line', thStyleLbl: 'Style', rsPuDays: 'Machines the PU uses on each short day',
     homeLink: 'Home', rzHint: 'Drag to resize the column; double-click to reset', eDlgTitle: 'End date of the running style {0} on line {1}', eDlgHint: 'Per plan: {0}. Pick a date on the calendar and press Save, or press "Per plan" to use the plan date.', eSave: 'Save', ePlan: 'Per plan', eCancel: 'Cancel', pickFilesRem: 'Choose Excel files… (remembered)', remFiles: 'Excel files',
     rsApplied: 'Already in the plan',
     rsActDelayDet: '{0} on line {1}: loading {2} → {3} (+{4} working days)', rsActDelayDet0: '{0} on line {1} (+{2} working days)',

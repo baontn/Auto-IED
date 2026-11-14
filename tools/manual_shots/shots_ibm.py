@@ -95,6 +95,7 @@ with sync_playwright() as p:
     pg.fill(P + '[data-f="note"]', 'PPC dời mã hàng chuyền K'); pg.wait_for_timeout(500)
     shot(pg, 'ibm-26-delay-preview', sel='#rsC [data-rs-blk="BT1M"]', hl=[P + '[data-f="type"]', P + '[data-f="line"]', P + '[data-f="style"]', P + '[data-f="date"]', P + '[data-rs-res]'])
     pg.select_option(P + '[data-f="status"]', 'CONFIRMED'); pg.click(P + '[data-rs-save]'); pg.wait_for_timeout(1200)
+    pg.click('#rsCS .sc-card[data-rs-g2=BT1M] tr.sc-pu >> nth=0'); pg.wait_for_timeout(300)
     shot(pg, 'ibm-27-actions-and-card', sel='#rsCS')
     pg.click('#roleSeg [data-role="sup"]'); pg.wait_for_timeout(400); pg.click('#sConnect'); pg.wait_for_timeout(2000)
     shot(pg, 'ibm-28-supervisor', full=True, hl='#sConnect')
