@@ -299,7 +299,7 @@ function xlOpen(f) {
       XLI.sheets.forEach(function (s) { s.info = xlSheetInfo(wb && wb.Sheets[s.name], s.name, f.name); });
       // SAM table: the layout's own sheet first, other sheets fill the missing operations; sequences typed in cells too
       if (wb) XLI.sheets.forEach(function (s) {
-        var ops = []; s.layouts.forEach(function (l) { (l.cells ? parsePaste(l.tsv).rows : l.rows).forEach(function (r) { r.cells.forEach(function (c) { String(c.op || '').split(/[\/+,&]/).forEach(function (o) { if (o.trim()) ops.push(o.trim()); }); }); }); });
+        var ops = []; s.layouts.forEach(function (l) { (l.cells ? parsePaste(l.tsv).rows : l.rows).forEach(function (r) { r.cells.forEach(function (c) { String(c.op || '').split(/[\/+,&]/).forEach(function (o) { o = o.trim().replace(/^0+(?=\d)/, ''); if (o) ops.push(o); }); }); }); });
         s.ops = xlOpsTables(wb.Sheets[s.name], ops);
         wb.SheetNames.forEach(function (sn) { if (sn === s.name) return; var o2 = xlOpsTables(wb.Sheets[sn], ops); Object.keys(o2).forEach(function (k) { if (!s.ops[k] && ops.indexOf(k) >= 0) s.ops[k] = o2[k]; }); });
         var seen = {}; s.seqs.forEach(function (q) { seen[q.text.replace(/\s/g, '')] = 1; });
@@ -346,6 +346,12 @@ function xlFillBranchPick() {
   if (!on) { sel.value = ''; return; }
   sel.innerHTML = '<option value="">' + esc(t('xlBranchNone')) + '</option>' + [].filter.call(document.getElementById('xlPick').options, function (o) { return !/^a:/.test(o.value); }).map(function (o) { return o.outerHTML; }).join('');
 }
+/* SAM etc. of the chosen layout: its own tables first, then the operation tables of every other sheet (as the automatic layout sees them) */
+function xlOpsAll(own) {
+  var out = Object.assign({}, own || {});
+  (XLI.auto || []).forEach(function (a) { Object.keys(a.ops).forEach(function (k) { if (!out[k] || !(out[k].sam > 0)) out[k] = out[k] ? Object.assign({}, a.ops[k], { ar: out[k].ar, ag: out[k].ag, ai: out[k].ai }) : a.ops[k]; }); });
+  return out;
+}
 function xlUse() {
   if (/^a:/.test(document.getElementById('xlPick').value)) { document.getElementById('xlPickB').value = ''; xlAuto(+document.getElementById('xlPick').value.slice(2)); return; }
   var pb = document.getElementById('xlPickB').value;
@@ -354,7 +360,7 @@ function xlUse() {
     var main = xlRows(s1.layouts[+p1[1]]).map(function (r) { r.zone = 'main'; return r; }), br = xlRows(s2.layouts[+p2[1]]).map(function (r) { r.zone = 'branch'; return r; });
     var rows = ((ST.line.branch || {}).pos === 'bottom' ? main.concat(br) : br.concat(main));
     PASTE = { rows: rows, nCols: 0, nMc: rows.reduce(function (a, r) { return a + r.cells.length; }, 0), fromXl: true, seq: s1.seqs.length ? s1.seqs : s2.seqs,
-      meta: { style: s1.info.style, file: XLI.name, sheet: s1.name, optr: s1.info.optr, sam: s1.info.sam, obd: s1.info.obd, target: s1.info.target, eff: s1.info.eff }, ops: Object.assign({}, s2.ops, s1.ops) };
+      meta: { style: s1.info.style, file: XLI.name, sheet: s1.name, optr: s1.info.optr, sam: s1.info.sam, obd: s1.info.obd, target: s1.info.target, eff: s1.info.eff }, ops: xlOpsAll(Object.assign({}, s2.ops, s1.ops)) };
     var stb = document.getElementById('ocrStatus'); stb.className = 'small'; stb.textContent = t('xlTwo', [PASTE.nMc]);
     document.getElementById('ocrView').innerHTML = '';
     renderPastePreview(); return;
@@ -364,14 +370,14 @@ function xlUse() {
   var st0 = document.getElementById('ocrStatus'); st0.className = 'small';
   if (lay.cells) {   // a layout written in cells: the same reader as a paste from Excel
     document.getElementById('pasteTxt').value = lay.tsv;
-    PASTE = parsePaste(lay.tsv); PASTE.seq = sh.seqs; PASTE.meta = meta; PASTE.ops = sh.ops;
+    PASTE = parsePaste(lay.tsv); PASTE.seq = sh.seqs; PASTE.meta = meta; PASTE.ops = xlOpsAll(sh.ops);
     st0.textContent = t('xlRead', [XLI.name, sh.name, PASTE.nMc, sh.seqs.length]) + ' ' + t('xlCells', [lay.ref]) + '.' + (sh.info.style ? ' ' + t('xlStyle', [sh.info.style, sh.info.optr || '?', sh.info.sam || '?', sh.info.obd || '?']) : '');
     document.getElementById('ocrView').innerHTML = '';
     renderPastePreview(); return;
   }
   var rows = lay.rows.map(function (r) { return { side: r.side || 'top', sideFound: r.sideFound, cells: r.cells.map(function (c) { return Object.assign({}, c); }) }; });
   PASTE = { rows: rows, nCols: Math.max.apply(null, rows.map(function (r) { return r.cells.length; })), nMc: lay.n, fromXl: true, seq: sh.seqs,
-    meta: meta, ops: sh.ops };
+    meta: meta, ops: xlOpsAll(sh.ops) };
   // the table text for reference (editing it switches back to the text grid)
   var lines = []; rows.forEach(function (r, i) { if (i) lines.push(''); var ops = r.cells.map(function (c) { return c.op; }).join('\t'), cs = r.cells.map(function (c) { return c.code; }).join('\t'); if (r.side === 'top') lines.push(ops, cs); else lines.push(cs, ops); });
   document.getElementById('pasteTxt').value = lines.join('\n') + '\n';
@@ -416,14 +422,17 @@ function autoRows(ops, seqs, branchOn) {
     var A = lines.filter(function (l) { return l.asm; })[0] || lines[lines.length - 1];
     rest.forEach(function (o) { var k = 0; while (k < A.ops.length && !(simNum(A.ops[k]) > simNum(o))) k++; A.ops.splice(k, 0, o); });
   }
-  var useBr = branchOn && lines.length > 1, zones = {}, nMc = 0, nOps = 0;
+  var useBr = branchOn && lines.length > 1, zones = {}, nMc = 0, nOps = 0, unitOf = {}, unitSide = {};
+  arrUnits(ops).forEach(function (u, ui) { u.ops.forEach(function (o) { unitOf[o] = ui; }); });   // operations done by the same people: one side of the table
   lines.forEach(function (l) {
     var zid = useBr && !l.asm ? 'branch' : 'main';
     var Z = zones[zid] || (zones[zid] = { cur: { top: 0, bottom: 0 }, rows: { top: [], bottom: [] } });
     l.ops.forEach(function (o) {
       var code = autoCode(ops[o].mc), n = autoCount(ops, o), L = dimOf(code).L; nOps++;
+      var uk = unitOf[o] != null ? zid + ':' + unitOf[o] : null;
       for (var i = 0; i < n; i++) {
-        var side = Z.cur.top <= Z.cur.bottom ? 'top' : 'bottom';
+        var side = uk && unitSide[uk] ? unitSide[uk] : Z.cur.top <= Z.cur.bottom ? 'top' : 'bottom';
+        if (uk) unitSide[uk] = side;
         Z.rows[side].push({ code: code, op: o, x: Z.cur[side] + L / 2, side: side }); Z.cur[side] += L; nMc++;
       }
     });

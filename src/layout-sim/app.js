@@ -166,6 +166,11 @@ function renderPastePreview() {
     });
     h += '</table>';
     var u = Object.keys(unk); if (u.length) h += '<div class="t-warn tagline">⚠ ' + esc(t('pasteUnknown', [u.join(', '), DEF_DIM.L + '×' + DEF_DIM.W])) + '</div>';
+    if (PASTE.ops) {   // SAM found for the operations of the layout
+      var lo = {}; PASTE.rows.forEach(function (r) { r.cells.forEach(function (c) { String(c.op || '').split(/[\/+,&]/).forEach(function (o) { o = o.trim().replace(/^0+(?=\d)/, ''); if (/^\d/.test(o)) lo[o] = 1; }); }); });
+      var lk = Object.keys(lo), miss = lk.filter(function (o) { return !(PASTE.ops[o] && PASTE.ops[o].sam > 0); });
+      if (lk.length) h += '<div class="tagline ' + (miss.length ? 't-warn' : 't-ok') + '">' + esc(t('pasteSam', [lk.length - miss.length, lk.length])) + (miss.length ? ' ' + esc(t('pasteSamMiss', [miss.join(', ')])) : '') + '</div>';
+    }
     if (PASTE.seq && PASTE.seq.length) h += '<div class="tagline t-info">' + esc(t('xlSeqFound')) + '<br>' + PASTE.seq.map(function (q) { return esc((q.name ? q.name + ': ' : '') + q.text); }).join('<br>') + '</div>';
   }
   $('pastePrev').innerHTML = h; $('pasteGo').disabled = !PASTE.nMc;
@@ -188,7 +193,7 @@ function pasteGo() {
   if (replace) setBase([(PASTE.meta || {}).file, (PASTE.meta || {}).sheet].filter(Boolean).join(' / ') || t('chgBasePaste')); else addToBase(items);   // reference for "Thay đổi so với file layout"
   SEL = items.map(function (i) { return i.id; });
   $('dlgPaste').close(); changed(); fitView(); if (TAB === '3d') view3dReset(false);
-  toast(t('pasteDone', [items.filter(function (i) { return i.kind === 'mc'; }).length]) + (arrRes ? ' ' + t('arrDone', [arrRes.total, arrRes.shared, arrRes.none]) : ''));
+  toast(t('pasteDone', [items.filter(function (i) { return i.kind === 'mc'; }).length]) + (arrRes ? ' ' + t('arrDone', [arrRes.total, arrRes.shared, arrRes.none]) + (arrRes.extra ? ' ' + t('arrExtra', [arrRes.extra]) : '') : ''));
 }
 
 /* ---------- line set-up (standard machine units + central table) ---------- */
@@ -488,9 +493,19 @@ function startApp() {
   runChecks(); renderSide();
   requestAnimationFrame(function () { fitView(); firstRun(); });
   initSim(); initChanges();
+  // label text sizes (2D toolbar and 3D toolbar stay in step)
+  var szs = [0.6, 0.8, 1, 1.25, 1.5, 2, 2.5];
+  [['lblMc', 'mc'], ['lblOp', 'op'], ['lblMc3', 'mc'], ['lblOp3', 'op']].forEach(function (p) {
+    var el = $(p[0]); el.innerHTML = szs.map(function (v) { return '<option value="' + v + '"' + (v === LBL[p[1]] ? ' selected' : '') + '>' + Math.round(v * 100) + '%</option>'; }).join('');
+    el.onchange = function () {
+      LBL[p[1]] = +this.value; ['lblMc', 'lblMc3'].forEach(function (id) { $(id).value = LBL.mc; }); ['lblOp', 'lblOp3'].forEach(function (id) { $(id).value = LBL.op; });
+      try { localStorage.setItem('ls_lblsz', JSON.stringify(LBL)); } catch (e) {}
+      render2d(); if (TAB === '3d') rebuild3d();
+    };
+  });
   ['bArr', 'smArr'].forEach(function (id) { $(id).onclick = function () {
     var r = applyArrangement(); if (!r) { toast(t('arrNone'), true); return; }
-    SIMR = null; changed(); if (TAB === 'sim') renderSim(); toast(t('arrDone', [r.total, r.shared, r.none]));
+    SIMR = null; changed(); if (TAB === 'sim') renderSim(); toast(t('arrDone', [r.total, r.shared, r.none]) + (r.extra ? ' ' + t('arrExtra', [r.extra]) : ''));
   }; });
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () { render2d(); if (TAB === '3d') rebuild3d(); });
 }

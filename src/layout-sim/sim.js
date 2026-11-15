@@ -243,8 +243,8 @@ function initSim() {
 
 /* ---------- people arranged in the layout file ("Arrange. Optr / CN sắp xếp") ---------- */
 /* groups of operations: a merged cell = one group; value = people for the whole group */
-function arrGroups() {
-  var g = {}, ops = ST.ops || {};
+function arrGroups(opsTable) {
+  var g = {}, ops = opsTable || ST.ops || {};
   Object.keys(ops).forEach(function (op) {
     var o = ops[op]; if (o.ar == null || !isFinite(o.ar)) return;
     var k = o.ag || op; g[k] = g[k] || { key: k, ops: [], v: o.ar, ai: o.ai != null ? o.ai : 1e6 };
@@ -255,9 +255,9 @@ function arrGroups() {
 function hasArr() { return arrGroups().length > 0; }
 /* operator units: a group with 1 person or more = its own people (rounded up); groups of less than one person
    (0.5 …) are joined in table order until one full person (the IE's "0.5 + 0.5" arrangement) */
-function arrUnits() {
+function arrUnits(opsTable) {
   var out = [], pool = null;
-  arrGroups().forEach(function (g) {
+  arrGroups(opsTable).forEach(function (g) {
     var v = Math.round(g.v * 1000) / 1000;
     if (v <= 0) { out.push({ ops: g.ops.slice(), p: 0, v: 0 }); return; }
     if (v >= 1) { out.push({ ops: g.ops.slice(), p: Math.ceil(v - 1e-6), v: v }); return; }
@@ -270,7 +270,7 @@ function arrUnits() {
    are run by the same person (neighbouring machines together); a unit with 0 people has no own operator */
 function applyArrangement() {
   var units = arrUnits(); if (!units.length) return null;
-  var done = {}, shared = 0, none = 0;
+  var done = {}, shared = 0, none = 0, extra = 0;
   function mcsOf(ops) {
     return ST.items.filter(function (it) { return it.kind === 'mc' && !done[it.id] && ops.indexOf(opsOf(it)[0]) >= 0; })
       .sort(function (a, b) { return (a.zone === 'branch' ? 0 : 1) - (b.zone === 'branch' ? 0 : 1) || Math.round(a.y / 60) - Math.round(b.y / 60) || a.x - b.x; });
@@ -280,12 +280,22 @@ function applyArrangement() {
     var M = mcsOf(u.ops); M.forEach(function (it) { done[it.id] = 1; });
     if (!M.length) return;
     if (u.p === 0) { M.forEach(function (it) { it.noOp = true; }); none += M.length; return; }
-    if (M.length <= u.p) return;
-    var k = u.p, at = 0;
-    for (var i = 0; i < k; i++) {
-      var n = Math.round((M.length - at) / (k - i)), chunk = M.slice(at, at + n); at += n;
-      if (chunk.length > 1) { opShare(chunk); shared += chunk.length - 1; }
-    }
+    // a person works on one side of the central table only: the people of the unit are shared out per side (at least one per side)
+    var sides = {}, keys = [];
+    M.forEach(function (it) { var k = sideKey(it); if (!sides[k]) { sides[k] = []; keys.push(k); } sides[k].push(it); });
+    keys.sort(function (a, b) { return sides[b].length - sides[a].length; });
+    var ppl = {}, left = u.p;
+    keys.forEach(function (k) { ppl[k] = 1; left--; });
+    if (left < 0) extra += -left;
+    while (left > 0) { var bk = keys.slice().sort(function (a, b) { return sides[b].length / ppl[b] - sides[a].length / ppl[a]; })[0]; ppl[bk]++; left--; }
+    keys.forEach(function (k) {
+      var S = sides[k], p = Math.min(ppl[k], S.length), at = 0;
+      if (S.length <= p) return;
+      for (var i = 0; i < p; i++) {
+        var n = Math.round((S.length - at) / (p - i)), chunk = S.slice(at, at + n); at += n;
+        if (chunk.length > 1 && opShare(chunk) === 'share') shared += chunk.length - 1;
+      }
+    });
   });
-  return { units: units.length, shared: shared, none: none, people: units.reduce(function (a, u) { return a + u.p; }, 0), total: Math.round(units.reduce(function (a, u) { return a + u.v; }, 0) * 100) / 100 };
+  return { units: units.length, shared: shared, none: none, extra: extra, people: units.reduce(function (a, u) { return a + u.p; }, 0), total: Math.round(units.reduce(function (a, u) { return a + u.v; }, 0) * 100) / 100 };
 }

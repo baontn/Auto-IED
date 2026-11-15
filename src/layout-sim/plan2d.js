@@ -16,6 +16,8 @@ function pal(light) {
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 function n1(v) { return Math.round(v * 10) / 10; }
 
+/* label text sizes (factor of the default), kept in this browser */
+var LBL = (function () { try { var o = JSON.parse(localStorage.getItem('ls_lblsz') || '{}'); return { mc: +o.mc || 1, op: +o.op || 1 }; } catch (e) { return { mc: 1, op: 1 }; } })();
 /* returns the inner SVG markup. o = {s: px per cm, P: palette, exp: true for export (no selection)} */
 function planMarkup(o) {
   var P = o.P, s = o.s, L = ST.line.length, W = ST.line.width, e = ST.erg, h = [];
@@ -100,18 +102,18 @@ function planMarkup(o) {
   labels.forEach(function (l) {
     var it = l.it, S = shapes(it), halo = '" fill="#14181f" stroke="rgba(255,255,255,.8)" paint-order="stroke" text-anchor="middle" font-weight="700" pointer-events="none"';
     if (it.kind !== 'mc') {
-      var f0 = fs * 0.9;
+      var f0 = fs * 0.9 * LBL.mc;
       h.push('<text x="' + n1(it.x) + '" y="' + n1(it.y - f0 * 0.1) + '" font-size="' + f0 + '" stroke-width="' + f0 * 0.18 + halo + '>' + esc(it.name || '') + '</text>' +
         '<text x="' + n1(it.x) + '" y="' + n1(it.y + f0 * 0.85) + '" font-size="' + f0 * 0.75 + '" stroke-width="' + f0 * 0.15 + halo + '>' + esc(it.L + '×' + it.W) + '</text>');
       return;
     }
     // machine code on the table; the operation number (big) on the operator's seat, or on the table when the station has no operator
-    var fc = fs * 1.05, fo = fs * 1.7, op = String(it.op || '');
+    var fc = fs * 1.05 * LBL.mc, fo = fs * 1.7 * LBL.op, op = String(it.op || '');
     if (S.chair) {
       h.push('<text x="' + n1(it.x) + '" y="' + n1(it.y + fc * 0.35) + '" font-size="' + fc + '" stroke-width="' + fc * 0.18 + halo + '>' + esc(it.code) + '</text>');
       if (op) h.push('<text x="' + n1(S.chair.x) + '" y="' + n1(S.chair.y + fo * 0.36) + '" font-size="' + fo + '" stroke-width="' + fo * 0.16 + halo.replace('#14181f', '#0b3d91') + '>' + esc(op) + '</text>');
     } else {
-      var fo2 = fs * 1.35;
+      var fo2 = fs * 1.35 * LBL.op;
       h.push('<text x="' + n1(it.x) + '" y="' + n1(it.y - fc * 0.25) + '" font-size="' + fc + '" stroke-width="' + fc * 0.18 + halo + '>' + esc(it.code) + '</text>');
       if (op) h.push('<text x="' + n1(it.x) + '" y="' + n1(it.y + fo2 * 0.85) + '" font-size="' + fo2 + '" stroke-width="' + fo2 * 0.16 + halo.replace('#14181f', '#0b3d91') + '>' + esc(op) + '</text>');
     }
@@ -265,7 +267,7 @@ function toggleOperator() {
   // keep the click order: the first selected machine keeps the operator
   var mc = SEL.map(itemById).filter(function (i) { return i && i.kind === 'mc'; }); if (!mc.length) return;
   var r = opShare(mc); changed();
-  if (r === 'share') toast(t('opShared', [mc.length, label(mc[0])])); else if (r === 'split') toast(t('opSplit', [mc.length]));
+  if (r === 'share') toast(t('opShared', [mc.length, label(mc[0])])); else if (r === 'split') toast(t('opSplit', [mc.length])); else if (r === 'cross') toast(t('opCross'), true);
 }
 /* ---------- edit commands (2D and 3D share them) ---------- */
 function rotateSel(deg) {

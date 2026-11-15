@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Layout Sim: User guide</title><link rel="icon" href="../icon.png"><link rel="stylesheet" href="manual.css"></head><body>
-<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>Layout Sim v2.5: User guide</b><a href="layout-sim.html" title="Tiếng Việt" onclick="try{localStorage.setItem('ie_site_lang','vi')}catch(e){}">VI</a><a href="../index.html">‹ Home</a></header>
+<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>Layout Sim v2.6: User guide</b><a href="layout-sim.html" title="Tiếng Việt" onclick="try{localStorage.setItem('ie_site_lang','vi')}catch(e){}">VI</a><a href="../index.html">‹ Home</a></header>
 <div class="wrap">
 <nav class="toc"><b>Contents</b>
 <a href="#intro">1. Introduction</a>
@@ -75,6 +75,7 @@
 <li><b>Open the layout Excel file</b> (most exact): press <span class="btn">📂 Mở file layout Excel…</span>, choose the <code>.xlsx</code>/<code>.xlsm</code>. The machine-code + operation-number shapes are read, or a layout written in cells (a row of machine codes with the operation numbers in the row above/below), on every sheet. Pick the layout in the list (sheet, rows, machines). With a branch line, pick a second layout for the branch.</li>
 <li><b>Paste an Excel range</b>: copy the layout range in Excel and paste it (Ctrl+V) into the text box.</li>
 <li><b>Paste a picture</b>: paste a screenshot of the layout; the text is recognised on the PC (no network). Check the codes read.</li></ol>
+<p>The preview shows <b>SAM found for x/y operations</b> of the layout; SAM comes from the operation table of the layout sheet, then from the operation tables of the other sheets of the file (as the automatic layout sees them). Operations without SAM are listed so you can enter them on the WIP simulation page.</p>
 <p>At the same time the file gives: the <b>style</b> (cells B3, D3, D4, B11, sheet/file name, as in IE Báo cáo máy), workers, SAM, OBD version, target output, efficiency, the <b>operation table</b> (SAM, machine type, column <b>Arrange. Optr / CN sắp xếp</b>) and the sequence <code>31=&gt;32=&gt;…</code>.</p>
 <figure><a href="img/ls-paste.png"><img src="img/ls-paste.png" alt="Paste layout" loading="lazy"></a><figcaption>Preview: machine rows, operator side (top/bottom) and line (main/branch) of each row; codes missing in the library are flagged. Press <span class="btn">Đưa vào mặt bằng</span> (place on the plan).</figcaption></figure>
 <h3 id="auto">5.1 Automatic layout (no machine drawing in the file yet)</h3>
@@ -96,6 +97,7 @@
 <li>Click a machine: floating buttons <span class="btn">⟲</span> <span class="btn">⟳</span> <span class="btn">⇅ 180°</span> <span class="btn">👤</span> <span class="btn">🧍</span> <span class="btn">🗑</span>. The <b>Đang chọn</b> (selection) card edits code, operation, position and angle.</li>
 <li>Box <b>Code / op.</b> + <span class="btn">+ Máy</span>: add a machine by code, or type an operation number to add that operation's machine (section 8). <span class="btn">+ Thêm</span>: input table, QC table, table, pillar, trolley, obstacle.</li>
 <li><b>Close up</b> (button <span class="btn">⇥⇤</span> on the floating buttons, <span class="btn">⇥⇤ Khép sát</span> in the selection card, or K): the selected machines are pushed together along each row with no gap (from the left machine); the edge facing the central table touches it; rows further out move with it. Select the whole line (Ctrl+A) and press K to close up everything.</li>
+<li><b>Chữ mã máy</b>, <b>Chữ số công đoạn</b> (2D and 3D toolbars): label text size from 60 % to 250 % on the 2D plan, in 3D and in the exported image; remembered in the browser.</li>
 <li><b>Bám lưới</b> (snap): machines snap to the grid while dragged (hold Alt to release). <b>Lối đi sau lưng</b>: shows the aisle behind the operators.</li>
 <li>Button <span class="btn">◨</span> (top right) hides/shows the right panel for a bigger plan.</li></ul>
 <p>The <b>Kiểm tra</b> card lists errors (red) and warnings (yellow): overlapping machines, operator zone blocked by another machine, aisle behind the operator blocked, machine outside the line or in the walkway, code without size. Click a line to select the machine.</p>
@@ -105,7 +107,7 @@
 <section id="operators"><h2>7. Operators</h2>
 <ul>
 <li>Every machine has one operator by default (chair or standing spot). Presses and irons stand by default.</li>
-<li><b>One person runs several machines</b>: select the machines (Shift+click, the machine with the operator first) and press <span class="btn">👤</span> or W. The purple curved arrow is drawn <b>behind the operator's back</b> (not over the central table); far machines also show the walking distance. Press <span class="btn">👤</span> again to split.</li>
+<li><b>One person runs several machines</b>: select the machines (Shift+click, the machine with the operator first) and press <span class="btn">👤</span> or W. <b>One person only runs machines on one side of the central table</b> (never around the table or on the other line): machines selected on both sides are refused with a message. The purple curved arrow is drawn <b>behind the operator's back</b> (not over the central table); far machines also show the walking distance. Press <span class="btn">👤</span> again to split.</li>
 <li><span class="btn">👤 Bấm máy để bật/tắt người</span>: each click on a machine turns its operator on/off. <span class="btn">Tất cả có người</span>: operator on every machine.</li>
 <li><span class="btn">🧍↔🪑 Tất cả đứng / ngồi</span> and <span class="btn">Mặc định (ép, ủi đứng)</span>; per machine: 🧍 or S.</li></ul>
 <figure><a href="img/ls-share.png"><img src="img/ls-share.png" alt="One person, several machines" loading="lazy"></a><figcaption>One person runs several machines: purple arrows join the seat with the machines of that person.</figcaption></figure>
@@ -117,7 +119,7 @@
 <tr><td>1.5, 2, 3 … people</td><td>Rounded up; with fewer machines than people the extra people are helpers in the simulation.</td></tr>
 <tr><td>0 people</td><td>The machine has no own operator (done by someone else).</td></tr>
 <tr><td>A row without operation number but with people (an extra machine of the operation above)</td><td>Added to the operation above.</td></tr></table>
-<p>The message after placing the layout gives the people of the file and the machines run by a shared operator. After changing operators by hand, press <span class="btn">👥 Theo CN sắp xếp trong file</span> (operators card or WIP simulation page) to set them from the file again.</p>
+<p>Shared operators are only formed with machines <b>on the same side of the central table</b>: when the machines of a group stand on both sides, each side gets at least one person (the message gives the extra people). The automatic layout always keeps operations sharing people on one side. The message after placing the layout gives the people of the file and the machines run by a shared operator. After changing operators by hand, press <span class="btn">👥 Theo CN sắp xếp trong file</span> (operators card or WIP simulation page) to set them from the file again.</p>
 <figure><a href="img/ls-arrange.png"><img src="img/ls-arrange.png" alt="Arranged people" loading="lazy"></a><figcaption>WIP simulation page: column <b>CN sắp xếp (file)</b> next to the people on the plan; ⟨31·32⟩ = merged cell, two operations sharing the person.</figcaption></figure>
 </section>
 

@@ -26,6 +26,7 @@ input[type=checkbox]{padding:0}
 .wipbar{background:var(--panel);border-bottom:1px solid var(--line);padding:6px 14px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;flex:none;font-size:13px}
 button.link{background:none;border:0;padding:0 2px;color:var(--accent);text-decoration:underline;cursor:pointer;font:inherit;font-weight:700}
 button.danger{color:var(--bad);border-color:var(--bad)}
+.lblsz{display:inline-flex;gap:4px;align-items:center;font-size:12.5px}.lblsz select{padding:2px 4px}
 .chgtag{background:var(--badbg);color:var(--bad);border-color:var(--bad);font-weight:700}
 .rmop{padding:0 5px;font-size:11px;line-height:1.3;opacity:.55}.rmop:hover{opacity:1;background:var(--badbg);color:var(--bad)}
 header{background:var(--panel);border-bottom:1px solid var(--line);padding:7px 14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;flex:none}
@@ -141,6 +142,8 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
       <label><input type="checkbox" id="optWip"><span data-t="optWip">WIP</span></label>
       <label><input type="checkbox" id="optAisle"><span data-t="optAisle">Lối đi sau lưng</span></label>
       <span class="sep"></span>
+      <label class="lblsz" data-tt="lblTip"><span data-t="lblMc">Chữ mã máy</span><select id="lblMc"></select></label>
+      <label class="lblsz" data-tt="lblTip"><span data-t="lblOp">Chữ số công đoạn</span><select id="lblOp"></select></label>
       <button id="bWip2d" data-t="bWip2d" data-tt="bWip2dTip">⏱ Mô phỏng WIP</button>
       <button id="chgTag" class="chgtag" style="display:none"></button>
       <span class="sep"></span>
@@ -152,6 +155,8 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
       <label><input type="checkbox" id="opt3People"><span data-t="opt3People">Người vận hành</span></label>
       <label><input type="checkbox" id="opt3Labels"><span data-t="opt3Labels">Nhãn</span></label>
       <label><input type="checkbox" id="opt3Ruler"><span data-t="opt3Ruler">Thước (m)</span></label>
+      <label class="lblsz" data-tt="lblTip"><span data-t="lblMc">Chữ mã máy</span><select id="lblMc3"></select></label>
+      <label class="lblsz" data-tt="lblTip"><span data-t="lblOp">Chữ số công đoạn</span><select id="lblOp3"></select></label>
       <button id="bStandAll3" data-t="bStandAll">🧍↔🪑 Tất cả đứng / ngồi</button>
       <span class="sep"></span><button id="bPng3" onclick="exportImage()" data-t="bPng">Xuất ảnh</button>
       <span class="muted small" data-t="hint3d">Kéo chuột trái: xoay · chuột phải/Shift: di chuyển · lăn chuột: phóng to · bấm vào máy để chọn</span>

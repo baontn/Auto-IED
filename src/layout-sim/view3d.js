@@ -186,7 +186,7 @@ function machineLabel(code, op) {
   var tw = x.measureText(code).width; if (tw > 288) { fz = Math.max(30, Math.floor(fz * 288 / tw)); x.font = 'bold ' + fz + 'px Segoe UI, Arial'; }   // long names (Bàn giữa…) fit in the box
   x.fillText(code, 160, y0 + 58 + fz * 0.35);
   var tx = new THREE.CanvasTexture(cv); tx.anisotropy = 4;
-  var s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tx, depthTest: false })); s.scale.set(80, 80 * cv.height / cv.width, 1); s.renderOrder = 11; return s;
+  var s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tx, depthTest: false })); var k = op ? (LBL.mc + 2 * LBL.op) / 3 : LBL.mc; s.scale.set(80 * k, 80 * k * cv.height / cv.width, 1); s.renderOrder = 11; return s;
 }
 function smallSprite(txt, w) {
   var cv = document.createElement('canvas'); cv.width = 256; cv.height = 64; var x = cv.getContext('2d');

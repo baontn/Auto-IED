@@ -289,8 +289,11 @@ function homeOf(it) { var h = it && it.by ? itemById(it.by) : null; return h && 
 function satellitesOf(home) { return ST.items.filter(function (i) { return i.by === home.id && i.noOp; }); }
 function opToggleOne(it) { if (it.noOp) { delete it.noOp; delete it.by; } else { it.noOp = true; delete it.by; } ST.items.forEach(function (i) { if (i.by === it.id && it.noOp) delete i.by; }); }
 /* one operator for all the given machines (the first one keeps the operator), or split them when they already share one */
+/* side of a machine: its line (main / branch) and its side of that line's central table; one person never crosses the table or the walkway */
+function sideKey(it) { var z = it.zone === 'branch' ? 'branch' : 'main', ct = centerOf(z); return z + (ct ? (it.y < ct.y ? '|T' : '|B') : ''); }
 function opShare(list) {
   if (list.length < 2) { if (list[0]) opToggleOne(list[0]); return 'one'; }
+  if (list.some(function (i) { return sideKey(i) !== sideKey(list[0]); })) return 'cross';
   var home = list.filter(function (i) { return !i.noOp; })[0] || list[0], ids = list.map(function (i) { return i.id; });
   var grouped = list.every(function (i) { return i === home ? !i.noOp : (i.noOp && i.by === home.id); });
   if (grouped) { list.forEach(function (i) { delete i.noOp; delete i.by; }); return 'split'; }
