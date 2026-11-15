@@ -192,12 +192,28 @@ function xlOpsTables(ws, layoutOps) {
       var sc = hit * 10 + n; if (n >= 2 && sc > bs) { bs = sc; best = c; }
     }
     if (best < 0) continue;
+    // "Arrange. Optr / CN sắp xếp": a cell merged over several operations = those operations done together by that many people
+    var merges = ws['!merges'] || [], last = null, idx = 0;
+    var mergeAt = function (row) { for (var i = 0; i < merges.length; i++) { var m = merges[i]; if (m.s.c <= optrC && m.e.c >= optrC && m.s.r <= row && m.e.r >= row && m.e.r > m.s.r) return m; } return null; };
     for (rr = r + 1; rr <= Math.min(r1, r + 200); rr++) {
       if (/total|tổng/i.test(v(rr, 0)) || /^total|^subtotal/i.test(v(rr, samC - 1))) break;
       var op = num(rr, best), sam = num(rr, samC);
-      if (!isFinite(op) || !isFinite(sam) || sam <= 0) continue;
+      if (!isFinite(op) || !isFinite(sam) || sam <= 0) {
+        // a row without operation number but with arranged people (an extra machine of the operation above): added to it
+        if (!isFinite(op) && last && optrC >= 0 && !mergeAt(rr) && isFinite(num(rr, optrC)) && num(rr, optrC) > 0 && out[last] && out[last].ag === last) out[last].ar = Math.round((out[last].ar + num(rr, optrC)) * 1000) / 1000;
+        continue;
+      }
       var k = String(op);
-      if (!out[k]) out[k] = { sam: Math.round(sam * 10000) / 10000, mc: mcC >= 0 ? v(rr, mcC).split(/\s/)[0] : '', optr: optrC >= 0 ? num(rr, optrC) : null };
+      if (out[k]) continue;
+      var arr = null, ag = k;
+      if (optrC >= 0) {
+        var mg = mergeAt(rr);
+        if (mg) { ag = 'm' + XLSX.utils.encode_range(mg); arr = num(mg.s.r, optrC); }
+        else arr = num(rr, optrC);
+        if (!isFinite(arr)) arr = mg ? 0 : null;
+      }
+      out[k] = { sam: Math.round(sam * 10000) / 10000, mc: mcC >= 0 ? v(rr, mcC).split(/\s/)[0] : '', optr: arr, ar: arr, ag: ag, ai: idx++ };
+      last = k;
     }
     r += 2;
   }

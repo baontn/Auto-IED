@@ -112,11 +112,12 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
 <body>
 <header>
   <a id="bHome" class="homebtn" href="../index.html" data-t="bHome" data-tt="bHomeTip">← IE Tools</a>
-  <h1 data-t="appTitle">Mô phỏng bố trí chuyền</h1><span class="tag t-info">v2.2</span>
+  <h1 data-t="appTitle">Mô phỏng bố trí chuyền</h1><span class="tag t-info">v2.3</span>
   <nav class="tabs"><button data-tab="proj" data-t="tabProj">🏠 Dự án</button><button data-tab="plan" class="on" data-t="tabPlan">Mặt bằng 2D</button><button data-tab="3d" data-t="tab3d">3D</button><button data-tab="sim" data-t="tabSim">⏱ Mô phỏng WIP</button><button data-tab="lib" data-t="tabLib">Thư viện máy</button></nav>
   <div class="hr">
     <button id="bNew" data-t="bNew">Mới</button><button id="bOpen" data-t="bOpen">Mở…</button><button id="bSave" class="primary" data-t="bSave" data-tt="bSaveTip">Lưu</button>
     <button id="libChip" class="chipbtn"></button>
+    <a id="bMan" class="homebtn" href="../manual/layout-sim.html" target="_blank" data-tt="bManTip">📖</a>
     <button id="bSide" data-tt="bSideTip">◨</button>
     <select id="lang" aria-label="Language"><option value="vi">VI</option><option value="en">EN</option></select>
   </div>
@@ -171,6 +172,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
     <div class="card"><h3 data-t="opCardTitle">Người vận hành</h3>
       <div class="muted small" data-t="opCardHelp">Một người làm nhiều máy: chọn các máy rồi bấm 👤.</div>
       <div class="btns"><button id="bOpMode" data-t="bOpMode">👤 Bấm máy để bật/tắt người</button><button id="bOpAll" data-t="bOpAll">Tất cả có người</button></div>
+      <div class="btns"><button id="bArr" data-t="bArr" data-tt="bArrTip">👥 Theo CN sắp xếp trong file</button></div>
       <div class="btns"><button id="bStandAll2" data-t="bStandAll">🧍↔🪑 Tất cả đứng / ngồi</button><button id="bStandDef" data-t="bStandDef">Mặc định (ép, ủi đứng)</button></div>
     </div>
     <div class="card"><h3 data-t="selTitle">Đang chọn</h3><div id="selBody"></div></div>
@@ -209,7 +211,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
       <label class="f"><span data-t="smWarn">Cảnh báo WIP từ (sp)</span><input id="smWarn" type="number" min="1" step="1" value="30"></label>
     </div>
     <label class="ck" style="margin-top:8px"><input type="checkbox" id="smWarm" checked><span data-t="smWarm">Bỏ qua thời gian khởi động (chuyền chạy ổn định: mô phỏng trước một ca để hàng lấp đầy chuyền)</span></label>
-    <div class="btns"><button id="smRun" class="primary" data-t="smRun">▶ Chạy mô phỏng</button><button id="smToPlan" data-t="smToPlan">Xem WIP trên mặt bằng</button></div>
+    <div class="btns"><button id="smRun" class="primary" data-t="smRun">▶ Chạy mô phỏng</button><button id="smToPlan" data-t="smToPlan">Xem WIP trên mặt bằng</button><button id="smArr" data-t="bArr" data-tt="bArrTip">👥 Theo CN sắp xếp trong file</button></div>
     <div id="smSrc" class="small" style="margin-top:6px"></div>
   </div>
   <div class="card"><h3 data-t="simRes">Kết quả</h3><div id="smRes" class="small"></div></div>
@@ -342,6 +344,10 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 var LANG = 'vi';
 var I18N = {
   vi: {
+    bManTip: 'Hướng dẫn sử dụng',
+    bArr: '👥 Theo CN sắp xếp trong file', bArrTip: 'Đặt người vận hành trên mặt bằng theo cột "Arrange. Optr / CN sắp xếp" của file layout: ô gộp nhiều công đoạn = các công đoạn đó do chung người làm; các công đoạn 0.5 người được ghép với nhau đến đủ 1 người',
+    arrDone: 'Người vận hành theo CN sắp xếp trong file ({0} người): {1} máy làm chung người, {2} máy không có người riêng.', arrNone: 'File layout không có cột "Arrange. Optr / CN sắp xếp" (mở lại file layout Excel).',
+    simArr: 'CN sắp xếp (file)', simArrTip: 'Số người sắp xếp trong file layout (cột Arrange. Optr / CN sắp xếp)', simArrGrp: 'Ô gộp: các công đoạn {0} do chung người làm',
     bHome: '← IE Tools', bHomeTip: 'Về trang chủ IE Tools (mặt bằng đang làm được giữ trong trình duyệt)',
     bAddOp: '+ Máy theo công đoạn', bAddOpTip: 'Nhập số công đoạn: chương trình lấy đúng loại máy của công đoạn đó trong layout; cũng dùng để bỏ công đoạn', bAddMcTip: 'Nhập mã máy, hoặc số công đoạn để thêm máy của công đoạn đó',
     bWip2d: '⏱ Mô phỏng WIP', bWip2dTip: 'Chạy mô phỏng WIP ngay trên mặt bằng; khi thanh kết quả đang mở, mỗi lần sửa mặt bằng sẽ tự chạy lại',
@@ -459,6 +465,10 @@ var I18N = {
     ocrIgnored: 'bỏ qua', ocrLegend: 'Viền xanh lá: đọc đúng mã · cam: đã sửa theo thư viện · đỏ: không có trong thư viện · xanh dương: số công đoạn · xám: bỏ qua. Đưa chuột vào ô để xem chữ đọc được.'
   },
   en: {
+    bManTip: 'User guide',
+    bArr: '👥 As arranged in the file', bArrTip: 'Set the operators on the plan from the column "Arrange. Optr / CN sắp xếp" of the layout file: a cell merged over several operations = done by the same people; operations of 0.5 person are joined until one full person',
+    arrDone: 'Operators as arranged in the file ({0} people): {1} machines run by a shared operator, {2} machines without own operator.', arrNone: 'The layout file has no column "Arrange. Optr / CN sắp xếp" (open the layout Excel file again).',
+    simArr: 'Arranged (file)', simArrTip: 'People arranged in the layout file (column Arrange. Optr / CN sắp xếp)', simArrGrp: 'Merged cell: operations {0} done by the same people',
     bHome: '← IE Tools', bHomeTip: 'Back to the IE Tools home page (the current plan is kept in this browser)',
     bAddOp: '+ Machine by operation', bAddOpTip: 'Type an operation number: the machine type of that operation in the layout is used; also removes an operation', bAddMcTip: 'Type a machine code, or an operation number to add that operation\'s machine',
     bWip2d: '⏱ WIP simulation', bWip2dTip: 'Run the WIP simulation on the plan; while the result bar is open it runs again after every change',
@@ -585,6 +595,7 @@ function applyI18n() {
   document.documentElement.lang = LANG;
   document.querySelectorAll('[data-t]').forEach(function (e) { e.textContent = t(e.dataset.t); });
   document.querySelectorAll('[data-tt]').forEach(function (e) { e.title = t(e.dataset.tt); });
+  var man = document.getElementById('bMan'); if (man) man.href = '../manual/layout-sim' + (LANG === 'en' ? '.en' : '') + '.html';
   document.querySelectorAll('[data-tp]').forEach(function (e) { e.placeholder = t(e.dataset.tp); });
   document.title = t('appTitle') + ' · Layout Sim';
 }
@@ -2392,12 +2403,28 @@ function xlOpsTables(ws, layoutOps) {
       var sc = hit * 10 + n; if (n >= 2 && sc > bs) { bs = sc; best = c; }
     }
     if (best < 0) continue;
+    // "Arrange. Optr / CN sắp xếp": a cell merged over several operations = those operations done together by that many people
+    var merges = ws['!merges'] || [], last = null, idx = 0;
+    var mergeAt = function (row) { for (var i = 0; i < merges.length; i++) { var m = merges[i]; if (m.s.c <= optrC && m.e.c >= optrC && m.s.r <= row && m.e.r >= row && m.e.r > m.s.r) return m; } return null; };
     for (rr = r + 1; rr <= Math.min(r1, r + 200); rr++) {
       if (/total|tổng/i.test(v(rr, 0)) || /^total|^subtotal/i.test(v(rr, samC - 1))) break;
       var op = num(rr, best), sam = num(rr, samC);
-      if (!isFinite(op) || !isFinite(sam) || sam <= 0) continue;
+      if (!isFinite(op) || !isFinite(sam) || sam <= 0) {
+        // a row without operation number but with arranged people (an extra machine of the operation above): added to it
+        if (!isFinite(op) && last && optrC >= 0 && !mergeAt(rr) && isFinite(num(rr, optrC)) && num(rr, optrC) > 0 && out[last] && out[last].ag === last) out[last].ar = Math.round((out[last].ar + num(rr, optrC)) * 1000) / 1000;
+        continue;
+      }
       var k = String(op);
-      if (!out[k]) out[k] = { sam: Math.round(sam * 10000) / 10000, mc: mcC >= 0 ? v(rr, mcC).split(/\s/)[0] : '', optr: optrC >= 0 ? num(rr, optrC) : null };
+      if (out[k]) continue;
+      var arr = null, ag = k;
+      if (optrC >= 0) {
+        var mg = mergeAt(rr);
+        if (mg) { ag = 'm' + XLSX.utils.encode_range(mg); arr = num(mg.s.r, optrC); }
+        else arr = num(rr, optrC);
+        if (!isFinite(arr)) arr = mg ? 0 : null;
+      }
+      out[k] = { sam: Math.round(sam * 10000) / 10000, mc: mcC >= 0 ? v(rr, mcC).split(/\s/)[0] : '', optr: arr, ar: arr, ag: ag, ai: idx++ };
+      last = k;
     }
     r += 2;
   }
@@ -3012,7 +3039,9 @@ function renderSim() {
     (B.hc && B.hc !== B.onPlan ? ' · ' + esc(t(B.hc > B.onPlan ? 'simHCplus' : 'simHCminus', [B.rows.filter(function (x) { return x.adj; }).map(function (x) { return x.op + ' ' + (x.adj > 0 ? '+' : '') + x.adj; }).join(', ')])) : '') +
     (missing.length ? '<div class="t-warn tagline">⚠ ' + esc(t('simNoSam', [missing.join(', ')])) + '</div>' : '');
   var maxCap = Math.max.apply(null, B.rows.map(function (x) { return isFinite(x.cap) ? x.cap : 0; }).concat([1]));
-  $('smTable').innerHTML = '<table><tr><th>' + esc(t('simOp')) + '</th><th>' + esc(t('simMc')) + '</th><th class="n">SAM</th><th class="n">' + esc(t('simSt')) + '</th><th class="n">' + esc(t('simPeople')) + '</th><th class="n">' + esc(t('simEffCol')) + '</th><th class="n">' + esc(t('simCap')) + '</th><th style="width:24%">' + esc(t('simLoad')) + '</th>' +
+  var arr = null;   // people arranged in the layout file, per operation (with the operations sharing the cell)
+  if (hasArr()) { arr = {}; arrGroups().forEach(function (g) { g.ops.forEach(function (o) { arr[o] = g; }); }); }
+  $('smTable').innerHTML = '<table><tr><th>' + esc(t('simOp')) + '</th><th>' + esc(t('simMc')) + '</th><th class="n">SAM</th><th class="n">' + esc(t('simSt')) + '</th><th class="n">' + esc(t('simPeople')) + '</th>' + (arr ? '<th class="n" title="' + esc(t('simArrTip')) + '">' + esc(t('simArr')) + '</th>' : '') + '<th class="n">' + esc(t('simEffCol')) + '</th><th class="n">' + esc(t('simCap')) + '</th><th style="width:24%">' + esc(t('simLoad')) + '</th>' +
     (r ? '<th class="n">' + esc(t('simWipEnd')) + '</th><th class="n">' + esc(t('simWipMax')) + '</th>' : '') + '</tr>' +
     B.rows.map(function (x) {
       var bn = B.bottleneck.indexOf(x.op) >= 0, rr = rowsBy[x.op], wip = rr ? (rr.wipEnd != null ? rr.wipEnd : 0) + (rr.feedEnd || 0) : 0;
@@ -3022,6 +3051,7 @@ function renderSim() {
       var need = i.target || B.capMin, load = isFinite(x.cap) && x.cap > 0 && need ? Math.round(100 * need / x.cap) : null;
       return '<tr' + cls + ' data-op="' + esc(x.op) + '"><td><button class="rmop" data-rmop="' + esc(x.op) + '" title="' + esc(t('simRmOp')) + '">✕</button> <b>' + esc(x.op) + '</b>' + (comb[x.op] ? ' <span class="tag t-info" title="' + esc(t('simComb', [comb[x.op].join(', ')])) + '">⇄ ' + esc(comb[x.op].join(', ')) + '</span>' : '') + (bn ? ' <span class="tag t-bad">' + esc(t('simBn')) + '</span>' : '') + '</td><td>' + esc(x.mc) + '</td>' +
         '<td class="n"><input style="width:84px" type="number" step="0.0001" min="0" data-sam="' + esc(x.op) + '" value="' + (x.sam || '') + '"></td><td class="n">' + x.stations + '</td><td class="n">' + x.people.toFixed(2) + (x.adj ? ' <span class="tag ' + (x.adj > 0 ? 't-info' : 't-warn') + '">' + (x.adj > 0 ? '+' : '') + x.adj + '</span>' : '') + '</td>' +
+        (arr ? '<td class="n">' + (arr[x.op] ? arr[x.op].v + (arr[x.op].ops.length > 1 ? ' <span class="muted small" title="' + esc(t('simArrGrp', [arr[x.op].ops.join(', ')])) + '">⟨' + esc(arr[x.op].ops.join('·')) + '⟩</span>' : '') : '<span class="muted">—</span>') + '</td>' : '') +
         '<td class="n"><input style="width:62px" type="number" step="1" min="5" max="150" data-eff="' + esc(x.op) + '" value="' + (x.effOwn ? Math.round(x.eff * 100) : '') + '" placeholder="' + Math.round(p.eff * 100) + '"></td>' +
         '<td class="n">' + (isFinite(x.cap) ? Math.round(x.cap) : '∞') + '</td><td><div class="bar"><i style="width:' + w + '%;background:' + (bn || (load && load > 100) ? 'var(--bad)' : 'var(--accent)') + '"></i>' + (takt ? '<b style="left:' + Math.min(100, Math.round(100 * (i.target || 0) / maxCap)) + '%"></b>' : '') +
         '<span class="barT">' + (isFinite(x.cap) ? Math.round(x.cap) + ' ' + esc(t('simPcsH')) : '∞') + (load != null ? ' · ' + esc(t('simLoadPct', [load])) : '') + '</span></div></td>' +
@@ -3063,6 +3093,55 @@ function initSim() {
     setTab('plan'); onSelChange(); render2d();
   });
   $('smToPlan').onclick = function () { OPT.wip = true; $('optWip').checked = true; setTab('plan'); };
+}
+
+/* ---------- people arranged in the layout file ("Arrange. Optr / CN sắp xếp") ---------- */
+/* groups of operations: a merged cell = one group; value = people for the whole group */
+function arrGroups() {
+  var g = {}, ops = ST.ops || {};
+  Object.keys(ops).forEach(function (op) {
+    var o = ops[op]; if (o.ar == null || !isFinite(o.ar)) return;
+    var k = o.ag || op; g[k] = g[k] || { key: k, ops: [], v: o.ar, ai: o.ai != null ? o.ai : 1e6 };
+    g[k].ops.push(op); g[k].ai = Math.min(g[k].ai, o.ai != null ? o.ai : 1e6);
+  });
+  return Object.keys(g).map(function (k) { return g[k]; }).sort(function (a, b) { return a.ai - b.ai; });
+}
+function hasArr() { return arrGroups().length > 0; }
+/* operator units: a group with 1 person or more = its own people (rounded up); groups of less than one person
+   (0.5 …) are joined in table order until one full person (the IE's "0.5 + 0.5" arrangement) */
+function arrUnits() {
+  var out = [], pool = null;
+  arrGroups().forEach(function (g) {
+    var v = Math.round(g.v * 1000) / 1000;
+    if (v <= 0) { out.push({ ops: g.ops.slice(), p: 0, v: 0 }); return; }
+    if (v >= 1) { out.push({ ops: g.ops.slice(), p: Math.ceil(v - 1e-6), v: v }); return; }
+    if (pool && pool.v + v <= 1.0001) { pool.ops = pool.ops.concat(g.ops); pool.v = Math.round((pool.v + v) * 1000) / 1000; return; }
+    pool = { ops: g.ops.slice(), p: 1, v: v, pooled: true }; out.push(pool);
+  });
+  return out;
+}
+/* set the operators on the plan as arranged in the file: machines of a unit with fewer people than machines
+   are run by the same person (neighbouring machines together); a unit with 0 people has no own operator */
+function applyArrangement() {
+  var units = arrUnits(); if (!units.length) return null;
+  var done = {}, shared = 0, none = 0;
+  function mcsOf(ops) {
+    return ST.items.filter(function (it) { return it.kind === 'mc' && !done[it.id] && ops.indexOf(opsOf(it)[0]) >= 0; })
+      .sort(function (a, b) { return (a.zone === 'branch' ? 0 : 1) - (b.zone === 'branch' ? 0 : 1) || Math.round(a.y / 60) - Math.round(b.y / 60) || a.x - b.x; });
+  }
+  units.forEach(function (u) { mcsOf(u.ops).forEach(function (it) { delete it.noOp; delete it.by; }); });
+  units.forEach(function (u) {
+    var M = mcsOf(u.ops); M.forEach(function (it) { done[it.id] = 1; });
+    if (!M.length) return;
+    if (u.p === 0) { M.forEach(function (it) { it.noOp = true; }); none += M.length; return; }
+    if (M.length <= u.p) return;
+    var k = u.p, at = 0;
+    for (var i = 0; i < k; i++) {
+      var n = Math.round((M.length - at) / (k - i)), chunk = M.slice(at, at + n); at += n;
+      if (chunk.length > 1) { opShare(chunk); shared += chunk.length - 1; }
+    }
+  });
+  return { units: units.length, shared: shared, none: none, people: units.reduce(function (a, u) { return a + u.p; }, 0), total: Math.round(units.reduce(function (a, u) { return a + u.v; }, 0) * 100) / 100 };
 }
 </script>
 <script>/* changes.js: changes against the imported layout file (machines per operation), add machines by operation,
@@ -3467,11 +3546,13 @@ function pasteGo() {
   if (PASTE.meta && (replace || !(ST.info || {}).style)) ST.info = Object.assign({}, ST.info, PASTE.meta);
   if (PASTE.ops && Object.keys(PASTE.ops).length) ST.ops = Object.assign(replace ? {} : (ST.ops || {}), PASTE.ops);   // SAM per operation from the layout file
   if (PASTE.seq && PASTE.seq.length) ST.seqText = PASTE.seq.map(function (q) { return (q.name ? q.name + ': ' : '') + q.text; }).join('\n');
+  else if (replace) ST.seqText = '';   // a new layout without sequence: the previous layout's sequence does not apply
   if ($('pasteFit').checked) { var bb = bbox(ST.items); ST.line.length = Math.ceil((bb.x1 + 60) / 10) * 10; ST.line.width = Math.ceil((bb.y1 + 60) / 10) * 10; }
+  var arrRes = PASTE.ops && Object.keys(PASTE.ops).some(function (k) { return PASTE.ops[k].ar != null; }) ? applyArrangement() : null;   // people as arranged in the file
   if (replace) setBase([(PASTE.meta || {}).file, (PASTE.meta || {}).sheet].filter(Boolean).join(' / ') || t('chgBasePaste')); else addToBase(items);   // reference for "Thay đổi so với file layout"
   SEL = items.map(function (i) { return i.id; });
   $('dlgPaste').close(); changed(); fitView(); if (TAB === '3d') view3dReset(false);
-  toast(t('pasteDone', [items.filter(function (i) { return i.kind === 'mc'; }).length]));
+  toast(t('pasteDone', [items.filter(function (i) { return i.kind === 'mc'; }).length]) + (arrRes ? ' ' + t('arrDone', [arrRes.total, arrRes.shared, arrRes.none]) : ''));
 }
 
 /* ---------- line set-up (standard machine units + central table) ---------- */
@@ -3770,6 +3851,10 @@ function startApp() {
   runChecks(); renderSide();
   requestAnimationFrame(function () { fitView(); firstRun(); });
   initSim(); initChanges();
+  ['bArr', 'smArr'].forEach(function (id) { $(id).onclick = function () {
+    var r = applyArrangement(); if (!r) { toast(t('arrNone'), true); return; }
+    SIMR = null; changed(); if (TAB === 'sim') renderSim(); toast(t('arrDone', [r.total, r.shared, r.none]));
+  }; });
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () { render2d(); if (TAB === '3d') rebuild3d(); });
 }
 </script>

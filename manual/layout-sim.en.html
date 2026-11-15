@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Layout Sim: User guide</title><link rel="icon" href="../icon.png"><link rel="stylesheet" href="manual.css"></head><body>
+<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>Layout Sim v2.3: User guide</b><a href="layout-sim.html" title="Tiếng Việt" onclick="try{localStorage.setItem('ie_site_lang','vi')}catch(e){}">VI</a><a href="../index.html">‹ Home</a></header>
+<div class="wrap">
+<nav class="toc"><b>Contents</b>
+<a href="#intro">1. Introduction</a>
+<a href="#start">2. First use</a>
+<a href="#library">3. Machine library</a>
+<a href="#line">4. Line set-up</a>
+<a href="#import">5. Bringing a layout onto the plan</a>
+<a href="#arrange">6. Arranging machines on the 2D plan</a>
+<a href="#operators">7. Operators</a>
+<a class="sub" href="#arranged">People arranged in the file</a>
+<a href="#ops">8. Add machines by operation, remove operations</a>
+<a href="#changes">9. Changes against the layout file</a>
+<a href="#sequence">10. Sequence and flow distance</a>
+<a href="#sim">11. WIP simulation</a>
+<a href="#view3d">12. 3D view</a>
+<a href="#projects">13. Saving and opening projects</a>
+<a href="#export">14. Export image, print</a>
+<a href="#keys">15. Keyboard shortcuts</a>
+<a href="#trouble">16. Troubleshooting</a>
+</nav>
+<main>
+<section id="intro"><h1>Layout Sim</h1>
+<p class="lead">Line layout simulator to scale: bring a layout from the Excel file onto the plan, arrange machines, check operator zones, measure the flow distance of the work, simulate WIP and view in 3D. Runs in Chrome or Edge and sends no data anywhere.</p>
+<h2>1. Introduction</h2>
+<table><tr><th>Task</th><th>Where</th></tr>
+<tr><td>Bring a style's layout onto the line (layout Excel file, pasted Excel range or pasted picture)</td><td>Tab <b>Mặt bằng 2D</b> (2D plan), button <span class="btn">📋 Dán layout</span></td></tr>
+<tr><td>Arrange and turn machines, operators, standing/sitting, collision and aisle checks</td><td>Tabs <b>Mặt bằng 2D</b> and <b>3D</b></td></tr>
+<tr><td>Add/remove machines by operation, track the changes to make in the layout file</td><td>Button <span class="btn">+ Máy theo công đoạn</span>, card <b>Thay đổi so với file layout</b></td></tr>
+<tr><td>Line balance, output, WIP per operation</td><td>Tab <b>⏱ Mô phỏng WIP</b> or the button <span class="btn">⏱ Mô phỏng WIP</span> on the 2D plan</td></tr>
+<tr><td>Save and open projects</td><td>Tab <b>🏠 Dự án</b>, button <span class="btn">Lưu</span> (Ctrl+S)</td></tr>
+<tr><td>Machine library (sizes, models)</td><td>Tab <b>Thư viện máy</b></td></tr></table>
+<div class="note">The screenshots show the Vietnamese interface (switch to English with the language box at the top right) and use <b>synthetic demo data</b> (a library of 11 machine codes, a demo layout), not company data.</div>
+</section>
+
+<section id="start"><h2>2. First use</h2>
+<ol>
+<li>Open <code>layout-sim/LayoutSim.html</code> from the IE Tools home page (button <span class="btn">Open Layout Sim</span>) in Edge or Chrome. The file <code>ocr-engine.js</code> must stay next to the HTML file (used to read pasted pictures).</li>
+<li>The box <b>Nơi lưu dự án</b> (where to save projects) appears: press <span class="btn">📁 Chọn thư mục…</span>, choose the folder for the layout projects (on the PC or a shared folder), press <span class="btn">Allow</span>. You may press <span class="btn">Để sau</span> (later).</li>
+<li>Press the library chip at the top right (<span class="btn">📚 … codes · … models</span>) and choose the company machine library Excel file (section 3).</li>
+<li>Press <span class="btn">Thiết lập chuyền theo số máy…</span> to enter the line size (section 4).</li></ol>
+<div class="ok">Next time the project folder, the machine library and the current plan are remembered (kept in the browser). The button <span class="btn">← IE Tools</span> at the top left goes back to the home page; the current plan is kept.</div>
+</section>
+
+<section id="library"><h2>3. Machine library</h2>
+<p>The company Excel file (e.g. <code>Machine_Upload_Template_Master.xlsx</code>) has:</p>
+<ul><li>sheet <code>Machine_Needle</code>: <code>Machine_Code</code> (machine group code, e.g. 1SLM, 2CSM, BT1M), <code>Machine_Name</code>, <code>Machine_Name_VN</code>, <code>Dimension</code> = length*width of the machine table in cm (without chair and operator);</li>
+<li>the machine list sheet: <code>Sewing Name</code>, <code>Sewing brand</code>, <code>Sewingmodel</code>.</li></ul>
+<p>The file is only read on this PC and never sent anywhere. A code without size is drawn with a default size and flagged in the <b>Kiểm tra</b> (checks) card.</p>
+<figure><a href="img/ls-lib.png"><img src="img/ls-lib.png" alt="Machine library" loading="lazy"></a><figcaption>Tab <b>Thư viện máy</b>: codes (size, 3D family) and the table <b>machine model → machine code</b> for IE Tech to confirm; the mapping can be exported / imported as Excel.</figcaption></figure>
+</section>
+
+<section id="line"><h2>4. Line set-up</h2>
+<p>Press <span class="btn">Thiết lập chuyền theo số máy…</span> in the <b>Chuyền</b> (line) card.</p>
+<table><tr><th>Field</th><th>Meaning</th></tr>
+<tr><td>Số máy chuẩn, Máy chuẩn (cm)</td><td>Line length in standard machine units; default 1 unit = 107 cm.</td></tr>
+<tr><td>Bàn giữa rộng (cm)</td><td>Central table: units × 107 cm long, 30 cm wide by default.</td></tr>
+<tr><td>Đầu chuyền, Cuối chuyền (cm)</td><td>Free space at the start and the end of the line (input table, packing…).</td></tr>
+<tr><td>Chuyền rộng (cm)</td><td>Empty = computed from the central table, machines, operator zones and aisles.</td></tr>
+<tr><td>Số công nhân (HC)</td><td>Headcount of the line used by the WIP simulation. Empty = workers from the layout file.</td></tr>
+<tr><td>Có chuyền nhánh</td><td>Branch line next to the main line (depends on the style): units, central table, position above/below, walkway between the lines (100 cm by default), offset from the start of the main line.</td></tr></table>
+<figure><a href="img/ls-linesetup.png"><img src="img/ls-linesetup.png" alt="Line set-up" loading="lazy"></a><figcaption>A line of 8 standard units with a branch line of 6 units and a 1 m walkway.</figcaption></figure>
+<p><span class="btn">Công thái học…</span> (ergonomics): sizes of the sitting/standing operator zone, chair, aisle behind the operator, gaps between machine rows.</p>
+</section>
+
+<section id="import"><h2>5. Bringing a layout onto the plan</h2>
+<p>Press <span class="btn">📋 Dán layout</span>. Three ways:</p>
+<ol>
+<li><b>Open the layout Excel file</b> (most exact): press <span class="btn">📂 Mở file layout Excel…</span>, choose the <code>.xlsx</code>/<code>.xlsm</code>. The machine-code + operation-number shapes are read, or a layout written in cells (a row of machine codes with the operation numbers in the row above/below), on every sheet. Pick the layout in the list (sheet, rows, machines). With a branch line, pick a second layout for the branch.</li>
+<li><b>Paste an Excel range</b>: copy the layout range in Excel and paste it (Ctrl+V) into the text box.</li>
+<li><b>Paste a picture</b>: paste a screenshot of the layout; the text is recognised on the PC (no network). Check the codes read.</li></ol>
+<p>At the same time the file gives: the <b>style</b> (cells B3, D3, D4, B11, sheet/file name, as in IE Báo cáo máy), workers, SAM, OBD version, target output, efficiency, the <b>operation table</b> (SAM, machine type, column <b>Arrange. Optr / CN sắp xếp</b>) and the sequence <code>31=&gt;32=&gt;…</code>.</p>
+<figure><a href="img/ls-paste.png"><img src="img/ls-paste.png" alt="Paste layout" loading="lazy"></a><figcaption>Preview: machine rows, operator side (top/bottom) and line (main/branch) of each row; codes missing in the library are flagged. Press <span class="btn">Đưa vào mặt bằng</span> (place on the plan).</figcaption></figure>
+<ul><li><b>Thay layout hiện tại</b> (replace): the old machines are removed (the central tables stay). Untick to add to the current plan.</li>
+<li><b>Chỉnh kích thước chuyền theo layout</b>: line size from the layout when no line was set up.</li></ul>
+<figure><a href="img/ls-2d.png"><img src="img/ls-2d.png" alt="2D plan" loading="lazy"></a><figcaption>Layout placed on the line: machine code on the table, big operation number, operator zone (dashed blue), central table and input table. Click a machine for the turn / operator / standing / delete buttons.</figcaption></figure>
+</section>
+
+<section id="arrange"><h2>6. Arranging machines on the 2D plan</h2>
+<ul>
+<li>Drag a machine to move it; drag the background to pan; mouse wheel to zoom. Shift+drag on the background selects several machines.</li>
+<li>Click a machine: floating buttons <span class="btn">⟲</span> <span class="btn">⟳</span> <span class="btn">⇅ 180°</span> <span class="btn">👤</span> <span class="btn">🧍</span> <span class="btn">🗑</span>. The <b>Đang chọn</b> (selection) card edits code, operation, position and angle.</li>
+<li>Box <b>Code / op.</b> + <span class="btn">+ Máy</span>: add a machine by code, or type an operation number to add that operation's machine (section 8). <span class="btn">+ Thêm</span>: input table, QC table, table, pillar, trolley, obstacle.</li>
+<li><b>Bám lưới</b> (snap): machines snap to the grid while dragged (hold Alt to release). <b>Lối đi sau lưng</b>: shows the aisle behind the operators.</li>
+<li>Button <span class="btn">◨</span> (top right) hides/shows the right panel for a bigger plan.</li></ul>
+<p>The <b>Kiểm tra</b> card lists errors (red) and warnings (yellow): overlapping machines, operator zone blocked by another machine, aisle behind the operator blocked, machine outside the line or in the walkway, code without size. Click a line to select the machine.</p>
+<figure><a href="img/ls-check.png"><img src="img/ls-check.png" alt="Checks" loading="lazy"></a><figcaption>Machines breaking a rule are red on the plan and listed in the checks card.</figcaption></figure>
+</section>
+
+<section id="operators"><h2>7. Operators</h2>
+<ul>
+<li>Every machine has one operator by default (chair or standing spot). Presses and irons stand by default.</li>
+<li><b>One person runs several machines</b>: select the machines (Shift+click, the machine with the operator first) and press <span class="btn">👤</span> or W. Neighbouring machines are joined by a curved arrow; far machines also show the walking distance. Press <span class="btn">👤</span> again to split.</li>
+<li><span class="btn">👤 Bấm máy để bật/tắt người</span>: each click on a machine turns its operator on/off. <span class="btn">Tất cả có người</span>: operator on every machine.</li>
+<li><span class="btn">🧍↔🪑 Tất cả đứng / ngồi</span> and <span class="btn">Mặc định (ép, ủi đứng)</span>; per machine: 🧍 or S.</li></ul>
+<figure><a href="img/ls-share.png"><img src="img/ls-share.png" alt="One person, several machines" loading="lazy"></a><figcaption>One person runs several machines: purple arrows join the seat with the machines of that person.</figcaption></figure>
+<h3 id="arranged">7.1 People arranged in the layout file</h3>
+<p>When a layout Excel file is opened, the column <b>Arrange. Optr / CN sắp xếp</b> of the operation table is read and <b>the operators on the plan are set from it automatically</b>:</p>
+<table><tr><th>In the file</th><th>On the plan</th></tr>
+<tr><td>A cell merged over several operations (e.g. 31, 33, 34 merged = 1)</td><td>Those operations share the people written in the cell. With more machines than people, neighbouring machines are given to the same person (arrows).</td></tr>
+<tr><td>Operations of 0.5 person (e.g. 46 = 0.5, 47 = 0.5)</td><td>Operations of less than one person are joined in table order up to one person: one person does 46 and 47.</td></tr>
+<tr><td>1.5, 2, 3 … people</td><td>Rounded up; with fewer machines than people the extra people are helpers in the simulation.</td></tr>
+<tr><td>0 people</td><td>The machine has no own operator (done by someone else).</td></tr>
+<tr><td>A row without operation number but with people (an extra machine of the operation above)</td><td>Added to the operation above.</td></tr></table>
+<p>The message after placing the layout gives the people of the file and the machines run by a shared operator. After changing operators by hand, press <span class="btn">👥 Theo CN sắp xếp trong file</span> (operators card or WIP simulation page) to set them from the file again.</p>
+<figure><a href="img/ls-arrange.png"><img src="img/ls-arrange.png" alt="Arranged people" loading="lazy"></a><figcaption>WIP simulation page: column <b>CN sắp xếp (file)</b> next to the people on the plan; ⟨31·32⟩ = merged cell, two operations sharing the person.</figcaption></figure>
+</section>
+
+<section id="ops"><h2>8. Add machines by operation, remove operations</h2>
+<p>Press <span class="btn">+ Máy theo công đoạn</span> and type the operation number:</p>
+<ul>
+<li>The machine type of that operation in the layout is found (e.g. 45 → 2CSM) with the number of machines on the plan. Enter <b>machines to add</b>, press <span class="btn">+ Thêm máy</span>: the new machines go to a free place next to the machines of the same operation (or below the plan when there is no room: drag them into place).</li>
+<li>An operation that is neither on the plan nor in the file: type a machine code.</li>
+<li><span class="btn">🗑 Bỏ công đoạn</span> (remove operation): its machines are deleted; a combined machine (e.g. “37/42”) only loses that operation number and keeps the other one. The operation also leaves the sequence and the simulation. The ✕ at the start of an operation row in the simulation table does the same.</li></ul>
+<figure><a href="img/ls-opdlg.png"><img src="img/ls-opdlg.png" alt="Add machines by operation" loading="lazy"></a><figcaption>Adding 2 machines for operation 45: machine 2CSM found.</figcaption></figure>
+</section>
+
+<section id="changes"><h2>9. Changes against the layout file</h2>
+<p>When a layout is placed from a file, the <b>machines per operation</b> are recorded as the reference. Every difference afterwards (machines added/deleted, operations removed, operation of a machine changed) is listed in the card <b>Thay đổi so với file layout</b> (top of the right panel) and by the red tag <span class="tag t-bad">⚠ N changes against the layout file</span> in the toolbar.</p>
+<div class="warn"><b>The layout Excel file MUST be edited with these changes</b> before the layout is used on the line (Layout Check and IE Báo cáo máy read the layout file, not Layout Sim).</div>
+<ul>
+<li>Table: operation, machine code, machines in the file, machines now, difference. Click a row to select those machines.</li>
+<li><span class="btn">📋 Sao chép danh sách</span>: copy the list for the person who edits the layout.</li>
+<li>Removed operations: ↺ restores them (machines back at their old place).</li>
+<li>When the layout file has been edited: press <span class="btn">✓ Đã sửa file layout: đặt mốc mới</span> (new reference).</li></ul>
+<figure><a href="img/ls-changes.png"><img src="img/ls-changes.png" alt="Changes against the layout file" loading="lazy"></a><figcaption>Two 2CSM added for operation 45 and one 1SLA for 47: change card and toolbar tag; the WIP result bar above the plan.</figcaption></figure>
+</section>
+
+<section id="sequence"><h2>10. Sequence and flow distance</h2>
+<ul>
+<li>The sequence is read from the layout file (<code>Work Flow: 31=&gt;32=&gt;…</code>) or entered with <span class="btn">Nhập trình tự…</span>: one group per line, the group name then the operations joined by <code>=&gt;</code>. The end of each sub-assembly goes to the first operation of the assembly group (the line with QC/PACKING or named “lắp ráp” / assembly).</li>
+<li>Tick <b>Đường đi</b> to draw the flow; the card <b>Trình tự &amp; đường đi bán thành phẩm</b> gives the total distance (m) and per group.</li>
+<li><span class="btn">💡 Tìm gợi ý cải tiến</span>: long moves, operators walking far between two machines, swapping two machines to shorten the flow (button <span class="btn">Áp dụng</span>).</li></ul>
+<figure><a href="img/ls-branch.png"><img src="img/ls-branch.png" alt="Branch line" loading="lazy"></a><figcaption>Main line, 1 m walkway and branch line; the flow of each group in its own colour.</figcaption></figure>
+</section>
+
+<section id="sim"><h2>11. WIP simulation</h2>
+<p>Tab <b>⏱ Mô phỏng WIP</b>:</p>
+<ul>
+<li><b>SAM</b> per operation from the operation table of the layout file; editable in the table.</li>
+<li><b>Efficiency (%)</b>: general efficiency (from the file when present); the <b>Hiệu suất (%)</b> column sets it per operation (empty = general).</li>
+<li><b>Input</b>: always available, or at an input rate (pcs/h, default = target of the file). <b>Bundle</b>: pieces per bundle. <b>Skip the warm-up</b>: the line is already running steadily.</li>
+<li><b>People</b>: the operators on the plan (one person on several machines splits the time by SAM). When the line <b>HC</b> (line set-up, or workers of the file) differs from the people on the plan, extra people help the slowest operation (+1) and missing people are taken where most capacity is spare (−1).</li>
+<li>Operations combined on one machine (“37/42”) are done by one person, marked ⇄ in the table.</li>
+<li>Without a sequence: the work flows from the lowest to the highest operation number.</li></ul>
+<p>Press <span class="btn">▶ Chạy mô phỏng</span>: simulated output, capacity of the slowest operation (bottleneck), line efficiency, total WIP, WIP at the end and maximum per operation, suggestions (bottleneck, WIP piles, operations with little work). Capacity bars show pcs/h and load; above 100 % the capacity is not enough.</p>
+<figure><a href="img/ls-sim.png"><img src="img/ls-sim.png" alt="WIP simulation" loading="lazy"></a><figcaption>Simulation result and line balance per operation; red row = bottleneck, yellow row = WIP above the warning level.</figcaption></figure>
+<div class="ok">The <span class="btn">⏱ Mô phỏng WIP</span> button in the <b>2D plan</b> toolbar runs the simulation right on the plan: a result bar (output and change against the last run, bottleneck, efficiency, WIP) and WIP labels on the machines. While the bar is open the simulation runs again after every change of the plan (machines added, operators changed…). Click an operation number on the bar to select its machines; <span class="btn">Chi tiết</span> opens the simulation page.</div>
+</section>
+
+<section id="view3d"><h2>12. 3D view</h2>
+<p>Tab <b>3D</b>: machines built by machine family and real size, sitting/standing operators, machine-code and operation labels, a meter ruler. Drag the background to rotate, right button/Shift to pan, wheel to zoom; drag a machine to move it; R/F/W/S as on the 2D plan.</p>
+<figure><a href="img/ls-3d.png"><img src="img/ls-3d.png" alt="3D" loading="lazy"></a><figcaption>3D view with labels and the meter ruler.</figcaption></figure>
+</section>
+
+<section id="projects"><h2>13. Saving and opening projects</h2>
+<ul>
+<li><span class="btn">Lưu</span> or Ctrl+S: writes a <code>.layout.json</code> file into the chosen project folder (the same file on later saves, no download). File name from the style and line name.</li>
+<li>Tab <b>🏠 Dự án</b>: current project (style, source file/sheet, workers, SAM, OBD), <span class="btn">Lưu thành dự án mới…</span> (save as new), <span class="btn">➕ Dự án mới</span>, <span class="btn">📂 Mở file dự án…</span>, the files of the project folder and the recent projects of this browser.</li>
+<li>A project file carries the sizes of the machine codes used, so it opens on a PC without the library.</li></ul>
+<figure><a href="img/ls-proj.png"><img src="img/ls-proj.png" alt="Projects" loading="lazy"></a><figcaption>Projects tab: project folder and recent projects.</figcaption></figure>
+</section>
+
+<section id="export"><h2>14. Export image, print</h2>
+<p><span class="btn">Xuất ảnh</span>: high-resolution PNG (about 3 px/cm, big labels) for the mechanics; in the 3D tab the current view. <span class="btn">In</span>: print the plan.</p>
+</section>
+
+<section id="keys"><h2>15. Keyboard shortcuts</h2>
+<table><tr><th>Key</th><th>Action</th></tr>
+<tr><td>R / Shift+R</td><td>Turn 90° right / left</td></tr>
+<tr><td>F</td><td>Turn 180°</td></tr>
+<tr><td>W</td><td>Operator: on/off (one machine) or one person for the selected machines</td></tr>
+<tr><td>S</td><td>Standing / sitting</td></tr>
+<tr><td>Delete</td><td>Delete</td></tr>
+<tr><td>Ctrl+D</td><td>Duplicate</td></tr>
+<tr><td>Arrows (Shift)</td><td>Move 1 cm (10 cm)</td></tr>
+<tr><td>Ctrl+Z / Ctrl+Y</td><td>Undo / redo</td></tr>
+<tr><td>Ctrl+S</td><td>Save the project</td></tr></table>
+</section>
+
+<section id="trouble"><h2>16. Troubleshooting</h2>
+<table><tr><th>Symptom</th><th>What to do</th></tr>
+<tr><td>Machines drawn with the default size, warning “no size”</td><td>Choose the machine library Excel file (📚 chip); the code must be in sheet <code>Machine_Needle</code>.</td></tr>
+<tr><td>No layout found in the Excel file</td><td>The layout must be drawn with shapes (machine code + operation number) or written in cells; otherwise copy the layout range and paste it, or paste a picture.</td></tr>
+<tr><td>The simulation reports operations without SAM</td><td>Enter the SAM in the table of the WIP simulation page.</td></tr>
+<tr><td>Simulated people differ from the people on the plan</td><td>The line HC (line set-up or workers of the file) is used; see the information line at the top of the WIP simulation page.</td></tr>
+<tr><td>Cannot save into the folder</td><td>Projects tab → <span class="btn">Chọn thư mục…</span>, press Allow.</td></tr>
+<tr><td>Old interface after an update</td><td>Press Ctrl+F5.</td></tr></table>
+</section>
+</main></div></body></html>

@@ -81,10 +81,18 @@ def make_layout_xlsx(path):
 def make_cells_xlsx(path):
     """a layout written in cells (rows of codes with operation numbers above / below), plus a code table that is not a layout"""
     wb = Workbook(); ws = wb.active; ws.title = 'Initial layout'
-    ws['A3'] = 'STYLE No /Mã hàng'; ws['E3'] = 'XYZ26-00002-1102XX'; ws['F3'] = 'TL OPTR /Tổng số công nhân:'; ws['H3'] = 12
+    ws['A3'] = 'STYLE No /Mã hàng'; ws['E3'] = 'XYZ26-00002-1102XX'; ws['F3'] = 'TL OPTR /Tổng số công nhân:'; ws['H3'] = 6
     top = [('31', '1SLA'), ('32', '3OLM'), ('33/34', '2CSM'), ('35', 'BT1M')]; bot = [('1SLA', '36'), ('3OLM', '37'), ('BT1M', '97')]
     for k, (o, c) in enumerate(top): ws.cell(row=19, column=18 + k, value=o); ws.cell(row=20, column=18 + k, value=c)
     for k, (c, o) in enumerate(bot): ws.cell(row=22, column=19 + k, value=c); ws.cell(row=23, column=19 + k, value=o)
+    # operation table with SAM and "Arrange. Optr / CN sắp xếp" (merged cell = shared operator, 0.5 + 0.5 = one operator)
+    ws.append([]); r0 = 30
+    for k, h in enumerate(['SQU', 'Op No.', 'Description', 'M/c Type', 'SAM/SMV', 'Calc.Optr', 'Arrange. Optr\nCN sắp xếp']): ws.cell(row=r0, column=1 + k, value=h)
+    rows = [(31, '1SLA', 0.5, 1), (32, '3OLM', 0.4, None), (33, '2CSM', 0.3, 0.5), (34, '2CSM', 0.3, 0.5), (35, 'BT1M', 0.6, 1), (36, '1SLA', 0.5, 0.5), (37, '3OLM', 0.5, 0.5), (97, 'BT1M', 0.4, 1), (None, '2CSM', None, 0.5)]
+    for k, (o, c, sam, ar) in enumerate(rows):
+        for j, v in enumerate([o, o, 'op', c, sam, None, ar]): ws.cell(row=r0 + 1 + k, column=1 + j, value=v)
+    ws.merge_cells(start_row=r0 + 1, start_column=7, end_row=r0 + 2, end_column=7)
+    ws.cell(row=r0 + 1 + len(rows), column=1, value='Total Sew')
     m = wb.create_sheet('Machine')
     for k in range(10): m.append(['1SLA', '1SLM', '1SLM', 'note'])
     wb.save(path)
@@ -238,7 +246,9 @@ async def main():
         # branch line + layout Excel file with shapes + operation sequence + flow suggestions
         xl = os.path.join(tmp, 'layout.xlsx'); make_layout_xlsx(xl)
         await pg.evaluate("()=>{ST.items=[];ST.seqText='';changed()}")
-        await pg.click('#bLineSetup'); await pg.fill('#lsUnits', '8'); await pg.check('#lsBr'); await pg.fill('#lsBUnits', '6'); await pg.dispatch_event('#lsBUnits', 'input'); await pg.click('#lsOk')
+        await pg.click('#bLineSetup'); await pg.fill('#lsUnits', '8'); await pg.check('#lsBr'); await pg.fill('#lsBUnits', '6'); await pg.dispatch_event('#lsBUnits', 'input')
+        if SHOTS: await pg.locator('#dlgLine').screenshot(path=SHOTS + '/ls-linesetup.png')
+        await pg.click('#lsOk')
         z = await pg.evaluate("()=>lineZones().map(z=>z.id+':'+z.y+':'+z.W)")
         check(len(z) == 3 and z[1].startswith('walk:') and z[1].endswith(':100'), 'branch line above, 1 m walkway ' + str(z))
         await pg.click('#bPaste'); await pg.set_input_files('#fileXl', xl); await pg.wait_for_timeout(600)
@@ -252,6 +262,7 @@ async def main():
         r = await pg.evaluate("()=>{const R=simRun({hours:8,eff:0.8,bundle:5,rate:0,warm:true});return [R.bottleneck.join(','),Math.round(R.capMin),Math.round(R.outH),R.rows.find(x=>x.op=='45').wipEnd]}")
         check(r[0] == '45' and r[1] == 30 and abs(r[2] - r[1]) <= 3 and r[3] > 0, 'simulation: bottleneck 45 at 30 pcs/h, output %d, WIP before 45: %s' % (r[2], r[3]))
         await pg.click('[data-tab="sim"]'); await pg.click('#smRun'); await pg.wait_for_timeout(400)
+        if SHOTS: await pg.screenshot(path=SHOTS + '/ls-sim.png', full_page=True)
         check('45' in await pg.inner_text('#smRes'), 'simulation tab shows the bottleneck')
         # efficiency per operation (table input), numbers on the capacity bars, headcount of the line
         await pg.fill('#smTable input[data-eff="45"]', '100'); await pg.press('#smTable input[data-eff="45"]', 'Tab'); await pg.wait_for_timeout(300)
@@ -275,6 +286,7 @@ async def main():
         await pg.click('#chgBody [data-chg="accept"]'); await pg.wait_for_timeout(150)
         check(await pg.evaluate("()=>baseChanges().length") == 0 and not await pg.is_visible('#chgTag'), 'layout file edited: new reference, no change left')
         await pg.click('#bAddOp'); await pg.fill('#odQty', '2'); await pg.fill('#odOp', '45')
+        if SHOTS: await pg.locator('#dlgOp').screenshot(path=SHOTS + '/ls-opdlg.png')
         check('2CSM' in await pg.inner_text('#odPrev'), 'operation 45 -> machine 2CSM found')
         await pg.click('#odAdd'); await pg.wait_for_timeout(150)
         r = await pg.evaluate("()=>{const m=ST.items.filter(i=>i.kind=='mc'&&opsOf(i).join()=='45');const bad=issueIds('bad');return [m.length, m.every(i=>i.code=='2CSM'), ISSUES.filter(x=>/isOverlap|isSeat/.test(x.k)&&x.ids.some(id=>m.some(i=>i.id==id))).length, baseChanges().map(chgText).join('|')]}")
@@ -309,8 +321,20 @@ async def main():
         cx = os.path.join(tmp, 'cells.xlsx'); make_cells_xlsx(cx)
         await pg.evaluate("()=>{openPaste()}"); await pg.set_input_files('#fileXl', cx); await pg.wait_for_timeout(700)
         r = await pg.evaluate("()=>[document.querySelectorAll('#xlPick option').length, PASTE.nMc, PASTE.rows.map(r=>r.side+':'+r.cells.map(c=>c.code+'/'+c.op).join(',')).join(' | '), PASTE.meta.style, PASTE.meta.optr]")
-        check(r == [1, 7, 'top:1SLA/31,3OLM/32,2CSM/33/34,BT1M/35 | bottom:1SLA/36,3OLM/37,BT1M/97', 'XYZ26-00002-1102(XX)', '12'], 'cell layout read (code table ignored), style and workers ' + str(r))
-        await pg.evaluate("()=>document.getElementById('dlgPaste').close()")
+        check(r == [1, 7, 'top:1SLA/31,3OLM/32,2CSM/33/34,BT1M/35 | bottom:1SLA/36,3OLM/37,BT1M/97', 'XYZ26-00002-1102(XX)', '6'], 'cell layout read (code table ignored), style and workers ' + str(r))
+        # people arranged in the file: merged 31+32 = 1 person, 33/34 0.5+0.5, 36 + 37 0.5 + 0.5 = one person, 97 1 + 0.5 (extra machine row)
+        r = await pg.evaluate("()=>[PASTE.ops['31'].ar, PASTE.ops['32'].ar, PASTE.ops['31'].ag==PASTE.ops['32'].ag, PASTE.ops['97'].ar, PASTE.ops['36'].ar]")
+        check(r == [1, 1, True, 1.5, 0.5], '"Arrange. Optr / CN sắp xếp" read with merged cells and extra machine rows ' + str(r))
+        await pg.click('#pasteGo'); await pg.wait_for_timeout(300)
+        r = await pg.evaluate("()=>[arrUnits().map(u=>u.ops.join('·')+':'+u.p).join(' '), simOperators({31:1,32:1,33:1,34:1,35:1,36:1,37:1,97:1}).map(o=>o.ops.join('+')).sort().join(' ')]")
+        check(r[0] == '31·32:1 33·34:1 35:1 36·37:1 97:2' and r[1] == '31+32 33+34 35 36+37 97', 'operators on the plan as arranged in the file (31+32 and 36+37 share one operator) ' + str(r))
+        check('CN sắp xếp' in await pg.inner_text('#toast'), 'import message tells the arrangement was applied')
+        await pg.click('#bOpAll'); await pg.click('#bArr'); await pg.wait_for_timeout(100)
+        check(await pg.evaluate("()=>simOperators({31:1,32:1,33:1,34:1,35:1,36:1,37:1,97:1}).length") == 5, 'button "Theo CN sắp xếp trong file" applies it again')
+        await pg.click('[data-tab="sim"]'); await pg.wait_for_timeout(200)
+        check('⟨31·32⟩' in await pg.inner_text('#smTable'), 'simulation table shows the arranged people of the file')
+        if SHOTS: await pg.screenshot(path=SHOTS + '/ls-arrange.png')
+        await pg.click('[data-tab="plan"]')
         # projects: style field, save (download fallback + recent list in the browser), new project, reopen from recent
         await pg.fill('#lnStyle', 'ABC26-00001-1101(XX)'); await pg.dispatch_event('#lnStyle', 'change')
         # in-memory folder instead of the real folder picker (headless)
@@ -323,6 +347,7 @@ async def main():
         fsk = await pg.evaluate('()=>Object.keys(window.__FS)'); print('  folder:', fsk, 'downloads:', len(downloads))
         check(len(fsk) == 1 and fsk[0].startswith('ABC26-00001-1101(XX)') and not downloads, 'save asks the folder once, then saves into it (no download, same file)')
         check('ABC26-00001-1101(XX)' in await pg.inner_text('#pjRecent'), 'saved project listed in recent projects')
+        if SHOTS: await pg.screenshot(path=SHOTS + '/ls-proj.png')
         nmc = await pg.evaluate("()=>ST.items.filter(i=>i.kind=='mc').length")
         pg.once('dialog', lambda d: asyncio.ensure_future(d.accept()))
         await pg.click('#pjNew'); await pg.wait_for_timeout(200); await pg.evaluate("()=>document.getElementById('dlgLine').close()")
