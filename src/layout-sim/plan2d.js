@@ -102,6 +102,7 @@ function planMarkup(o) {
   labels.forEach(function (l) {
     var it = l.it, S = shapes(it), halo = '" fill="#14181f" stroke="rgba(255,255,255,.8)" paint-order="stroke" text-anchor="middle" font-weight="700" pointer-events="none"';
     if (it.kind !== 'mc') {
+      if (it.zone === 'boxes') return;   // the boxes: only the area label "Khu thùng"
       var f0 = fs * 0.9 * LBL.mc;
       h.push('<text x="' + n1(it.x) + '" y="' + n1(it.y - f0 * 0.1) + '" font-size="' + f0 + '" stroke-width="' + f0 * 0.18 + halo + '>' + esc(it.name || '') + '</text>' +
         '<text x="' + n1(it.x) + '" y="' + n1(it.y + f0 * 0.85) + '" font-size="' + f0 * 0.75 + '" stroke-width="' + f0 * 0.15 + halo + '>' + esc(it.L + '×' + it.W) + '</text>');

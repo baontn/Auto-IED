@@ -322,7 +322,7 @@ function rebuild3d() {
       }
     } else {
       g = buildObject(it);
-      if (V3.labels && it.name) { var sp2 = machineLabel(it.name, ''); sp2.position.set(0, (it.H || 75) + 45, 0); g.add(sp2); }
+      if (V3.labels && it.name && it.zone !== 'boxes') { var sp2 = machineLabel(it.name, ''); sp2.position.set(0, (it.H || 75) + 45, 0); g.add(sp2); }
     }
     var sel = SEL.indexOf(it.id) >= 0;
     if (sel || bad[it.id] || warn[it.id]) g.add(rectLoop(d.L + 6, d.W + 6, sel ? '#1f6feb' : bad[it.id] ? '#e5484d' : '#e0a100', 1));

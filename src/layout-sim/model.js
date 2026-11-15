@@ -265,7 +265,7 @@ function setupLine(o) {
   var oldF = zoneById('finish'), oldB = zoneById('boxes');
   if (fin) {
     var fL = Math.round(20 + tW + tL), fx = mL + gap;   // QC, packing tables and boxes side by side, touching
-    zones.push({ id: 'finish', x: fx, y: mainY, L: fL, W: mW }, { id: 'boxes', x: fx + fL, y: mainY, L: Math.round(bxW + 20), W: mW });
+    zones.push({ id: 'finish', x: fx, y: mainY, L: fL, W: mW }, { id: 'boxes', x: fx + fL, y: mainY, L: Math.round(3 * bxW), W: mW });   // 3 box strips across the line width
   }
   if (inL > 0) zones.push({ id: 'input', x: inX, y: mainY, L: inL, W: mW });
   if (br) {
@@ -308,7 +308,7 @@ function placeFinish(oldF, oldB) {
   if (!ST.items.some(function (it) { return it.zone === 'boxes'; })) {
     var bw = L.boxW;
     [['boxY', '#f2c230'], ['boxR', '#e04848'], ['boxG', '#3fae6a']].forEach(function (b, k) {
-      ST.items.push({ id: uid(), kind: 'obj', zone: 'boxes', name: t(b[0]), L: bw, W: bw, H: 60, x: n1(Bz.x + bw / 2), y: n1(cy + (k - 1) * bw), rot: 0, color: b[1] });   // stacked, touching each other and the packing tables
+      ST.items.push({ id: uid(), kind: 'obj', zone: 'boxes', name: '', box: b[0], L: bw, W: Bz.W, H: 60, x: n1(Bz.x + bw / 2 + k * bw), y: n1(Bz.y + Bz.W / 2), rot: 0, color: b[1] });   // upright strips, as long as the line is wide, side by side
     });
   }
 }
