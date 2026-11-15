@@ -251,7 +251,7 @@ function setupLine(o) {
     var wx0 = Math.min(0, brX), wx1 = Math.max(mL, brX + bL);
     zones.push({ id: 'walk', x: wx0, y: br.pos === 'top' ? bW : mW, L: wx1 - wx0, W: walk }, { id: 'branch', x: brX, y: brY, L: bL, W: bW });
   }
-  ST.line = { name: o.name || '', length: Math.max(mL, brX + bL), width: mW + (br ? walk + bW : 0), fixed: true, units: o.units, unit: o.unit, tableW: o.tableW, start: o.start, end: o.end,
+  ST.line = { name: o.name || '', length: Math.max(mL, brX + bL), width: mW + (br ? walk + bW : 0), fixed: true, units: o.units, unit: o.unit, tableW: o.tableW, start: o.start, end: o.end, hc: o.hc || 0,
     mainWidth: o.width || 0, zones: zones, branch: br || null };
   function center(zid, x, y, L, W) {
     var c = centerOf(zid), dx = 0, dy = 0;

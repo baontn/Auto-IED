@@ -63,7 +63,8 @@ label.f.row input{width:80px}
 #paneSim .card{margin-bottom:12px}
 .grid6{display:grid;grid-template-columns:repeat(6,minmax(110px,1fr));gap:8px;margin-top:8px}
 @media (max-width:900px){.grid6{grid-template-columns:1fr 1fr}}
-.bar{position:relative;height:10px;background:var(--line);border-radius:5px;min-width:80px}.bar i{position:absolute;left:0;top:0;bottom:0;border-radius:5px}.bar b{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--warn)}
+.barT{position:absolute;left:6px;top:-1px;font-size:11px;font-weight:700;line-height:20px;color:var(--text);text-shadow:0 0 3px var(--panel),0 0 3px var(--panel);white-space:nowrap}
+.bar{position:relative;height:18px;background:var(--line);border-radius:5px;min-width:80px}.bar i{position:absolute;left:0;top:0;bottom:0;border-radius:5px}.bar b{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--warn)}
 tr.bn td{background:var(--badbg)}tr.wip td{background:var(--warnbg)}tr[data-op]{cursor:pointer}
 .kpis{display:flex;flex-wrap:wrap;gap:8px}.kpis div{background:var(--sel);border-radius:10px;padding:8px 12px;min-width:120px}.kpis span{display:block;font-size:12px;color:var(--muted)}.kpis b{font-size:22px}.kpis i{font-style:normal;font-size:12px;color:var(--muted);margin-left:4px}
 ul.sug{margin:8px 0 0 18px;padding:0}ul.sug li{margin-bottom:3px}
@@ -251,6 +252,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
       <label class="f"><span data-t="lsStart">Đầu chuyền (cm)</span><input id="lsStart" type="number" min="0" step="10"></label>
       <label class="f"><span data-t="lsEnd">Cuối chuyền (cm)</span><input id="lsEnd" type="number" min="0" step="10"></label>
       <label class="f"><span data-t="lsWidth">Chuyền rộng (cm)</span><input id="lsWidth" type="number" min="50" step="10"></label>
+      <label class="f"><span data-t="lsHC">Số công nhân (HC)</span><input id="lsHC" type="number" min="0" step="1"></label>
     </div>
     <div class="calc" id="lsCalc"></div>
     <label class="ck" style="margin-top:10px"><input type="checkbox" id="lsBr"><b data-t="lsBr">Có chuyền nhánh (chuyền phụ bên cạnh, tùy mã hàng)</b></label>

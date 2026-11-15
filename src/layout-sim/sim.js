@@ -13,7 +13,20 @@ function simLines() {
   ST.items.forEach(function (it) { if (it.kind === 'mc') opsOf(it).forEach(function (o) { if (/^\d/.test(o)) all[o] = 1; }); });
   if (sq.lines.length) {
     var lines = sq.lines.map(function (ln) { return { name: ln.name, ops: ln.ops.map(function (o) { return o.replace(/^0+(?=\d)/, ''); }).filter(function (o) { return /^\d/.test(o); }) }; }).filter(function (l) { return l.ops.length; });
-    return { lines: lines, asm: Math.max(0, Math.min(sq.asm, lines.length - 1)), fromSeq: true };
+    // operations combined on one machine (e.g. "37/42") but missing from the sequence: done right after their partner
+    var inSeq = {}, added = [];
+    lines.forEach(function (l) { l.ops.forEach(function (o) { inSeq[o] = 1; }); });
+    ST.items.forEach(function (it) {
+      if (it.kind !== 'mc') return;
+      var ops = opsOf(it).filter(function (o) { return /^\d/.test(o); }); if (ops.length < 2) return;
+      ops.forEach(function (o) {
+        if (inSeq[o]) return;
+        var prev = null; ops.forEach(function (q) { if (q !== o && inSeq[q]) prev = q; }); if (!prev) return;
+        lines.some(function (l) { var k = l.ops.lastIndexOf(prev); if (k < 0) return false; l.ops.splice(k + 1, 0, o); return true; });
+        inSeq[o] = 1; added.push(o);
+      });
+    });
+    return { lines: lines, asm: Math.max(0, Math.min(sq.asm, lines.length - 1)), fromSeq: true, added: added };
   }
   return { lines: [{ name: t('simDefLine'), ops: Object.keys(all).sort(function (a, b) { return simNum(a) - simNum(b); }) }], asm: 0, fromSeq: false };
 }
@@ -29,22 +42,45 @@ function simOperators(opsSet) {
   return out;
 }
 /* static balance: share of each operator's time per operation (proportional to SAM), capacity in pieces / hour */
+/* efficiency of one operation: its own value (%, edited in the table) or the general one */
+function effOf(op, eff) { var o = (ST.ops || {})[op]; return o && o.eff > 0 ? o.eff / 100 : eff; }
+/* headcount of the line: line set-up, else the workers of the layout file, else 0 (= operators as on the plan) */
+function lineHC() { var h = parseFloat(ST.line.hc); if (h > 0) return Math.round(h); var f = parseFloat((ST.info || {}).optr); return f > 0 ? Math.round(f) : 0; }
+/* static balance: share of each operator's time per operation (proportional to SAM), capacity in pieces / hour.
+   With a headcount: extra people help the slowest operations, missing people are taken from the operations with most spare capacity */
 function simBalance(eff) {
-  var L = simLines(), set = {}, rows = [];
+  var L = simLines(), set = {}, st = {};
   L.lines.forEach(function (l) { l.ops.forEach(function (o) { set[o] = 1; }); });
-  var opers = simOperators(set), share = {}, st = {};
-  opers.forEach(function (p) {
-    var tot = p.ops.reduce(function (a, o) { return a + (samOf(o) || 0.0001); }, 0);
-    p.ops.forEach(function (o) { share[o] = (share[o] || 0) + (samOf(o) || 0.0001) / tot; });
-  });
   ST.items.forEach(function (it) { if (it.kind === 'mc') opsOf(it).forEach(function (o) { if (set[o]) (st[o] = st[o] || []).push(it); }); });
-  Object.keys(set).sort(function (a, b) { return simNum(a) - simNum(b); }).forEach(function (o) {
-    var sam = samOf(o), sh = share[o] || 0;
-    rows.push({ op: o, sam: sam, mc: ((ST.ops || {})[o] || {}).mc || (st[o] && st[o][0] ? st[o][0].code : ''), stations: (st[o] || []).length, its: st[o] || [], people: sh, cap: sam > 0 && sh > 0 ? sh * 60 * eff / sam : (sh > 0 ? Infinity : 0) });
-  });
+  var opers = simOperators(set), onPlan = opers.length, adj = {};
+  function calc() {
+    var share = {}, cnt = {};
+    opers.forEach(function (p) {
+      var tot = p.ops.reduce(function (a, o) { return a + (samOf(o) || 0.0001); }, 0);
+      p.ops.forEach(function (o) { share[o] = (share[o] || 0) + (samOf(o) || 0.0001) / tot; cnt[o] = (cnt[o] || 0) + 1; });
+    });
+    var rows = Object.keys(set).sort(function (a, b) { return simNum(a) - simNum(b); }).map(function (o) {
+      var sam = samOf(o), sh = share[o] || 0, ef = effOf(o, eff);
+      return { op: o, sam: sam, eff: ef, effOwn: !!(((ST.ops || {})[o] || {}).eff > 0), mc: ((ST.ops || {})[o] || {}).mc || (st[o] && st[o][0] ? st[o][0].code : ''), stations: (st[o] || []).length, its: st[o] || [],
+        people: sh, nOper: cnt[o] || 0, adj: adj[o] || 0, cap: sam > 0 && sh > 0 ? sh * 60 * ef / sam : (sh > 0 ? Infinity : 0) };
+    });
+    return rows;
+  }
+  var hc = lineHC(), rows = calc(), guard = 0;
+  while (hc > 0 && opers.length < hc && guard++ < 200) {   // helpers for the slowest operation
+    var lo = rows.filter(function (r) { return r.sam > 0 && r.stations > 0; }).sort(function (a, b) { return a.cap - b.cap; })[0]; if (!lo) break;
+    opers.push({ ops: [lo.op], it: lo.its[0], helper: true }); adj[lo.op] = (adj[lo.op] || 0) + 1; rows = calc();
+  }
+  while (hc > 0 && opers.length > hc && guard++ < 400) {   // fewer people: remove one where the most capacity is spare
+    var byOp = {}; rows.forEach(function (r) { byOp[r.op] = r; });
+    var cand = opers.map(function (p, k) { return { k: k, p: p }; }).filter(function (x) { return x.p.ops.length === 1 && byOp[x.p.ops[0]] && byOp[x.p.ops[0]].nOper > 1; })
+      .sort(function (a, b) { var ca = byOp[a.p.ops[0]], cb = byOp[b.p.ops[0]]; return (cb.cap * (cb.nOper - 1) / cb.nOper) - (ca.cap * (ca.nOper - 1) / ca.nOper); })[0];
+    if (!cand) break;
+    var op0 = cand.p.ops[0]; opers.splice(cand.k, 1); adj[op0] = (adj[op0] || 0) - 1; rows = calc();
+  }
   // operations without a machine / operator pass pieces straight through: not a bottleneck
   var finite = rows.filter(function (r) { return r.sam > 0 && r.people > 0; }), capMin = finite.length ? Math.min.apply(null, finite.map(function (r) { return r.cap; })) : 0;
-  return { L: L, rows: rows, opers: opers, capMin: capMin, bottleneck: finite.filter(function (r) { return r.cap === capMin; }).map(function (r) { return r.op; }) };
+  return { L: L, rows: rows, opers: opers, onPlan: onPlan, hc: hc, capMin: capMin, bottleneck: finite.filter(function (r) { return r.cap === capMin; }).map(function (r) { return r.op; }) };
 }
 /* event simulation. p = {hours, eff (0-1), bundle, rate (pcs/h, 0 = push)} */
 function simRun(p) {
@@ -91,7 +127,7 @@ function simRun(p) {
       if (w.busy) return;
       var best = null;
       w.ops.forEach(function (o) { if (!node[o].sam || !(avail(o) > 0)) return; if (best === null || rank[o] > rank[best]) best = o; });
-      if (best) { take(best); w.busy = true; w.job = best; var d = bundle * node[best].sam / p.eff; w.until = t + d; w.busyT += Math.max(0, Math.min(t + d, TT) - Math.max(t, W0)); }
+      if (best) { take(best); w.busy = true; w.job = best; var d = bundle * node[best].sam / effOf(best, p.eff); w.until = t + d; w.busyT += Math.max(0, Math.min(t + d, TT) - Math.max(t, W0)); }
     });
     var next = nextArr;
     opers.forEach(function (w) { if (w.busy && w.until < next) next = w.until; });
@@ -133,18 +169,25 @@ function renderSim() {
   var p = simParams(), B = simBalance(p.eff), r = SIMR, rowsBy = {};
   if (r) r.rows.forEach(function (x) { rowsBy[x.op] = x; });
   var takt = i.target ? 60 / i.target : 0, missing = B.rows.filter(function (x) { return !x.sam; }).map(function (x) { return x.op; });
-  $('smSrc').innerHTML = esc(B.L.fromSeq ? t('simSrcSeq', [B.L.lines.length]) : t('simSrcDef')) + ' · ' + esc(t('simOpers', [B.opers.length])) +
+  var comb = {};   // operations done on the same machine (layout label "37/42")
+  ST.items.forEach(function (it) { if (it.kind !== 'mc') return; var ops = opsOf(it); if (ops.length > 1) ops.forEach(function (o) { ops.forEach(function (q) { if (q !== o) { comb[o] = comb[o] || []; if (comb[o].indexOf(q) < 0) comb[o].push(q); } }); }); });
+  $('smSrc').innerHTML = esc(B.L.fromSeq ? t('simSrcSeq', [B.L.lines.length]) : t('simSrcDef')) + (B.L.added && B.L.added.length ? ' · ' + esc(t('simCombAdd', [B.L.added.join(', ')])) : '') + ' · ' + esc(B.hc ? t('simHC', [B.hc, B.onPlan]) : t('simOpers', [B.opers.length])) +
+    (B.hc && B.hc !== B.onPlan ? ' · ' + esc(t(B.hc > B.onPlan ? 'simHCplus' : 'simHCminus', [B.rows.filter(function (x) { return x.adj; }).map(function (x) { return x.op + ' ' + (x.adj > 0 ? '+' : '') + x.adj; }).join(', ')])) : '') +
     (missing.length ? '<div class="t-warn tagline">⚠ ' + esc(t('simNoSam', [missing.join(', ')])) + '</div>' : '');
   var maxCap = Math.max.apply(null, B.rows.map(function (x) { return isFinite(x.cap) ? x.cap : 0; }).concat([1]));
-  $('smTable').innerHTML = '<table><tr><th>' + esc(t('simOp')) + '</th><th>' + esc(t('simMc')) + '</th><th class="n">SAM</th><th class="n">' + esc(t('simSt')) + '</th><th class="n">' + esc(t('simPeople')) + '</th><th class="n">' + esc(t('simCap')) + '</th><th style="width:22%">' + esc(t('simLoad')) + '</th>' +
+  $('smTable').innerHTML = '<table><tr><th>' + esc(t('simOp')) + '</th><th>' + esc(t('simMc')) + '</th><th class="n">SAM</th><th class="n">' + esc(t('simSt')) + '</th><th class="n">' + esc(t('simPeople')) + '</th><th class="n">' + esc(t('simEffCol')) + '</th><th class="n">' + esc(t('simCap')) + '</th><th style="width:24%">' + esc(t('simLoad')) + '</th>' +
     (r ? '<th class="n">' + esc(t('simWipEnd')) + '</th><th class="n">' + esc(t('simWipMax')) + '</th>' : '') + '</tr>' +
     B.rows.map(function (x) {
       var bn = B.bottleneck.indexOf(x.op) >= 0, rr = rowsBy[x.op], wip = rr ? (rr.wipEnd != null ? rr.wipEnd : 0) + (rr.feedEnd || 0) : 0;
       var cls = bn ? ' class="bn"' : (rr && wip >= p.wipWarn ? ' class="wip"' : '');
       var w = isFinite(x.cap) ? Math.round(100 * x.cap / maxCap) : 100;
-      return '<tr' + cls + ' data-op="' + esc(x.op) + '"><td><b>' + esc(x.op) + '</b>' + (bn ? ' <span class="tag t-bad">' + esc(t('simBn')) + '</span>' : '') + '</td><td>' + esc(x.mc) + '</td>' +
-        '<td class="n"><input style="width:84px" type="number" step="0.0001" min="0" data-sam="' + esc(x.op) + '" value="' + (x.sam || '') + '"></td><td class="n">' + x.stations + '</td><td class="n">' + x.people.toFixed(2) + '</td>' +
-        '<td class="n">' + (isFinite(x.cap) ? Math.round(x.cap) : '∞') + '</td><td><div class="bar"><i style="width:' + w + '%;background:' + (bn ? 'var(--bad)' : 'var(--accent)') + '"></i>' + (takt ? '<b style="left:' + Math.min(100, Math.round(100 * (i.target || 0) / maxCap)) + '%"></b>' : '') + '</div></td>' +
+      // load = output needed (the target, else the slowest operation) / capacity of this operation
+      var need = i.target || B.capMin, load = isFinite(x.cap) && x.cap > 0 && need ? Math.round(100 * need / x.cap) : null;
+      return '<tr' + cls + ' data-op="' + esc(x.op) + '"><td><b>' + esc(x.op) + '</b>' + (comb[x.op] ? ' <span class="tag t-info" title="' + esc(t('simComb', [comb[x.op].join(', ')])) + '">⇄ ' + esc(comb[x.op].join(', ')) + '</span>' : '') + (bn ? ' <span class="tag t-bad">' + esc(t('simBn')) + '</span>' : '') + '</td><td>' + esc(x.mc) + '</td>' +
+        '<td class="n"><input style="width:84px" type="number" step="0.0001" min="0" data-sam="' + esc(x.op) + '" value="' + (x.sam || '') + '"></td><td class="n">' + x.stations + '</td><td class="n">' + x.people.toFixed(2) + (x.adj ? ' <span class="tag ' + (x.adj > 0 ? 't-info' : 't-warn') + '">' + (x.adj > 0 ? '+' : '') + x.adj + '</span>' : '') + '</td>' +
+        '<td class="n"><input style="width:62px" type="number" step="1" min="5" max="150" data-eff="' + esc(x.op) + '" value="' + (x.effOwn ? Math.round(x.eff * 100) : '') + '" placeholder="' + Math.round(p.eff * 100) + '"></td>' +
+        '<td class="n">' + (isFinite(x.cap) ? Math.round(x.cap) : '∞') + '</td><td><div class="bar"><i style="width:' + w + '%;background:' + (bn || (load && load > 100) ? 'var(--bad)' : 'var(--accent)') + '"></i>' + (takt ? '<b style="left:' + Math.min(100, Math.round(100 * (i.target || 0) / maxCap)) + '%"></b>' : '') +
+        '<span class="barT">' + (isFinite(x.cap) ? Math.round(x.cap) + ' ' + esc(t('simPcsH')) : '∞') + (load != null ? ' · ' + esc(t('simLoadPct', [load])) : '') + '</span></div></td>' +
         (r ? '<td class="n">' + (rr && rr.wipEnd == null ? '<span class="muted">∞</span>' : wip) + '</td><td class="n">' + (rr ? rr.wipMax + (rr.feedMax || 0) : '') + '</td>' : '') + '</tr>';
     }).join('') + '</table>';
   if (!r) { $('smRes').innerHTML = '<div class="muted">' + esc(t('simPress')) + '</div>'; return; }
@@ -170,8 +213,11 @@ function initSim() {
   ['smEff', 'smRate'].forEach(function (id) { $(id).addEventListener('input', function () { this.dataset.touched = '1'; }); });
   $('smMode').onchange = function () { this.dataset.touched = '1'; $('smRate').disabled = this.value !== 'rate'; };
   $('smTable').addEventListener('change', function (e) {
-    var op = e.target.dataset.sam; if (!op) return;
-    ST.ops = ST.ops || {}; ST.ops[op] = Object.assign({}, ST.ops[op], { sam: Math.max(0, num(e.target.value, 0)) }); SIMR = null; commit(); renderSim();
+    var op = e.target.dataset.sam || e.target.dataset.eff; if (!op) return;
+    ST.ops = ST.ops || {};
+    if (e.target.dataset.sam) ST.ops[op] = Object.assign({}, ST.ops[op], { sam: Math.max(0, num(e.target.value, 0)) });
+    else { var ev = num(e.target.value, 0); ST.ops[op] = Object.assign({}, ST.ops[op], { eff: ev > 0 ? Math.min(150, ev) : 0 }); }   // empty = general efficiency
+    SIMR = null; commit(); setTimeout(renderSim, 0);   // redraw after the input has lost focus
   });
   $('smTable').addEventListener('click', function (e) {
     var tr = e.target.closest('tr[data-op]'); if (!tr || e.target.tagName === 'INPUT') return;

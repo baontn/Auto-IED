@@ -193,7 +193,7 @@ function lineVals() {
   var L = ST.line;
   return { name: $('lsName').value.trim(), units: Math.max(1, Math.round(num($('lsUnits').value, L.units || LINE_DEF.units))), unit: Math.max(10, num($('lsUnit').value, LINE_DEF.unit)),
     tableW: Math.max(0, num($('lsTable').value, LINE_DEF.tableW)), start: Math.max(0, num($('lsStart').value, LINE_DEF.start)), end: Math.max(0, num($('lsEnd').value, LINE_DEF.end)),
-    width: num($('lsWidth').value, 0),
+    width: num($('lsWidth').value, 0), hc: Math.max(0, Math.round(num($('lsHC').value, 0))),
     branch: !$('lsBr').checked ? null : { units: Math.max(1, Math.round(num($('lsBUnits').value, 6))), unit: Math.max(10, num($('lsUnit').value, LINE_DEF.unit)), tableW: Math.max(0, num($('lsBTable').value, LINE_DEF.tableW)),
       start: 30, end: 30, pos: $('lsBPos').value, walk: Math.max(0, num($('lsBWalk').value, 100)), offset: Math.max(0, num($('lsBOff').value, 0)), width: num($('lsBWidth').value, 0) } };
 }
@@ -209,6 +209,7 @@ function openLineSetup() {
   $('lsName').value = L.name || ''; $('lsUnits').value = L.units || LINE_DEF.units; $('lsUnit').value = L.unit || LINE_DEF.unit;
   $('lsTable').value = ct ? ct.W : (L.tableW != null ? L.tableW : LINE_DEF.tableW); $('lsStart').value = L.start != null ? L.start : LINE_DEF.start; $('lsEnd').value = L.end != null ? L.end : LINE_DEF.end;
   $('lsWidth').value = L.units ? (L.mainWidth || (L.zones ? zoneById('main').W : L.width)) : '';
+  $('lsHC').value = L.hc || ''; $('lsHC').placeholder = (ST.info || {}).optr || ST.items.filter(function (i) { return i.kind === 'mc' && !i.noOp; }).length || '';
   var B = L.branch, cb = centerOf('branch');
   $('lsBr').checked = !!B; $('lsBUnits').value = B ? B.units : 6; $('lsBTable').value = cb ? cb.W : (B ? B.tableW : LINE_DEF.tableW); $('lsBPos').value = B ? B.pos : 'top';
   $('lsBWalk').value = B ? B.walk : 100; $('lsBOff').value = B ? B.offset : (L.start != null ? L.start : LINE_DEF.start); $('lsBWidth').value = B && B.width ? B.width : '';
