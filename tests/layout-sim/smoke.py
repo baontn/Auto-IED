@@ -53,11 +53,16 @@ def make_layout_xlsx(path, combined=False):
     shapes, i = [], 2
     def add(t, x, y, w=86, h=50):
         nonlocal i; shapes.append(sp(i, t, x, y, w, h)); i += 1
+    def chair(x, y, w=30, h=60):   # a picture next to a machine box (the operator's chair)
+        nonlocal i
+        shapes.append(('<xdr:twoCellAnchor><xdr:from><xdr:col>0</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>0</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from><xdr:to><xdr:col>1</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>1</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:to>'
+                       '<xdr:pic><xdr:nvPicPr><xdr:cNvPr id="%d" name="P%d"/><xdr:cNvPicPr/></xdr:nvPicPr><xdr:blipFill/><xdr:spPr><a:xfrm><a:off x="%d" y="%d"/><a:ext cx="%d" cy="%d"/></a:xfrm></xdr:spPr></xdr:pic><xdr:clientData/></xdr:twoCellAnchor>') % (i, i, x * E, y * E, w * E, h * E)); i += 1
     if combined:   # one box per machine "31- 1SLA" (vertical boxes), a conveyor between the two rows, a manual table box
-        for k, tx in enumerate(['31- 1SLA', '32 -3OLM', '33/34- 2CSM', '35-BT1M']): add(tx, 3000 + k * 50, 3000, 46, 110)
-        add('MNHD', 3200, 3060, 90, 50)
+        for k, tx in enumerate(['31- 1SLA', '32 -3OLM', '33/34- 2CSM', '35-BT1M']): add(tx, 3000 + k * 100, 3000, 46, 110)
+        for k in range(3): chair(3048 + k * 100, 3050)   # chairs on the right of the first three (the fourth has none: right, as usual above the conveyor)
+        add('MNHD', 3420, 3060, 90, 50)
         add('Băng chuyền đôi 30cm', 3000, 3115, 600, 22)
-        for k, tx in enumerate(['36- 1SLA', '37- 3OLM', '97- BT1M']): add(tx, 3000 + k * 50, 3140, 46, 110)
+        for k, tx in enumerate(['36- 1SLA', '37- 3OLM', '97- BT1M']): add(tx, 3040 + k * 100, 3140, 46, 110); chair(3006 + k * 100, 3150)
     # branch rows: numbers above codes, then codes above numbers
     for k, (c, o) in enumerate([('SFAM', '41'), ('SFAM', '43'), ('2CSM', '45'), ('1SLA', '47')]): add(o, 100 + k * 86, 1000); add(c, 100 + k * 86, 1050)
     for k, (c, o) in enumerate([('3OLM', '52'), ('3OLM', '53'), ('4OLB', '55')]): add(c, 100 + k * 86, 1100); add(o, 100 + k * 86, 1150)
@@ -385,8 +390,13 @@ async def main():
         await pg.evaluate("()=>{openPaste()}"); await pg.set_input_files('#fileXl', cb); await pg.wait_for_timeout(700)
         r = await pg.evaluate("()=>{const o=[...document.querySelectorAll('#xlPick option')].map(o=>o.value+' '+o.textContent);const i=o.findIndex(x=>/8 máy|8 machines/.test(x));return [o, i]}")
         if r[1] >= 0: await pg.select_option('#xlPick', index=r[1]); await pg.wait_for_timeout(200)
-        r = await pg.evaluate("()=>PASTE.rows.map(r=>r.side+':'+r.cells.map(c=>c.code+'/'+c.op).join(',')).join(' | ')")
-        check(r == 'top:1SLA/31,3OLM/32,2CSM/33/34,BT1M/35,MNHD/ | bottom:1SLA/36,3OLM/37,BT1M/97', 'boxes "31- 1SLA" read (operation + machine in one box), sides from the conveyor ' + r)
+        r = await pg.evaluate("()=>PASTE.rows.map(r=>r.side+':'+r.cells.map(c=>c.code+'/'+c.op+(c.dir?'@'+c.dir:'')).join(',')).join(' | ')")
+        check(r == 'top:1SLA/31@right,3OLM/32@right,2CSM/33/34@right,BT1M/35@right,MNHD/ | bottom:1SLA/36@left,3OLM/37@left,BT1M/97@left', 'boxes "31- 1SLA" read (operation + machine in one box), sides from the conveyor, upright boxes = turned machines, operator side from the chair ' + r)
+        await pg.click('#pasteGo'); await pg.wait_for_timeout(300)
+        r = await pg.evaluate("()=>{const m=ST.items.filter(i=>i.kind=='mc'&&i.op);const ct=centerTable();return [m.filter(i=>i.rot==270).length, m.filter(i=>i.rot==90).length, ISSUES.filter(x=>/isOverlap|isSeat|isAisle/.test(x.k)).length, m.filter(i=>i.rot%180).every(i=>Math.abs(Math.abs(i.y-ct.y)-ct.W/2-dimOf(i.code).L/2)<1)]}")
+        check(r == [4, 3, 0, True], 'turned machines placed as drawn (4 operators on the right above, 3 on the left below), touching the central table, no conflict ' + str(r))
+        await pg.keyboard.press('Control+z'); await pg.wait_for_timeout(100)
+        await pg.evaluate("()=>{openPaste()}")
         await pg.evaluate("()=>document.getElementById('dlgPaste').close()")
                 # automatic layout: operation table + work flow, no layout drawn
         ax = os.path.join(tmp, 'auto.xlsx'); make_auto_xlsx(ax)

@@ -37,7 +37,7 @@ function xlShapes(xml) {
   function xf(el) { var p = xlKid(el, 'spPr') || xlKid(el, 'grpSpPr'); return p ? xlKid(p, 'xfrm') : null; }
   function num(el, a) { return el ? +el.getAttribute(a) || 0 : 0; }
   function walk(el, T) {
-    xlKids(el, 'sp').concat(xlKids(el, 'cxnSp')).forEach(function (sp) {
+    xlKids(el, 'sp').concat(xlKids(el, 'cxnSp'), xlKids(el, 'pic')).forEach(function (sp) {
       var x = xf(sp); if (!x) return;
       var o = xlKid(x, 'off'), e = xlKid(x, 'ext'), rot = num(x, 'rot');
       var p0 = T(num(o, 'x'), num(o, 'y')), p1 = T(num(o, 'x') + num(e, 'cx'), num(o, 'y') + num(e, 'cy'));
@@ -72,8 +72,9 @@ var OPCODE_RE = /^(\d{1,3}[a-z]?(?:\s*[\/+,&]\s*\d{1,3}[a-z]?)*)\s*[-–—:.]\s
 var BELT_RE = /băng\s*chuyền|bang\s*chuyen|conveyor|bàn\s*giữa|ban\s*giua|central\s*table|center\s*table/i;
 /* machine boxes paired with the operation box touching them, grouped into layouts (blocks separated by empty space) and rows */
 function xlLayouts(shapes) {
-  var codes = [], nums = [], belts = [], st = [];
+  var codes = [], nums = [], belts = [], st = [], pics = [];
   shapes.forEach(function (s) {
+    if (s.kind === 'pic') { s.cx = (s.x0 + s.x1) / 2; s.cy = (s.y0 + s.y1) / 2; s.w = s.x1 - s.x0; s.h = s.y1 - s.y0; pics.push(s); return; }
     if (s.kind !== 'sp' || !s.text) return;
     var t0 = s.text.trim(), cl = t0.toUpperCase().replace(/[^A-Z0-9]/g, ''), mm = t0.match(OPCODE_RE);
     s.cx = (s.x0 + s.x1) / 2; s.cy = (s.y0 + s.y1) / 2; s.w = s.x1 - s.x0; s.h = s.y1 - s.y0;
@@ -97,6 +98,23 @@ function xlLayouts(shapes) {
   });
   if (!st.length) return [];
   var medW = median(st.map(function (s) { return s.w; })), medH = median(st.map(function (s) { return s.h; }));
+  // boxes holding operation + machine: the operator side from the chair picture next to the box; a tall box = machine turned 90°
+  var gap = function (s, c) { var dx = Math.max(s.x0 - c.cx, 0, c.cx - s.x1), dy = Math.max(s.y0 - c.cy, 0, c.cy - s.y1); return Math.hypot(dx, dy); };
+  var ones = st.filter(function (s) { return s.one; });
+  pics.forEach(function (c) {   // each chair belongs to the box nearest to it
+    var bs = null, bd = Infinity;
+    ones.forEach(function (s) { var sh = Math.min(s.w, s.h); if (Math.min(c.w, c.h) < 0.5 * sh || c.w * c.h > 1.5 * s.w * s.h) return; var d = gap(s, c); if (d < bd && d < 0.7 * Math.max(s.w, s.h)) { bd = d; bs = s; } });   // chairs, not the small thread / cone icons
+    if (bs) (bs.chairs = bs.chairs || []).push(c);
+  });
+  st.forEach(function (s) {
+    if (!s.one) return;
+    var best = (s.chairs || []).sort(function (a, b) { return gap(s, a) - gap(s, b); })[0];
+    if (best) {
+      var nx = (best.cx - s.cx) / (s.w / 2), ny = (best.cy - s.cy) / (s.h / 2);
+      s.dir = Math.abs(nx) > Math.abs(ny) ? (nx > 0 ? 'right' : 'left') : (ny > 0 ? 'bottom' : 'top');
+    }
+    s.tall = s.h > 1.6 * s.w;
+  });
   // blocks: stations connected when close in both directions
   var par = st.map(function (s, i) { return i; });
   function f(i) { while (par[i] !== i) { par[i] = par[par[i]]; i = par[i]; } return i; }
@@ -110,7 +128,9 @@ function xlLayouts(shapes) {
     g.sort(function (a, b) { return a.cy - b.cy; });
     var rows = [];
     g.forEach(function (s) { var r = rows[rows.length - 1]; if (r && Math.abs(s.cy - r.cy) < medH * 0.5) { r.items.push(s); r.cy = (r.cy * (r.items.length - 1) + s.cy) / r.items.length; } else rows.push({ cy: s.cy, items: [s] }); });
-    var x0 = Math.min.apply(null, g.map(function (s) { return s.x0; })), k = 107 / (median(g.map(function (s) { return s.w; })) || 1);
+    // drawing scale: a machine box is one standard machine (107 cm) long; boxes drawn upright (turned machines) are measured on their long side
+    var oneBox = g.filter(function (s) { return s.one; }).length > g.length / 2;
+    var x0 = Math.min.apply(null, g.map(function (s) { return s.x0; })), k = 107 / (median(g.map(function (s) { return oneBox ? Math.max(s.w, s.h) : s.w; })) || 1);
     var gx0 = Math.min.apply(null, g.map(function (s) { return s.x0; })), gx1 = Math.max.apply(null, g.map(function (s) { return s.x1; }));
     var belt = belts.filter(function (b) { return Math.min(b.x1, gx1) - Math.max(b.x0, gx0) > 0.3 * (gx1 - gx0); }).sort(function (a, b) { return Math.abs(a.cy - rows[0].cy) - Math.abs(b.cy - rows[0].cy); })[0];
     var midY = belt ? belt.cy : (rows[0].cy + rows[rows.length - 1].cy) / 2;
@@ -118,7 +138,12 @@ function xlLayouts(shapes) {
       r.items.sort(function (a, b) { return a.cx - b.cx; });
       var up = r.items.filter(function (s) { return s.side === 'top'; }).length, dn = r.items.filter(function (s) { return s.side === 'bottom'; }).length;
       var side = up || dn ? (up >= dn ? 'top' : 'bottom') : rows.length > 1 || belt ? (r.cy < midY ? 'top' : 'bottom') : null;
-      return { cy: r.cy, side: side, sideFound: !!(up || dn), cells: r.items.map(function (s, ci) { return { col: ci, code: s.code, op: s.op, side: s.side || side || 'top', x: (s.cx - x0) * k }; }) };
+      var rs = side || 'top';
+      return { cy: r.cy, side: side, sideFound: !!(up || dn), cells: r.items.map(function (s, ci) {
+        // a tall box without chair: the machine is turned, the operator on the right above the conveyor, on the left below it (as drawn usually)
+        var dir = s.dir || (s.tall ? (rs === 'top' ? 'right' : 'left') : null);
+        return { col: ci, code: s.code, op: s.op, side: dir === 'top' || dir === 'bottom' ? dir : (s.side || rs), dir: dir === 'left' || dir === 'right' ? dir : null, x: (s.cx - x0) * k };
+      }) };
     });
     return { rows: prow, n: g.length, x0: x0, y0: Math.min.apply(null, g.map(function (s) { return s.y0; })), x1: Math.max.apply(null, g.map(function (s) { return s.x1; })), y1: Math.max.apply(null, g.map(function (s) { return s.y1; })), stations: g };
   });

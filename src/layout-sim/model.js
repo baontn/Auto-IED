@@ -56,7 +56,7 @@ function shapes(it) {
     if (it.noOp) return r;                    // station without its own operator (one worker runs two machines)
     r.zone = obb(it, sx, d.W / 2 + zd / 2, zw / 2, zd / 2);
     r.chair = rotPt(it, sx, d.W / 2 + (st ? e.standGap : e.chairGap + e.chairD / 2));   // operator position (seat centre or standing spot)
-    r.aisle = e.aisle > 0 ? obb(it, sx, d.W / 2 + zd + e.aisle / 2, zw / 2, e.aisle / 2) : null;
+    r.aisle = e.aisle > 0 && (it.rot || 0) % 180 === 0 ? obb(it, sx, d.W / 2 + zd + e.aisle / 2, zw / 2, e.aisle / 2) : null;   // a machine turned across the row: the operator sits between machines, no aisle behind
   }
   return r;
 }
@@ -192,15 +192,24 @@ function buildFromPaste(p, opt) {
   // real machine lengths: never overlap inside a row
   p.rows.forEach(function (r) {
     r.cells.sort(function (a, b) { return a.rx - b.rx; });
-    for (var i = 1; i < r.cells.length; i++) { var pa = r.cells[i - 1], cu = r.cells[i], mn = pa.rx + dimOf(pa.code).L / 2 + e.colGap + dimOf(cu.code).L / 2; if (cu.rx < mn - 0.5) cu.rx = mn; }
+    // a turned machine (operator on its left / right) takes its width plus the operator's place along the row
+    var zd = function (c) { return STAND_FAMS[famOf(c.code)] ? e.standDepth : e.opDepth; };
+    var lo = function (c) { var d = dimOf(c.code); return c.dir ? d.W / 2 + (c.dir === 'left' ? zd(c) : 0) : d.L / 2; };
+    var hi = function (c) { var d = dimOf(c.code); return c.dir ? d.W / 2 + (c.dir === 'right' ? zd(c) : 0) : d.L / 2; };
+    for (var i = 1; i < r.cells.length; i++) { var pa = r.cells[i - 1], cu = r.cells[i], mn = pa.rx + hi(pa) + e.colGap + lo(cu); if (cu.rx < mn - 0.5) cu.rx = mn; }
   });
   var inputL = 60, zones = {}, order = [];
   p.rows.forEach(function (r) { var z = r.zone || 'main'; if (!zones[z]) { zones[z] = []; order.push(z); } zones[z].push(r); });
   var yCursor = opt.y0, mainSpan = null;
   order.forEach(function (zid) {
     var rows = zones[zid], ct = opt.centers && opt.centers[zid], x0, ys = [];
-    function place(r, yOf, zoneId) {
+    function place(r, yOf, zoneId, yOfT) {
       r.cells.forEach(function (x) {
+        if (x.dir) {   // turned 90°: its length across the row, the operator beside it (right: 270°, left: 90°)
+          var D = dimOf(x.code).L, yt = yOfT(D);
+          items.push({ id: uid(), kind: 'mc', code: x.code, op: x.op, x: n1(x0 + x.rx), y: n1(yt), rot: x.dir === 'right' ? 270 : 90, zone: zoneId === 'main' ? undefined : zoneId });
+          ys.push(yt - D / 2, yt + D / 2); return;
+        }
         var W = dimOf(x.code).W, top = (x.side || r.side) === 'top', yy = yOf(W, top);
         items.push({ id: uid(), kind: 'mc', code: x.code, op: x.op, x: n1(x0 + x.rx), y: n1(yy), rot: top ? 180 : 0, zone: zoneId === 'main' ? undefined : zoneId });
         ys.push(yy - W / 2 - (top ? e.opDepth : 0), yy + W / 2 + (top ? 0 : e.opDepth));
@@ -208,16 +217,16 @@ function buildFromPaste(p, opt) {
     }
     function band(r, y) {   // a row without a table: operators on their side, machines lined up on the operator side
       var Wmax = 0, anyTop = false, anyBot = false;
-      r.cells.forEach(function (x) { Wmax = Math.max(Wmax, dimOf(x.code).W); if ((x.side || r.side) === 'top') anyTop = true; else anyBot = true; });
+      r.cells.forEach(function (x) { Wmax = Math.max(Wmax, x.dir ? dimOf(x.code).L : dimOf(x.code).W); if ((x.side || r.side) === 'top') anyTop = true; else anyBot = true; });
       var tt = y + (anyTop ? e.opDepth : 0);
-      place(r, function (W, top) { return top ? tt + W / 2 : tt + Wmax - W / 2; }, zid);
+      place(r, function (W, top) { return top ? tt + W / 2 : tt + Wmax - W / 2; }, zid, function (D) { return tt + D / 2; });
       return tt + Wmax + (anyBot ? e.opDepth : 0) + e.rowGap;
     }
     if (ct) {
       x0 = ct.x - ct.L / 2;
       var tTop = ct.y - ct.W / 2, tBot = ct.y + ct.W / 2;
-      if (rows[0]) place(rows[0], function (W, top) { return top ? tTop - W / 2 : tTop - e.opDepth - W / 2; }, zid);
-      if (rows[1]) place(rows[1], function (W, top) { return top ? tBot + e.opDepth + W / 2 : tBot + W / 2; }, zid);
+      if (rows[0]) place(rows[0], function (W, top) { return top ? tTop - W / 2 : tTop - e.opDepth - W / 2; }, zid, function (D) { return tTop - D / 2; });
+      if (rows[1]) place(rows[1], function (W, top) { return top ? tBot + e.opDepth + W / 2 : tBot + W / 2; }, zid, function (D) { return tBot + D / 2; });
       var yy = (ys.length ? Math.max.apply(null, ys) : tBot) + e.rowGap;
       rows.slice(2).forEach(function (r) { yy = band(r, yy); });
     } else {

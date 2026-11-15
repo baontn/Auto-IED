@@ -357,6 +357,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 var LANG = 'vi';
 var I18N = {
   vi: {
+    turnR: 'Máy xoay ngang trong file, người ngồi bên phải', turnL: 'Máy xoay ngang trong file, người ngồi bên trái',
     simCapH: 'Năng lực (sp/giờ) · tải', simLoadTip: 'Tải = sản lượng cần (mục tiêu, không có thì công đoạn chậm nhất) / năng lực. Xanh < 90 %, vàng 90–100 %, đỏ > 100 % (không đủ năng lực).',
     simNeed: 'Người cần', simNeedTip: 'Số người cần để đạt sản lượng mục tiêu = mục tiêu × SAM / (60 × hiệu suất). Đỏ: nhiều hơn số người đang có.',
     simFileN: 'file: {0}', simTotal: 'Tổng / TB', simTotalN: '{0} công đoạn', simAvgW: 'TB theo SAM',
@@ -496,6 +497,7 @@ var I18N = {
     ocrIgnored: 'bỏ qua', ocrLegend: 'Viền xanh lá: đọc đúng mã · cam: đã sửa theo thư viện · đỏ: không có trong thư viện · xanh dương: số công đoạn · xám: bỏ qua. Đưa chuột vào ô để xem chữ đọc được.'
   },
   en: {
+    turnR: 'Machine turned in the file, operator on its right', turnL: 'Machine turned in the file, operator on its left',
     simCapH: 'Capacity (pcs/h) · load', simLoadTip: 'Load = output needed (target, else the slowest operation) / capacity. Green < 90 %, yellow 90–100 %, red > 100 % (not enough capacity).',
     simNeed: 'People needed', simNeedTip: 'People needed for the target output = target × SAM / (60 × efficiency). Red: more than the people there.',
     simFileN: 'file: {0}', simTotal: 'Total / avg', simTotalN: '{0} operations', simAvgW: 'avg by SAM',
@@ -901,7 +903,7 @@ function shapes(it) {
     if (it.noOp) return r;                    // station without its own operator (one worker runs two machines)
     r.zone = obb(it, sx, d.W / 2 + zd / 2, zw / 2, zd / 2);
     r.chair = rotPt(it, sx, d.W / 2 + (st ? e.standGap : e.chairGap + e.chairD / 2));   // operator position (seat centre or standing spot)
-    r.aisle = e.aisle > 0 ? obb(it, sx, d.W / 2 + zd + e.aisle / 2, zw / 2, e.aisle / 2) : null;
+    r.aisle = e.aisle > 0 && (it.rot || 0) % 180 === 0 ? obb(it, sx, d.W / 2 + zd + e.aisle / 2, zw / 2, e.aisle / 2) : null;   // a machine turned across the row: the operator sits between machines, no aisle behind
   }
   return r;
 }
@@ -1037,15 +1039,24 @@ function buildFromPaste(p, opt) {
   // real machine lengths: never overlap inside a row
   p.rows.forEach(function (r) {
     r.cells.sort(function (a, b) { return a.rx - b.rx; });
-    for (var i = 1; i < r.cells.length; i++) { var pa = r.cells[i - 1], cu = r.cells[i], mn = pa.rx + dimOf(pa.code).L / 2 + e.colGap + dimOf(cu.code).L / 2; if (cu.rx < mn - 0.5) cu.rx = mn; }
+    // a turned machine (operator on its left / right) takes its width plus the operator's place along the row
+    var zd = function (c) { return STAND_FAMS[famOf(c.code)] ? e.standDepth : e.opDepth; };
+    var lo = function (c) { var d = dimOf(c.code); return c.dir ? d.W / 2 + (c.dir === 'left' ? zd(c) : 0) : d.L / 2; };
+    var hi = function (c) { var d = dimOf(c.code); return c.dir ? d.W / 2 + (c.dir === 'right' ? zd(c) : 0) : d.L / 2; };
+    for (var i = 1; i < r.cells.length; i++) { var pa = r.cells[i - 1], cu = r.cells[i], mn = pa.rx + hi(pa) + e.colGap + lo(cu); if (cu.rx < mn - 0.5) cu.rx = mn; }
   });
   var inputL = 60, zones = {}, order = [];
   p.rows.forEach(function (r) { var z = r.zone || 'main'; if (!zones[z]) { zones[z] = []; order.push(z); } zones[z].push(r); });
   var yCursor = opt.y0, mainSpan = null;
   order.forEach(function (zid) {
     var rows = zones[zid], ct = opt.centers && opt.centers[zid], x0, ys = [];
-    function place(r, yOf, zoneId) {
+    function place(r, yOf, zoneId, yOfT) {
       r.cells.forEach(function (x) {
+        if (x.dir) {   // turned 90°: its length across the row, the operator beside it (right: 270°, left: 90°)
+          var D = dimOf(x.code).L, yt = yOfT(D);
+          items.push({ id: uid(), kind: 'mc', code: x.code, op: x.op, x: n1(x0 + x.rx), y: n1(yt), rot: x.dir === 'right' ? 270 : 90, zone: zoneId === 'main' ? undefined : zoneId });
+          ys.push(yt - D / 2, yt + D / 2); return;
+        }
         var W = dimOf(x.code).W, top = (x.side || r.side) === 'top', yy = yOf(W, top);
         items.push({ id: uid(), kind: 'mc', code: x.code, op: x.op, x: n1(x0 + x.rx), y: n1(yy), rot: top ? 180 : 0, zone: zoneId === 'main' ? undefined : zoneId });
         ys.push(yy - W / 2 - (top ? e.opDepth : 0), yy + W / 2 + (top ? 0 : e.opDepth));
@@ -1053,16 +1064,16 @@ function buildFromPaste(p, opt) {
     }
     function band(r, y) {   // a row without a table: operators on their side, machines lined up on the operator side
       var Wmax = 0, anyTop = false, anyBot = false;
-      r.cells.forEach(function (x) { Wmax = Math.max(Wmax, dimOf(x.code).W); if ((x.side || r.side) === 'top') anyTop = true; else anyBot = true; });
+      r.cells.forEach(function (x) { Wmax = Math.max(Wmax, x.dir ? dimOf(x.code).L : dimOf(x.code).W); if ((x.side || r.side) === 'top') anyTop = true; else anyBot = true; });
       var tt = y + (anyTop ? e.opDepth : 0);
-      place(r, function (W, top) { return top ? tt + W / 2 : tt + Wmax - W / 2; }, zid);
+      place(r, function (W, top) { return top ? tt + W / 2 : tt + Wmax - W / 2; }, zid, function (D) { return tt + D / 2; });
       return tt + Wmax + (anyBot ? e.opDepth : 0) + e.rowGap;
     }
     if (ct) {
       x0 = ct.x - ct.L / 2;
       var tTop = ct.y - ct.W / 2, tBot = ct.y + ct.W / 2;
-      if (rows[0]) place(rows[0], function (W, top) { return top ? tTop - W / 2 : tTop - e.opDepth - W / 2; }, zid);
-      if (rows[1]) place(rows[1], function (W, top) { return top ? tBot + e.opDepth + W / 2 : tBot + W / 2; }, zid);
+      if (rows[0]) place(rows[0], function (W, top) { return top ? tTop - W / 2 : tTop - e.opDepth - W / 2; }, zid, function (D) { return tTop - D / 2; });
+      if (rows[1]) place(rows[1], function (W, top) { return top ? tBot + e.opDepth + W / 2 : tBot + W / 2; }, zid, function (D) { return tBot + D / 2; });
       var yy = (ys.length ? Math.max.apply(null, ys) : tBot) + e.rowGap;
       rows.slice(2).forEach(function (r) { yy = band(r, yy); });
     } else {
@@ -2360,7 +2371,7 @@ function xlShapes(xml) {
   function xf(el) { var p = xlKid(el, 'spPr') || xlKid(el, 'grpSpPr'); return p ? xlKid(p, 'xfrm') : null; }
   function num(el, a) { return el ? +el.getAttribute(a) || 0 : 0; }
   function walk(el, T) {
-    xlKids(el, 'sp').concat(xlKids(el, 'cxnSp')).forEach(function (sp) {
+    xlKids(el, 'sp').concat(xlKids(el, 'cxnSp'), xlKids(el, 'pic')).forEach(function (sp) {
       var x = xf(sp); if (!x) return;
       var o = xlKid(x, 'off'), e = xlKid(x, 'ext'), rot = num(x, 'rot');
       var p0 = T(num(o, 'x'), num(o, 'y')), p1 = T(num(o, 'x') + num(e, 'cx'), num(o, 'y') + num(e, 'cy'));
@@ -2395,8 +2406,9 @@ var OPCODE_RE = /^(\d{1,3}[a-z]?(?:\s*[\/+,&]\s*\d{1,3}[a-z]?)*)\s*[-–—:.]\s
 var BELT_RE = /băng\s*chuyền|bang\s*chuyen|conveyor|bàn\s*giữa|ban\s*giua|central\s*table|center\s*table/i;
 /* machine boxes paired with the operation box touching them, grouped into layouts (blocks separated by empty space) and rows */
 function xlLayouts(shapes) {
-  var codes = [], nums = [], belts = [], st = [];
+  var codes = [], nums = [], belts = [], st = [], pics = [];
   shapes.forEach(function (s) {
+    if (s.kind === 'pic') { s.cx = (s.x0 + s.x1) / 2; s.cy = (s.y0 + s.y1) / 2; s.w = s.x1 - s.x0; s.h = s.y1 - s.y0; pics.push(s); return; }
     if (s.kind !== 'sp' || !s.text) return;
     var t0 = s.text.trim(), cl = t0.toUpperCase().replace(/[^A-Z0-9]/g, ''), mm = t0.match(OPCODE_RE);
     s.cx = (s.x0 + s.x1) / 2; s.cy = (s.y0 + s.y1) / 2; s.w = s.x1 - s.x0; s.h = s.y1 - s.y0;
@@ -2420,6 +2432,23 @@ function xlLayouts(shapes) {
   });
   if (!st.length) return [];
   var medW = median(st.map(function (s) { return s.w; })), medH = median(st.map(function (s) { return s.h; }));
+  // boxes holding operation + machine: the operator side from the chair picture next to the box; a tall box = machine turned 90°
+  var gap = function (s, c) { var dx = Math.max(s.x0 - c.cx, 0, c.cx - s.x1), dy = Math.max(s.y0 - c.cy, 0, c.cy - s.y1); return Math.hypot(dx, dy); };
+  var ones = st.filter(function (s) { return s.one; });
+  pics.forEach(function (c) {   // each chair belongs to the box nearest to it
+    var bs = null, bd = Infinity;
+    ones.forEach(function (s) { var sh = Math.min(s.w, s.h); if (Math.min(c.w, c.h) < 0.5 * sh || c.w * c.h > 1.5 * s.w * s.h) return; var d = gap(s, c); if (d < bd && d < 0.7 * Math.max(s.w, s.h)) { bd = d; bs = s; } });   // chairs, not the small thread / cone icons
+    if (bs) (bs.chairs = bs.chairs || []).push(c);
+  });
+  st.forEach(function (s) {
+    if (!s.one) return;
+    var best = (s.chairs || []).sort(function (a, b) { return gap(s, a) - gap(s, b); })[0];
+    if (best) {
+      var nx = (best.cx - s.cx) / (s.w / 2), ny = (best.cy - s.cy) / (s.h / 2);
+      s.dir = Math.abs(nx) > Math.abs(ny) ? (nx > 0 ? 'right' : 'left') : (ny > 0 ? 'bottom' : 'top');
+    }
+    s.tall = s.h > 1.6 * s.w;
+  });
   // blocks: stations connected when close in both directions
   var par = st.map(function (s, i) { return i; });
   function f(i) { while (par[i] !== i) { par[i] = par[par[i]]; i = par[i]; } return i; }
@@ -2433,7 +2462,9 @@ function xlLayouts(shapes) {
     g.sort(function (a, b) { return a.cy - b.cy; });
     var rows = [];
     g.forEach(function (s) { var r = rows[rows.length - 1]; if (r && Math.abs(s.cy - r.cy) < medH * 0.5) { r.items.push(s); r.cy = (r.cy * (r.items.length - 1) + s.cy) / r.items.length; } else rows.push({ cy: s.cy, items: [s] }); });
-    var x0 = Math.min.apply(null, g.map(function (s) { return s.x0; })), k = 107 / (median(g.map(function (s) { return s.w; })) || 1);
+    // drawing scale: a machine box is one standard machine (107 cm) long; boxes drawn upright (turned machines) are measured on their long side
+    var oneBox = g.filter(function (s) { return s.one; }).length > g.length / 2;
+    var x0 = Math.min.apply(null, g.map(function (s) { return s.x0; })), k = 107 / (median(g.map(function (s) { return oneBox ? Math.max(s.w, s.h) : s.w; })) || 1);
     var gx0 = Math.min.apply(null, g.map(function (s) { return s.x0; })), gx1 = Math.max.apply(null, g.map(function (s) { return s.x1; }));
     var belt = belts.filter(function (b) { return Math.min(b.x1, gx1) - Math.max(b.x0, gx0) > 0.3 * (gx1 - gx0); }).sort(function (a, b) { return Math.abs(a.cy - rows[0].cy) - Math.abs(b.cy - rows[0].cy); })[0];
     var midY = belt ? belt.cy : (rows[0].cy + rows[rows.length - 1].cy) / 2;
@@ -2441,7 +2472,12 @@ function xlLayouts(shapes) {
       r.items.sort(function (a, b) { return a.cx - b.cx; });
       var up = r.items.filter(function (s) { return s.side === 'top'; }).length, dn = r.items.filter(function (s) { return s.side === 'bottom'; }).length;
       var side = up || dn ? (up >= dn ? 'top' : 'bottom') : rows.length > 1 || belt ? (r.cy < midY ? 'top' : 'bottom') : null;
-      return { cy: r.cy, side: side, sideFound: !!(up || dn), cells: r.items.map(function (s, ci) { return { col: ci, code: s.code, op: s.op, side: s.side || side || 'top', x: (s.cx - x0) * k }; }) };
+      var rs = side || 'top';
+      return { cy: r.cy, side: side, sideFound: !!(up || dn), cells: r.items.map(function (s, ci) {
+        // a tall box without chair: the machine is turned, the operator on the right above the conveyor, on the left below it (as drawn usually)
+        var dir = s.dir || (s.tall ? (rs === 'top' ? 'right' : 'left') : null);
+        return { col: ci, code: s.code, op: s.op, side: dir === 'top' || dir === 'bottom' ? dir : (s.side || rs), dir: dir === 'left' || dir === 'right' ? dir : null, x: (s.cx - x0) * k };
+      }) };
     });
     return { rows: prow, n: g.length, x0: x0, y0: Math.min.apply(null, g.map(function (s) { return s.y0; })), x1: Math.max.apply(null, g.map(function (s) { return s.x1; })), y1: Math.max.apply(null, g.map(function (s) { return s.y1; })), stations: g };
   });
@@ -3804,7 +3840,7 @@ function renderPastePreview() {
   else {
     h += '<div>' + esc(t('pasteFound', [PASTE.rows.length, PASTE.nMc])) + '</div><table class="mini"><tr><th>#</th><th>' + esc(t('pasteRowMc')) + '</th><th>' + esc(t('pasteSide')) + '</th>' + (br ? '<th>' + esc(t('pasteZone')) + '</th>' : '') + '</tr>';
     PASTE.rows.forEach(function (r, i) {
-      h += '<tr><td>' + (i + 1) + '</td><td class="small">' + r.cells.map(function (c) { return esc(c.code) + (c.op ? '<sub>' + esc(c.op) + '</sub>' : ''); }).join(' ') + '</td><td><select data-row="' + i + '"><option value="top"' + (r.side === 'top' ? ' selected' : '') + '>' + esc(t('sideTop')) + '</option><option value="bottom"' + (r.side === 'bottom' ? ' selected' : '') + '>' + esc(t('sideBottom')) + '</option></select>' + (r.sideFound ? '' : ' <span class="muted small">' + esc(t('sideGuess')) + '</span>') + '</td>' +
+      h += '<tr><td>' + (i + 1) + '</td><td class="small">' + r.cells.map(function (c) { return esc(c.code) + (c.op ? '<sub>' + esc(c.op) + '</sub>' : '') + (c.dir ? '<span title="' + esc(t(c.dir === 'right' ? 'turnR' : 'turnL')) + '">' + (c.dir === 'right' ? '↻' : '↺') + '</span>' : ''); }).join(' ') + '</td><td><select data-row="' + i + '"><option value="top"' + (r.side === 'top' ? ' selected' : '') + '>' + esc(t('sideTop')) + '</option><option value="bottom"' + (r.side === 'bottom' ? ' selected' : '') + '>' + esc(t('sideBottom')) + '</option></select>' + (r.sideFound ? '' : ' <span class="muted small">' + esc(t('sideGuess')) + '</span>') + '</td>' +
         (br ? '<td><select data-zone="' + i + '"><option value="main"' + (r.zone !== 'branch' ? ' selected' : '') + '>' + esc(t('zoneMain')) + '</option><option value="branch"' + (r.zone === 'branch' ? ' selected' : '') + '>' + esc(t('zoneBranch')) + '</option></select></td>' : '') + '</tr>';
     });
     h += '</table>';
