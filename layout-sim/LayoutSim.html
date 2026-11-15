@@ -1126,8 +1126,8 @@ function setupLine(o) {
   var fin = o.finish !== false, tL = Math.max(40, +o.finTL || LINE_DEF.finTL), tW = Math.max(30, +o.finTW || LINE_DEF.finTW), bxW = Math.max(30, +o.boxW || LINE_DEF.boxW);
   var oldF = zoneById('finish'), oldB = zoneById('boxes');
   if (fin) {
-    var fL = Math.round(tW + tL + 80), fx = mL + gap;
-    zones.push({ id: 'finish', x: fx, y: mainY, L: fL, W: mW }, { id: 'boxes', x: fx + fL + gap, y: mainY, L: Math.round(bxW + 40), W: mW });
+    var fL = Math.round(20 + tW + tL), fx = mL + gap;   // QC, packing tables and boxes side by side, touching
+    zones.push({ id: 'finish', x: fx, y: mainY, L: fL, W: mW }, { id: 'boxes', x: fx + fL, y: mainY, L: Math.round(bxW + 20), W: mW });
   }
   if (inL > 0) zones.push({ id: 'input', x: inX, y: mainY, L: inL, W: mW });
   if (br) {
@@ -1162,7 +1162,7 @@ function placeFinish(oldF, oldB) {
   });
   var cy = F.y + F.W / 2, tL = L.finTL, tW = L.finTW;
   if (!ST.items.some(function (it) { return it.zone === 'finish'; })) {
-    var px = F.x + 20 + tW + 40 + tL / 2;
+    var px = F.x + 20 + tW + tL / 2;   // packing tables touch the QC table
     ST.items.push({ id: uid(), kind: 'obj', zone: 'finish', name: 'QC', L: tL, W: tW, H: 75, x: n1(F.x + 20 + tW / 2), y: n1(cy), rot: 90, color: '#9fd3a8' },   // QC table upright
       { id: uid(), kind: 'obj', zone: 'finish', name: 'PCK 1', L: tL, W: tW, H: 75, x: n1(px), y: n1(cy - tW / 2), rot: 0, color: '#f2cf8d' },   // two packing tables face to face
       { id: uid(), kind: 'obj', zone: 'finish', name: 'PCK 2', L: tL, W: tW, H: 75, x: n1(px), y: n1(cy + tW / 2), rot: 0, color: '#f2cf8d' });
@@ -1170,7 +1170,7 @@ function placeFinish(oldF, oldB) {
   if (!ST.items.some(function (it) { return it.zone === 'boxes'; })) {
     var bw = L.boxW;
     [['boxY', '#f2c230'], ['boxR', '#e04848'], ['boxG', '#3fae6a']].forEach(function (b, k) {
-      ST.items.push({ id: uid(), kind: 'obj', zone: 'boxes', name: t(b[0]), L: bw, W: bw, H: 60, x: n1(Bz.x + Bz.L / 2), y: n1(cy + (k - 1) * (bw + 20)), rot: 0, color: b[1] });
+      ST.items.push({ id: uid(), kind: 'obj', zone: 'boxes', name: t(b[0]), L: bw, W: bw, H: 60, x: n1(Bz.x + bw / 2), y: n1(cy + (k - 1) * bw), rot: 0, color: b[1] });   // stacked, touching each other and the packing tables
     });
   }
 }

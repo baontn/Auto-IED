@@ -147,8 +147,9 @@ async def main():
         r = await pg.evaluate('()=>{const c=centerTable(),i=zoneById("input"),m=zoneById("main");return [c.L,c.W,ST.line.length,c.x-c.L/2,i.x,i.L,i.x+i.L,i.W==m.W]}')
         check(r == [1819, 30, 1849, 0, -120, 90, -30, True], 'central table 17 x 107 cm from 0 m, width 30; line 1819+30; input area 90 cm, 30 cm in front, as wide as the line ' + str(r))
         r = await pg.evaluate('''()=>{const f=zoneById("finish"),b=zoneById("boxes"),m=zoneById("main");const it=ST.items.filter(i=>isFinishObj(i));const q=it.find(i=>i.name=="QC"),p=it.filter(i=>/^PCK/.test(i.name)),bx=it.filter(i=>i.zone=="boxes");
-          return [f.x==m.x+m.L+30, f.W==m.W && b.W==m.W, q.rot, q.L+"x"+q.W, p.map(i=>i.rot).join(), Math.abs(p[0].y-p[1].y)==75, bx.map(i=>i.color).join(), bx.every(i=>i.L==70), ISSUES.length]}''')
-        check(r == [True, True, 90, '175x75', '0,0', True, '#f2c230,#e04848,#3fae6a', True, 0], 'finishing area (QC upright, 2 PCK face to face) and box area (yellow, red, green, 70 cm) after the main line, as wide as it ' + str(r))
+          return [f.x==m.x+m.L+30, f.W==m.W && b.W==m.W, q.rot, q.L+"x"+q.W, p.map(i=>i.rot).join(), Math.abs(p[0].y-p[1].y)==75, bx.map(i=>i.color).join(), bx.every(i=>i.L==70), ISSUES.length,
+          Math.round(p[0].x-p[0].L/2-(q.x+q.W/2)), Math.round(bx[0].x-bx[0].L/2-(p[0].x+p[0].L/2)), Math.round(bx[1].y-bx[0].y), Math.round(bx[2].y-bx[1].y), bx.every(i=>i.x==bx[0].x)]}''')
+        check(r == [True, True, 90, '175x75', '0,0', True, '#f2c230,#e04848,#3fae6a', True, 0, 0, 0, 70, 70, True], 'finishing area (QC upright, 2 PCK face to face, touching QC) and boxes (yellow, red, green, 70 cm) stacked, touching each other and the PCK tables ' + str(r))
         check(await pg.is_visible('#libBanner'), 'banner without library')
         await pg.set_input_files('#fileLib', lib); await pg.wait_for_timeout(800)
         check(await pg.evaluate('()=>[Object.keys(LIB.codes).length, LIB.models.length]') == [len(CODES), len(MODELS)], 'library read')
