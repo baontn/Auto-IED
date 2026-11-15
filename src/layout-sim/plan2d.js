@@ -1,6 +1,6 @@
 /* plan2d.js: scaled top view (SVG, 1 unit = 1 cm). Drag to move, wheel to zoom, drag on empty floor to pan, Shift+drag to select a box. */
 var V = { x: -50, y: -80, s: 0.5 };           // world point at the top-left corner, pixels per cm
-var OPT = { flow: true, snap: true, aisles: false };
+var OPT = { flow: true, snap: true, aisles: false, wip: false };
 var DRAG = null, BOXR = null;
 
 function pal(light) {
@@ -116,6 +116,14 @@ function planMarkup(o) {
       if (op) h.push('<text x="' + n1(it.x) + '" y="' + n1(it.y + fo2 * 0.85) + '" font-size="' + fo2 + '" stroke-width="' + fo2 * 0.16 + halo.replace('#14181f', '#0b3d91') + '>' + esc(op) + '</text>');
     }
   });
+  if (OPT.wip && SIMR) {   // simulated WIP waiting at each station (pieces)
+    var warnW = (SIMR.p && SIMR.p.wipWarn) || 30;
+    ST.items.forEach(function (it) {
+      var w = simWipOf(it); if (w == null || w <= 0) return;
+      var S = shapes(it), q = rotPt(it, S.L / 2 - 4, -S.W / 2 + 4), f = fs * 0.85, col = w >= warnW ? '#d93636' : '#e09a2b', tx = 'WIP ' + w, wd = f * (0.62 * tx.length + 0.8);
+      h.push('<g pointer-events="none"><rect x="' + n1(q.x - wd / 2) + '" y="' + n1(q.y - f * 0.8) + '" width="' + n1(wd) + '" height="' + n1(f * 1.4) + '" rx="' + n1(f * 0.4) + '" fill="' + col + '"/><text x="' + n1(q.x) + '" y="' + n1(q.y + f * 0.18) + '" font-size="' + f + '" font-weight="700" fill="#fff" text-anchor="middle">' + tx + '</text></g>');
+    });
+  }
   if (BOXR && !o.exp) {
     var bx = Math.min(BOXR.a.x, BOXR.b.x), by = Math.min(BOXR.a.y, BOXR.b.y);
     h.push('<rect x="' + bx + '" y="' + by + '" width="' + Math.abs(BOXR.a.x - BOXR.b.x) + '" height="' + Math.abs(BOXR.a.y - BOXR.b.y) + '" fill="rgba(31,111,235,.08)" stroke="' + P.accent + '" stroke-width="' + sw + '" stroke-dasharray="' + 4 * sw + '"/>');

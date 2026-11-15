@@ -59,7 +59,14 @@ label.f.row input{width:80px}
 .chip{display:inline-flex;align-items:center;gap:4px;background:var(--sel);border-radius:14px;padding:2px 9px;font-size:12px;cursor:pointer}
 .chip i{width:9px;height:9px;border-radius:2px;display:inline-block}
 .banner{background:var(--warnbg);color:var(--warn);padding:8px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;flex:none}
-#paneLib,#paneProj{flex:1;overflow:auto;padding:14px}
+#paneLib,#paneProj,#paneSim{flex:1;overflow:auto;padding:14px}
+#paneSim .card{margin-bottom:12px}
+.grid6{display:grid;grid-template-columns:repeat(6,minmax(110px,1fr));gap:8px;margin-top:8px}
+@media (max-width:900px){.grid6{grid-template-columns:1fr 1fr}}
+.bar{position:relative;height:10px;background:var(--line);border-radius:5px;min-width:80px}.bar i{position:absolute;left:0;top:0;bottom:0;border-radius:5px}.bar b{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--warn)}
+tr.bn td{background:var(--badbg)}tr.wip td{background:var(--warnbg)}tr[data-op]{cursor:pointer}
+.kpis{display:flex;flex-wrap:wrap;gap:8px}.kpis div{background:var(--sel);border-radius:10px;padding:8px 12px;min-width:120px}.kpis span{display:block;font-size:12px;color:var(--muted)}.kpis b{font-size:22px}.kpis i{font-style:normal;font-size:12px;color:var(--muted);margin-left:4px}
+ul.sug{margin:8px 0 0 18px;padding:0}ul.sug li{margin-bottom:3px}
 #paneProj .card{margin-bottom:12px;max-width:1100px}
 #paneLib .card{margin-bottom:12px}
 table{border-collapse:collapse;width:100%}
@@ -98,9 +105,9 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
 <body>
 <header>
   <h1 data-t="appTitle">Mô phỏng bố trí chuyền</h1><span class="tag t-info">v{{VERSION}}</span>
-  <nav class="tabs"><button data-tab="proj" data-t="tabProj">🏠 Dự án</button><button data-tab="plan" class="on" data-t="tabPlan">Mặt bằng 2D</button><button data-tab="3d" data-t="tab3d">3D</button><button data-tab="lib" data-t="tabLib">Thư viện máy</button></nav>
+  <nav class="tabs"><button data-tab="proj" data-t="tabProj">🏠 Dự án</button><button data-tab="plan" class="on" data-t="tabPlan">Mặt bằng 2D</button><button data-tab="3d" data-t="tab3d">3D</button><button data-tab="sim" data-t="tabSim">⏱ Mô phỏng WIP</button><button data-tab="lib" data-t="tabLib">Thư viện máy</button></nav>
   <div class="hr">
-    <button id="bNew" data-t="bNew">Mới</button><button id="bOpen" data-t="bOpen">Mở…</button><button id="bSave" class="primary" data-t="bSave" data-tt="bSaveTip">Lưu…</button>
+    <button id="bNew" data-t="bNew">Mới</button><button id="bOpen" data-t="bOpen">Mở…</button><button id="bSave" class="primary" data-t="bSave" data-tt="bSaveTip">Lưu</button>
     <button id="libChip" class="chipbtn"></button>
     <button id="bSide" data-tt="bSideTip">◨</button>
     <select id="lang" aria-label="Language"><option value="vi">VI</option><option value="en">EN</option></select>
@@ -120,6 +127,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
       <button id="bStandAll" data-t="bStandAll" data-tt="bStandAllTip">🧍↔🪑 Tất cả đứng / ngồi</button>
       <label><input type="checkbox" id="optFlow"><span data-t="optFlow">Đường đi</span></label>
       <label><input type="checkbox" id="optSnap"><span data-t="optSnap">Bám lưới</span></label>
+      <label><input type="checkbox" id="optWip"><span data-t="optWip">WIP</span></label>
       <label><input type="checkbox" id="optAisle"><span data-t="optAisle">Lối đi sau lưng</span></label>
       <span class="sep"></span>
       <button id="bPng" data-t="bPng">Xuất ảnh</button><button id="bPrint" data-t="bPrint">In</button>
@@ -175,6 +183,24 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
     <div id="pjDirList" class="scroll" style="margin-top:6px;max-height:40vh"></div>
   </div>
   <div class="card"><h3 data-t="projRecentT">Dự án gần đây (lưu trong trình duyệt này)</h3><div id="pjRecent" class="scroll" style="max-height:40vh"></div></div>
+</div>
+<div id="paneSim" style="display:none">
+  <div class="card"><h3 data-t="simTitle">Mô phỏng dòng chảy sản phẩm và WIP</h3>
+    <div class="muted small" data-t="simHelp">Dùng SAM từng công đoạn (đọc từ file layout, sửa được trong bảng), trình tự công đoạn (nếu không có: từ công đoạn đầu đến công đoạn cuối theo số), máy và người vận hành trên mặt bằng (người chạy nhiều máy chia thời gian). Hàng đi theo bó; cụm phụ hợp vào công đoạn đầu cụm lắp ráp.</div>
+    <div class="grid6">
+      <label class="f"><span data-t="smHours">Thời gian (giờ)</span><input id="smHours" type="number" min="0.5" step="0.5" value="8"></label>
+      <label class="f"><span data-t="smEff">Hiệu suất (%)</span><input id="smEff" type="number" min="5" max="150" step="1" value="80"></label>
+      <label class="f"><span data-t="smBundle">Bó hàng (sản phẩm)</span><input id="smBundle" type="number" min="1" step="1" value="10"></label>
+      <label class="f"><span data-t="smMode">Đầu vào</span><select id="smMode"><option value="push" data-t="smPush">Luôn có hàng</option><option value="rate" data-t="smRateOpt">Theo sản lượng (sp/giờ)</option></select></label>
+      <label class="f"><span data-t="smRate">Sản lượng đầu vào (sp/giờ)</span><input id="smRate" type="number" min="1" step="1" value="60" disabled></label>
+      <label class="f"><span data-t="smWarn">Cảnh báo WIP từ (sp)</span><input id="smWarn" type="number" min="1" step="1" value="30"></label>
+    </div>
+    <label class="ck" style="margin-top:8px"><input type="checkbox" id="smWarm" checked><span data-t="smWarm">Bỏ qua thời gian khởi động (chuyền chạy ổn định: mô phỏng trước một ca để hàng lấp đầy chuyền)</span></label>
+    <div class="btns"><button id="smRun" class="primary" data-t="smRun">▶ Chạy mô phỏng</button><button id="smToPlan" data-t="smToPlan">Xem WIP trên mặt bằng</button></div>
+    <div id="smSrc" class="small" style="margin-top:6px"></div>
+  </div>
+  <div class="card"><h3 data-t="simRes">Kết quả</h3><div id="smRes" class="small"></div></div>
+  <div class="card"><h3 data-t="simTab">Cân bằng chuyền theo công đoạn</h3><div class="muted small" data-t="simTabHelp">Năng lực = phần thời gian người làm công đoạn × 60 × hiệu suất / SAM. Vạch vàng: sản lượng mục tiêu. Bấm một dòng để xem các máy trên mặt bằng.</div><div id="smTable" class="scroll" style="margin-top:6px;max-height:60vh"></div></div>
 </div>
 <div id="paneLib" style="display:none">
   <div class="card"><h3 data-t="libTitle">Thư viện máy</h3>
@@ -245,6 +271,10 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
   <div id="seqPrev" class="small" style="margin-top:6px"></div></div>
   <div class="df"><button data-close data-t="cancel">Hủy</button><button id="seqOk" class="primary" data-t="apply">Áp dụng</button></div>
 </dialog>
+<dialog id="dlgDir"><div class="dh"><span data-t="dirTitle">Nơi lưu dự án</span></div>
+  <div class="db"><p data-t="dirHelp">Chọn thư mục (trên máy hoặc thư mục chung) để lưu các dự án layout. Chương trình ghi nhớ thư mục này: mỗi lần bấm "Lưu" file được ghi thẳng vào đó, không phải tải xuống.</p><div id="dirName" class="small muted"></div></div>
+  <div class="df"><button id="dirLater" data-t="dirLater">Để sau</button><button id="dirPick" class="primary" data-t="dirPick">📁 Chọn thư mục…</button></div>
+</dialog>
 <dialog id="dlgErg"><div class="dh"><span data-t="ergTitle">Công thái học và khoảng cách</span><button data-close>✕</button></div>
   <div class="db"><div class="muted small" data-t="ergHelp">Vùng người vận hành được vẽ phía trước mỗi máy và kiểm tra chồng lấn. Giá trị mặc định là đề xuất; IE chỉnh theo tiêu chuẩn nhà máy.</div><div id="ergBody"></div></div>
   <div class="df"><button id="ergReset" data-t="ergReset">Về mặc định</button><button data-close data-t="cancel">Hủy</button><button id="ergOk" class="primary" data-t="apply">Áp dụng</button></div>
@@ -265,6 +295,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
 <script>/*__XLIMPORT__*/</script>
 <script>/*__FLOW__*/</script>
 <script>/*__PROJECT__*/</script>
+<script>/*__SIM__*/</script>
 <script>/*__APP__*/</script>
 <script>startApp();</script>
 </body>

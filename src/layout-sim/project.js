@@ -18,7 +18,7 @@ function idbDo(store, mode, fn) {
   return idbOpen().then(function (db) {
     return new Promise(function (res, rej) {
       var tx = db.transaction(store, mode), st = tx.objectStore(store), out = fn(st);
-      tx.oncomplete = function () { res(out && out.result !== undefined ? out.result : out); }; tx.onerror = function () { rej(tx.error); };
+      tx.oncomplete = function () { res(out instanceof IDBRequest ? out.result : out); }; tx.onerror = function () { rej(tx.error); };   // an empty get gives undefined, not the request
     });
   });
 }
@@ -50,17 +50,17 @@ function projRecent() { return idbDo('projects', 'readonly', function (s) { retu
 /* ---------- save / open ---------- */
 function writeHandle(h, data) { return h.createWritable().then(function (w) { return w.write(data).then(function () { return w.close(); }); }); }
 function saveProject(asNew) {
-  if (asNew) { ST.info = Object.assign({}, ST.info, { projId: null }); PROJ.handle = null; }
-  var data = fileJson(), name = projFileName(), p;
-  if (PROJ.handle && !asNew) p = writeHandle(PROJ.handle, data);
-  else if (PROJ.dir) p = dirPerm(true).then(function () { return PROJ.dir.getFileHandle(name, { create: true }); }).then(function (h) { PROJ.handle = h; return writeHandle(h, data); });
-  else if (window.showSaveFilePicker) p = window.showSaveFilePicker({ suggestedName: name, types: [{ description: 'Layout', accept: { 'application/json': ['.json'] } }] }).then(function (h) { PROJ.handle = h; return writeHandle(h, data); });
-  else { download(name, data, 'application/json'); p = Promise.resolve(); }
-  return p.then(function () { return projRemember(fileJson()); }).then(function () { ST.info.savedAt = new Date().toISOString(); toast(t('projSaved', [PROJ.handle ? PROJ.handle.name : name])); renderProj(); if (PROJ.dir) scanDir(); })
-    .catch(function (e) {
-      if (e && e.name === 'AbortError') return;
-      console.warn(e); download(name, data, 'application/json'); projRemember(data).then(renderProj);   // no file access: download a copy
-    });
+  if (!PROJ.dir && window.showDirectoryPicker) return pickDir(function () { saveProject(asNew); });   // first time: choose where projects are saved
+  if (asNew) {
+    var nm = prompt(t('projAsName'), projFileName().replace(/\.layout\.json$/i, '') + ' (2)'); if (!nm) return;
+    PROJ.saveName = nm.replace(/[\\/:*?"<>|]+/g, '_').trim() + '.layout.json'; ST.info = Object.assign({}, ST.info, { projId: null }); PROJ.handle = null;
+  }
+  var data = fileJson(), name = PROJ.saveName || projFileName(), p;
+  if (PROJ.dir) p = dirPerm(true).then(function () { return PROJ.handle || PROJ.dir.getFileHandle(name, { create: true }); }).then(function (h) { PROJ.handle = h; return writeHandle(h, data); });
+  else { download(name, data, 'application/json'); p = Promise.resolve(); }   // browser without folder access only
+  return p.then(function () { return projRemember(fileJson()); }).then(function () {
+    ST.info.savedAt = new Date().toISOString(); toast(t('projSaved', [(PROJ.dir ? PROJ.dir.name + ' / ' : '') + (PROJ.handle ? PROJ.handle.name : name)])); renderProj(); if (PROJ.dir) scanDir();
+  }).catch(function (e) { if (e && e.name === 'AbortError') return; console.warn(e); toast(t('projSaveErr') + ': ' + (e && e.message || e), true); });
 }
 function loadProject(txt, handle, label) {
   try {
@@ -82,9 +82,21 @@ function dirPerm(write) {
   var o = { mode: write ? 'readwrite' : 'read' };
   return PROJ.dir.queryPermission(o).then(function (s) { return s === 'granted' ? s : PROJ.dir.requestPermission(o); }).then(function (s) { if (s !== 'granted') throw new Error(t('projNoPerm')); });
 }
-function pickDir() {
+function pickDir(then) {
   if (!window.showDirectoryPicker) { toast(t('projNoFs'), true); return; }
-  window.showDirectoryPicker({ mode: 'readwrite' }).then(function (d) { PROJ.dir = d; kvSet('dir', d).catch(function () {}); return scanDir(); }).catch(function (e) { if (e && e.name !== 'AbortError') toast(e.message, true); });
+  window.showDirectoryPicker({ mode: 'readwrite', id: 'layoutsim' }).then(function (d) {
+    PROJ.dir = d; PROJ.handle = null; kvSet('dir', d).catch(function () {}); toast(t('projDirSet', [d.name]));
+    return scanDir().then(function () { if (typeof then === 'function') then(); });
+  }).catch(function (e) { if (e && e.name !== 'AbortError') toast(e.message, true); });
+}
+/* first start: ask once where projects are saved (remembered), then the line set-up */
+function firstRun() {
+  var next = function () { if (!ST.line.fixed && !ST.items.length) openLineSetup(); };
+  (PROJ.ready || Promise.resolve()).then(function () {
+    if (PROJ.dir || !window.showDirectoryPicker) return next();
+    $('dirName').textContent = ''; $('dlgDir').showModal();
+    $('dlgDir').onclose = next;
+  });
 }
 function scanDir() {
   if (!PROJ.dir) return Promise.resolve();
@@ -130,7 +142,9 @@ function initProj() {
   $('pjSaveAs').onclick = function () { saveProject(true); };
   $('pjOpen').onclick = function () { $('fileOpen').value = ''; $('fileOpen').click(); };
   $('pjPaste').onclick = function () { setTab('plan'); openPaste(); };
-  $('pjDir').onclick = pickDir;
+  $('pjDir').onclick = function () { pickDir(); };
+  $('dirPick').onclick = function () { pickDir(function () { $('dlgDir').close(); }); };
+  $('dirLater').onclick = function () { $('dlgDir').close(); };
   $('pjRescan').onclick = scanDir;
   $('pjStyle').onchange = function () { ST.info = Object.assign({}, ST.info, { style: this.value.trim() }); changed(); renderProj(); };
   $('pjLine').onchange = function () { ST.line.name = this.value.trim(); changed(); renderProj(); };
@@ -142,5 +156,5 @@ function initProj() {
     if (p[0] === 'r') { var rec = PROJ.recent[k]; ST.info = {}; loadProject(rec.json, null, rec.name); }
     else { var f = PROJ.dirFiles[k]; dirPerm(false).then(function () { return f.handle.getFile(); }).then(function (fl) { return fl.text(); }).then(function (txt) { loadProject(txt, f.handle, f.name); }).catch(function (er) { toast(er.message, true); }); }
   });
-  kvGet('dir').then(function (d) { if (d) { PROJ.dir = d; if (d.queryPermission) d.queryPermission({ mode: 'read' }).then(function (s) { if (s === 'granted') scanDir(); else renderProj(); }); } }).catch(function () {});
+  PROJ.ready = kvGet('dir').then(function (d) { if (d) { PROJ.dir = d; if (d.queryPermission) d.queryPermission({ mode: 'read' }).then(function (s) { if (s === 'granted') scanDir(); else renderProj(); }); } }).catch(function () {});
 }

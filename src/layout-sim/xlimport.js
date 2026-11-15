@@ -166,6 +166,57 @@ function xlCellLayouts(ws) {
     return { cells: true, tsv: tsv, rows: p.rows, n: p.nMc, withOp: withOp, ref: XLSX.utils.encode_range({ s: { r: b.r0, c: b.c0 }, e: { r: b.r1, c: b.c1 } }) };
   }).filter(function (l) { return l.n >= 3 && l.withOp >= l.n * 0.6 && l.rows.length <= 8; });   // a real layout has operation numbers next to its machines (not a code / group table)
 }
+/* ---------- operation table of a layout / OBD sheet: operation number, machine type, SAM ----------
+   header row with a "SAM" / "SMV" cell; the operation column is the numeric column left of it that matches the layout's numbers best */
+function xlOpsTables(ws, layoutOps) {
+  var out = {};
+  if (!ws || !ws['!ref']) return out;
+  var R = XLSX.utils.decode_range(ws['!ref']), r1 = Math.min(R.e.r, 1500), c1 = Math.min(R.e.c, 40);
+  function v(r, c) { var x = ws[XLSX.utils.encode_cell({ r: r, c: c })]; return x && x.v != null ? String(x.w != null ? x.w : x.v).trim() : ''; }
+  function num(r, c) { var x = ws[XLSX.utils.encode_cell({ r: r, c: c })]; if (!x || x.v == null || x.v === '') return NaN; return typeof x.v === 'number' ? x.v : parseFloat(String(x.v).replace(',', '.')); }
+  var want = {}; (layoutOps || []).forEach(function (o) { want[String(o)] = 1; });
+  for (var r = R.s.r; r <= r1; r++) {
+    var samC = -1, mcC = -1, optrC = -1, opHdr = false;
+    for (var c = 0; c <= c1; c++) {   // a header may take two rows ("Factory" / "SMV"); a "SAM:" label of the sheet header is not a column
+      var h1 = v(r, c).toLowerCase(), h = (h1 + ' ' + v(r + 1, c).toLowerCase()).trim();
+      if (samC < 0 && h1.indexOf(':') < 0 && (/^(sam|smv)(\s*\/\s*(sam|smv))?\b/.test(h1) || /sam\s*\/\s*smv|factory\s*smv/.test(h))) samC = c;
+      if (mcC < 0 && /m\/c\s*type|machine\s*type|loại máy/.test(h)) mcC = c;
+      if (optrC < 0 && /arrange\.?\s*optr/.test(h)) optrC = c;
+      if (/^squ\b|op\.?\s*no|operation|công đoạn|op\s*code/.test(h1)) opHdr = true;
+    }
+    if (samC < 0 || !(opHdr || mcC >= 0)) continue;
+    var best = -1, bs = -1;   // the operation column: best overlap with the layout numbers among numeric columns left of SAM
+    for (c = 0; c < samC; c++) {
+      var n = 0, hit = 0;
+      for (var rr = r + 1; rr <= Math.min(r1, r + 120); rr++) { var x = num(rr, c); if (isFinite(x) && x > 0 && x < 1000 && Math.round(x) === x) { n++; if (want[String(x)]) hit++; } }
+      var sc = hit * 10 + n; if (n >= 2 && sc > bs) { bs = sc; best = c; }
+    }
+    if (best < 0) continue;
+    for (rr = r + 1; rr <= Math.min(r1, r + 200); rr++) {
+      if (/total|tổng/i.test(v(rr, 0)) || /^total|^subtotal/i.test(v(rr, samC - 1))) break;
+      var op = num(rr, best), sam = num(rr, samC);
+      if (!isFinite(op) || !isFinite(sam) || sam <= 0) continue;
+      var k = String(op);
+      if (!out[k]) out[k] = { sam: Math.round(sam * 10000) / 10000, mc: mcC >= 0 ? v(rr, mcC).split(/\s/)[0] : '', optr: optrC >= 0 ? num(rr, optrC) : null };
+    }
+    r += 2;
+  }
+  return out;
+}
+/* sequences typed in cells ("Work Flow: 31=>32=>33=>97") */
+function xlCellSeqs(ws) {
+  var out = [];
+  if (!ws || !ws['!ref']) return out;
+  var R = XLSX.utils.decode_range(ws['!ref']);
+  for (var r = R.s.r; r <= Math.min(R.e.r, 1500); r++) for (var c = R.s.c; c <= Math.min(R.e.c, 60); c++) {
+    var x = ws[XLSX.utils.encode_cell({ r: r, c: c })]; if (!x || typeof x.v !== 'string' || !/(=>|->|→)/.test(x.v)) continue;
+    if ((x.v.match(/\d{1,3}/g) || []).length < 2) continue;
+    var name = '';
+    for (var k = c - 1; k >= Math.max(0, c - 4) && !name; k--) { var y = ws[XLSX.utils.encode_cell({ r: r, c: k })]; if (y && y.v != null && String(y.v).trim() && !/(=>|->)/.test(String(y.v))) name = String(y.v).trim(); }
+    out.push({ name: /work\s*flow|trình tự/i.test(name) ? '' : name, text: x.v.replace(/\s+/g, ' ').trim(), y: r });
+  }
+  return out;
+}
 /* ---------- style name and header info of the layout sheet (same rules as IE Báo cáo máy / Layout Check) ---------- */
 var XL_STYLE_RE = /([A-Z]{3}\d{2})-(\d{5}(?:[._\/&+]\d{2,5})*)-(\d{4}(?:\s*[._\/&+-]\s*\d{2,4})*)\s*(?:[(_]\s*([A-Z0-9]{2})\s*[)_]?|([A-Z][A-Z0-9]|\d[A-Z])(?![A-Z0-9]))/gi;   // size in brackets, after _, or stuck to the number (3808XX)
 var XL_SPECIAL_RE = /\b(SP\d{5}V\d{2}|DS\d{3}[A-Z0-9]{5,}|[SF]2\d{3}[A-Z0-9]{3,})\b/g;
@@ -197,6 +248,8 @@ function xlSheetInfo(ws, sheetName, fileName) {
       if (/^\s*sam\s*:?\s*$/i.test(v) && !info.sam) info.sam = nx;
       if (/ver\s*\/\s*phiên bản/i.test(v) && !info.obd) info.obd = (v.split(':')[1] || nx).trim();
       if (/line no|chuyền\s*:/i.test(v) && !info.line && nx && !/ver|phiên bản|sam/i.test(nx)) info.line = nx;
+      if (/target\s*output|line target ou/i.test(v) && !info.target) info.target = parseFloat(nx) || '';
+      if (/target\s*efficiency|line target ef/i.test(v) && !info.eff) info.eff = parseFloat(nx) || '';
     }
     info.styles = xlExpandStyles(cells.join(' \n '));
   }
@@ -227,6 +280,14 @@ function xlOpen(f) {
         if (ex) ex.layouts = ex.layouts.concat(cl); else XLI.sheets.push({ name: sn, hidden: hid, layouts: cl, seqs: [] });
       });
       XLI.sheets.forEach(function (s) { s.info = xlSheetInfo(wb && wb.Sheets[s.name], s.name, f.name); });
+      // SAM table: the layout's own sheet first, other sheets fill the missing operations; sequences typed in cells too
+      if (wb) XLI.sheets.forEach(function (s) {
+        var ops = []; s.layouts.forEach(function (l) { (l.cells ? parsePaste(l.tsv).rows : l.rows).forEach(function (r) { r.cells.forEach(function (c) { String(c.op || '').split(/[\/+,&]/).forEach(function (o) { if (o.trim()) ops.push(o.trim()); }); }); }); });
+        s.ops = xlOpsTables(wb.Sheets[s.name], ops);
+        wb.SheetNames.forEach(function (sn) { if (sn === s.name) return; var o2 = xlOpsTables(wb.Sheets[sn], ops); Object.keys(o2).forEach(function (k) { if (!s.ops[k] && ops.indexOf(k) >= 0) s.ops[k] = o2[k]; }); });
+        var seen = {}; s.seqs.forEach(function (q) { seen[q.text.replace(/\s/g, '')] = 1; });
+        xlCellSeqs(wb.Sheets[s.name]).forEach(function (q) { if (!seen[q.text.replace(/\s/g, '')]) { seen[q.text.replace(/\s/g, '')] = 1; s.seqs.push(q); } });
+      });
       if (!XLI.sheets.length) { st.className = 'small t-warn tagline'; st.textContent = t('xlNone', [f.name]); return; }
       document.getElementById('ocrView').innerHTML = '';
       var sel = document.getElementById('xlPick');
@@ -260,24 +321,24 @@ function xlUse() {
     var main = xlRows(s1.layouts[+p1[1]]).map(function (r) { r.zone = 'main'; return r; }), br = xlRows(s2.layouts[+p2[1]]).map(function (r) { r.zone = 'branch'; return r; });
     var rows = ((ST.line.branch || {}).pos === 'bottom' ? main.concat(br) : br.concat(main));
     PASTE = { rows: rows, nCols: 0, nMc: rows.reduce(function (a, r) { return a + r.cells.length; }, 0), fromXl: true, seq: s1.seqs.length ? s1.seqs : s2.seqs,
-      meta: { style: s1.info.style, file: XLI.name, sheet: s1.name, optr: s1.info.optr, sam: s1.info.sam, obd: s1.info.obd } };
+      meta: { style: s1.info.style, file: XLI.name, sheet: s1.name, optr: s1.info.optr, sam: s1.info.sam, obd: s1.info.obd, target: s1.info.target, eff: s1.info.eff }, ops: Object.assign({}, s2.ops, s1.ops) };
     var stb = document.getElementById('ocrStatus'); stb.className = 'small'; stb.textContent = t('xlTwo', [PASTE.nMc]);
     document.getElementById('ocrView').innerHTML = '';
     renderPastePreview(); return;
   }
   var p = document.getElementById('xlPick').value.split(':'), sh = XLI.sheets[+p[0]], lay = sh.layouts[+p[1]];
-  var meta = { style: sh.info.style, file: XLI.name, sheet: sh.name, optr: sh.info.optr, sam: sh.info.sam, obd: sh.info.obd };
+  var meta = { style: sh.info.style, file: XLI.name, sheet: sh.name, optr: sh.info.optr, sam: sh.info.sam, obd: sh.info.obd, target: sh.info.target, eff: sh.info.eff };
   var st0 = document.getElementById('ocrStatus'); st0.className = 'small';
   if (lay.cells) {   // a layout written in cells: the same reader as a paste from Excel
     document.getElementById('pasteTxt').value = lay.tsv;
-    PASTE = parsePaste(lay.tsv); PASTE.seq = sh.seqs; PASTE.meta = meta;
+    PASTE = parsePaste(lay.tsv); PASTE.seq = sh.seqs; PASTE.meta = meta; PASTE.ops = sh.ops;
     st0.textContent = t('xlRead', [XLI.name, sh.name, PASTE.nMc, sh.seqs.length]) + ' ' + t('xlCells', [lay.ref]) + '.' + (sh.info.style ? ' ' + t('xlStyle', [sh.info.style, sh.info.optr || '?', sh.info.sam || '?', sh.info.obd || '?']) : '');
     document.getElementById('ocrView').innerHTML = '';
     renderPastePreview(); return;
   }
   var rows = lay.rows.map(function (r) { return { side: r.side || 'top', sideFound: r.sideFound, cells: r.cells.map(function (c) { return Object.assign({}, c); }) }; });
   PASTE = { rows: rows, nCols: Math.max.apply(null, rows.map(function (r) { return r.cells.length; })), nMc: lay.n, fromXl: true, seq: sh.seqs,
-    meta: { style: sh.info.style, file: XLI.name, sheet: sh.name, optr: sh.info.optr, sam: sh.info.sam, obd: sh.info.obd } };
+    meta: meta, ops: sh.ops };
   // the table text for reference (editing it switches back to the text grid)
   var lines = []; rows.forEach(function (r, i) { if (i) lines.push(''); var ops = r.cells.map(function (c) { return c.op; }).join('\t'), cs = r.cells.map(function (c) { return c.code; }).join('\t'); if (r.side === 'top') lines.push(ops, cs); else lines.push(cs, ops); });
   document.getElementById('pasteTxt').value = lines.join('\n') + '\n';

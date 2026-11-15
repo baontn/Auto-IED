@@ -10,7 +10,7 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 SRC, VENDOR = ROOT / 'src' / 'layout-sim', ROOT / 'vendor'
 OUT = ROOT / 'layout-sim' / 'LayoutSim.html'
 PARTS = [('XLSX', VENDOR / 'xlsx.full.min.js'), ('THREE', VENDOR / 'three.min.js'), ('I18N', SRC / 'i18n.js'), ('LIB', SRC / 'lib.js'),
-         ('MODEL', SRC / 'model.js'), ('PLAN2D', SRC / 'plan2d.js'), ('VIEW3D', SRC / 'view3d.js'), ('IMGPASTE', SRC / 'imgpaste.js'), ('XLIMPORT', SRC / 'xlimport.js'), ('FLOW', SRC / 'flow.js'), ('PROJECT', SRC / 'project.js'), ('APP', SRC / 'app.js')]
+         ('MODEL', SRC / 'model.js'), ('PLAN2D', SRC / 'plan2d.js'), ('VIEW3D', SRC / 'view3d.js'), ('IMGPASTE', SRC / 'imgpaste.js'), ('XLIMPORT', SRC / 'xlimport.js'), ('FLOW', SRC / 'flow.js'), ('PROJECT', SRC / 'project.js'), ('SIM', SRC / 'sim.js'), ('APP', SRC / 'app.js')]
 
 def main():
     html = (SRC / 'tpl.html').read_text(encoding='utf-8')

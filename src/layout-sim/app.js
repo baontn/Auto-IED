@@ -11,8 +11,9 @@ function renderAll() { runChecks(); render2d(); renderSide(); if (TAB === '3d') 
 function setTab(tb) {
   TAB = tb;
   document.querySelectorAll('.tabs button').forEach(function (b) { b.classList.toggle('on', b.dataset.tab === tb); });
-  $('paneWork').style.display = tb === 'lib' || tb === 'proj' ? 'none' : '';
-  $('paneLib').style.display = tb === 'lib' ? '' : 'none'; $('paneProj').style.display = tb === 'proj' ? '' : 'none';
+  $('paneWork').style.display = tb === 'lib' || tb === 'proj' || tb === 'sim' ? 'none' : '';
+  $('paneLib').style.display = tb === 'lib' ? '' : 'none'; $('paneProj').style.display = tb === 'proj' ? '' : 'none'; $('paneSim').style.display = tb === 'sim' ? '' : 'none';
+  if (tb === 'sim') renderSim();
   if (tb === 'proj') renderProj();
   $('plan').style.display = tb === 'plan' ? '' : 'none'; $('tb2d').style.display = tb === 'plan' ? '' : 'none';
   $('v3').style.display = tb === '3d' ? '' : 'none'; $('tb3d').style.display = tb === '3d' ? '' : 'none';
@@ -179,6 +180,7 @@ function pasteGo() {
   var items = buildFromPaste(PASTE, { addInput: $('pasteInput').checked, x0: 60, y0: y0, centers: useCt ? { main: centerOf('main'), branch: centerOf('branch') } : null });
   if (replace) ST.items = cts.concat(items); else ST.items = ST.items.concat(items);
   if (PASTE.meta && (replace || !(ST.info || {}).style)) ST.info = Object.assign({}, ST.info, PASTE.meta);
+  if (PASTE.ops && Object.keys(PASTE.ops).length) ST.ops = Object.assign(replace ? {} : (ST.ops || {}), PASTE.ops);   // SAM per operation from the layout file
   if (PASTE.seq && PASTE.seq.length) ST.seqText = PASTE.seq.map(function (q) { return (q.name ? q.name + ': ' : '') + q.text; }).join('\n');
   if ($('pasteFit').checked) { var bb = bbox(ST.items); ST.line.length = Math.ceil((bb.x1 + 60) / 10) * 10; ST.line.width = Math.ceil((bb.y1 + 60) / 10) * 10; }
   SEL = items.map(function (i) { return i.id; });
@@ -420,6 +422,7 @@ function startApp() {
   $('bFit').onclick = fitView;
   $('optFlow').checked = OPT.flow; $('optFlow').onchange = function () { OPT.flow = this.checked; render2d(); };
   $('optSnap').checked = OPT.snap; $('optSnap').onchange = function () { OPT.snap = this.checked; };
+  $('optWip').checked = OPT.wip; $('optWip').onchange = function () { OPT.wip = this.checked; render2d(); };
   $('optAisle').checked = OPT.aisles; $('optAisle').onchange = function () { OPT.aisles = this.checked; render2d(); };
   $('bErg').onclick = openErg;
   $('bLineSetup').onclick = openLineSetup;
@@ -474,6 +477,7 @@ function startApp() {
   document.addEventListener('keydown', onKey);
   init2d();
   runChecks(); renderSide();
-  requestAnimationFrame(function () { fitView(); if (!ST.line.fixed && !ST.items.length) openLineSetup(); });
+  requestAnimationFrame(function () { fitView(); firstRun(); });
+  initSim();
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () { render2d(); if (TAB === '3d') rebuild3d(); });
 }
