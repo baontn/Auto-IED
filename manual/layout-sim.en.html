@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Layout Sim: User guide</title><link rel="icon" href="../icon.png"><link rel="stylesheet" href="manual.css"></head><body>
-<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>Layout Sim v2.4: User guide</b><a href="layout-sim.html" title="Tiếng Việt" onclick="try{localStorage.setItem('ie_site_lang','vi')}catch(e){}">VI</a><a href="../index.html">‹ Home</a></header>
+<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>Layout Sim v2.5: User guide</b><a href="layout-sim.html" title="Tiếng Việt" onclick="try{localStorage.setItem('ie_site_lang','vi')}catch(e){}">VI</a><a href="../index.html">‹ Home</a></header>
 <div class="wrap">
 <nav class="toc"><b>Contents</b>
 <a href="#intro">1. Introduction</a>
@@ -9,6 +9,7 @@
 <a href="#library">3. Machine library</a>
 <a href="#line">4. Line set-up</a>
 <a href="#import">5. Bringing a layout onto the plan</a>
+<a class="sub" href="#auto">Automatic layout</a>
 <a href="#arrange">6. Arranging machines on the 2D plan</a>
 <a href="#operators">7. Operators</a>
 <a class="sub" href="#arranged">People arranged in the file</a>
@@ -76,9 +77,17 @@
 <li><b>Paste a picture</b>: paste a screenshot of the layout; the text is recognised on the PC (no network). Check the codes read.</li></ol>
 <p>At the same time the file gives: the <b>style</b> (cells B3, D3, D4, B11, sheet/file name, as in IE Báo cáo máy), workers, SAM, OBD version, target output, efficiency, the <b>operation table</b> (SAM, machine type, column <b>Arrange. Optr / CN sắp xếp</b>) and the sequence <code>31=&gt;32=&gt;…</code>.</p>
 <figure><a href="img/ls-paste.png"><img src="img/ls-paste.png" alt="Paste layout" loading="lazy"></a><figcaption>Preview: machine rows, operator side (top/bottom) and line (main/branch) of each row; codes missing in the library are flagged. Press <span class="btn">Đưa vào mặt bằng</span> (place on the plan).</figcaption></figure>
+<h3 id="auto">5.1 Automatic layout (no machine drawing in the file yet)</h3>
+<p>When the Excel file has the <b>operation table</b> (M/c Type, SAM, people arranged) and the <b>sequence</b> (<code>Work Flow: 31=&gt;32=&gt;…</code>) but no machine drawing, the layout list also offers <b>⚙ Automatic layout from the operation table · sheet …</b> (also for files with a layout, to compare). The tool:</p>
+<ul><li>takes the machine type of each operation from <b>M/c Type</b>;</li>
+<li>machines per operation: the machine-count column when present, else the <b>people arranged</b> (a merged cell shared by SAM), rounded like the costing rule (decimal ≤ 0.20 down, else up), at least 1;</li>
+<li>places the machines along the sequence of each group, alternately on both sides of the central table so the work moves forward; with a branch line the sub-assembly groups go on the branch and the assembly group on the main line; operations of the table missing from the sequence are inserted into the assembly group by number;</li>
+<li>sets the operators from the people arranged (section 7.1).</li></ul>
+<figure><a href="img/ls-auto.png"><img src="img/ls-auto.png" alt="Automatic layout" loading="lazy"></a><figcaption>Layout built from the operation table and a 3-group sequence: two sub-assemblies on the branch line, the assembly on the main line; one colour per group.</figcaption></figure>
+<div class="warn">An automatic layout is a draft: check it, rearrange it on the plan, then draw the layout in the Excel file (the card <b>Changes against the layout file</b> takes the automatic layout as its reference).</div>
 <ul><li><b>Thay layout hiện tại</b> (replace): the old machines are removed (the central tables stay). Untick to add to the current plan.</li>
 <li><b>Chỉnh kích thước chuyền theo layout</b>: line size from the layout when no line was set up.</li></ul>
-<figure><a href="img/ls-2d.png"><img src="img/ls-2d.png" alt="2D plan" loading="lazy"></a><figcaption>Layout placed on the line: machine code on the table, big operation number, operator zone (dashed blue), central table and input table. Click a machine for the turn / operator / standing / delete buttons.</figcaption></figure>
+<figure><a href="img/ls-2d.png"><img src="img/ls-2d.png" alt="2D plan" loading="lazy"></a><figcaption>Layout placed on the line: <b>machines of the same flow (sequence group) share one colour</b>, the colour of the group's flow line; machines outside every group are grey. Machine code on the table, big operation number, operator zone (dashed blue), central table and input table. Click a machine for the turn / operator / standing / delete buttons.</figcaption></figure>
 </section>
 
 <section id="arrange"><h2>6. Arranging machines on the 2D plan</h2>
@@ -149,7 +158,7 @@
 <li><b>People</b>: the operators on the plan (one person on several machines splits the time by SAM). When the line <b>HC</b> (line set-up, or workers of the file) differs from the people on the plan, extra people help the slowest operation (+1) and missing people are taken where most capacity is spare (−1).</li>
 <li>Operations combined on one machine (“37/42”) are done by one person, marked ⇄ in the table.</li>
 <li>Without a sequence: the work flows from the lowest to the highest operation number.</li></ul>
-<p>Press <span class="btn">▶ Chạy mô phỏng</span>: simulated output, capacity of the slowest operation (bottleneck), line efficiency, total WIP, WIP at the end and maximum per operation, suggestions (bottleneck, WIP piles, operations with little work). Capacity bars show pcs/h and load; above 100 % the capacity is not enough.</p>
+<p>Press <span class="btn">▶ Chạy mô phỏng</span>: simulated output, <b>utilisation</b> (average, lowest, highest; column <b>Mức bận</b> per operation; list per operator: red ≥ 95 % overloaded, yellow &lt; 60 % little work), capacity of the slowest operation (bottleneck), line efficiency, total WIP, WIP at the end and maximum per operation, suggestions (bottleneck, WIP piles, operations with little work). Capacity bars show pcs/h and load; above 100 % the capacity is not enough.</p>
 <figure><a href="img/ls-sim.png"><img src="img/ls-sim.png" alt="WIP simulation" loading="lazy"></a><figcaption>Simulation result and line balance per operation; red row = bottleneck, yellow row = WIP above the warning level.</figcaption></figure>
 <div class="ok">The <span class="btn">⏱ Mô phỏng WIP</span> button in the <b>2D plan</b> toolbar runs the simulation right on the plan: a result bar (output and change against the last run, bottleneck, efficiency, WIP) and WIP labels on the machines. While the bar is open the simulation runs again after every change of the plan (machines added, operators changed…). Click an operation number on the bar to select its machines; <span class="btn">Chi tiết</span> opens the simulation page.</div>
 </section>

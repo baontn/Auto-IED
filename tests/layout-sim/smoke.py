@@ -97,6 +97,18 @@ def make_cells_xlsx(path):
     for k in range(10): m.append(['1SLA', '1SLM', '1SLM', 'note'])
     wb.save(path)
 
+def make_auto_xlsx(path):
+    """an operation table (machine type, SAM, people arranged) and the work flow, but no layout drawn: for the automatic layout"""
+    wb = Workbook(); ws = wb.active; ws.title = 'Initial layout'
+    ws['A3'] = 'STYLE No /Mã hàng'; ws['E3'] = 'XYZ26-00003-1103XX'
+    for k, h in enumerate(['SQU', 'Op No.', 'Description', 'M/c Type', 'SAM/SMV', 'Calc.Optr', 'Arrange. Optr\nCN sắp xếp']): ws.cell(row=5, column=1 + k, value=h)
+    rows = [(31, '1SLA', 0.5, 1), (32, '3OLM', 0.4, 0.5), (33, '2CSM', 0.6, 0.5), (41, 'SFAM', 0.3, 0.5), (43, 'SFAM', 0.3, 0.5), (66, '4OLB', 0.9, 2), (67, '1SLA', 0.5, 1), (97, 'BT1M', 0.4, 1)]
+    for k, (o, c, sam, ar) in enumerate(rows):
+        for j, v in enumerate([o, o, 'op', c, sam, None, ar]): ws.cell(row=6 + k, column=1 + j, value=v)
+    ws.cell(row=6 + len(rows), column=1, value='Total Sew')
+    ws['A20'] = 'Work Flow'; ws['B21'] = 'Cụm tim'; ws['C21'] = '31=>32=>33'; ws['B22'] = 'Cụm bát'; ws['C22'] = '41=>43'; ws['B23'] = 'Lắp ráp'; ws['C23'] = '66=>67=>97=>QC'
+    wb.save(path)
+
 async def launch(p):
     args = ['--use-angle=swiftshader', '--enable-unsafe-swiftshader']
     try: return await p.chromium.launch(args=args)
@@ -336,7 +348,7 @@ async def main():
         cx = os.path.join(tmp, 'cells.xlsx'); make_cells_xlsx(cx)
         await pg.evaluate("()=>{openPaste()}"); await pg.set_input_files('#fileXl', cx); await pg.wait_for_timeout(700)
         r = await pg.evaluate("()=>[document.querySelectorAll('#xlPick option').length, PASTE.nMc, PASTE.rows.map(r=>r.side+':'+r.cells.map(c=>c.code+'/'+c.op).join(',')).join(' | '), PASTE.meta.style, PASTE.meta.optr]")
-        check(r == [1, 7, 'top:1SLA/31,3OLM/32,2CSM/33/34,BT1M/35 | bottom:1SLA/36,3OLM/37,BT1M/97', 'XYZ26-00002-1102(XX)', '6'], 'cell layout read (code table ignored), style and workers ' + str(r))
+        check(r == [2, 7, 'top:1SLA/31,3OLM/32,2CSM/33/34,BT1M/35 | bottom:1SLA/36,3OLM/37,BT1M/97', 'XYZ26-00002-1102(XX)', '6'], 'cell layout read (code table ignored; + automatic layout option), style and workers ' + str(r))
         # people arranged in the file: merged 31+32 = 1 person, 33/34 0.5+0.5, 36 + 37 0.5 + 0.5 = one person, 97 1 + 0.5 (extra machine row)
         r = await pg.evaluate("()=>[PASTE.ops['31'].ar, PASTE.ops['32'].ar, PASTE.ops['31'].ag==PASTE.ops['32'].ag, PASTE.ops['97'].ar, PASTE.ops['36'].ar]")
         check(r == [1, 1, True, 1.5, 0.5], '"Arrange. Optr / CN sắp xếp" read with merged cells and extra machine rows ' + str(r))
@@ -349,6 +361,20 @@ async def main():
         await pg.click('[data-tab="sim"]'); await pg.wait_for_timeout(200)
         check('⟨31·32⟩' in await pg.inner_text('#smTable'), 'simulation table shows the arranged people of the file')
         if SHOTS: await pg.screenshot(path=SHOTS + '/ls-arrange.png')
+        await pg.click('[data-tab="plan"]')
+        # automatic layout: operation table + work flow, no layout drawn
+        ax = os.path.join(tmp, 'auto.xlsx'); make_auto_xlsx(ax)
+        await pg.evaluate("()=>{openPaste()}"); await pg.set_input_files('#fileXl', ax); await pg.wait_for_timeout(700)
+        r = await pg.evaluate("()=>[document.querySelectorAll('#xlPick option').length, document.getElementById('xlPick').value, PASTE.auto, PASTE.nMc, PASTE.rows.map(r=>r.zone+':'+r.side+':'+r.cells.map(c=>c.code+'/'+c.op).join(',')).join(' | ')]")
+        check(r[0] == 1 and r[1] == 'a:0' and r[2] and r[3] == 9 and r[4] == 'branch:top:1SLA/31,SFAM/41,SFAM/43 | branch:bottom:3OLM/32,2CSM/33 | main:top:4OLB/66,1SLA/67 | main:bottom:4OLB/66,BT1M/97', 'automatic layout offered and built from the table + flow (66 = 2 people -> 2 machines; sub-assemblies on the branch) ' + str(r))
+        await pg.click('#pasteGo'); await pg.wait_for_timeout(300)
+        r = await pg.evaluate('''()=>{const m=ST.items.filter(i=>i.kind=='mc');const col=o=>flowColOf(m.find(i=>opsOf(i)[0]==o));
+          return [m.length, m.filter(i=>i.zone=='branch').length, col('31')==col('33'), col('31')!=col('41'), col('66')==col('97'), ISSUES.filter(x=>/isOverlap|isSeat/.test(x.k)).length]}''')
+        check(r == [9, 5, True, True, True, 0], 'automatic layout placed (5 on the branch, 4 on the main line), machines coloured by flow, no overlap ' + str(r))
+        if SHOTS: await pg.evaluate('()=>{SEL=[];onSelChange();fitView()}'); await pg.screenshot(path=SHOTS + '/ls-auto.png')
+        await pg.click('[data-tab="sim"]'); await pg.click('#smRun'); await pg.wait_for_timeout(400)
+        r = await pg.evaluate("()=>[document.querySelector('#smTable').innerText.includes('Mức bận'), SIMR.rows.every(x=>x.util==null||(x.util>=0&&x.util<=1.01)), document.querySelectorAll('#smRes .utils>div').length]")
+        check(r[0] and r[1] and r[2] >= 6, 'WIP simulation shows utilisation per operation and per operator ' + str(r))
         await pg.click('[data-tab="plan"]')
         # projects: style field, save (download fallback + recent list in the browser), new project, reopen from recent
         await pg.fill('#lnStyle', 'ABC26-00001-1101(XX)'); await pg.dispatch_event('#lnStyle', 'change')

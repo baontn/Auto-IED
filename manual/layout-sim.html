@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Layout Sim: Hướng dẫn sử dụng</title><link rel="icon" href="../icon.png"><link rel="stylesheet" href="manual.css"></head><body>
-<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>Layout Sim v2.4: Hướng dẫn sử dụng</b><a href="layout-sim.en.html" title="English" onclick="try{localStorage.setItem('ie_site_lang','en')}catch(e){}">EN</a><a href="../index.html">‹ Trang chủ</a></header>
+<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>Layout Sim v2.5: Hướng dẫn sử dụng</b><a href="layout-sim.en.html" title="English" onclick="try{localStorage.setItem('ie_site_lang','en')}catch(e){}">EN</a><a href="../index.html">‹ Trang chủ</a></header>
 <div class="wrap">
 <nav class="toc"><b>Nội dung</b>
 <a href="#gioi-thieu">1. Giới thiệu</a>
@@ -9,6 +9,7 @@
 <a href="#thu-vien">3. Thư viện máy</a>
 <a href="#chuyen">4. Thiết lập chuyền</a>
 <a href="#dua-layout">5. Đưa layout vào mặt bằng</a>
+<a class="sub" href="#tu-tao">Tự tạo layout</a>
 <a href="#sap-xep">6. Sắp xếp máy trên mặt bằng 2D</a>
 <a href="#nguoi">7. Người vận hành</a>
 <a class="sub" href="#cn-sap-xep">CN sắp xếp trong file</a>
@@ -76,9 +77,17 @@
 <li><b>Dán ảnh</b>: dán ảnh chụp layout; chương trình nhận dạng chữ ngay trên máy (không cần mạng). Kiểm tra lại các mã đọc được.</li></ol>
 <p>Cùng lúc chương trình đọc từ file: <b>mã hàng</b> (ô B3, D3, D4, B11, tên sheet/file, giống IE Báo cáo máy), số công nhân, SAM, phiên bản OBD, sản lượng mục tiêu, hiệu suất, <b>bảng công đoạn</b> (SAM, loại máy, cột <b>Arrange. Optr / CN sắp xếp</b>) và trình tự <code>31=&gt;32=&gt;…</code>.</p>
 <figure><a href="img/ls-paste.png"><img src="img/ls-paste.png" alt="Dán layout" loading="lazy"></a><figcaption>Xem trước: các hàng máy, phía người ngồi (trên/dưới) và chuyền (chính/nhánh) của từng hàng; mã chưa có trong thư viện được cảnh báo. Bấm <span class="btn">Đưa vào mặt bằng</span>.</figcaption></figure>
+<h3 id="tu-tao">5.1 Tự tạo layout (file chưa có sơ đồ máy)</h3>
+<p>Khi file Excel có <b>bảng công đoạn</b> (cột M/c Type, SAM, CN sắp xếp) và <b>trình tự</b> (<code>Work Flow: 31=&gt;32=&gt;…</code>) nhưng chưa vẽ sơ đồ máy, danh sách layout có thêm dòng <b>⚙ Tự tạo layout từ bảng công đoạn · sheet …</b> (cũng có ở file đã có layout, để so sánh). Chương trình:</p>
+<ul><li>lấy loại máy của từng công đoạn từ cột <b>M/c Type</b>;</li>
+<li>số máy của công đoạn: theo cột số máy nếu có, nếu không theo <b>CN sắp xếp</b> (ô gộp chia theo SAM), làm tròn như quy tắc costing (phần lẻ ≤ 0,20 làm tròn xuống, còn lại làm tròn lên), ít nhất 1 máy;</li>
+<li>xếp máy theo trình tự từng cụm, lần lượt hai bên bàn giữa (so le) để hàng đi tới; có chuyền nhánh thì các cụm phụ đặt ở chuyền nhánh, cụm lắp ráp ở chuyền chính; công đoạn trong bảng nhưng không có trong trình tự được chèn vào cụm lắp ráp theo số;</li>
+<li>đặt người vận hành theo CN sắp xếp (mục 7.1).</li></ul>
+<figure><a href="img/ls-auto.png"><img src="img/ls-auto.png" alt="Tự tạo layout" loading="lazy"></a><figcaption>Layout tự tạo từ bảng công đoạn và trình tự 3 cụm: cụm tim và cụm bát ở chuyền nhánh, cụm lắp ráp ở chuyền chính; mỗi cụm một màu.</figcaption></figure>
+<div class="warn">Layout tự tạo là bản nháp: kiểm tra, sắp xếp lại trên mặt bằng, rồi vẽ layout vào file Excel (thẻ <b>Thay đổi so với file layout</b> tính mốc từ layout tự tạo).</div>
 <ul><li><b>Thay layout hiện tại</b>: bỏ các máy cũ (giữ bàn giữa). Bỏ tích để thêm vào mặt bằng đang có.</li>
 <li><b>Chỉnh kích thước chuyền theo layout</b>: chuyền rộng/dài theo layout khi chưa thiết lập chuyền.</li></ul>
-<figure><a href="img/ls-2d.png"><img src="img/ls-2d.png" alt="Mặt bằng 2D" loading="lazy"></a><figcaption>Layout đã đặt vào chuyền: mã máy trên mặt bàn, số công đoạn lớn, vùng người vận hành (khung xanh nét đứt), bàn giữa và bàn đầu vào. Bấm một máy để hiện các nút xoay / người / đứng-ngồi / xóa.</figcaption></figure>
+<figure><a href="img/ls-2d.png"><img src="img/ls-2d.png" alt="Mặt bằng 2D" loading="lazy"></a><figcaption>Layout đã đặt vào chuyền: <b>máy cùng một cụm (trình tự) cùng một màu</b>, giống màu đường đi của cụm; máy không thuộc cụm nào màu xám. Mã máy trên mặt bàn, số công đoạn lớn, vùng người vận hành (khung xanh nét đứt), bàn giữa và bàn đầu vào. Bấm một máy để hiện các nút xoay / người / đứng-ngồi / xóa.</figcaption></figure>
 </section>
 
 <section id="sap-xep"><h2>6. Sắp xếp máy trên mặt bằng 2D</h2>
@@ -149,7 +158,7 @@
 <li><b>Số người</b>: theo người vận hành trên mặt bằng (một người nhiều máy chia thời gian theo SAM). Nếu chuyền có <b>HC</b> (Thiết lập chuyền, hoặc số công nhân trong file) khác số người trên mặt bằng: người thêm hỗ trợ công đoạn chậm nhất (+1), thiếu người thì bớt ở công đoạn dư năng lực nhất (−1).</li>
 <li>Công đoạn ghép trên một máy (“37/42”) do một người làm, đánh dấu ⇄ trong bảng.</li>
 <li>Không có trình tự: hàng đi từ công đoạn nhỏ nhất đến lớn nhất.</li></ul>
-<p>Bấm <span class="btn">▶ Chạy mô phỏng</span>: sản lượng mô phỏng, năng lực công đoạn chậm nhất (nút cổ chai), hiệu suất chuyền, tổng WIP, WIP cuối ca và WIP lớn nhất từng công đoạn, gợi ý (nút cổ chai, WIP dồn, công đoạn ít việc). Thanh năng lực ghi số sp/giờ và mức tải; trên 100 % là không đủ năng lực.</p>
+<p>Bấm <span class="btn">▶ Chạy mô phỏng</span>: sản lượng mô phỏng, <b>mức bận</b> (trung bình, thấp nhất, cao nhất; cột <b>Mức bận</b> từng công đoạn; danh sách mức bận từng người vận hành: đỏ ≥ 95 % quá tải, vàng &lt; 60 % ít việc), năng lực công đoạn chậm nhất (nút cổ chai), hiệu suất chuyền, tổng WIP, WIP cuối ca và WIP lớn nhất từng công đoạn, gợi ý (nút cổ chai, WIP dồn, công đoạn ít việc). Thanh năng lực ghi số sp/giờ và mức tải; trên 100 % là không đủ năng lực.</p>
 <figure><a href="img/ls-sim.png"><img src="img/ls-sim.png" alt="Mô phỏng WIP" loading="lazy"></a><figcaption>Kết quả mô phỏng và bảng cân bằng chuyền theo công đoạn; dòng đỏ = nút cổ chai, dòng vàng = WIP vượt mức cảnh báo.</figcaption></figure>
 <div class="ok">Nút <span class="btn">⏱ Mô phỏng WIP</span> trên thanh công cụ <b>Mặt bằng 2D</b> chạy mô phỏng ngay trên mặt bằng: thanh kết quả (sản lượng và chênh lệch so với lần trước, nút cổ chai, hiệu suất, WIP) và nhãn WIP trên từng máy. Khi thanh đang mở, mỗi lần sửa mặt bằng (thêm máy, đổi người…) mô phỏng tự chạy lại. Bấm số công đoạn trên thanh để chọn máy đó; <span class="btn">Chi tiết</span> mở trang Mô phỏng WIP.</div>
 </section>

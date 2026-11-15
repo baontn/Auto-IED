@@ -176,12 +176,13 @@ function xlOpsTables(ws, layoutOps) {
   function num(r, c) { var x = ws[XLSX.utils.encode_cell({ r: r, c: c })]; if (!x || x.v == null || x.v === '') return NaN; return typeof x.v === 'number' ? x.v : parseFloat(String(x.v).replace(',', '.')); }
   var want = {}; (layoutOps || []).forEach(function (o) { want[String(o)] = 1; });
   for (var r = R.s.r; r <= r1; r++) {
-    var samC = -1, mcC = -1, optrC = -1, opHdr = false;
+    var samC = -1, mcC = -1, optrC = -1, mcnC = -1, opHdr = false;
     for (var c = 0; c <= c1; c++) {   // a header may take two rows ("Factory" / "SMV"); a "SAM:" label of the sheet header is not a column
       var h1 = v(r, c).toLowerCase(), h = (h1 + ' ' + v(r + 1, c).toLowerCase()).trim();
       if (samC < 0 && h1.indexOf(':') < 0 && (/^(sam|smv)(\s*\/\s*(sam|smv))?\b/.test(h1) || /sam\s*\/\s*smv|factory\s*smv/.test(h))) samC = c;
       if (mcC < 0 && /m\/c\s*type|machine\s*type|loại máy/.test(h)) mcC = c;
       if (optrC < 0 && /arrange\.?\s*optr/.test(h)) optrC = c;
+      if (mcnC < 0 && /no\.?\s*(of\s*)?m\/?c\b|số\s*máy|qty\s*(of\s*)?m\/?c|m\/c\s*qty/.test(h)) mcnC = c;
       if (/^squ\b|op\.?\s*no|operation|công đoạn|op\s*code/.test(h1)) opHdr = true;
     }
     if (samC < 0 || !(opHdr || mcC >= 0)) continue;
@@ -212,7 +213,7 @@ function xlOpsTables(ws, layoutOps) {
         else arr = num(rr, optrC);
         if (!isFinite(arr)) arr = mg ? 0 : null;
       }
-      out[k] = { sam: Math.round(sam * 10000) / 10000, mc: mcC >= 0 ? v(rr, mcC).split(/\s/)[0] : '', optr: arr, ar: arr, ag: ag, ai: idx++ };
+      out[k] = { sam: Math.round(sam * 10000) / 10000, mc: mcC >= 0 ? v(rr, mcC).split(/\s/)[0] : '', optr: arr, ar: arr, ag: ag, ai: idx++, mcn: mcnC >= 0 && isFinite(num(rr, mcnC)) ? num(rr, mcnC) : null };
       last = k;
     }
     r += 2;
@@ -304,16 +305,31 @@ function xlOpen(f) {
         var seen = {}; s.seqs.forEach(function (q) { seen[q.text.replace(/\s/g, '')] = 1; });
         xlCellSeqs(wb.Sheets[s.name]).forEach(function (q) { if (!seen[q.text.replace(/\s/g, '')]) { seen[q.text.replace(/\s/g, '')] = 1; s.seqs.push(q); } });
       });
-      if (!XLI.sheets.length) { st.className = 'small t-warn tagline'; st.textContent = t('xlNone', [f.name]); return; }
+      // operation tables (machine type per operation) + sequence without a drawn layout: candidates for an automatic layout
+      XLI.auto = [];
+      if (wb) wb.SheetNames.forEach(function (sn, k) {
+        if (/template/i.test(sn)) return;
+        var ops = xlOpsTables(wb.Sheets[sn], []), n = Object.keys(ops).filter(function (o) { return autoCode(ops[o].mc); }).length; if (n < 3) return;
+        var hid = !!(wb.Workbook && wb.Workbook.Sheets && wb.Workbook.Sheets[k] && wb.Workbook.Sheets[k].Hidden);
+        var ex = XLI.sheets.filter(function (s) { return s.name === sn; })[0], dr = sheets.filter(function (s) { return s.name === sn; })[0];
+        var seqs = ex ? ex.seqs.slice() : (dr ? xlSeqs(xlShapes(xlFile(z, dr.drawing))) : []), seen = {};
+        seqs.forEach(function (q) { seen[q.text.replace(/\s/g, '')] = 1; });
+        xlCellSeqs(wb.Sheets[sn]).forEach(function (q) { if (!seen[q.text.replace(/\s/g, '')]) { seen[q.text.replace(/\s/g, '')] = 1; seqs.push(q); } });
+        XLI.auto.push({ name: sn, hidden: hid, ops: ops, seqs: seqs, info: xlSheetInfo(wb.Sheets[sn], sn, f.name) });
+      });
+      if (!XLI.sheets.length && !XLI.auto.length) { st.className = 'small t-warn tagline'; st.textContent = t('xlNone', [f.name]); return; }
       document.getElementById('ocrView').innerHTML = '';
       var sel = document.getElementById('xlPick');
       sel.innerHTML = XLI.sheets.map(function (s, i) {
         return s.layouts.map(function (l, j) { return '<option value="' + i + ':' + j + '">' + esc((s.info.style && s.name.toUpperCase().indexOf(s.info.style.toUpperCase()) < 0 ? s.info.style + ' · ' : '') + s.name + (s.hidden ? ' (' + t('xlHidden') + ')' : '') + ' · ' + t('xlLay', [j + 1, l.rows.length, l.n]) + (l.cells ? ' · ' + t('xlCells', [l.ref]) : '')) + '</option>'; }).join('');
+      }).join('') + XLI.auto.map(function (a, k) {
+        var r = autoRows(a.ops, a.seqs, false);
+        return '<option value="a:' + k + '">' + esc('⚙ ' + t('xlAutoOpt', [a.name + (a.hidden ? ' (' + t('xlHidden') + ')' : ''), r.nOps, r.nMc, r.nLines])) + '</option>';
       }).join('');
       document.getElementById('xlBox').style.display = '';
       xlFillBranchPick();
       // the visible sheet with the most machines first
-      var bi = 0, bn = -1; [].forEach.call(sel.options, function (o, k) { var p = o.value.split(':'), s = XLI.sheets[+p[0]]; if (!s.hidden && s.layouts[+p[1]].n > bn) { bn = s.layouts[+p[1]].n; bi = k; } });
+      var bi = 0, bn = -1; [].forEach.call(sel.options, function (o, k) { var p = o.value.split(':'); if (p[0] === 'a') { if (bn < 0 && !XLI.auto[+p[1]].hidden) { bn = 0; bi = k; } return; } var s = XLI.sheets[+p[0]]; if (!s.hidden && s.layouts[+p[1]].n > bn) { bn = s.layouts[+p[1]].n; bi = k; } });
       sel.selectedIndex = bi; xlUse();
     } catch (e) { console.error(e); st.className = 'small t-bad tagline'; st.textContent = t('xlErr') + ': ' + e.message; }
   };
@@ -328,9 +344,10 @@ function xlFillBranchPick() {
   var sel = document.getElementById('xlPickB'), on = !!centerOf('branch');
   document.getElementById('xlBranch').style.display = on ? '' : 'none';
   if (!on) { sel.value = ''; return; }
-  sel.innerHTML = '<option value="">' + esc(t('xlBranchNone')) + '</option>' + document.getElementById('xlPick').innerHTML;
+  sel.innerHTML = '<option value="">' + esc(t('xlBranchNone')) + '</option>' + [].filter.call(document.getElementById('xlPick').options, function (o) { return !/^a:/.test(o.value); }).map(function (o) { return o.outerHTML; }).join('');
 }
 function xlUse() {
+  if (/^a:/.test(document.getElementById('xlPick').value)) { document.getElementById('xlPickB').value = ''; xlAuto(+document.getElementById('xlPick').value.slice(2)); return; }
   var pb = document.getElementById('xlPickB').value;
   if (pb) {   // two layouts: the one chosen for the main line + another one on the branch line
     var p1 = document.getElementById('xlPick').value.split(':'), p2 = pb.split(':'), s1 = XLI.sheets[+p1[0]], s2 = XLI.sheets[+p2[0]];
@@ -370,4 +387,58 @@ function xlPreviewSvg(lay) {
       '<text x="' + (s.cx - lay.x0) + '" y="' + (s.cy - lay.y0 + 4) + '" font-size="' + Math.max(9, s.h * 0.22) + '" text-anchor="middle" font-weight="700">' + esc(s.code) + (s.op ? ' ' + esc(s.op) : '') + '</text>';
   });
   document.getElementById('ocrView').innerHTML = '<div class="ocrwrap"><svg viewBox="-5 -5 ' + (w + 10) + ' ' + (h + 10) + '" style="position:static;height:auto;width:100%">' + svg + '</svg></div>';
+}
+
+/* ---------- automatic layout: machines from the operation table, placed along the sequence ---------- */
+function autoCode(mc) { var m = String(mc || '').toUpperCase().match(/^[A-Z0-9]+/); return m && m[0].length >= 3 ? m[0] : ''; }
+/* machines of an operation: the machine-count column, else the people arranged in the file (a merged cell shared by SAM),
+   rounded like the costing rule (decimal <= 0.20 down, else up), at least 1 */
+function autoCount(ops, o) {
+  var x = ops[o];
+  if (x.mcn > 0) return Math.max(1, Math.round(x.mcn));
+  if (x.ar == null || !isFinite(x.ar)) return 1;
+  var v = x.ar, grp = Object.keys(ops).filter(function (k) { return ops[k].ag === x.ag; });
+  if (grp.length > 1) { var tot = grp.reduce(function (a, k) { return a + (ops[k].sam || 0); }, 0); v = tot > 0 ? x.ar * (x.sam || 0) / tot : x.ar / grp.length; }
+  var f = Math.floor(v), d = v - f;
+  return Math.max(1, Math.min(8, d <= 0.2 + 1e-9 ? f : f + 1));
+}
+/* rows for buildFromPaste: the flow lines in sequence order, machines alternately on both sides of the central table
+   (zig-zag, the side with less length first) so that the work moves forward along the table; with a branch line the
+   sub-assembly flows go on the branch and the assembly flow on the main line */
+function autoRows(ops, seqs, branchOn) {
+  var norm = function (o) { return String(o).trim().replace(/^0+(?=\d)/, '').toUpperCase(); };
+  var sq = seqParse((seqs || []).map(function (q) { return (q.name ? q.name + ': ' : '') + q.text; }).join('\n'));
+  var lines = sq.lines.map(function (ln, i) { return { asm: i === sq.asm, ops: ln.ops.map(norm).filter(function (o, j, a) { return ops[o] && autoCode(ops[o].mc) && a.indexOf(o) === j; }) }; }).filter(function (l) { return l.ops.length; });
+  var seen = {}; lines.forEach(function (l) { l.ops = l.ops.filter(function (o) { if (seen[o]) return false; seen[o] = 1; return true; }); });
+  var rest = Object.keys(ops).filter(function (o) { return !seen[o] && autoCode(ops[o].mc); }).sort(function (a, b) { return simNum(a) - simNum(b); });
+  if (!lines.length) lines = [{ asm: true, ops: rest }];
+  else {   // operations of the table missing from the sequence: into the assembly flow by number
+    var A = lines.filter(function (l) { return l.asm; })[0] || lines[lines.length - 1];
+    rest.forEach(function (o) { var k = 0; while (k < A.ops.length && !(simNum(A.ops[k]) > simNum(o))) k++; A.ops.splice(k, 0, o); });
+  }
+  var useBr = branchOn && lines.length > 1, zones = {}, nMc = 0, nOps = 0;
+  lines.forEach(function (l) {
+    var zid = useBr && !l.asm ? 'branch' : 'main';
+    var Z = zones[zid] || (zones[zid] = { cur: { top: 0, bottom: 0 }, rows: { top: [], bottom: [] } });
+    l.ops.forEach(function (o) {
+      var code = autoCode(ops[o].mc), n = autoCount(ops, o), L = dimOf(code).L; nOps++;
+      for (var i = 0; i < n; i++) {
+        var side = Z.cur.top <= Z.cur.bottom ? 'top' : 'bottom';
+        Z.rows[side].push({ code: code, op: o, x: Z.cur[side] + L / 2, side: side }); Z.cur[side] += L; nMc++;
+      }
+    });
+  });
+  var rows = [], order = useBr && (ST.line.branch || {}).pos !== 'bottom' ? ['branch', 'main'] : ['main', 'branch'];
+  order.forEach(function (zid) { var Z = zones[zid]; if (!Z) return; ['top', 'bottom'].forEach(function (sd) { if (Z.rows[sd].length) rows.push({ side: sd, sideFound: true, zone: zid, cells: Z.rows[sd] }); }); });
+  // a zone with only one row: keep the row order (top row first) expected by buildFromPaste
+  return { rows: rows, nMc: nMc, nOps: nOps, nLines: lines.length };
+}
+function xlAuto(k) {
+  var a = XLI.auto[k], r = autoRows(a.ops, a.seqs, !!centerOf('branch'));
+  var meta = { style: a.info.style, file: XLI.name, sheet: a.name, optr: a.info.optr, sam: a.info.sam, obd: a.info.obd, target: a.info.target, eff: a.info.eff };
+  PASTE = { rows: r.rows, nCols: 0, nMc: r.nMc, fromXl: true, auto: true, seq: a.seqs, meta: meta, ops: a.ops };
+  document.getElementById('pasteTxt').value = '';
+  document.getElementById('ocrView').innerHTML = '';
+  var st = document.getElementById('ocrStatus'); st.className = 'small t-info tagline'; st.textContent = t('xlAutoRead', [XLI.name, a.name, r.nOps, r.nMc, r.nLines]);
+  renderPastePreview();
 }

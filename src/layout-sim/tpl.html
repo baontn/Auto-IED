@@ -69,6 +69,8 @@ label.f.row input{width:80px}
 #paneSim .card{margin-bottom:12px}
 .grid6{display:grid;grid-template-columns:repeat(6,minmax(110px,1fr));gap:8px;margin-top:8px}
 @media (max-width:900px){.grid6{grid-template-columns:1fr 1fr}}
+
+.utils{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:4px 14px;margin-top:6px;font-size:12.5px}.utils>div{display:grid;grid-template-columns:96px 1fr;gap:6px;align-items:center}
 .barT{position:absolute;left:6px;top:-1px;font-size:11px;font-weight:700;line-height:20px;color:var(--text);text-shadow:0 0 3px var(--panel),0 0 3px var(--panel);white-space:nowrap}
 .bar{position:relative;height:18px;background:var(--line);border-radius:5px;min-width:80px}.bar i{position:absolute;left:0;top:0;bottom:0;border-radius:5px}.bar b{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--warn)}
 tr.bn td{background:var(--badbg)}tr.wip td{background:var(--warnbg)}tr[data-op]{cursor:pointer}

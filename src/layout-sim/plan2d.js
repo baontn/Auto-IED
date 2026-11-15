@@ -62,10 +62,10 @@ function planMarkup(o) {
     }
     var fam = it.kind === 'mc' ? famOf(it.code) : '';
     var ins = 0, bw = Math.max(wd, 1.8 * sw);   // no gap: a firm dark border keeps touching tables distinct
-    g.push('<rect x="' + (-d.L / 2 + ins) + '" y="' + (-d.W / 2 + ins) + '" width="' + (d.L - 2 * ins) + '" height="' + (d.W - 2 * ins) + '" rx="' + (ins ? 1.5 : 0) + '" fill="' + (it.kind === 'mc' ? FAM_COL[fam] : (it.color || '#c9ccd3')) + '" fill-opacity="' + (it.kind === 'mc' ? 0.55 : 0.45) + '" stroke="' + (stroke === P.edge ? P.tableEdge : stroke) + '" stroke-width="' + bw + '"/>');
+    g.push('<rect x="' + (-d.L / 2 + ins) + '" y="' + (-d.W / 2 + ins) + '" width="' + (d.L - 2 * ins) + '" height="' + (d.W - 2 * ins) + '" rx="' + (ins ? 1.5 : 0) + '" fill="' + (it.kind === 'mc' ? flowColOf(it) : (it.color || '#c9ccd3')) + '" fill-opacity="' + (it.kind === 'mc' ? 0.5 : 0.45) + '" stroke="' + (stroke === P.edge ? P.tableEdge : stroke) + '" stroke-width="' + bw + '"/>');
     if (it.kind === 'mc') {
       var hd = headTop(fam, d, S.seatX);
-      if (hd) g.push('<rect x="' + hd.x + '" y="' + hd.y + '" width="' + hd.w + '" height="' + hd.h + '" rx="2" fill="' + FAM_COL[fam] + '" fill-opacity=".95" stroke="' + P.edge + '" stroke-width="' + sw + '"/>');
+      if (hd) g.push('<rect x="' + hd.x + '" y="' + hd.y + '" width="' + hd.w + '" height="' + hd.h + '" rx="2" fill="' + flowColOf(it) + '" fill-opacity=".95" stroke="' + P.edge + '" stroke-width="' + sw + '"/>');
       g.push('<circle cx="' + S.seatX + '" cy="' + (d.W / 2 - 6) + '" r="2.2" fill="' + P.bad + '"/>');   // needle / work point, operator side
     }
     g.push('</g>');

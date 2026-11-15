@@ -2,6 +2,10 @@
 var LANG = 'vi';
 var I18N = {
   vi: {
+    xlAutoOpt: 'Tự tạo layout từ bảng công đoạn · sheet {0}: {1} công đoạn, {2} máy, trình tự {3} cụm',
+    xlAutoRead: 'Tự tạo layout: {0} · sheet "{1}": {2} công đoạn, {3} máy (số máy theo cột số máy, nếu không có thì theo CN sắp xếp), xếp theo trình tự {4} cụm, hai bên bàn giữa so le để hàng đi tới. Kiểm tra rồi bấm "Đưa vào mặt bằng"; sau đó chỉnh lại trên mặt bằng.',
+    simUtilCol: 'Mức bận', simUtilTip: 'Thời gian người vận hành làm công đoạn / thời gian có mặt (theo số người của công đoạn). Đỏ ≥ 95 %: quá tải; vàng < 60 %: ít việc.', simUtilAvg: 'Mức bận trung bình',
+    simUtilRange: 'thấp nhất {0}% · cao nhất {1}%', simUtilOne: '{0}: công đoạn {1}, bận {2}% thời gian',
     lsInL: 'Khu đầu vào dài (cm)', lsGap: 'Khu đầu vào cách chuyền (cm)', zoneInput: 'Khu đầu vào',
     lsCalc2: 'Chuyền dài {0} × {1} + {2} = {3} cm, tính từ 0 m = đầu bàn giữa · bàn giữa {4} × {5} cm · rộng {6} cm (để trống ô "Chuyền rộng" để tự tính) · khu đầu vào {7} cm phía trước, cách chuyền {8} cm, rộng bằng chuyền.',
     bClose: '⇥⇤ Khép sát', ttClose: 'Khép sát (K): các máy đã chọn sát nhau theo hàng, không khe hở; cạnh quay về bàn giữa áp sát bàn giữa',
@@ -126,6 +130,10 @@ var I18N = {
     ocrIgnored: 'bỏ qua', ocrLegend: 'Viền xanh lá: đọc đúng mã · cam: đã sửa theo thư viện · đỏ: không có trong thư viện · xanh dương: số công đoạn · xám: bỏ qua. Đưa chuột vào ô để xem chữ đọc được.'
   },
   en: {
+    xlAutoOpt: 'Automatic layout from the operation table · sheet {0}: {1} operations, {2} machines, sequence {3} groups',
+    xlAutoRead: 'Automatic layout: {0} · sheet "{1}": {2} operations, {3} machines (machine-count column, else the people arranged), placed along the sequence ({4} groups), alternately on both sides of the central table so the work moves forward. Check and press "Place on the plan", then adjust on the plan.',
+    simUtilCol: 'Utilisation', simUtilTip: 'Time the operators work on the operation / time present (for the people of the operation). Red ≥ 95 %: overloaded; yellow < 60 %: little work.', simUtilAvg: 'Average utilisation',
+    simUtilRange: 'lowest {0}% · highest {1}%', simUtilOne: '{0}: operation {1}, busy {2}% of the time',
     lsInL: 'Input area length (cm)', lsGap: 'Input area gap to the line (cm)', zoneInput: 'Input area',
     lsCalc2: 'Line length {0} × {1} + {2} = {3} cm from 0 m = start of the central table · central table {4} × {5} cm · width {6} cm (leave "Line width" empty to compute it) · input area {7} cm in front, {8} cm away, as wide as the line.',
     bClose: '⇥⇤ Close up', ttClose: 'Close up (K): the selected machines touch each other along their row, no gap; the edge facing the central table touches it',
