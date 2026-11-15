@@ -4,13 +4,13 @@ var OPT = { flow: true, snap: true, aisles: false };
 var DRAG = null, BOXR = null;
 
 function pal(light) {
-  if (light) return { bg: '#ffffff', floor: '#f7f7f5', grid: '#e3e3df', grid2: '#cfcfca', text: '#1d2330', muted: '#6b7280', accent: '#1f6feb', bad: '#c4202b', warn: '#c98a00', edge: '#3b4250', zone: 'rgba(31,111,235,.08)', zoneEdge: '#7aa3e6', chair: '#5b6474', aisle: 'rgba(201,138,0,.10)', flow: '#e0457b', outFloor: '#ececea', walk: 'rgba(224,161,0,.12)', walkEdge: '#b07d00', standZone: 'rgba(22,160,133,.10)', standEdge: '#2a9d8f', mat: 'rgba(60,70,80,.18)' };
+  if (light) return { bg: '#ffffff', floor: '#f7f7f5', grid: '#e3e3df', grid2: '#cfcfca', text: '#1d2330', muted: '#6b7280', accent: '#1f6feb', bad: '#c4202b', warn: '#c98a00', edge: '#3b4250', zone: 'rgba(31,111,235,.08)', zoneEdge: '#7aa3e6', chair: '#5b6474', aisle: 'rgba(201,138,0,.10)', flow: '#e0457b', tableEdge: '#1d2330', outFloor: '#ececea', walk: 'rgba(224,161,0,.12)', walkEdge: '#b07d00', standZone: 'rgba(22,160,133,.10)', standEdge: '#2a9d8f', mat: 'rgba(60,70,80,.18)' };
   var cs = getComputedStyle(document.documentElement), g = function (n) { return cs.getPropertyValue(n).trim(); };
   var dark = matchMedia('(prefers-color-scheme: dark)').matches;
   return { bg: g('--bg'), floor: dark ? '#141922' : '#fbfbfa', grid: dark ? '#222a36' : '#e7e7e3', grid2: dark ? '#2e3846' : '#d2d2cc', text: g('--text'), muted: g('--muted'), accent: g('--accent'),
     bad: g('--bad'), warn: g('--warn'), edge: dark ? '#cfd6e2' : '#3b4250', zone: dark ? 'rgba(76,141,255,.12)' : 'rgba(31,111,235,.08)', zoneEdge: dark ? '#4c78c0' : '#7aa3e6',
     chair: dark ? '#8a94a6' : '#5b6474', aisle: dark ? 'rgba(227,179,65,.12)' : 'rgba(201,138,0,.10)', flow: '#e0457b',
-    outFloor: dark ? '#0d1016' : '#ececea', walk: dark ? 'rgba(227,179,65,.14)' : 'rgba(224,161,0,.12)', walkEdge: dark ? '#e3b341' : '#b07d00',
+    tableEdge: dark ? '#e6e9ef' : '#1d2330', outFloor: dark ? '#0d1016' : '#ececea', walk: dark ? 'rgba(227,179,65,.14)' : 'rgba(224,161,0,.12)', walkEdge: dark ? '#e3b341' : '#b07d00',
     standZone: dark ? 'rgba(42,157,143,.16)' : 'rgba(22,160,133,.10)', standEdge: '#2a9d8f', mat: dark ? 'rgba(200,210,220,.14)' : 'rgba(60,70,80,.18)' };
 }
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
@@ -61,7 +61,8 @@ function planMarkup(o) {
       }
     }
     var fam = it.kind === 'mc' ? famOf(it.code) : '';
-    g.push('<rect x="' + (-d.L / 2) + '" y="' + (-d.W / 2) + '" width="' + d.L + '" height="' + d.W + '" fill="' + (it.kind === 'mc' ? FAM_COL[fam] : (it.color || '#c9ccd3')) + '" fill-opacity="' + (it.kind === 'mc' ? 0.55 : 0.45) + '" stroke="' + stroke + '" stroke-width="' + wd + '"/>');
+    var ins = it.kind === 'mc' ? Math.min(1.5, d.L / 10) : 0, bw = Math.max(wd, 1.8 * sw);   // a visible gap and border between touching tables
+    g.push('<rect x="' + (-d.L / 2 + ins) + '" y="' + (-d.W / 2 + ins) + '" width="' + (d.L - 2 * ins) + '" height="' + (d.W - 2 * ins) + '" rx="' + (ins ? 1.5 : 0) + '" fill="' + (it.kind === 'mc' ? FAM_COL[fam] : (it.color || '#c9ccd3')) + '" fill-opacity="' + (it.kind === 'mc' ? 0.55 : 0.45) + '" stroke="' + (stroke === P.edge ? P.tableEdge : stroke) + '" stroke-width="' + bw + '"/>');
     if (it.kind === 'mc') {
       var hd = headTop(fam, d, S.seatX);
       if (hd) g.push('<rect x="' + hd.x + '" y="' + hd.y + '" width="' + hd.w + '" height="' + hd.h + '" rx="2" fill="' + FAM_COL[fam] + '" fill-opacity=".95" stroke="' + P.edge + '" stroke-width="' + sw + '"/>');
@@ -310,7 +311,7 @@ function exportPng(cb) {
   var x0 = Math.min(0, b.x0) - 40, y0 = Math.min(0, b.y0) - 110, x1 = Math.max(ST.line.length, b.x1) + 40, y1 = Math.max(ST.line.width, b.y1) + 40;
   // printable: about 3 px per cm (a 20 m line gives ~6500 px), big labels (15 cm text, operation numbers ~26 cm)
   var px = Math.max(1.5, Math.min(3.5, 7000 / (x1 - x0))), w = Math.round((x1 - x0) * px), h = Math.round((y1 - y0) * px);
-  var head = '<text x="' + (x0 + 40) + '" y="' + (y0 + 45) + '" font-size="34" font-weight="700" fill="#1d2330">' + esc((ST.line.name || t('lineNoName')) + ' · ' + ST.line.length + ' × ' + ST.line.width + ' cm') + '</text>' +
+  var head = '<text x="' + (x0 + 40) + '" y="' + (y0 + 45) + '" font-size="34" font-weight="700" fill="#1d2330">' + esc([(ST.info || {}).style, ST.line.name || t('lineNoName'), ST.line.length + ' × ' + ST.line.width + ' cm'].filter(Boolean).join(' · ')) + '</text>' +
     '<text x="' + (x0 + 40) + '" y="' + (y0 + 82) + '" font-size="20" fill="#6b7280">' + esc(t('expSub', [ST.items.filter(function (i) { return i.kind === 'mc'; }).length, new Date().toLocaleString()])) + '</text>';
   var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '" viewBox="' + x0 + ' ' + y0 + ' ' + (x1 - x0) + ' ' + (y1 - y0) + '" font-family="Segoe UI,Roboto,Arial,sans-serif">' +
     '<rect x="' + x0 + '" y="' + y0 + '" width="' + (x1 - x0) + '" height="' + (y1 - y0) + '" fill="#fff"/>' + head + planMarkup({ s: 1.2, fs: 15, P: pal(true), exp: true }) + '</svg>';

@@ -137,6 +137,45 @@ function xlSeqs(shapes) {
   return seqs;
 }
 
+/* ---------- style name and header info of the layout sheet (same rules as IE Báo cáo máy / Layout Check) ---------- */
+var XL_STYLE_RE = /([A-Z]{3}\d{2})-(\d{5}(?:[._\/&+]\d{2,5})*)-(\d{4}(?:\s*[._\/&+-]\s*\d{2,4})*)\s*[(_]\s*([A-Z0-9]{2})\s*[)_]?/gi;
+var XL_SPECIAL_RE = /\b(SP\d{5}V\d{2}|DS\d{3}[A-Z0-9]{5,}|[SF]2\d{3}[A-Z0-9]{3,})\b/g;
+/* "ABC25-00013-1103(MB)", combined forms expanded: 00115_116 -> 00115, 00116; 3901.04 -> 3901, 3904; special customer codes kept as written */
+function xlExpandStyles(text) {
+  var out = [], tt = String(text == null ? '' : text).toUpperCase(), m;
+  XL_STYLE_RE.lastIndex = 0;
+  while ((m = XL_STYLE_RE.exec(tt))) {
+    var cust = m[1], mids = m[2].split(/[._\/&+]/), sp = m[3].split(/[._\/&+-]/).map(function (x) { return x.trim(); }).filter(Boolean), size = m[4];
+    var ml = [mids[0]]; for (var i = 1; i < mids.length; i++) ml.push(mids[0].slice(0, 5 - mids[i].length) + mids[i]);
+    var sl = [sp[0]]; for (var j = 1; j < sp.length; j++) sl.push(sp[0].slice(0, 4 - sp[j].length) + sp[j]);
+    ml.forEach(function (a) { sl.forEach(function (b) { var st = cust + '-' + a + '-' + b + '(' + size + ')'; if (out.indexOf(st) < 0) out.push(st); }); });
+  }
+  XL_SPECIAL_RE.lastIndex = 0;
+  while ((m = XL_SPECIAL_RE.exec(tt))) if (out.indexOf(m[1]) < 0) out.push(m[1]);
+  return out;
+}
+function xlVariant(text) { var tt = String(text || ''); return /48\s*HC/i.test(tt) ? '48HC' : /16\s*HC/i.test(tt) ? '16HC' : ''; }
+/* header of a layout sheet: the cells B3, D3, D4, B11 (as Layout Check) and the top rows; then the file name */
+function xlSheetInfo(ws, sheetName, fileName) {
+  var info = { styles: [], style: '', optr: '', sam: '', obd: '', line: '' };
+  if (ws) {
+    var cells = [], cv = function (r, c) { var x = ws[XLSX.utils.encode_cell({ r: r, c: c })]; return x ? String(x.w != null ? x.w : (x.v != null ? x.v : '')).trim() : ''; };
+    ['B3', 'D3', 'D4', 'B11'].forEach(function (a) { var x = ws[a]; if (x) cells.push(String(x.w || x.v || '')); });
+    for (var r = 0; r < 14; r++) for (var c = 0; c < 16; c++) {
+      var v = cv(r, c); if (!v) continue; cells.push(v);
+      var nx = ''; for (var k = c + 1; k < c + 6 && !nx; k++) nx = cv(r, k);
+      if (/tổng số công nhân|tl\s*optr/i.test(v) && !info.optr) info.optr = nx;
+      if (/^\s*sam\s*:?\s*$/i.test(v) && !info.sam) info.sam = nx;
+      if (/ver\s*\/\s*phiên bản/i.test(v) && !info.obd) info.obd = (v.split(':')[1] || nx).trim();
+      if (/line no|chuyền\s*:/i.test(v) && !info.line && nx && !/ver|phiên bản|sam/i.test(nx)) info.line = nx;
+    }
+    info.styles = xlExpandStyles(cells.join(' \n '));
+  }
+  if (!info.styles.length) info.styles = xlExpandStyles(sheetName + ' ' + fileName);
+  var vr = xlVariant(sheetName + ' ' + fileName);
+  info.style = info.styles.length ? info.styles.join(' / ') + (vr && !/\d$/.test(info.styles[0]) ? vr : '') : '';
+  return info;
+}
 /* ---------- UI (inside the paste window) ---------- */
 function xlOpen(f) {
   var st = document.getElementById('ocrStatus');
@@ -149,11 +188,14 @@ function xlOpen(f) {
         var shapes = xlShapes(xlFile(z, s.drawing)), lays = xlLayouts(shapes);
         if (lays.length) XLI.sheets.push({ name: s.name, hidden: s.hidden, layouts: lays, seqs: xlSeqs(shapes) });
       });
+      var wb = null;   // cells of the layout sheets only (style, workers, SAM, OBD version)
+      try { wb = XLSX.read(new Uint8Array(rd.result), { type: 'array', sheets: XLI.sheets.map(function (s) { return s.name; }) }); } catch (e2) { console.warn('cells', e2); }
+      XLI.sheets.forEach(function (s) { s.info = xlSheetInfo(wb && wb.Sheets[s.name], s.name, f.name); });
       if (!XLI.sheets.length) { st.className = 'small t-warn tagline'; st.textContent = t('xlNone', [f.name]); return; }
       document.getElementById('ocrView').innerHTML = '';
       var sel = document.getElementById('xlPick');
       sel.innerHTML = XLI.sheets.map(function (s, i) {
-        return s.layouts.map(function (l, j) { return '<option value="' + i + ':' + j + '">' + esc(s.name + (s.hidden ? ' (' + t('xlHidden') + ')' : '') + ' · ' + t('xlLay', [j + 1, l.rows.length, l.n])) + '</option>'; }).join('');
+        return s.layouts.map(function (l, j) { return '<option value="' + i + ':' + j + '">' + esc((s.info.style && s.name.toUpperCase().indexOf(s.info.style.toUpperCase()) < 0 ? s.info.style + ' · ' : '') + s.name + (s.hidden ? ' (' + t('xlHidden') + ')' : '') + ' · ' + t('xlLay', [j + 1, l.rows.length, l.n])) + '</option>'; }).join('');
       }).join('');
       document.getElementById('xlBox').style.display = '';
       // the visible sheet with the most machines first
@@ -166,11 +208,12 @@ function xlOpen(f) {
 function xlUse() {
   var p = document.getElementById('xlPick').value.split(':'), sh = XLI.sheets[+p[0]], lay = sh.layouts[+p[1]];
   var rows = lay.rows.map(function (r) { return { side: r.side || 'top', sideFound: r.sideFound, cells: r.cells.map(function (c) { return Object.assign({}, c); }) }; });
-  PASTE = { rows: rows, nCols: Math.max.apply(null, rows.map(function (r) { return r.cells.length; })), nMc: lay.n, fromXl: true, seq: sh.seqs };
+  PASTE = { rows: rows, nCols: Math.max.apply(null, rows.map(function (r) { return r.cells.length; })), nMc: lay.n, fromXl: true, seq: sh.seqs,
+    meta: { style: sh.info.style, file: XLI.name, sheet: sh.name, optr: sh.info.optr, sam: sh.info.sam, obd: sh.info.obd } };
   // the table text for reference (editing it switches back to the text grid)
   var lines = []; rows.forEach(function (r, i) { if (i) lines.push(''); var ops = r.cells.map(function (c) { return c.op; }).join('\t'), cs = r.cells.map(function (c) { return c.code; }).join('\t'); if (r.side === 'top') lines.push(ops, cs); else lines.push(cs, ops); });
   document.getElementById('pasteTxt').value = lines.join('\n') + '\n';
-  var st = document.getElementById('ocrStatus'); st.className = 'small'; st.textContent = t('xlRead', [XLI.name, sh.name, lay.n, sh.seqs.length]);
+  var st = document.getElementById('ocrStatus'); st.className = 'small'; st.textContent = t('xlRead', [XLI.name, sh.name, lay.n, sh.seqs.length]) + (sh.info.style ? ' ' + t('xlStyle', [sh.info.style, sh.info.optr || '?', sh.info.sam || '?', sh.info.obd || '?']) : '');
   xlPreviewSvg(lay);
   renderPastePreview();
 }

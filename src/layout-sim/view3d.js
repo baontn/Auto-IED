@@ -33,7 +33,9 @@ function C(g, r, h, m, x, y, z, axis, r2) {
 /* ---------- parts ---------- */
 function partTable(g, L, W, H, opt) {
   opt = opt || {};
-  B(g, L, 3, W, M.top, 0, H - 1.5, 0);
+  B(g, L - 3, 3, W - 3, M.top, 0, H - 1.5, 0);
+  var ek = 'e' + L + ',' + W; if (!GEO[ek]) GEO[ek] = new THREE.EdgesGeometry(geoBox(+(L - 3).toFixed(1), 3, +(W - 3).toFixed(1)));
+  var ed = new THREE.LineSegments(GEO[ek], M.edge || (M.edge = new THREE.LineBasicMaterial({ color: '#2b3038' }))); ed.position.set(0, H - 1.5, 0); g.add(ed);
   var lx = L / 2 - 5, lz = W / 2 - 5;
   [[-lx, -lz], [lx, -lz], [-lx, lz], [lx, lz]].forEach(function (p) { B(g, 3.5, H - 3, 3.5, M.leg, p[0], (H - 3) / 2, p[1]); });
   B(g, L - 10, 3, 3, M.leg, 0, 12, -lz); B(g, 3, 3, W - 10, M.leg, -lx, 12, 0); B(g, 3, 3, W - 10, M.leg, lx, 12, 0);

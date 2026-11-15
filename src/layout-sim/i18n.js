@@ -2,6 +2,13 @@
 var LANG = 'vi';
 var I18N = {
   vi: {
+    tabProj: '🏠 Dự án', projCur: 'Dự án hiện tại', pjStyle: 'Mã hàng', pjStylePh: 'VD: MNS25-00013-1103(MB)', pjSave: '💾 Lưu dự án', pjSaveAs: 'Lưu thành dự án mới…', pjNew: '➕ Dự án mới', pjOpen: '📂 Mở file dự án…', pjPaste: '📋 Dán / mở layout Excel…',
+    projDir: 'Thư mục dự án', projDirHelp: 'Chọn thư mục chung chứa các file dự án (.layout.json): danh sách hiện ở đây, "Lưu dự án" ghi vào thư mục này.', pjDir: 'Chọn thư mục…', pjRescan: '⟳ Đọc lại', projNoDir: '(chưa chọn)',
+    projRecentT: 'Dự án gần đây (lưu trong trình duyệt này)', projNoRecent: 'Chưa có dự án nào được lưu trên trình duyệt này.', projDirEmpty: 'Thư mục chưa có file dự án (.layout.json).',
+    projOpen: 'Mở', projMc: 'Máy', projDate: 'Lưu lúc', projUnnamed: 'Dự án chưa đặt tên', projSaved: 'Đã lưu dự án: {0}', projNewConfirm: 'Bắt đầu dự án mới? Layout hiện tại sẽ được thay (hãy lưu trước nếu cần).',
+    projDelConfirm: 'Xóa dự án này khỏi danh sách gần đây của trình duyệt? (File trong thư mục không bị xóa.)', projNoPerm: 'Trình duyệt chưa cho phép đọc / ghi thư mục.', projNoFs: 'Trình duyệt không hỗ trợ chọn thư mục (dùng Chrome hoặc Edge).',
+    projInfo: '{0} máy · {1} người · chuyền {2} × {3} cm', projSrc: 'Nguồn: {0} · sheet "{1}" · số công nhân {2} · SAM {3} · {4}', projFile: 'File: {0}', projNotSaved: 'Chưa lưu thành file.',
+    xlStyle: 'Mã hàng {0} · công nhân {1} · SAM {2} · {3}.',
     centerTableB: 'Bàn giữa (nhánh)', zoneMain: 'Chuyền chính', zoneBranch: 'Chuyền nhánh', walkLbl: 'Lối đi {0} cm', pasteZone: 'Chuyền', isWalk: '{0}: lấn vào lối đi giữa 2 chuyền ({1} cm).',
     lsBr: 'Có chuyền nhánh (chuyền phụ bên cạnh, tùy mã hàng)', lsBPos: 'Vị trí', lsBTop: 'Phía trên chuyền chính', lsBBottom: 'Phía dưới chuyền chính', lsBWalk: 'Lối đi giữa 2 chuyền (cm)', lsBOff: 'Lệch so với đầu chuyền chính (cm)',
     lsBCalc: 'Chuyền nhánh: {0} máy chuẩn, bàn giữa {1} cm, rộng {2} cm · lối đi {3} cm · tổng bề ngang {4} cm',
@@ -80,6 +87,13 @@ var I18N = {
     ocrIgnored: 'bỏ qua', ocrLegend: 'Viền xanh lá: đọc đúng mã · cam: đã sửa theo thư viện · đỏ: không có trong thư viện · xanh dương: số công đoạn · xám: bỏ qua. Đưa chuột vào ô để xem chữ đọc được.'
   },
   en: {
+    tabProj: '🏠 Projects', projCur: 'Current project', pjStyle: 'Style', pjStylePh: 'e.g. MNS25-00013-1103(MB)', pjSave: '💾 Save project', pjSaveAs: 'Save as a new project…', pjNew: '➕ New project', pjOpen: '📂 Open project file…', pjPaste: '📋 Paste / open layout Excel…',
+    projDir: 'Project folder', projDirHelp: 'Choose the shared folder holding the project files (.layout.json): they are listed here and "Save project" writes into it.', pjDir: 'Choose folder…', pjRescan: '⟳ Reload', projNoDir: '(none)',
+    projRecentT: 'Recent projects (kept in this browser)', projNoRecent: 'No project saved in this browser yet.', projDirEmpty: 'No project file (.layout.json) in this folder yet.',
+    projOpen: 'Open', projMc: 'Machines', projDate: 'Saved', projUnnamed: 'Unnamed project', projSaved: 'Project saved: {0}', projNewConfirm: 'Start a new project? The current layout will be replaced (save it first if needed).',
+    projDelConfirm: 'Remove this project from the recent list of this browser? (Files in the folder are not deleted.)', projNoPerm: 'The browser has not allowed reading / writing the folder.', projNoFs: 'This browser cannot choose folders (use Chrome or Edge).',
+    projInfo: '{0} machines · {1} operators · line {2} × {3} cm', projSrc: 'Source: {0} · sheet "{1}" · workers {2} · SAM {3} · {4}', projFile: 'File: {0}', projNotSaved: 'Not saved as a file yet.',
+    xlStyle: 'Style {0} · workers {1} · SAM {2} · {3}.',
     centerTableB: 'Central table (branch)', zoneMain: 'Main line', zoneBranch: 'Branch line', walkLbl: 'Walkway {0} cm', pasteZone: 'Line', isWalk: '{0}: in the walkway between the two lines ({1} cm).',
     lsBr: 'Branch line (a smaller line next to it, depends on the style)', lsBPos: 'Position', lsBTop: 'Above the main line', lsBBottom: 'Below the main line', lsBWalk: 'Walkway between the lines (cm)', lsBOff: 'Offset from the main line start (cm)',
     lsBCalc: 'Branch line: {0} standard machines, central table {1} cm, width {2} cm · walkway {3} cm · total width {4} cm',

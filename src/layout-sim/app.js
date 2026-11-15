@@ -11,8 +11,9 @@ function renderAll() { runChecks(); render2d(); renderSide(); if (TAB === '3d') 
 function setTab(tb) {
   TAB = tb;
   document.querySelectorAll('.tabs button').forEach(function (b) { b.classList.toggle('on', b.dataset.tab === tb); });
-  $('paneWork').style.display = tb === 'lib' ? 'none' : '';
-  $('paneLib').style.display = tb === 'lib' ? '' : 'none';
+  $('paneWork').style.display = tb === 'lib' || tb === 'proj' ? 'none' : '';
+  $('paneLib').style.display = tb === 'lib' ? '' : 'none'; $('paneProj').style.display = tb === 'proj' ? '' : 'none';
+  if (tb === 'proj') renderProj();
   $('plan').style.display = tb === 'plan' ? '' : 'none'; $('tb2d').style.display = tb === 'plan' ? '' : 'none';
   $('v3').style.display = tb === '3d' ? '' : 'none'; $('tb3d').style.display = tb === '3d' ? '' : 'none';
   if (tb === 'plan') render2d();
@@ -27,7 +28,7 @@ function setTab(tb) {
 
 /* ---------- side panel ---------- */
 function renderSide() {
-  $('lnName').value = ST.line.name || ''; $('lnL').value = ST.line.length; $('lnW').value = ST.line.width;
+  $('lnName').value = ST.line.name || ''; $('lnStyle').value = (ST.info || {}).style || ''; $('lnL').value = ST.line.length; $('lnW').value = ST.line.width;
   var b = bbox(ST.items);
   $('lnUsed').textContent = b ? t('lnUsed', [Math.round(b.x1 - Math.min(0, b.x0)), Math.round(b.y1 - Math.min(0, b.y0))]) : '';
   renderSel(); renderIssues(); renderSum(); renderSeq();
@@ -177,6 +178,7 @@ function pasteGo() {
   var useCt = cts.length && (replace || ST.items.length === cts.length);
   var items = buildFromPaste(PASTE, { addInput: $('pasteInput').checked, x0: 60, y0: y0, centers: useCt ? { main: centerOf('main'), branch: centerOf('branch') } : null });
   if (replace) ST.items = cts.concat(items); else ST.items = ST.items.concat(items);
+  if (PASTE.meta && (replace || !(ST.info || {}).style)) ST.info = Object.assign({}, ST.info, PASTE.meta);
   if (PASTE.seq && PASTE.seq.length) ST.seqText = PASTE.seq.map(function (q) { return (q.name ? q.name + ': ' : '') + q.text; }).join('\n');
   if ($('pasteFit').checked) { var bb = bbox(ST.items); ST.line.length = Math.ceil((bb.x1 + 60) / 10) * 10; ST.line.width = Math.ceil((bb.y1 + 60) / 10) * 10; }
   SEL = items.map(function (i) { return i.id; });
@@ -342,19 +344,10 @@ function download(name, data, type) {
   a.href = typeof data === 'string' && data.indexOf('data:') === 0 ? data : URL.createObjectURL(new Blob([data], { type: type }));
   document.body.appendChild(a); a.click(); a.remove();
 }
-function saveFile() {
-  var data = fileJson(), name = fileBase() + '.layout.json';
-  if (window.showSaveFilePicker) {
-    window.showSaveFilePicker({ suggestedName: name, types: [{ description: 'Layout', accept: { 'application/json': ['.json'] } }] })
-      .then(function (h) { return h.createWritable().then(function (w) { return w.write(data).then(function () { return w.close(); }); }); })
-      .then(function () { toast(t('saved')); }).catch(function (e) { if (e && e.name !== 'AbortError') { download(name, data, 'application/json'); } });
-  } else download(name, data, 'application/json');
-}
 function openFile(f) {
   if (!f) return;
   f.text().then(function (txt) {
-    try { openJson(txt); fillCodeList(); LAST = null; commit(); UNDO = []; REDO = []; renderAll(); fitView(); if (TAB === '3d') view3dReset(false); toast(t('opened', [f.name])); }
-    catch (e) { toast(t('openErr') + ': ' + e.message, true); }
+    loadProject(txt, null, f.name);
   });
 }
 function exportImage() {
@@ -382,7 +375,7 @@ function onKey(e) {
   else if (ctl && (k === 'y' || k === 'Y' || ((k === 'z' || k === 'Z') && e.shiftKey))) { if (redo()) { renderAll(); } }
   else if (ctl && (k === 'd' || k === 'D')) duplicateSel();
   else if (ctl && (k === 'a' || k === 'A')) { SEL = ST.items.map(function (i) { return i.id; }); onSelChange(); render2d(); }
-  else if (ctl && (k === 's' || k === 'S')) saveFile();
+  else if (ctl && (k === 's' || k === 'S')) saveProject(false);
   else if (ctl) done = false;
   else if (k === 'r' || k === 'R') rotateSel(e.shiftKey ? -90 : 90);
   else if (k === 'f' || k === 'F') rotateSel(180);
@@ -463,9 +456,11 @@ function startApp() {
     else if (/\.json$/i.test(f.name)) { e.preventDefault(); openFile(f); }
   }); $('ergOk').onclick = function () { applyErg(false); }; $('ergReset').onclick = function () { applyErg(true); };
   document.querySelectorAll('dialog [data-close]').forEach(function (b) { b.onclick = function () { b.closest('dialog').close(); }; });
-  $('bSave').onclick = saveFile;
+  $('bSave').onclick = function () { saveProject(false); };
+  $('lnStyle').onchange = function () { ST.info = Object.assign({}, ST.info, { style: this.value.trim() }); changed(); };
+  initProj();
   $('bOpen').onclick = function () { $('fileOpen').value = ''; $('fileOpen').click(); }; $('fileOpen').onchange = function () { openFile(this.files[0]); };
-  $('bNew').onclick = function () { if (ST.items.length && !confirm(t('newConfirm'))) return; ST.items = []; SEL = []; changed(); fitView(); };
+  $('bNew').onclick = newProject;
   $('bPng').onclick = exportImage; $('bPrint').onclick = printPlan;
   $('b3Reset').onclick = function () { view3dReset(false); }; $('b3Top').onclick = function () { view3dReset(true); };
   $('opt3People').checked = V3.people; $('opt3People').onchange = function () { V3.people = this.checked; rebuild3d(); };

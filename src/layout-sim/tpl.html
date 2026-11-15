@@ -59,7 +59,8 @@ label.f.row input{width:80px}
 .chip{display:inline-flex;align-items:center;gap:4px;background:var(--sel);border-radius:14px;padding:2px 9px;font-size:12px;cursor:pointer}
 .chip i{width:9px;height:9px;border-radius:2px;display:inline-block}
 .banner{background:var(--warnbg);color:var(--warn);padding:8px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;flex:none}
-#paneLib{flex:1;overflow:auto;padding:14px}
+#paneLib,#paneProj{flex:1;overflow:auto;padding:14px}
+#paneProj .card{margin-bottom:12px;max-width:1100px}
 #paneLib .card{margin-bottom:12px}
 table{border-collapse:collapse;width:100%}
 th,td{border-bottom:1px solid var(--line);padding:5px 7px;text-align:left;vertical-align:top}
@@ -97,7 +98,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
 <body>
 <header>
   <h1 data-t="appTitle">Mô phỏng bố trí chuyền</h1><span class="tag t-info">v{{VERSION}}</span>
-  <nav class="tabs"><button data-tab="plan" class="on" data-t="tabPlan">Mặt bằng 2D</button><button data-tab="3d" data-t="tab3d">3D</button><button data-tab="lib" data-t="tabLib">Thư viện máy</button></nav>
+  <nav class="tabs"><button data-tab="proj" data-t="tabProj">🏠 Dự án</button><button data-tab="plan" class="on" data-t="tabPlan">Mặt bằng 2D</button><button data-tab="3d" data-t="tab3d">3D</button><button data-tab="lib" data-t="tabLib">Thư viện máy</button></nav>
   <div class="hr">
     <button id="bNew" data-t="bNew">Mới</button><button id="bOpen" data-t="bOpen">Mở…</button><button id="bSave" class="primary" data-t="bSave" data-tt="bSaveTip">Lưu…</button>
     <button id="libChip" class="chipbtn"></button>
@@ -140,7 +141,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
   </div>
   <aside>
     <div class="card"><h3 data-t="lnTitle">Chuyền</h3>
-      <div class="grid3"><label class="f" style="grid-column:span 3"><span data-t="lnName">Tên chuyền</span><input id="lnName"></label>
+      <div class="grid3"><label class="f" style="grid-column:span 2"><span data-t="pjStyle">Mã hàng</span><input id="lnStyle"></label><label class="f"><span data-t="lnName">Tên chuyền</span><input id="lnName"></label>
       <label class="f"><span data-t="lnLen">Dài (cm)</span><input id="lnL" type="number" step="10"></label><label class="f"><span data-t="lnWid">Rộng (cm)</span><input id="lnW" type="number" step="10"></label>
       <label class="f"><span>&nbsp;</span><button id="bErg" data-t="bErg">Công thái học…</button></label></div>
       <div class="muted small" id="lnUsed"></div>
@@ -162,6 +163,19 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
   </aside>
 </div>
 
+<div id="paneProj" style="display:none">
+  <div class="card"><h3 data-t="projCur">Dự án hiện tại</h3>
+    <div class="grid2"><label class="f"><span data-t="pjStyle">Mã hàng</span><input id="pjStyle" data-tp="pjStylePh" placeholder="VD: MNS25-00013-1103(MB)"></label><label class="f"><span data-t="lnName">Tên chuyền</span><input id="pjLine"></label></div>
+    <div id="pjInfo" class="small muted"></div>
+    <div class="btns"><button id="pjSave" class="primary" data-t="pjSave">💾 Lưu dự án</button><button id="pjSaveAs" data-t="pjSaveAs">Lưu thành dự án mới…</button><button id="pjNew" data-t="pjNew">➕ Dự án mới</button><button id="pjOpen" data-t="pjOpen">📂 Mở file dự án…</button><button id="pjPaste" data-t="pjPaste">📋 Dán / mở layout Excel…</button></div>
+  </div>
+  <div class="card"><h3 data-t="projDir">Thư mục dự án</h3>
+    <div class="muted small" data-t="projDirHelp">Chọn thư mục chung chứa các file dự án (.layout.json): danh sách hiện ở đây, "Lưu dự án" ghi vào thư mục này.</div>
+    <div class="btns"><button id="pjDir" data-t="pjDir">Chọn thư mục…</button><button id="pjRescan" data-t="pjRescan">⟳ Đọc lại</button><span class="small"><b id="pjDirName"></b></span></div>
+    <div id="pjDirList" class="scroll" style="margin-top:6px;max-height:40vh"></div>
+  </div>
+  <div class="card"><h3 data-t="projRecentT">Dự án gần đây (lưu trong trình duyệt này)</h3><div id="pjRecent" class="scroll" style="max-height:40vh"></div></div>
+</div>
 <div id="paneLib" style="display:none">
   <div class="card"><h3 data-t="libTitle">Thư viện máy</h3>
     <div class="muted small" data-t="libHelp">Chọn file Excel của công ty: sheet Machine_Needle (Machine_Code, Machine_Name, Machine_Name_VN, Dimension = dài*rộng, cm) và sheet danh sách máy (Sewing Name, Sewing brand, Sewingmodel). File chỉ được đọc trên máy này, không gửi đi đâu.</div>
@@ -250,6 +264,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
 <script>/*__IMGPASTE__*/</script>
 <script>/*__XLIMPORT__*/</script>
 <script>/*__FLOW__*/</script>
+<script>/*__PROJECT__*/</script>
 <script>/*__APP__*/</script>
 <script>startApp();</script>
 </body>
