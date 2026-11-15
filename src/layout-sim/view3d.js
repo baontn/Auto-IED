@@ -33,9 +33,11 @@ function C(g, r, h, m, x, y, z, axis, r2) {
 /* ---------- parts ---------- */
 function partTable(g, L, W, H, opt) {
   opt = opt || {};
-  B(g, L - 3, 3, W - 3, M.top, 0, H - 1.5, 0);
-  var ek = 'e' + L + ',' + W; if (!GEO[ek]) GEO[ek] = new THREE.EdgesGeometry(geoBox(+(L - 3).toFixed(1), 3, +(W - 3).toFixed(1)));
-  var ed = new THREE.LineSegments(GEO[ek], M.edge || (M.edge = new THREE.LineBasicMaterial({ color: '#2b3038' }))); ed.position.set(0, H - 1.5, 0); g.add(ed);
+  B(g, L, 3, W, M.top, 0, H - 1.5, 0);
+  // coloured border on the table top (no gap): tables placed side by side stay distinct
+  var bm = M.border || (M.border = mat('#3d5a80', { roughness: 0.6 })), bt = 1.8;
+  B(g, L, 0.6, bt, bm, 0, H + 0.3, W / 2 - bt / 2); B(g, L, 0.6, bt, bm, 0, H + 0.3, -W / 2 + bt / 2);
+  B(g, bt, 0.6, W - 2 * bt, bm, L / 2 - bt / 2, H + 0.3, 0); B(g, bt, 0.6, W - 2 * bt, bm, -L / 2 + bt / 2, H + 0.3, 0);
   var lx = L / 2 - 5, lz = W / 2 - 5;
   [[-lx, -lz], [lx, -lz], [-lx, lz], [lx, lz]].forEach(function (p) { B(g, 3.5, H - 3, 3.5, M.leg, p[0], (H - 3) / 2, p[1]); });
   B(g, L - 10, 3, 3, M.leg, 0, 12, -lz); B(g, 3, 3, W - 10, M.leg, -lx, 12, 0); B(g, 3, 3, W - 10, M.leg, lx, 12, 0);
@@ -180,7 +182,9 @@ function machineLabel(code, op) {
     x.fillStyle = '#0b3d91'; x.font = 'bold ' + (String(op).length > 3 ? 92 : 138) + 'px Segoe UI, Arial'; x.fillText(op, 160, String(op).length > 3 ? 122 : 138); y0 = 180;
   }
   x.fillStyle = 'rgba(20,24,31,.9)'; x.beginPath(); if (x.roundRect) x.roundRect(6, y0 + 4, 308, 108, 22); else x.rect(6, y0 + 4, 308, 108); x.fill();
-  x.fillStyle = '#fff'; x.font = 'bold 86px Segoe UI, Arial'; x.fillText(code, 160, y0 + 88);
+  x.fillStyle = '#fff'; var fz = 86; x.font = 'bold ' + fz + 'px Segoe UI, Arial';
+  var tw = x.measureText(code).width; if (tw > 288) { fz = Math.max(30, Math.floor(fz * 288 / tw)); x.font = 'bold ' + fz + 'px Segoe UI, Arial'; }   // long names (Bàn giữa…) fit in the box
+  x.fillText(code, 160, y0 + 58 + fz * 0.35);
   var tx = new THREE.CanvasTexture(cv); tx.anisotropy = 4;
   var s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tx, depthTest: false })); s.scale.set(80, 80 * cv.height / cv.width, 1); s.renderOrder = 11; return s;
 }

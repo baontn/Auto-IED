@@ -61,7 +61,7 @@ function planMarkup(o) {
       }
     }
     var fam = it.kind === 'mc' ? famOf(it.code) : '';
-    var ins = it.kind === 'mc' ? Math.min(1.5, d.L / 10) : 0, bw = Math.max(wd, 1.8 * sw);   // a visible gap and border between touching tables
+    var ins = 0, bw = Math.max(wd, 1.8 * sw);   // no gap: a firm dark border keeps touching tables distinct
     g.push('<rect x="' + (-d.L / 2 + ins) + '" y="' + (-d.W / 2 + ins) + '" width="' + (d.L - 2 * ins) + '" height="' + (d.W - 2 * ins) + '" rx="' + (ins ? 1.5 : 0) + '" fill="' + (it.kind === 'mc' ? FAM_COL[fam] : (it.color || '#c9ccd3')) + '" fill-opacity="' + (it.kind === 'mc' ? 0.55 : 0.45) + '" stroke="' + (stroke === P.edge ? P.tableEdge : stroke) + '" stroke-width="' + bw + '"/>');
     if (it.kind === 'mc') {
       var hd = headTop(fam, d, S.seatX);
