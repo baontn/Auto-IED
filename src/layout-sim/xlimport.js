@@ -371,6 +371,7 @@ function xlOpen(f) {
         return '<option value="a:' + k + '">' + esc('⚙ ' + t('xlAutoOpt', [a.name + (a.hidden ? ' (' + t('xlHidden') + ')' : ''), r.nOps, r.nMc, r.nLines])) + '</option>';
       }).join('');
       document.getElementById('xlBox').style.display = '';
+      document.getElementById('xlAutoBtn').style.display = XLI.auto.length ? '' : 'none';
       xlFillBranchPick();
       // the visible sheet with the most machines first
       var bi = 0, bn = -1; [].forEach.call(sel.options, function (o, k) { var p = o.value.split(':'); if (p[0] === 'a') { if (bn < 0 && !XLI.auto[+p[1]].hidden) { bn = 0; bi = k; } return; } var s = XLI.sheets[+p[0]]; if (!s.hidden && s.layouts[+p[1]].n > bn) { bn = s.layouts[+p[1]].n; bi = k; } });
@@ -433,9 +434,14 @@ function xlUse() {
 function xlPreviewSvg(lay) {
   var w = lay.x1 - lay.x0, h = lay.y1 - lay.y0, svg = '';
   lay.stations.forEach(function (s) {
-    var col = FAM_COL[famOf(s.code)] || '#ccc';
+    var col = FAM_COL[famOf(s.code)] || '#ccc', x = s.cx - lay.x0, y = s.cy - lay.y0, up = s.h > 1.3 * s.w;
+    var fs = Math.max(7, Math.min(up ? s.w * 0.36 : s.h * 0.3, (up ? s.h : s.w) / Math.max(4, (s.code + ' ' + (s.op || '')).length * 0.62)));
     svg += '<rect x="' + (s.x0 - lay.x0) + '" y="' + (s.y0 - lay.y0) + '" width="' + s.w + '" height="' + s.h + '" fill="' + col + '" fill-opacity=".6" stroke="#333" stroke-width="1"/>' +
-      '<text x="' + (s.cx - lay.x0) + '" y="' + (s.cy - lay.y0 + 4) + '" font-size="' + Math.max(9, s.h * 0.22) + '" text-anchor="middle" font-weight="700">' + esc(s.code) + (s.op ? ' ' + esc(s.op) : '') + '</text>';
+      '<text x="' + x + '" y="' + y + '" dy=".35em" font-size="' + fs.toFixed(1) + '" text-anchor="middle" font-weight="700"' + (up ? ' transform="rotate(-90 ' + x + ' ' + y + ')"' : '') + '>' + esc((s.op ? s.op + ' ' : '') + s.code) + '</text>';
+    // the operator's place found in the drawing (chair / operation box side)
+    var d = s.dir || (s.side === 'top' ? 'top' : s.side === 'bottom' ? 'bottom' : null), r = Math.max(4, Math.min(s.w, s.h) * 0.22);
+    if (d) { var px = d === 'left' ? s.x0 - lay.x0 - r * 1.4 : d === 'right' ? s.x1 - lay.x0 + r * 1.4 : x, py = d === 'top' ? s.y0 - lay.y0 - r * 1.4 : d === 'bottom' ? s.y1 - lay.y0 + r * 1.4 : y;
+      svg += '<circle cx="' + px.toFixed(1) + '" cy="' + py.toFixed(1) + '" r="' + r.toFixed(1) + '" fill="#f2c230" stroke="#555" stroke-width="1"/>'; }
   });
   document.getElementById('ocrView').innerHTML = '<div class="ocrwrap"><svg viewBox="-5 -5 ' + (w + 10) + ' ' + (h + 10) + '" style="position:static;height:auto;width:100%">' + svg + '</svg></div>';
 }

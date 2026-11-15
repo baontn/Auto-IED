@@ -2,6 +2,7 @@
 var LANG = 'vi';
 var I18N = {
   vi: {
+    xlAutoBtn: '⚙ Tự tạo layout', xlAutoTip: 'Tự tạo layout từ bảng công đoạn (loại máy, số máy, CN sắp xếp) và trình tự của sheet đang chọn',
     turnR: 'Máy xoay ngang trong file, người ngồi bên phải', turnL: 'Máy xoay ngang trong file, người ngồi bên trái',
     simCapH: 'Năng lực (sp/giờ) · tải', simLoadTip: 'Tải = sản lượng cần (mục tiêu, không có thì công đoạn chậm nhất) / năng lực. Xanh < 90 %, vàng 90–100 %, đỏ > 100 % (không đủ năng lực).',
     simNeed: 'Người cần', simNeedTip: 'Số người cần để đạt sản lượng mục tiêu = mục tiêu × SAM / (60 × hiệu suất). Đỏ: nhiều hơn số người đang có.',
@@ -142,6 +143,7 @@ var I18N = {
     ocrIgnored: 'bỏ qua', ocrLegend: 'Viền xanh lá: đọc đúng mã · cam: đã sửa theo thư viện · đỏ: không có trong thư viện · xanh dương: số công đoạn · xám: bỏ qua. Đưa chuột vào ô để xem chữ đọc được.'
   },
   en: {
+    xlAutoBtn: '⚙ Automatic layout', xlAutoTip: 'Build the layout from the operation table (machine type, machines, people arranged) and the sequence of the chosen sheet',
     turnR: 'Machine turned in the file, operator on its right', turnL: 'Machine turned in the file, operator on its left',
     simCapH: 'Capacity (pcs/h) · load', simLoadTip: 'Load = output needed (target, else the slowest operation) / capacity. Green < 90 %, yellow 90–100 %, red > 100 % (not enough capacity).',
     simNeed: 'People needed', simNeedTip: 'People needed for the target output = target × SAM / (60 × efficiency). Red: more than the people there.',

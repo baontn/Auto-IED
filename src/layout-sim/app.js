@@ -464,6 +464,11 @@ function startApp() {
   $('bXlOpen').onclick = function () { $('fileXl').value = ''; $('fileXl').click(); };
   $('fileXl').onchange = function () { if (this.files[0]) xlOpen(this.files[0]); };
   $('xlPick').onchange = xlUse; $('xlPickB').onchange = xlUse;
+  $('xlAutoBtn').onclick = function () {   // the automatic layout of the sheet chosen (or the first one)
+    var cur = $('xlPick').value.split(':'), sh = cur[0] !== 'a' && XLI.sheets[+cur[0]] ? XLI.sheets[+cur[0]].name : null, k = 0;
+    XLI.auto.forEach(function (a, i) { if (a.name === sh) k = i; });
+    $('xlPick').value = 'a:' + k; xlUse();
+  };
   $('lsBr').onchange = lineCalc; ['lsBUnits', 'lsBTable', 'lsBWalk', 'lsBWidth', 'lsBPos'].forEach(function (id) { $(id).oninput = lineCalc; $(id).onchange = lineCalc; });
   $('bOpAll').onclick = function () { ST.items.forEach(function (i) { delete i.noOp; delete i.by; }); changed(); };
   ['bStandAll', 'bStandAll2', 'bStandAll3'].forEach(function (id) { $(id).onclick = function () { var st = standAll(); changed(); toast(t(st ? 'allStand' : 'allSit')); }; });
