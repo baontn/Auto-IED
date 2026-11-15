@@ -3,6 +3,19 @@
    Edges: consecutive operations of a line; the last operation of each other line feeds the first operation of the assembly line
    (the line with QC/PACKING or named "lắp ráp"); an "Input" table feeds the first operation of every line. */
 var FLOW_COLS = ['#e0457b', '#2a9d8f', '#e09a2b', '#3a7bd5', '#8e5bd6', '#5aa02c'];
+var FLOW_NONE = '#aeb7c4';   // machines outside every flow (or no sequence entered)
+/* colour of a machine = colour of the flow (sequence group) of its operation, the same colour as the flow line */
+var FLOWC = { key: null, map: {} };
+function flowColOf(it) {
+  if (FLOWC.key !== (ST.seqText || '') + '|' + (ST.opsOff || []).length) {
+    var sq = seqParse(ST.seqText), m = {};
+    sq.lines.forEach(function (ln, i) { ln.ops.forEach(function (o) { var k = String(o).trim().replace(/^0+(?=\d)/, '').toUpperCase(); if (m[k] == null) m[k] = i; }); });
+    FLOWC = { key: (ST.seqText || '') + '|' + (ST.opsOff || []).length, map: m };
+  }
+  var ops = opsOf(it);
+  for (var i = 0; i < ops.length; i++) { var li = FLOWC.map[ops[i].toUpperCase()]; if (li != null) return FLOW_COLS[li % FLOW_COLS.length]; }
+  return FLOW_NONE;
+}
 
 function seqParse(text) {
   var lines = [];

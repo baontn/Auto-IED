@@ -35,7 +35,7 @@ function partTable(g, L, W, H, opt) {
   opt = opt || {};
   B(g, L, 3, W, M.top, 0, H - 1.5, 0);
   // coloured border on the table top (no gap): tables placed side by side stay distinct
-  var bm = M.border || (M.border = mat('#3d5a80', { roughness: 0.6 })), bt = 1.8;
+  var fc = opt.border || V3.flowCol, bc = fc || '#3d5a80', bm = M['b' + bc] || (M['b' + bc] = mat(bc, { roughness: 0.6 })), bt = fc ? 4 : 1.8;   // colour of the flow
   B(g, L, 0.6, bt, bm, 0, H + 0.3, W / 2 - bt / 2); B(g, L, 0.6, bt, bm, 0, H + 0.3, -W / 2 + bt / 2);
   B(g, bt, 0.6, W - 2 * bt, bm, L / 2 - bt / 2, H + 0.3, 0); B(g, bt, 0.6, W - 2 * bt, bm, -L / 2 + bt / 2, H + 0.3, 0);
   var lx = L / 2 - 5, lz = W / 2 - 5;
@@ -314,7 +314,7 @@ function rebuild3d() {
     var d = itemDim(it), g;
     if (it.kind === 'mc') {
       var S = shapes(it), fam = famOf(it.code);
-      g = buildMachine(fam, d.L, d.W, H, S.seatX);
+      V3.flowCol = flowColOf(it); g = buildMachine(fam, d.L, d.W, H, S.seatX); V3.flowCol = null;
       if (!it.noOp) { if (S.stand) buildStanding(g, S.seatX, d.W, e, V3.people); else buildChair(g, S.seatX, d.W / 2 + e.chairGap + e.chairD / 2, e, V3.people); }
       if (V3.labels) {   // like 2D: machine code above the machine, big operation number above the operator (on the machine when nobody sits there)
         var lbl = machineLabel(it.code, it.op || ''), lz = it.noOp ? 0 : d.W / 2 + (S.stand ? e.standGap : e.chairGap + e.chairD / 2) * 0.5;
