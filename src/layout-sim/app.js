@@ -98,7 +98,7 @@ function renderSel() {
     h += '<div><b>' + esc(t('selMany', [its.length])) + '</b></div>';
     h += '<div class="btns"><button data-cmd="rotL">⟲ 90°</button><button data-cmd="rotR">⟳ 90°</button><button data-cmd="flip">' + esc(t('bFlip')) + '</button><button data-cmd="op" title="W">👤 ' + esc(t(opGrouped(its) ? 'bOpSplit' : 'bOpShare')) + '</button></div>';
     h += '<div class="btns"><button data-cmd="grpR" title="' + esc(t('bGrpTip')) + '">' + esc(t('bGrp90')) + '</button><button data-cmd="grp180" title="' + esc(t('bGrpTip')) + '">' + esc(t('bGrp180')) + '</button></div>';
-    h += '<div class="btns"><button data-cmd="align" title="' + esc(t('bAlignTip')) + '">' + esc(t('bAlign')) + '</button><button data-cmd="pack" title="' + esc(t('bPackTip')) + '">' + esc(t('bPack')) + '</button><button data-cmd="dup">' + esc(t('bDup')) + '</button><button data-cmd="del" class="danger">' + esc(t('bDel')) + '</button></div>';
+    h += '<div class="btns"><button data-cmd="align" title="' + esc(t('bAlignTip')) + '">' + esc(t('bAlign')) + '</button><button data-cmd="pack" title="' + esc(t('bPackTip')) + '">' + esc(t('bPack')) + '</button><button data-cmd="close" title="' + esc(t('ttClose')) + '">' + esc(t('bClose')) + '</button><button data-cmd="dup">' + esc(t('bDup')) + '</button><button data-cmd="del" class="danger">' + esc(t('bDel')) + '</button></div>';
   }
   $('selBody').innerHTML = h;
 }
@@ -137,7 +137,7 @@ function toggleStand() {
 }
 function cmd(c) {
   ({ rotL: function () { rotateSel(-90); }, rotR: function () { rotateSel(90); }, flip: function () { rotateSel(180); }, dup: duplicateSel, del: deleteSel,
-    op: toggleOperator, stand: toggleStand, grpR: function () { rotateGroup(90); }, grp180: function () { rotateGroup(180); }, align: alignSel, pack: packSel }[c] || function () {})();
+    op: toggleOperator, stand: toggleStand, grpR: function () { rotateGroup(90); }, grp180: function () { rotateGroup(180); }, align: alignSel, pack: packSel, close: closeSel }[c] || function () {})();
   renderSel();
 }
 
@@ -195,27 +195,27 @@ function pasteGo() {
 function lineVals() {
   var L = ST.line;
   return { name: $('lsName').value.trim(), units: Math.max(1, Math.round(num($('lsUnits').value, L.units || LINE_DEF.units))), unit: Math.max(10, num($('lsUnit').value, LINE_DEF.unit)),
-    tableW: Math.max(0, num($('lsTable').value, LINE_DEF.tableW)), start: Math.max(0, num($('lsStart').value, LINE_DEF.start)), end: Math.max(0, num($('lsEnd').value, LINE_DEF.end)),
+    tableW: Math.max(0, num($('lsTable').value, LINE_DEF.tableW)), start: Math.max(0, num($('lsStart').value, LINE_DEF.start)), gap: Math.max(0, num($('lsGap').value, LINE_DEF.gap)), end: Math.max(0, num($('lsEnd').value, LINE_DEF.end)),
     width: num($('lsWidth').value, 0), hc: Math.max(0, Math.round(num($('lsHC').value, 0))),
     branch: !$('lsBr').checked ? null : { units: Math.max(1, Math.round(num($('lsBUnits').value, 6))), unit: Math.max(10, num($('lsUnit').value, LINE_DEF.unit)), tableW: Math.max(0, num($('lsBTable').value, LINE_DEF.tableW)),
-      start: 30, end: 30, pos: $('lsBPos').value, walk: Math.max(0, num($('lsBWalk').value, 100)), offset: Math.max(0, num($('lsBOff').value, 0)), width: num($('lsBWidth').value, 0) } };
+      end: 30, pos: $('lsBPos').value, walk: Math.max(0, num($('lsBWalk').value, 100)), width: num($('lsBWidth').value, 0) } };
 }
 function lineCalc() {
-  var o = lineVals(), L = o.start + o.units * o.unit + o.end, W = o.width || lineAutoWidth(o.tableW);
+  var o = lineVals(), L = o.units * o.unit + o.end, W = o.width || lineAutoWidth(o.tableW);
   $('lsWidth').placeholder = lineAutoWidth(o.tableW);
-  $('lsCalc').innerHTML = esc(t('lsCalc', [o.start, o.units, o.unit, o.end, Math.round(L), Math.round(o.units * o.unit), o.tableW, Math.round(W)])) +
+  $('lsCalc').innerHTML = esc(t('lsCalc2', [o.units, o.unit, o.end, Math.round(L), Math.round(o.units * o.unit), o.tableW, Math.round(W), o.start, o.gap])) +
     (o.branch ? '<br>' + esc(t('lsBCalc', [o.branch.units, Math.round(o.branch.units * o.branch.unit), o.branch.width || lineAutoWidth(o.branch.tableW), o.branch.walk, Math.round(W + o.branch.walk + (o.branch.width || lineAutoWidth(o.branch.tableW)))])) : '');
   $('lsBrBox').style.display = $('lsBr').checked ? '' : 'none'; $('lsBWidth').placeholder = lineAutoWidth(num($('lsBTable').value, 30));
 }
 function openLineSetup() {
   var L = ST.line, ct = centerTable();
   $('lsName').value = L.name || ''; $('lsUnits').value = L.units || LINE_DEF.units; $('lsUnit').value = L.unit || LINE_DEF.unit;
-  $('lsTable').value = ct ? ct.W : (L.tableW != null ? L.tableW : LINE_DEF.tableW); $('lsStart').value = L.start != null ? L.start : LINE_DEF.start; $('lsEnd').value = L.end != null ? L.end : LINE_DEF.end;
+  $('lsTable').value = ct ? ct.W : (L.tableW != null ? L.tableW : LINE_DEF.tableW); $('lsStart').value = L.v === 2 && L.start != null ? L.start : LINE_DEF.start; $('lsGap').value = L.gap != null ? L.gap : LINE_DEF.gap; $('lsEnd').value = L.end != null ? L.end : LINE_DEF.end;
   $('lsWidth').value = L.units ? (L.mainWidth || (L.zones ? zoneById('main').W : L.width)) : '';
   $('lsHC').value = L.hc || ''; $('lsHC').placeholder = (ST.info || {}).optr || ST.items.filter(function (i) { return i.kind === 'mc' && !i.noOp; }).length || '';
   var B = L.branch, cb = centerOf('branch');
   $('lsBr').checked = !!B; $('lsBUnits').value = B ? B.units : 6; $('lsBTable').value = cb ? cb.W : (B ? B.tableW : LINE_DEF.tableW); $('lsBPos').value = B ? B.pos : 'top';
-  $('lsBWalk').value = B ? B.walk : 100; $('lsBOff').value = B ? B.offset : (L.start != null ? L.start : LINE_DEF.start); $('lsBWidth').value = B && B.width ? B.width : '';
+  $('lsBWalk').value = B ? B.walk : 100; $('lsBWidth').value = B && B.width ? B.width : '';
   lineCalc(); $('dlgLine').showModal();
 }
 function applyLineSetup() { setupLine(lineVals()); $('dlgLine').close(); changed(); fitView(); if (TAB === '3d') view3dReset(false); }
@@ -387,6 +387,7 @@ function onKey(e) {
   else if (k === 'f' || k === 'F') rotateSel(180);
   else if (k === 'w' || k === 'W') toggleOperator();
   else if (k === 's' || k === 'S') toggleStand();
+  else if (k === 'k' || k === 'K') closeSel();
   else if (k === 'Delete' || k === 'Backspace') deleteSel();
   else if (k === 'ArrowLeft') nudgeSel(-st, 0); else if (k === 'ArrowRight') nudgeSel(st, 0);
   else if (k === 'ArrowUp') nudgeSel(0, -st); else if (k === 'ArrowDown') nudgeSel(0, st);
@@ -434,7 +435,7 @@ function startApp() {
   $('optAisle').checked = OPT.aisles; $('optAisle').onchange = function () { OPT.aisles = this.checked; render2d(); };
   $('bErg').onclick = openErg;
   $('bLineSetup').onclick = openLineSetup;
-  ['lsUnits', 'lsUnit', 'lsTable', 'lsStart', 'lsEnd', 'lsWidth'].forEach(function (id) { $(id).oninput = lineCalc; });
+  ['lsUnits', 'lsUnit', 'lsTable', 'lsStart', 'lsGap', 'lsEnd', 'lsWidth'].forEach(function (id) { $(id).oninput = lineCalc; });
   $('lsOk').onclick = applyLineSetup;
   $('selTools').addEventListener('pointerdown', function (e) { e.stopPropagation(); });
   $('selTools').addEventListener('click', function (e) { var b = e.target.closest('button[data-cmd]'); if (b) cmd(b.dataset.cmd); });
@@ -451,7 +452,7 @@ function startApp() {
   $('bXlOpen').onclick = function () { $('fileXl').value = ''; $('fileXl').click(); };
   $('fileXl').onchange = function () { if (this.files[0]) xlOpen(this.files[0]); };
   $('xlPick').onchange = xlUse; $('xlPickB').onchange = xlUse;
-  $('lsBr').onchange = lineCalc; ['lsBUnits', 'lsBTable', 'lsBWalk', 'lsBOff', 'lsBWidth', 'lsBPos'].forEach(function (id) { $(id).oninput = lineCalc; $(id).onchange = lineCalc; });
+  $('lsBr').onchange = lineCalc; ['lsBUnits', 'lsBTable', 'lsBWalk', 'lsBWidth', 'lsBPos'].forEach(function (id) { $(id).oninput = lineCalc; $(id).onchange = lineCalc; });
   $('bOpAll').onclick = function () { ST.items.forEach(function (i) { delete i.noOp; delete i.by; }); changed(); };
   ['bStandAll', 'bStandAll2', 'bStandAll3'].forEach(function (id) { $(id).onclick = function () { var st = standAll(); changed(); toast(t(st ? 'allStand' : 'allSit')); }; });
   $('bStandDef').onclick = function () { standDefault(); changed(); toast(t('standDefDone')); };

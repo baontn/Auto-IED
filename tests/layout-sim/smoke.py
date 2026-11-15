@@ -122,7 +122,8 @@ async def main():
         await pg.click('#dirLater'); await pg.wait_for_timeout(200)
         check(await pg.evaluate("()=>document.getElementById('dlgLine').open"), 'line set-up dialog on first start')
         await pg.fill('#lsName', 'Line D3'); await pg.fill('#lsUnits', '17'); await pg.dispatch_event('#lsUnits', 'input'); await pg.click('#lsOk')
-        check(await pg.evaluate('()=>{const c=centerTable();return [c.L,c.W,ST.line.length]}') == [1819, 30, 1969], 'central table 17 x 107 cm, width 30; line 120+1819+30')
+        r = await pg.evaluate('()=>{const c=centerTable(),i=zoneById("input"),m=zoneById("main");return [c.L,c.W,ST.line.length,c.x-c.L/2,i.x,i.L,i.x+i.L,i.W==m.W]}')
+        check(r == [1819, 30, 1849, 0, -120, 90, -30, True], 'central table 17 x 107 cm from 0 m, width 30; line 1819+30; input area 90 cm, 30 cm in front, as wide as the line ' + str(r))
         check(await pg.is_visible('#libBanner'), 'banner without library')
         await pg.set_input_files('#fileLib', lib); await pg.wait_for_timeout(800)
         check(await pg.evaluate('()=>[Object.keys(LIB.codes).length, LIB.models.length]') == [len(CODES), len(MODELS)], 'library read')
@@ -250,13 +251,27 @@ async def main():
         if SHOTS: await pg.locator('#dlgLine').screenshot(path=SHOTS + '/ls-linesetup.png')
         await pg.click('#lsOk')
         z = await pg.evaluate("()=>lineZones().map(z=>z.id+':'+z.y+':'+z.W)")
-        check(len(z) == 3 and z[1].startswith('walk:') and z[1].endswith(':100'), 'branch line above, 1 m walkway ' + str(z))
+        zw = await pg.evaluate("()=>{const w=zoneById('walk');return w.y+':'+w.W}")
+        cx = await pg.evaluate("()=>[centerOf('main').x-centerOf('main').L/2, centerOf('branch').x-centerOf('branch').L/2]")
+        check(zw.endswith(':100') and z[3].startswith('branch:0') and cx == [0, 0] and any(x.startswith('inputB:') for x in z), 'branch line above, 1 m walkway, both central tables start at 0 m, input areas ' + str(z))
         await pg.click('#bPaste'); await pg.set_input_files('#fileXl', xl); await pg.wait_for_timeout(600)
         r = await pg.evaluate("()=>[PASTE.nMc, PASTE.rows.length, PASTE.rows.map(r=>r.zone).join(','), (PASTE.seq||[]).length, PASTE.rows[0].cells.map(c=>c.code+':'+c.op).join(' ')]")
         check(r[:4] == [15, 4, 'branch,branch,main,main', 4] and r[4] == 'SFAM:41 SFAM:43 2CSM:45 1SLA:47', 'Excel shapes: 15 machines, 4 rows (2 branch + 2 main), 4 sequence lines ' + str(r))
         await pg.click('#pasteGo'); await pg.wait_for_timeout(200)
         r = await pg.evaluate("()=>[ST.items.filter(i=>i.zone=='branch'&&i.kind=='mc').length, ST.items.filter(i=>i.kind=='mc'&&!i.zone).length, seqParse(ST.seqText).lines.length, Math.round(flowCalc().total)]")
         check(r[0] == 7 and r[1] == 8 and r[2] == 4 and r[3] > 500, 'placed on branch (7) and main (8); flow from the sequence %d cm' % r[3])
+        # close up: machines of a row touch each other, the row touches the central table
+        await pg.evaluate("()=>{const m=ST.items.filter(i=>i.kind=='mc'&&!i.zone);m.forEach((i,k)=>{i.x+=k*7;i.y+=(i.y<centerTable().y?-12:12)});SEL=m.map(i=>i.id);changed();onSelChange()}")
+        await pg.click('#selTools [data-cmd="close"]'); await pg.wait_for_timeout(100)
+        r = await pg.evaluate('''()=>{const ct=centerTable(),m=ST.items.filter(i=>i.kind=='mc'&&!i.zone),out=[];
+          ['top','bot'].forEach(sd=>{const row=m.filter(i=>(i.y<ct.y)==(sd=='top')).map(i=>tableExt(i)).sort((a,b)=>a.x0-b.x0);if(!row.length)return;
+            let gap=0;for(let k=1;k<row.length;k++)gap=Math.max(gap,Math.abs(row[k].x0-row[k-1].x1));
+            const edge=sd=='top'?Math.max(...row.map(e=>e.y1))-(ct.y-ct.W/2):Math.min(...row.map(e=>e.y0))-(ct.y+ct.W/2);out.push([row.length,Math.round(gap*10)/10,Math.round(edge*10)/10]);});
+          return [out, ISSUES.filter(x=>x.k=='isOverlap').length]}''')
+        check(len(r[0]) == 2 and all(x[1] == 0 and x[2] == 0 for x in r[0]) and r[1] == 0, 'close up (⇥⇤): no gap between machines of a row, row edge on the central table ' + str(r))
+        # the operator arrow (one person, two machines) runs behind the operator, not over the central table
+        r = await pg.evaluate("()=>{const ct=centerTable(),m=ST.items.filter(i=>i.kind=='mc'&&!i.zone&&i.y>ct.y).sort((a,b)=>a.x-b.x);opShare([m[0],m[1]]);const l=opLinks().find(l=>l.home===m[0]||l.sat===m[0]);const e=tableExt(m[0]);const r=[l.c1.y>e.y1, l.back.y>0];delete m[1].noOp;delete m[1].by;return r}")
+        check(r == [True, True], 'operator arrow drawn behind the operator\'s back ' + str(r))
         # flow / WIP simulation with SAM values: output equals the slowest operation's capacity
         await pg.evaluate("()=>{ST.ops={'41':{sam:0.5},'43':{sam:0.5},'45':{sam:1.6},'47':{sam:0.4},'52':{sam:0.3},'53':{sam:0.3},'55':{sam:0.3},'31':{sam:0.4},'33':{sam:0.5},'35':{sam:0.5},'66':{sam:0.6},'67':{sam:0.5},'68':{sam:0.5},'70':{sam:0.7},'97':{sam:0.3}};commit()}")
         r = await pg.evaluate("()=>{const R=simRun({hours:8,eff:0.8,bundle:5,rate:0,warm:true});return [R.bottleneck.join(','),Math.round(R.capMin),Math.round(R.outH),R.rows.find(x=>x.op=='45').wipEnd]}")

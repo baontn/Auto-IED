@@ -14,7 +14,7 @@ var ERG_DEF = {
   emptyPitch: 107,// width of an empty cell in the pasted grid
   snap: 5
 };
-var LINE_DEF = { units: 17, unit: 107, tableW: 30, start: 120, end: 30 };
+var LINE_DEF = { units: 17, unit: 107, tableW: 30, start: 90, gap: 30, end: 30 };   // start = length of the input area in front of the line
 var ST = { line: { name: '', length: 2400, width: 600, fixed: false }, erg: Object.assign({}, ERG_DEF), items: [], seq: 1 };
 var SEL = [];            // selected ids (not saved)
 var UNDO = [], REDO = [];
@@ -228,7 +228,9 @@ function buildFromPaste(p, opt) {
   });
   if (opt.addInput && mainSpan) {
     var hh = mainSpan.y1 - mainSpan.y0;
-    items.unshift({ id: uid(), kind: 'obj', name: 'Input', L: inputL, W: Math.round(hh), H: 75, x: mainSpan.x0 - 40 - inputL / 2, y: mainSpan.y0 + hh / 2, rot: 0, color: '#8fb3d9' });
+    var inp = { id: uid(), kind: 'obj', name: 'Input', L: inputL, W: Math.round(hh), H: 75, x: mainSpan.x0 - 40 - inputL / 2, y: mainSpan.y0 + hh / 2, rot: 0, color: '#8fb3d9' };
+    if (opt.centers && zoneById('input')) placeInput(inp, 'main');
+    items.unshift(inp);
   }
   return items;
 }
@@ -240,28 +242,47 @@ function lineAutoWidth(tableW) { var e = ST.erg; return Math.ceil(tableW + 2 * (
 /* floor areas: main line, optional branch line and the walkway between them */
 function lineZones() { return ST.line.zones || [{ id: 'main', x: 0, y: 0, L: ST.line.length, W: ST.line.width }]; }
 function zoneById(id) { return lineZones().filter(function (z) { return z.id === id; })[0] || null; }
-/* o = {name, units, unit, tableW, start, end, width, branch: null | {units, unit, tableW, start, end, width, pos: 'top'|'bottom', walk, offset}}
-   main line length = start + units x unit + end, central table units x unit long; a branch line is another line next to it, a walkway between */
+/* o = {name, units, unit, tableW, start, gap, end, width, hc, branch: null | {units, unit, tableW, end, width, pos: 'top'|'bottom', walk}}
+   0 m = left edge of the central table; line = units x unit + end; the input area (start cm long, same width as the line)
+   lies in front of it, gap cm away; a branch line starts at the same 0 m, next to the main line with a walkway between */
 function setupLine(o) {
-  var mL = Math.round(o.start + o.units * o.unit + o.end), mW = Math.round(o.width || lineAutoWidth(o.tableW)), br = o.branch, bL = 0, bW = 0, walk = 0;
-  if (br) { bL = Math.round(br.start + br.units * br.unit + br.end); bW = Math.round(br.width || lineAutoWidth(br.tableW)); walk = Math.round(br.walk); }
-  var mainY = br && br.pos === 'top' ? bW + walk : 0, brY = br ? (br.pos === 'top' ? 0 : mW + walk) : 0, brX = br ? Math.round(br.offset || 0) : 0;
+  var inL = Math.max(0, Math.round(o.start != null ? o.start : LINE_DEF.start)), gap = Math.max(0, Math.round(o.gap != null ? o.gap : LINE_DEF.gap));
+  var mL = Math.round(o.units * o.unit + o.end), mW = Math.round(o.width || lineAutoWidth(o.tableW)), br = o.branch, bL = 0, bW = 0, walk = 0;
+  if (br) { bL = Math.round(br.units * br.unit + br.end); bW = Math.round(br.width || lineAutoWidth(br.tableW)); walk = Math.round(br.walk); }
+  var mainY = br && br.pos === 'top' ? bW + walk : 0, brY = br ? (br.pos === 'top' ? 0 : mW + walk) : 0, inX = -(inL + gap);
   var zones = [{ id: 'main', x: 0, y: mainY, L: mL, W: mW }];
+  if (inL > 0) zones.push({ id: 'input', x: inX, y: mainY, L: inL, W: mW });
   if (br) {
-    var wx0 = Math.min(0, brX), wx1 = Math.max(mL, brX + bL);
-    zones.push({ id: 'walk', x: wx0, y: br.pos === 'top' ? bW : mW, L: wx1 - wx0, W: walk }, { id: 'branch', x: brX, y: brY, L: bL, W: bW });
+    var wx0 = inL > 0 ? inX : 0, wx1 = Math.max(mL, bL);
+    zones.push({ id: 'walk', x: wx0, y: br.pos === 'top' ? bW : mW, L: wx1 - wx0, W: walk }, { id: 'branch', x: 0, y: brY, L: bL, W: bW });
+    if (inL > 0) zones.push({ id: 'inputB', x: inX, y: brY, L: inL, W: bW });
   }
-  ST.line = { name: o.name || '', length: Math.max(mL, brX + bL), width: mW + (br ? walk + bW : 0), fixed: true, units: o.units, unit: o.unit, tableW: o.tableW, start: o.start, end: o.end, hc: o.hc || 0,
-    mainWidth: o.width || 0, zones: zones, branch: br || null };
+  ST.line = { name: o.name || '', length: Math.max(mL, bL), width: mW + (br ? walk + bW : 0), fixed: true, units: o.units, unit: o.unit, tableW: o.tableW, start: inL, gap: gap, end: o.end, hc: o.hc || 0,
+    mainWidth: o.width || 0, zones: zones, branch: br || null, v: 2 };
   function center(zid, x, y, L, W) {
     var c = centerOf(zid), dx = 0, dy = 0;
-    if (c) { dx = x - c.x; dy = y - c.y; ST.items.forEach(function (it) { if (it !== c && (it.zone || 'main') === zid) { it.x = n1(it.x + dx); it.y = n1(it.y + dy); } }); }
+    if (c) { dx = x - c.x; dy = y - c.y; ST.items.forEach(function (it) { if (it !== c && (it.zone || 'main') === zid && !isInputObj(it)) { it.x = n1(it.x + dx); it.y = n1(it.y + dy); } }); }
     else { c = { id: uid(), kind: 'obj', role: 'center', zone: zid === 'main' ? undefined : zid, name: zid === 'main' ? t('centerTable') : t('centerTableB'), H: 75, rot: 0, color: '#d9cdb0' }; ST.items.unshift(c); }
     c.L = L; c.W = W; c.x = n1(x); c.y = n1(y);
   }
-  center('main', o.start + o.units * o.unit / 2, mainY + mW / 2, o.units * o.unit, o.tableW);
-  if (br) center('branch', brX + br.start + br.units * br.unit / 2, brY + bW / 2, br.units * br.unit, br.tableW);
+  center('main', o.units * o.unit / 2, mainY + mW / 2, o.units * o.unit, o.tableW);
+  if (br) center('branch', br.units * br.unit / 2, brY + bW / 2, br.units * br.unit, br.tableW);
   else { var cb = centerOf('branch'); if (cb) ST.items = ST.items.filter(function (it) { return it !== cb; }); }
+  ST.items.filter(isInputObj).forEach(function (it) { placeInput(it, it.zone === 'branch' ? 'branch' : 'main'); });
+}
+function isInputObj(it) { return it.kind === 'obj' && it.role !== 'center' && /^input$/i.test(String(it.name || '').trim()); }
+/* the input table: in the middle of the input area of its line (main / branch) */
+function placeInput(it, line) {
+  var z = zoneById(line === 'branch' ? 'inputB' : 'input'); if (!z) return false;
+  it.L = Math.min(it.L || 60, Math.max(20, z.L - 20)); it.W = Math.min(it.W || 120, Math.max(20, z.W - 20));
+  it.x = n1(z.x + z.L / 2); it.y = n1(z.y + z.W / 2); it.rot = 0;
+  return true;
+}
+/* outer extent of all floor areas (the input area lies left of 0 m) */
+function lineExtent() {
+  var x0 = 0, y0 = 0, x1 = ST.line.length, y1 = ST.line.width;
+  lineZones().forEach(function (z) { x0 = Math.min(x0, z.x); y0 = Math.min(y0, z.y); x1 = Math.max(x1, z.x + z.L); y1 = Math.max(y1, z.y + z.W); });
+  return { x0: x0, y0: y0, x1: x1, y1: y1 };
 }
 /* ---------- shared operators: it.by = id of the machine whose operator also runs this one ---------- */
 function homeOf(it) { var h = it && it.by ? itemById(it.by) : null; return h && !h.noOp ? h : null; }
@@ -285,9 +306,9 @@ function opLinks() {
     var h = homeOf(it); if (!it.noOp || !h) return;
     var a = shapes(h), b = shapes(it), big = { cx: a.table.cx, cy: a.table.cy, hx: a.table.hx + 25, hy: a.table.hy + 25, a: a.table.a };
     var p1 = a.chair || a.front, p2 = b.front;
-    // c1/c2: points on the two tables for the curved arrow (a little behind the table centres); back = direction away from the operator
-    var c1 = rotPt(h, a.seatX || 0, -a.W * 0.15), c2 = rotPt(it, b.seatX || 0, -b.W * 0.15), ang = (h.rot || 0) * Math.PI / 180;
-    out.push({ home: h, sat: it, p1: p1, p2: p2, c1: c1, c2: c2, back: { x: Math.sin(ang), y: -Math.cos(ang) }, far: !(overlap(big, b.table) > 0), dist: Math.hypot(p2.x - p1.x, p2.y - p1.y) });
+    // c1/c2: the curved arrow runs behind the operator's back (outer end of the operator zone), away from the central table; back = that side
+    var c1 = rotPt(h, a.seatX || 0, a.W / 2 + (a.zd || 60) * 0.9), c2 = rotPt(it, b.seatX || 0, b.W / 2 + (b.zd || 60) * 0.9), ang = (h.rot || 0) * Math.PI / 180;
+    out.push({ home: h, sat: it, p1: p1, p2: p2, c1: c1, c2: c2, back: { x: -Math.sin(ang), y: Math.cos(ang) }, far: !(overlap(big, b.table) > 0), dist: Math.hypot(p2.x - p1.x, p2.y - p1.y) });
   });
   return out;
 }

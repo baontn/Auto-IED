@@ -2,6 +2,9 @@
 var LANG = 'vi';
 var I18N = {
   vi: {
+    lsInL: 'Khu đầu vào dài (cm)', lsGap: 'Khu đầu vào cách chuyền (cm)', zoneInput: 'Khu đầu vào',
+    lsCalc2: 'Chuyền dài {0} × {1} + {2} = {3} cm, tính từ 0 m = đầu bàn giữa · bàn giữa {4} × {5} cm · rộng {6} cm (để trống ô "Chuyền rộng" để tự tính) · khu đầu vào {7} cm phía trước, cách chuyền {8} cm, rộng bằng chuyền.',
+    bClose: '⇥⇤ Khép sát', ttClose: 'Khép sát (K): các máy đã chọn sát nhau theo hàng, không khe hở; cạnh quay về bàn giữa áp sát bàn giữa',
     bManTip: 'Hướng dẫn sử dụng',
     bArr: '👥 Theo CN sắp xếp trong file', bArrTip: 'Đặt người vận hành trên mặt bằng theo cột "Arrange. Optr / CN sắp xếp" của file layout: ô gộp nhiều công đoạn = các công đoạn đó do chung người làm; các công đoạn 0.5 người được ghép với nhau đến đủ 1 người',
     arrDone: 'Người vận hành theo CN sắp xếp trong file ({0} người): {1} máy làm chung người, {2} máy không có người riêng.', arrNone: 'File layout không có cột "Arrange. Optr / CN sắp xếp" (mở lại file layout Excel).',
@@ -62,7 +65,7 @@ var I18N = {
     erg_standW: 'Đứng: bề ngang vùng thao tác', ergh_standW: 'Thảm chống mỏi thường rộng 90 cm, chân đứng rộng bằng vai',
     erg_standGap: 'Đứng: mép bàn → giữa người', ergh_standGap: 'Người đứng cách mép bàn khoảng 25-30 cm',
     ocrCells: 'Đang đọc từng ô… {0}/{1}', opShared: 'Một người chạy {0} máy (người ngồi ở {1}).', opSplit: 'Đã tách: {0} máy, mỗi máy một người.', sumMulti: '{0} người chạy nhiều máy', runBy: 'Do người ở máy {0} vận hành', alsoRuns: 'Người này chạy thêm: {0}', bOpShare: '1 người cho các máy này', bOpSplit: 'Tách: mỗi máy 1 người', expErr: 'Không xuất được ảnh.', centerTable: 'Bàn giữa', bLineSetup: 'Thiết lập chuyền theo số máy…', lsTitle: 'Thiết lập chuyền',
-    lsHelp: 'Nhập chiều dài chuyền bằng số máy chuẩn đặt nối nhau (mỗi máy chuẩn 107 cm). Chương trình tạo bàn giữa dài bằng số máy × 107 cm; hai hàng máy đặt hai bên bàn giữa khi dán layout.',
+    lsHelp: 'Nhập chiều dài chuyền bằng số máy chuẩn đặt nối nhau (mỗi máy chuẩn 107 cm). Chương trình tạo bàn giữa dài bằng số máy × 107 cm; hai hàng máy đặt hai bên bàn giữa khi dán layout. Mốc 0 m là đầu bàn giữa (chuyền nhánh cũng bắt đầu tại 0 m); khu đầu vào nằm phía trước, rộng bằng chuyền.',
     lsUnits: 'Số máy chuẩn', lsUnit: 'Máy chuẩn (cm)', lsTable: 'Bàn giữa rộng (cm)', lsStart: 'Đầu chuyền (cm)', lsEnd: 'Cuối chuyền (cm)', lsWidth: 'Chuyền rộng (cm)',
     lsCalc: 'Dài chuyền = {0} + {1} × {2} + {3} = {4} cm · bàn giữa {5} × {6} cm · rộng {7} cm (để trống ô "Chuyền rộng" để tự tính: bàn giữa + hai bên máy, vùng người vận hành, lối đi).',
     opCardTitle: 'Người vận hành', opCardHelp: 'Một người làm nhiều máy: chọn các máy (Shift+bấm, máy có người bấm trước) rồi bấm 👤 hoặc phím W; máy ở xa được nối bằng mũi tên 2 đầu và khoảng cách đi lại. Bấm 👤 lần nữa để tách. Chế độ dưới đây: mỗi lần bấm vào máy là bật/tắt người của máy đó.',
@@ -77,7 +80,7 @@ var I18N = {
     bUndoTip: 'Hoàn tác (Ctrl+Z)', bRedoTip: 'Làm lại (Ctrl+Y)', bFit: 'Vừa màn hình', optFlow: 'Đường đi', optSnap: 'Bám lưới', optAisle: 'Lối đi sau lưng',
     bPng: 'Xuất ảnh', bPrint: 'In', b3Reset: 'Góc nhìn mặc định', b3Top: 'Nhìn từ trên', opt3People: 'Người vận hành', opt3Labels: 'Nhãn',
     hint3d: 'Kéo máy để dời máy · kéo nền: xoay · chuột phải/Shift: di chuyển · lăn chuột: phóng to · Ctrl+bấm: chọn thêm · R/F/W/S như mặt bằng 2D',
-    hint2d: 'Kéo máy để di chuyển · R / Shift+R xoay 90° · F quay đầu · Delete xóa · W bật/tắt người · S đứng/ngồi · Ctrl+D nhân bản · mũi tên dịch 1 cm (Shift 10 cm) · Shift+kéo chọn vùng · lăn chuột phóng to · kéo nền để di chuyển · giữ Alt khi kéo: bỏ bám lưới',
+    hint2d: 'Kéo máy để di chuyển · R / Shift+R xoay 90° · F quay đầu · Delete xóa · W bật/tắt người · S đứng/ngồi · K khép sát · Ctrl+D nhân bản · mũi tên dịch 1 cm (Shift 10 cm) · Shift+kéo chọn vùng · lăn chuột phóng to · kéo nền để di chuyển · giữ Alt khi kéo: bỏ bám lưới',
     lnTitle: 'Chuyền', lnName: 'Tên chuyền', lnLen: 'Dài (cm)', lnWid: 'Rộng (cm)', bErg: 'Công thái học…', lnUsed: 'Layout chiếm: {0} × {1} cm (tính cả vùng người vận hành)', lineNoName: 'Chuyền chưa đặt tên',
     selTitle: 'Đang chọn', sumTitle: 'Tổng hợp', issTitle: 'Kiểm tra', issNone: 'Không có lỗi',
     selNone: 'Bấm vào một máy để xem và sửa; các nút xoay hiện ngay cạnh máy. Shift+bấm để chọn nhiều máy. Đường viền xanh nét đứt phía trước máy là vùng người vận hành (ghế + chỗ ngồi), chấm đỏ là vị trí kim.',
@@ -123,6 +126,9 @@ var I18N = {
     ocrIgnored: 'bỏ qua', ocrLegend: 'Viền xanh lá: đọc đúng mã · cam: đã sửa theo thư viện · đỏ: không có trong thư viện · xanh dương: số công đoạn · xám: bỏ qua. Đưa chuột vào ô để xem chữ đọc được.'
   },
   en: {
+    lsInL: 'Input area length (cm)', lsGap: 'Input area gap to the line (cm)', zoneInput: 'Input area',
+    lsCalc2: 'Line length {0} × {1} + {2} = {3} cm from 0 m = start of the central table · central table {4} × {5} cm · width {6} cm (leave "Line width" empty to compute it) · input area {7} cm in front, {8} cm away, as wide as the line.',
+    bClose: '⇥⇤ Close up', ttClose: 'Close up (K): the selected machines touch each other along their row, no gap; the edge facing the central table touches it',
     bManTip: 'User guide',
     bArr: '👥 As arranged in the file', bArrTip: 'Set the operators on the plan from the column "Arrange. Optr / CN sắp xếp" of the layout file: a cell merged over several operations = done by the same people; operations of 0.5 person are joined until one full person',
     arrDone: 'Operators as arranged in the file ({0} people): {1} machines run by a shared operator, {2} machines without own operator.', arrNone: 'The layout file has no column "Arrange. Optr / CN sắp xếp" (open the layout Excel file again).',
@@ -183,7 +189,7 @@ var I18N = {
     erg_standW: 'Standing: work area width', ergh_standW: 'An anti-fatigue mat is usually 90 cm wide; feet shoulder-width apart',
     erg_standGap: 'Standing: table edge → body centre', ergh_standGap: 'A standing operator is about 25-30 cm from the table edge',
     ocrCells: 'Reading each box… {0}/{1}', opShared: 'One operator runs {0} machines (seated at {1}).', opSplit: 'Split: {0} machines, one operator each.', sumMulti: '{0} operators run several machines', runBy: 'Run by the operator of {0}', alsoRuns: 'This operator also runs: {0}', bOpShare: 'One operator for these machines', bOpSplit: 'Split: one operator each', expErr: 'Could not export the image.', centerTable: 'Central table', bLineSetup: 'Set up line by machine count…', lsTitle: 'Line set-up',
-    lsHelp: 'Enter the line length as a number of standard machines placed end to end (one standard machine = 107 cm). A central table of machines × 107 cm is created; the two machine rows are placed on both sides of it when you paste a layout.',
+    lsHelp: 'Enter the line length as a number of standard machines placed end to end (one standard machine = 107 cm). A central table of machines × 107 cm is created; the two machine rows are placed on both sides of it when you paste a layout. 0 m is the start of the central table (a branch line also starts at 0 m); the input area lies in front, as wide as the line.',
     lsUnits: 'Standard machines', lsUnit: 'Standard machine (cm)', lsTable: 'Central table width (cm)', lsStart: 'Line start (cm)', lsEnd: 'Line end (cm)', lsWidth: 'Line width (cm)',
     lsCalc: 'Line length = {0} + {1} × {2} + {3} = {4} cm · central table {5} × {6} cm · width {7} cm (leave "Line width" empty to compute it: table + machines, operator zones and aisles on both sides).',
     opCardTitle: 'Operators', opCardHelp: 'One person runs several machines: select them (Shift+click, the machine with the operator first) and press 👤 or key W; machines apart are linked by a double arrow with the walking distance. Press 👤 again to split. The mode below: each click on a machine turns its operator on/off.',
@@ -198,7 +204,7 @@ var I18N = {
     bUndoTip: 'Undo (Ctrl+Z)', bRedoTip: 'Redo (Ctrl+Y)', bFit: 'Fit to screen', optFlow: 'Flow', optSnap: 'Snap', optAisle: 'Aisle behind operators',
     bPng: 'Export image', bPrint: 'Print', b3Reset: 'Default view', b3Top: 'Top view', opt3People: 'Operators', opt3Labels: 'Labels',
     hint3d: 'Drag a machine to move it · drag the floor: orbit · right drag/Shift: pan · wheel: zoom · Ctrl+click: add to selection · R/F/W/S like 2D',
-    hint2d: 'Drag a machine to move · R / Shift+R rotate 90° · F turn around · Delete remove · W operator on/off · S standing/sitting · Ctrl+D duplicate · arrows move 1 cm (Shift 10 cm) · Shift+drag box select · wheel zoom · drag the floor to pan · hold Alt while dragging: no snap',
+    hint2d: 'Drag a machine to move · R / Shift+R rotate 90° · F turn around · Delete remove · W operator on/off · S standing/sitting · K close up · Ctrl+D duplicate · arrows move 1 cm (Shift 10 cm) · Shift+drag box select · wheel zoom · drag the floor to pan · hold Alt while dragging: no snap',
     lnTitle: 'Line', lnName: 'Line name', lnLen: 'Length (cm)', lnWid: 'Width (cm)', bErg: 'Ergonomics…', lnUsed: 'Layout uses: {0} × {1} cm (operator zones included)', lineNoName: 'Unnamed line',
     selTitle: 'Selection', sumTitle: 'Summary', issTitle: 'Checks', issNone: 'No problems',
     selNone: 'Click a machine to see and edit it; turn buttons appear next to it. Shift+click to select several. The dashed blue area in front of a machine is the operator zone (chair + seat space); the red dot is the needle.',

@@ -157,7 +157,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
     <div id="opModeBar" class="banner" style="display:none" data-t="opModeBar">Chế độ người vận hành: bấm vào máy để bỏ / trả người vận hành. Esc hoặc bấm lại nút để thoát.</div>
     <svg id="plan" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI,Roboto,Arial,sans-serif"></svg>
     <div id="v3" style="display:none"></div>
-    <div id="selTools"><button data-cmd="rotL" data-tt="ttRotL">⟲</button><button data-cmd="rotR" data-tt="ttRotR">⟳</button><button data-cmd="flip" data-tt="ttFlip">⇅ 180°</button><button data-cmd="op" data-tt="ttOp">👤</button><button data-cmd="stand" data-tt="ttStand">🧍</button><button data-cmd="del" data-tt="ttDel">🗑</button></div>
+    <div id="selTools"><button data-cmd="rotL" data-tt="ttRotL">⟲</button><button data-cmd="rotR" data-tt="ttRotR">⟳</button><button data-cmd="flip" data-tt="ttFlip">⇅ 180°</button><button data-cmd="op" data-tt="ttOp">👤</button><button data-cmd="stand" data-tt="ttStand">🧍</button><button data-cmd="close" data-tt="ttClose">⇥⇤</button><button data-cmd="del" data-tt="ttDel">🗑</button></div>
     <div class="hint"><span data-t="hint2d">Kéo máy để di chuyển · R / Shift+R xoay 90° · F quay đầu · Delete xóa · Ctrl+D nhân bản · mũi tên dịch 1 cm (Shift 10 cm) · Shift+kéo chọn vùng · lăn chuột phóng to · kéo nền để di chuyển · Alt khi kéo: bỏ bám lưới</span> <span id="zoomTxt" class="muted"></span></div>
   </div>
   <aside>
@@ -257,13 +257,14 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
 </dialog>
 <dialog id="dlgLine"><div class="dh"><span data-t="lsTitle">Thiết lập chuyền</span><button data-close>✕</button></div>
   <div class="db">
-    <div class="muted small" data-t="lsHelp">Nhập chiều dài chuyền bằng số máy chuẩn đặt nối nhau (mỗi máy chuẩn 107 cm). Chương trình tạo bàn giữa dài bằng số máy × 107 cm; hai hàng máy đặt hai bên bàn giữa khi dán layout.</div>
+    <div class="muted small" data-t="lsHelp">Nhập chiều dài chuyền bằng số máy chuẩn đặt nối nhau (mỗi máy chuẩn 107 cm). Chương trình tạo bàn giữa dài bằng số máy × 107 cm; hai hàng máy đặt hai bên bàn giữa khi dán layout. Mốc 0 m là đầu bàn giữa (chuyền nhánh cũng bắt đầu tại 0 m); khu đầu vào nằm phía trước, rộng bằng chuyền.</div>
     <div class="grid3" style="margin-top:8px">
       <label class="f" style="grid-column:span 3"><span data-t="lnName">Tên chuyền</span><input id="lsName"></label>
       <label class="f"><span data-t="lsUnits">Số máy chuẩn</span><input id="lsUnits" type="number" min="1" step="1"></label>
       <label class="f"><span data-t="lsUnit">Máy chuẩn (cm)</span><input id="lsUnit" type="number" min="10" step="1"></label>
       <label class="f"><span data-t="lsTable">Bàn giữa rộng (cm)</span><input id="lsTable" type="number" min="0" step="1"></label>
-      <label class="f"><span data-t="lsStart">Đầu chuyền (cm)</span><input id="lsStart" type="number" min="0" step="10"></label>
+      <label class="f"><span data-t="lsInL">Khu đầu vào dài (cm)</span><input id="lsStart" type="number" min="0" step="10"></label>
+      <label class="f"><span data-t="lsGap">Khu đầu vào cách chuyền (cm)</span><input id="lsGap" type="number" min="0" step="5"></label>
       <label class="f"><span data-t="lsEnd">Cuối chuyền (cm)</span><input id="lsEnd" type="number" min="0" step="10"></label>
       <label class="f"><span data-t="lsWidth">Chuyền rộng (cm)</span><input id="lsWidth" type="number" min="50" step="10"></label>
       <label class="f"><span data-t="lsHC">Số công nhân (HC)</span><input id="lsHC" type="number" min="0" step="1"></label>
@@ -275,7 +276,6 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
       <label class="f"><span data-t="lsTable">Bàn giữa rộng (cm)</span><input id="lsBTable" type="number" min="0" step="1"></label>
       <label class="f"><span data-t="lsBPos">Vị trí</span><select id="lsBPos"><option value="top" data-t="lsBTop">Phía trên chuyền chính</option><option value="bottom" data-t="lsBBottom">Phía dưới chuyền chính</option></select></label>
       <label class="f"><span data-t="lsBWalk">Lối đi giữa 2 chuyền (cm)</span><input id="lsBWalk" type="number" min="0" step="10"></label>
-      <label class="f"><span data-t="lsBOff">Lệch so với đầu chuyền chính (cm)</span><input id="lsBOff" type="number" min="0" step="10"></label>
       <label class="f"><span data-t="lsWidth">Chuyền rộng (cm)</span><input id="lsBWidth" type="number" min="50" step="10"></label>
     </div>
   </div>
