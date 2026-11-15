@@ -1,7 +1,7 @@
 /* view3d.js: 3D view (three.js, bundled in the page, no network). 1 unit = 1 cm, plan (x, y) -> 3D (x, z), y is up.
    Machines are drawn from simple shapes per family, proportioned on the models in the register
    (Juki DDL-9000C, Yamato CZ6020 / VF2500 / VG2700, Juki LK-1900, Juki AMS-221, Precious PC8520, Oxima OS-390...). */
-var V3 = { ok: false, scene: null, cam: null, ren: null, root: null, theta: -0.55, phi: 0.95, rad: 1500, tgt: null, people: true, labels: true, dirty: true };
+var V3 = { ruler: true, ok: false, scene: null, cam: null, ren: null, root: null, theta: -0.55, phi: 0.95, rad: 1500, tgt: null, people: true, labels: true, dirty: true };
 var MAT = {}, GEO = {};
 
 function mat(hex, o) {
@@ -16,7 +16,7 @@ function initMats() {
     panel: mat('#1d2a3a', { roughness: 0.3 }), screen: mat('#3d8be0', { emissive: '#1a4f8f', emissiveIntensity: 0.4 }), blue: mat('#2d6cc0'),
     red: mat('#c23b3b'), press: mat('#5b6068', { metalness: 0.3 }), board: mat('#e9e9e6', { roughness: 0.9 }), cone: [mat('#e0457b'), mat('#2f7de1'), mat('#f2c230'), mat('#3fae6a'), mat('#f5f5f5')],
     seat: mat('#36404d', { roughness: 0.8 }), shirt: mat('#3f7bd0', { roughness: 0.9 }), skin: mat('#d9a982', { roughness: 0.8 }), pants: mat('#2d3748', { roughness: 0.9 }),
-    obj: {}, floor: mat('#cfd3d8', { roughness: 1 }), lineFloor: mat('#f1efe9', { roughness: 1 }) };
+    mat: mat('#3b4048', { roughness: 1 }), arc: mat('#7c3aed', { roughness: 0.5 }), obj: {}, floor: mat('#cfd3d8', { roughness: 1 }), lineFloor: mat('#f1efe9', { roughness: 1 }) };
 }
 function geoBox(w, h, d) { var k = 'b' + w + ',' + h + ',' + d; return GEO[k] || (GEO[k] = new THREE.BoxGeometry(w, h, d)); }
 function geoCyl(rt, rb, h, seg) { var k = 'c' + rt + ',' + rb + ',' + h + ',' + (seg || 20); return GEO[k] || (GEO[k] = new THREE.CylinderGeometry(rt, rb, h, seg || 20)); }
@@ -135,6 +135,17 @@ function buildMachine(fam, L, W, H, sx) {
   }
   return g;
 }
+function buildStanding(g, x, W, e, person) {
+  var c = new THREE.Group(), z = W / 2 + e.standGap;
+  B(c, Math.min(e.standW, 90) - 6, 1.2, Math.min(e.standDepth - 10, 60), M.mat, 0, 0.6, -(z - W / 2 - 6) + Math.min(e.standDepth - 10, 60) / 2);   // anti-fatigue mat
+  if (person) {                                                                         // standing operator facing the table (-z)
+    [-1, 1].forEach(function (k) { B(c, 12, 80, 15, M.pants, k * 9, 40, 0); B(c, 12, 4, 24, M.dark, k * 9, 2, -4); });
+    B(c, 38, 56, 22, M.shirt, 0, 108, -2).rotation.x = 0.08;
+    var hd = new THREE.Mesh(geoSph(10.5), M.skin); hd.position.set(0, 148, -3); hd.castShadow = true; c.add(hd);
+    [-1, 1].forEach(function (k) { var a = B(c, 9, 9, 40, M.shirt, k * 20, 112, -18); a.rotation.x = 0.75; B(c, 7, 6, 8, M.skin, k * 18, 96, -34); });
+  }
+  c.position.set(x, 0, z); g.add(c);
+}
 function buildChair(g, x, z, e, person) {
   var c = new THREE.Group(), sh = e.seatH;
   for (var i = 0; i < 5; i++) { var a = B(c, 26, 2.5, 3, M.dark, 0, 5, 0); a.position.set(Math.cos(i * 1.2566) * 12, 5, Math.sin(i * 1.2566) * 12); a.rotation.y = -i * 1.2566; }
@@ -157,6 +168,19 @@ function buildObject(it) {
   if (H > 120) B(g, it.L, H, it.W, m, 0, H / 2, 0);
   else { partTable(g, it.L, it.W, H, { pedal: false, noDrawer: true }); B(g, it.L - 2, 2, it.W - 2, m, 0, H + 1, 0); }
   return g;
+}
+/* big operation number above the operator (like the 2D seat label) */
+function opSprite(op) {
+  var cv = document.createElement('canvas'); cv.width = 160; cv.height = 128; var x = cv.getContext('2d');
+  x.fillStyle = '#ffd36b'; x.strokeStyle = '#0b3d91'; x.lineWidth = 6; x.beginPath(); if (x.roundRect) x.roundRect(6, 6, 148, 116, 30); else x.rect(6, 6, 148, 116); x.fill(); x.stroke();
+  x.fillStyle = '#0b3d91'; x.textAlign = 'center'; x.font = 'bold ' + (String(op).length > 3 ? 54 : 78) + 'px Segoe UI, Arial'; x.fillText(op, 80, String(op).length > 3 ? 82 : 92);
+  var s = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), depthTest: false })); s.scale.set(40, 32, 1); s.renderOrder = 11; return s;
+}
+function smallSprite(txt, w) {
+  var cv = document.createElement('canvas'); cv.width = 256; cv.height = 64; var x = cv.getContext('2d');
+  x.fillStyle = 'rgba(255,255,255,.88)'; x.beginPath(); if (x.roundRect) x.roundRect(4, 6, 248, 52, 12); else x.rect(4, 6, 248, 52); x.fill();
+  x.fillStyle = '#1d2330'; x.textAlign = 'center'; x.font = 'bold 38px Segoe UI, Arial'; x.fillText(txt, 128, 46);
+  var s = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), depthTest: false })); s.scale.set(w || 56, (w || 56) / 4, 1); s.renderOrder = 9; return s;
 }
 function textSprite(t1, t2) {
   var cv = document.createElement('canvas'); cv.width = 256; cv.height = 128; var x = cv.getContext('2d');
@@ -192,16 +216,44 @@ function init3d() {
   V3.root = new THREE.Group(); V3.scene.add(V3.root);
   var el = V3.ren.domElement, dr = null;
   el.addEventListener('contextmenu', function (e) { e.preventDefault(); });
-  el.addEventListener('pointerdown', function (e) { el.setPointerCapture(e.pointerId); dr = { x: e.clientX, y: e.clientY, b: e.button, sh: e.shiftKey, moved: 0 }; });
+  el.addEventListener('pointerdown', function (e) {
+    el.setPointerCapture(e.pointerId);
+    dr = { x: e.clientX, y: e.clientY, b: e.button, sh: e.shiftKey, moved: 0 };
+    if (e.button !== 0 || e.shiftKey) return;
+    var id = hitId(e);
+    if (!id) return;
+    if (OPMODE) { var ti = itemById(id); if (ti && ti.kind === 'mc') { opToggleOne(ti); changed(); } dr.done = true; return; }
+    if (e.ctrlKey || e.metaKey) { var k = SEL.indexOf(id); if (k >= 0) SEL.splice(k, 1); else SEL.push(id); onSelChange(); dr.done = true; return; }
+    if (SEL.indexOf(id) < 0) { SEL = [id]; onSelChange(); }
+    var p0 = floorPt(e); if (!p0) return;
+    var mv = selItems().filter(function (it) { return !isLocked(it); }); if (!mv.length) { dr.done = true; return; }
+    dr.drag = { p0: p0, orig: mv.map(function (it) { return { it: it, x: it.x, y: it.y }; }) };
+  });
   el.addEventListener('pointermove', function (e) {
     if (!dr) return; var dx = e.clientX - dr.x, dy = e.clientY - dr.y; dr.x = e.clientX; dr.y = e.clientY; dr.moved += Math.abs(dx) + Math.abs(dy);
+    if (dr.done) return;
+    if (dr.drag) {                                                                        // move the selected machines on the floor (snap like 2D)
+      if (dr.moved < 4) return;
+      var p = floorPt(e); if (!p) return;
+      var o0 = dr.drag.orig[0], useSnap = OPT.snap && !e.altKey;
+      var ddx = (useSnap ? Math.round((o0.x + p.x - dr.drag.p0.x) / ST.erg.snap) * ST.erg.snap : o0.x + p.x - dr.drag.p0.x) - o0.x, ddy = (useSnap ? Math.round((o0.y + p.z - dr.drag.p0.z) / ST.erg.snap) * ST.erg.snap : o0.y + p.z - dr.drag.p0.z) - o0.y;
+      dr.drag.orig.forEach(function (o) { o.it.x = n1(o.x + ddx); o.it.y = n1(o.y + ddy); });
+      V3.root.children.forEach(function (g) { var it = g.userData.id && itemById(g.userData.id); if (it && SEL.indexOf(it.id) >= 0) g.position.set(it.x, 0, it.y); });
+      document.getElementById('selTools').style.display = 'none';
+      draw3d(); sideLive(); return;
+    }
     if (dr.b === 2 || dr.b === 1 || dr.sh) {                                              // pan on the floor plane
       var k = V3.rad * 0.0012, ct = Math.cos(V3.theta), st = Math.sin(V3.theta);
       V3.tgt.x += (-dx * ct - dy * st) * k; V3.tgt.z += (dx * st - dy * ct) * k;
     } else { V3.theta -= dx * 0.006; V3.phi = Math.max(0.08, Math.min(1.52, V3.phi - dy * 0.006)); }
     draw3d();
   });
-  el.addEventListener('pointerup', function (e) { if (dr && dr.moved < 5 && dr.b === 0) pick3d(e); dr = null; });
+  el.addEventListener('pointerup', function (e) {
+    if (!dr) return; var d = dr; dr = null;
+    if (d.drag && d.moved >= 4) { changed(); return; }
+    if (d.done || d.drag) { placeSelTools(); return; }
+    if (d.moved < 5 && d.b === 0 && !d.sh) { if (SEL.length) { SEL = []; onSelChange(); } }
+  });
   el.addEventListener('wheel', function (e) { e.preventDefault(); V3.rad = Math.max(150, Math.min(20000, V3.rad * (e.deltaY < 0 ? 0.88 : 1.14))); draw3d(); }, { passive: false });
   V3.ok = true;
   return true;
@@ -216,6 +268,7 @@ function draw3d() {
   var t = V3.tgt, r = V3.rad;
   V3.cam.position.set(t.x + r * Math.sin(V3.phi) * Math.sin(V3.theta), t.y + r * Math.cos(V3.phi), t.z + r * Math.sin(V3.phi) * Math.cos(V3.theta));
   V3.cam.lookAt(t); V3.ren.render(V3.scene, V3.cam);
+  if (TAB === '3d') placeSelTools();
 }
 function view3dReset(top) {
   var L = ST.line.length, W = ST.line.width, b = bbox(ST.items);
@@ -225,7 +278,7 @@ function view3dReset(top) {
 function rebuild3d() {
   if (!V3.ok) return;
   var root = V3.root, e = ST.erg, H = e.tableH;
-  while (root.children.length) { var c = root.children.pop(); c.traverse(function (o) { if (o.isSprite) { o.material.map.dispose(); o.material.dispose(); } if (o.isLine) { o.geometry.dispose(); o.material.dispose(); } }); }
+  while (root.children.length) { var c = root.children.pop(); c.traverse(function (o) { if (o.isSprite) { o.material.map.dispose(); o.material.dispose(); } if (o.isLine) { o.geometry.dispose(); o.material.dispose(); } if (o.userData && o.userData.own) o.geometry.dispose(); }); }
   var L = ST.line.length, W = ST.line.width, dark = matchMedia('(prefers-color-scheme: dark)').matches;
   V3.scene.background = new THREE.Color(dark ? '#0f1218' : '#e9ecf0');
   var big = new THREE.Mesh(geoBox(L + 4000, 1, W + 4000), M.floor); big.position.set(L / 2, -0.6, W / 2); big.receiveShadow = true; root.add(big);
@@ -235,14 +288,26 @@ function rebuild3d() {
   for (var y = 0; y <= W; y += 100) pts.push(new THREE.Vector3(0, 0.3, y), new THREE.Vector3(L, 0.3, y));
   root.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: '#b9bcc2' })));
   var edge = rectLoop(L, W, '#e0a100', 0.5); edge.position.set(L / 2, 0, W / 2); root.add(edge);
+  if (V3.ruler) {   // metre marks along the front and left edges, total length and width
+    var stp = L > 3000 ? 200 : 100, tk = [];
+    for (x = 0; x <= L + 0.1; x += stp) { tk.push(new THREE.Vector3(x, 0.5, W), new THREE.Vector3(x, 0.5, W + 18)); var lb = smallSprite((x / 100) + ' m', 40); lb.position.set(x, 4, W + 40); root.add(lb); }
+    for (y = 0; y <= W + 0.1; y += 100) { tk.push(new THREE.Vector3(0, 0.5, y), new THREE.Vector3(-18, 0.5, y)); var lb2 = smallSprite((y / 100) + ' m', 40); lb2.position.set(-50, 4, y); root.add(lb2); }
+    tk.push(new THREE.Vector3(0, 0.5, -45), new THREE.Vector3(L, 0.5, -45), new THREE.Vector3(L + 45, 0.5, 0), new THREE.Vector3(L + 45, 0.5, W));
+    root.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(tk), new THREE.LineBasicMaterial({ color: '#5b6474' })));
+    var lt = smallSprite((L / 100).toFixed(2) + ' m', 90); lt.position.set(L / 2, 8, -70); root.add(lt);
+    var wt = smallSprite((W / 100).toFixed(2) + ' m', 70); wt.position.set(L + 95, 8, W / 2); root.add(wt);
+  }
   var bad = issueIds('bad'), warn = issueIds('warn');
   ST.items.forEach(function (it) {
     var d = itemDim(it), g;
     if (it.kind === 'mc') {
       var S = shapes(it), fam = famOf(it.code);
       g = buildMachine(fam, d.L, d.W, H, S.seatX);
-      if (!it.noOp) buildChair(g, S.seatX, d.W / 2 + e.chairGap + e.chairD / 2, e, V3.people);
-      if (V3.labels) { var sp = textSprite(it.code, it.op || ''); sp.position.set(0, H + 85, 0); g.add(sp); }
+      if (!it.noOp) { if (S.stand) buildStanding(g, S.seatX, d.W, e, V3.people); else buildChair(g, S.seatX, d.W / 2 + e.chairGap + e.chairD / 2, e, V3.people); }
+      if (V3.labels) {   // like 2D: machine code above the machine, big operation number above the operator (on the machine when nobody sits there)
+        var sp = it.noOp ? textSprite(it.code, it.op || '') : smallSprite(it.code, 44); sp.position.set(0, H + (it.noOp ? 85 : 62), -d.W * 0.1); g.add(sp);
+        if (!it.noOp && it.op) { var os = opSprite(it.op), oz = d.W / 2 + (S.stand ? e.standGap : e.chairGap + e.chairD / 2); os.position.set(S.seatX, (S.stand ? 148 : e.seatH + 72) + (V3.people ? 34 : 10), oz); g.add(os); }
+      }
     } else {
       g = buildObject(it);
       if (V3.labels && it.name) { var sp2 = textSprite(it.name, ''); sp2.position.set(0, (it.H || 75) + 40, 0); g.add(sp2); }
@@ -254,7 +319,15 @@ function rebuild3d() {
   });
   // shared operators: double arrow on the floor between the operator and the far machine
   opLinks().forEach(function (l) {
-    if (!l.far) return;
+    if (!l.far) {
+      var c1 = new THREE.Vector3(l.c1.x, H + 45, l.c1.y), c2 = new THREE.Vector3(l.c2.x, H + 45, l.c2.y), mid = c1.clone().add(c2).multiplyScalar(0.5), dl = c1.distanceTo(c2);
+      var ctl = mid.clone().add(new THREE.Vector3(l.back.x * dl * 0.35, Math.max(45, dl * 0.45), l.back.y * dl * 0.35));
+      var end = c2.clone().add(ctl.clone().sub(c2).normalize().multiplyScalar(12)), curve = new THREE.QuadraticBezierCurve3(c1, ctl, end);
+      var tube = new THREE.Mesh(new THREE.TubeGeometry(curve, 28, 2.2, 8, false), M.arc); tube.userData.own = true; root.add(tube);
+      var dir = c2.clone().sub(end).normalize(), cone = new THREE.Mesh(new THREE.ConeGeometry(6, 14, 16), M.arc); cone.userData.own = true;
+      cone.position.copy(end.clone().add(dir.clone().multiplyScalar(5))); cone.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir); root.add(cone);
+      return;
+    }
     var a = new THREE.Vector3(l.p1.x, 4, l.p1.y), b = new THREE.Vector3(l.p2.x, 4, l.p2.y), mid = a.clone().add(b).multiplyScalar(0.5), half = a.distanceTo(b) / 2;
     [[b, a], [a, b]].forEach(function (pr) { var dir = pr[0].clone().sub(mid).normalize(); root.add(new THREE.ArrowHelper(dir, mid, half, 0x7c3aed, Math.min(30, half * 0.4), 18)); });
   });
@@ -263,14 +336,20 @@ function rebuild3d() {
   s.shadow.camera.left = -m; s.shadow.camera.right = m; s.shadow.camera.top = m; s.shadow.camera.bottom = -m; s.shadow.camera.near = 100; s.shadow.camera.far = 6000; s.shadow.camera.updateProjectionMatrix();
   draw3d();
 }
-function pick3d(e) {
+function rayFrom(e) {
   var r = V3.ren.domElement.getBoundingClientRect(), ray = new THREE.Raycaster();
   ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), V3.cam);
-  var hits = ray.intersectObjects(V3.root.children, true), id = null;
-  for (var i = 0; i < hits.length && !id; i++) { var o = hits[i].object; while (o && !o.userData.id) o = o.parent; if (o) id = o.userData.id; }
-  if (id && OPMODE) { var ti = itemById(id); if (ti && ti.kind === 'mc') { opToggleOne(ti); changed(); } return; }
-  if (id) { if (e.shiftKey || e.ctrlKey) { var k = SEL.indexOf(id); if (k >= 0) SEL.splice(k, 1); else SEL.push(id); } else SEL = [id]; }
-  else SEL = [];
-  onSelChange();
+  return ray;
+}
+function hitId(e) {
+  var hits = rayFrom(e).intersectObjects(V3.root.children, true);
+  for (var i = 0; i < hits.length; i++) { var o = hits[i].object; if (o.isSprite) continue; while (o && !o.userData.id) o = o.parent; if (o) return o.userData.id; }   // labels are drawn on top: never pick them
+  return null;
+}
+function floorPt(e) { var p = new THREE.Vector3(); return rayFrom(e).ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), p) ? p : null; }
+/* screen position (in the stage box) of a floor point at height h, for the floating buttons */
+function screenOf3d(x, h, z) {
+  var v = new THREE.Vector3(x, h, z).project(V3.cam), r = V3.ren.domElement.getBoundingClientRect();
+  return { x: (v.x + 1) / 2 * r.width, y: (1 - v.y) / 2 * r.height, r: r, ok: v.z < 1 };
 }
 function png3d() { draw3d(); return V3.ren.domElement.toDataURL('image/png'); }

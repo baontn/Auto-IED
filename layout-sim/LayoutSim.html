@@ -30,6 +30,7 @@ header h1{font-size:16px;margin:0 6px 0 0}
 .tabs button.on{background:var(--sel);color:var(--accent);font-weight:600}
 .hr{margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 #paneWork{flex:1;display:grid;grid-template-columns:1fr 330px;min-height:0}
+body.noside #paneWork{grid-template-columns:1fr}body.noside aside{display:none}body.noside #bSide{background:var(--sel);color:var(--accent)}
 @media (max-width:900px){#paneWork{grid-template-columns:1fr;grid-template-rows:60vh auto}}
 .stage{position:relative;display:flex;flex-direction:column;min-width:0;min-height:0;border-right:1px solid var(--line)}
 .toolbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:7px 10px;background:var(--panel);border-bottom:1px solid var(--line)}
@@ -95,11 +96,12 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
 </head>
 <body>
 <header>
-  <h1 data-t="appTitle">Mô phỏng bố trí chuyền</h1><span class="tag t-info">v1.4</span>
+  <h1 data-t="appTitle">Mô phỏng bố trí chuyền</h1><span class="tag t-info">v1.5</span>
   <nav class="tabs"><button data-tab="plan" class="on" data-t="tabPlan">Mặt bằng 2D</button><button data-tab="3d" data-t="tab3d">3D</button><button data-tab="lib" data-t="tabLib">Thư viện máy</button></nav>
   <div class="hr">
     <button id="bNew" data-t="bNew">Mới</button><button id="bOpen" data-t="bOpen">Mở…</button><button id="bSave" class="primary" data-t="bSave" data-tt="bSaveTip">Lưu…</button>
     <button id="libChip" class="chipbtn"></button>
+    <button id="bSide" data-tt="bSideTip">◨</button>
     <select id="lang" aria-label="Language"><option value="vi">VI</option><option value="en">EN</option></select>
   </div>
 </header>
@@ -114,6 +116,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
       <span class="sep"></span>
       <button id="bUndo" data-tt="bUndoTip" title="Ctrl+Z">↶</button><button id="bRedo" data-tt="bRedoTip" title="Ctrl+Y">↷</button>
       <button id="bFit" data-t="bFit">Vừa màn hình</button>
+      <button id="bStandAll" data-t="bStandAll" data-tt="bStandAllTip">🧍↔🪑 Tất cả đứng / ngồi</button>
       <label><input type="checkbox" id="optFlow"><span data-t="optFlow">Đường đi</span></label>
       <label><input type="checkbox" id="optSnap"><span data-t="optSnap">Bám lưới</span></label>
       <label><input type="checkbox" id="optAisle"><span data-t="optAisle">Lối đi sau lưng</span></label>
@@ -124,13 +127,15 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
       <button id="b3Reset" data-t="b3Reset">Góc nhìn mặc định</button><button id="b3Top" data-t="b3Top">Nhìn từ trên</button>
       <label><input type="checkbox" id="opt3People"><span data-t="opt3People">Người vận hành</span></label>
       <label><input type="checkbox" id="opt3Labels"><span data-t="opt3Labels">Nhãn</span></label>
+      <label><input type="checkbox" id="opt3Ruler"><span data-t="opt3Ruler">Thước (m)</span></label>
+      <button id="bStandAll3" data-t="bStandAll">🧍↔🪑 Tất cả đứng / ngồi</button>
       <span class="sep"></span><button id="bPng3" onclick="exportImage()" data-t="bPng">Xuất ảnh</button>
       <span class="muted small" data-t="hint3d">Kéo chuột trái: xoay · chuột phải/Shift: di chuyển · lăn chuột: phóng to · bấm vào máy để chọn</span>
     </div>
     <div id="opModeBar" class="banner" style="display:none" data-t="opModeBar">Chế độ người vận hành: bấm vào máy để bỏ / trả người vận hành. Esc hoặc bấm lại nút để thoát.</div>
     <svg id="plan" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI,Roboto,Arial,sans-serif"></svg>
     <div id="v3" style="display:none"></div>
-    <div id="selTools"><button data-cmd="rotL" data-tt="ttRotL">⟲</button><button data-cmd="rotR" data-tt="ttRotR">⟳</button><button data-cmd="flip" data-tt="ttFlip">⇅ 180°</button><button data-cmd="op" data-tt="ttOp">👤</button><button data-cmd="del" data-tt="ttDel">🗑</button></div>
+    <div id="selTools"><button data-cmd="rotL" data-tt="ttRotL">⟲</button><button data-cmd="rotR" data-tt="ttRotR">⟳</button><button data-cmd="flip" data-tt="ttFlip">⇅ 180°</button><button data-cmd="op" data-tt="ttOp">👤</button><button data-cmd="stand" data-tt="ttStand">🧍</button><button data-cmd="del" data-tt="ttDel">🗑</button></div>
     <div class="hint"><span data-t="hint2d">Kéo máy để di chuyển · R / Shift+R xoay 90° · F quay đầu · Delete xóa · Ctrl+D nhân bản · mũi tên dịch 1 cm (Shift 10 cm) · Shift+kéo chọn vùng · lăn chuột phóng to · kéo nền để di chuyển · Alt khi kéo: bỏ bám lưới</span> <span id="zoomTxt" class="muted"></span></div>
   </div>
   <aside>
@@ -144,6 +149,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
     <div class="card"><h3 data-t="opCardTitle">Người vận hành</h3>
       <div class="muted small" data-t="opCardHelp">Một người làm nhiều máy: chọn các máy rồi bấm 👤.</div>
       <div class="btns"><button id="bOpMode" data-t="bOpMode">👤 Bấm máy để bật/tắt người</button><button id="bOpAll" data-t="bOpAll">Tất cả có người</button></div>
+      <div class="btns"><button id="bStandAll2" data-t="bStandAll">🧍↔🪑 Tất cả đứng / ngồi</button><button id="bStandDef" data-t="bStandDef">Mặc định (ép, ủi đứng)</button></div>
     </div>
     <div class="card"><h3 data-t="selTitle">Đang chọn</h3><div id="selBody"></div></div>
     <div class="card"><h3 id="issHead"></h3><ul id="issList"></ul></div>
@@ -246,6 +252,11 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 var LANG = 'vi';
 var I18N = {
   vi: {
+    fLock: 'Khóa vị trí (không kéo được)', bSideTip: 'Ẩn / hiện bảng bên phải', ttStand: 'Đứng / ngồi (S)', bStandAll: '🧍↔🪑 Tất cả đứng / ngồi', bStandAllTip: 'Chuyển tất cả công đoạn sang đứng, bấm lại để chuyển sang ngồi', bStandDef: 'Mặc định (ép, ủi đứng)',
+    allStand: 'Tất cả công đoạn: đứng.', allSit: 'Tất cả công đoạn: ngồi.', standDefDone: 'Mặc định: máy ép nhiệt và bàn ủi đứng, các máy khác ngồi.', fStand: 'Thao tác đứng', sumStand: '{0} người đứng', opt3Ruler: 'Thước (m)',
+    erg_standDepth: 'Đứng: chiều sâu vùng thao tác', ergh_standDepth: 'Từ mép bàn/máy ra sau: thảm chống mỏi + chỗ lùi bước (thường 75-90 cm; IE chỉnh theo tiêu chuẩn nhà máy)',
+    erg_standW: 'Đứng: bề ngang vùng thao tác', ergh_standW: 'Thảm chống mỏi thường rộng 90 cm, chân đứng rộng bằng vai',
+    erg_standGap: 'Đứng: mép bàn → giữa người', ergh_standGap: 'Người đứng cách mép bàn khoảng 25-30 cm',
     ocrCells: 'Đang đọc từng ô… {0}/{1}', opShared: 'Một người chạy {0} máy (người ngồi ở {1}).', opSplit: 'Đã tách: {0} máy, mỗi máy một người.', sumMulti: '{0} người chạy nhiều máy', runBy: 'Do người ở máy {0} vận hành', alsoRuns: 'Người này chạy thêm: {0}', bOpShare: '1 người cho các máy này', bOpSplit: 'Tách: mỗi máy 1 người', expErr: 'Không xuất được ảnh.', centerTable: 'Bàn giữa', bLineSetup: 'Thiết lập chuyền theo số máy…', lsTitle: 'Thiết lập chuyền',
     lsHelp: 'Nhập chiều dài chuyền bằng số máy chuẩn đặt nối nhau (mỗi máy chuẩn 107 cm). Chương trình tạo bàn giữa dài bằng số máy × 107 cm; hai hàng máy đặt hai bên bàn giữa khi dán layout.',
     lsUnits: 'Số máy chuẩn', lsUnit: 'Máy chuẩn (cm)', lsTable: 'Bàn giữa rộng (cm)', lsStart: 'Đầu chuyền (cm)', lsEnd: 'Cuối chuyền (cm)', lsWidth: 'Chuyền rộng (cm)',
@@ -261,8 +272,8 @@ var I18N = {
     obInput: 'Bàn đầu vào', obQc: 'Bàn QC', obTable: 'Bàn', obPillar: 'Cột', obTrolley: 'Xe đẩy', obBox: 'Vật cản', bAddObj: '+ Thêm',
     bUndoTip: 'Hoàn tác (Ctrl+Z)', bRedoTip: 'Làm lại (Ctrl+Y)', bFit: 'Vừa màn hình', optFlow: 'Đường đi', optSnap: 'Bám lưới', optAisle: 'Lối đi sau lưng',
     bPng: 'Xuất ảnh', bPrint: 'In', b3Reset: 'Góc nhìn mặc định', b3Top: 'Nhìn từ trên', opt3People: 'Người vận hành', opt3Labels: 'Nhãn',
-    hint3d: 'Kéo chuột trái: xoay · chuột phải/Shift: di chuyển · lăn chuột: phóng to · bấm vào máy để chọn',
-    hint2d: 'Kéo máy để di chuyển · R / Shift+R xoay 90° · F quay đầu · Delete xóa · W bật/tắt người · Ctrl+D nhân bản · mũi tên dịch 1 cm (Shift 10 cm) · Shift+kéo chọn vùng · lăn chuột phóng to · kéo nền để di chuyển · giữ Alt khi kéo: bỏ bám lưới',
+    hint3d: 'Kéo máy để dời máy · kéo nền: xoay · chuột phải/Shift: di chuyển · lăn chuột: phóng to · Ctrl+bấm: chọn thêm · R/F/W/S như mặt bằng 2D',
+    hint2d: 'Kéo máy để di chuyển · R / Shift+R xoay 90° · F quay đầu · Delete xóa · W bật/tắt người · S đứng/ngồi · Ctrl+D nhân bản · mũi tên dịch 1 cm (Shift 10 cm) · Shift+kéo chọn vùng · lăn chuột phóng to · kéo nền để di chuyển · giữ Alt khi kéo: bỏ bám lưới',
     lnTitle: 'Chuyền', lnName: 'Tên chuyền', lnLen: 'Dài (cm)', lnWid: 'Rộng (cm)', bErg: 'Công thái học…', lnUsed: 'Layout chiếm: {0} × {1} cm (tính cả vùng người vận hành)', lineNoName: 'Chuyền chưa đặt tên',
     selTitle: 'Đang chọn', sumTitle: 'Tổng hợp', issTitle: 'Kiểm tra', issNone: 'Không có lỗi',
     selNone: 'Bấm vào một máy để xem và sửa; các nút xoay hiện ngay cạnh máy. Shift+bấm để chọn nhiều máy. Đường viền xanh nét đứt phía trước máy là vùng người vận hành (ghế + chỗ ngồi), chấm đỏ là vị trí kim.',
@@ -308,6 +319,11 @@ var I18N = {
     ocrIgnored: 'bỏ qua', ocrLegend: 'Viền xanh lá: đọc đúng mã · cam: đã sửa theo thư viện · đỏ: không có trong thư viện · xanh dương: số công đoạn · xám: bỏ qua. Đưa chuột vào ô để xem chữ đọc được.'
   },
   en: {
+    fLock: 'Lock position (cannot be dragged)', bSideTip: 'Hide / show the right panel', ttStand: 'Standing / sitting (S)', bStandAll: '🧍↔🪑 All standing / sitting', bStandAllTip: 'Make every operation standing, press again for sitting', bStandDef: 'Default (press, iron standing)',
+    allStand: 'All operations: standing.', allSit: 'All operations: sitting.', standDefDone: 'Default: heat presses and ironing standing, other machines sitting.', fStand: 'Standing operation', sumStand: '{0} standing', opt3Ruler: 'Ruler (m)',
+    erg_standDepth: 'Standing: work area depth', ergh_standDepth: 'From the table/machine edge backwards: anti-fatigue mat + room to step back (usually 75-90 cm; IE sets the factory standard)',
+    erg_standW: 'Standing: work area width', ergh_standW: 'An anti-fatigue mat is usually 90 cm wide; feet shoulder-width apart',
+    erg_standGap: 'Standing: table edge → body centre', ergh_standGap: 'A standing operator is about 25-30 cm from the table edge',
     ocrCells: 'Reading each box… {0}/{1}', opShared: 'One operator runs {0} machines (seated at {1}).', opSplit: 'Split: {0} machines, one operator each.', sumMulti: '{0} operators run several machines', runBy: 'Run by the operator of {0}', alsoRuns: 'This operator also runs: {0}', bOpShare: 'One operator for these machines', bOpSplit: 'Split: one operator each', expErr: 'Could not export the image.', centerTable: 'Central table', bLineSetup: 'Set up line by machine count…', lsTitle: 'Line set-up',
     lsHelp: 'Enter the line length as a number of standard machines placed end to end (one standard machine = 107 cm). A central table of machines × 107 cm is created; the two machine rows are placed on both sides of it when you paste a layout.',
     lsUnits: 'Standard machines', lsUnit: 'Standard machine (cm)', lsTable: 'Central table width (cm)', lsStart: 'Line start (cm)', lsEnd: 'Line end (cm)', lsWidth: 'Line width (cm)',
@@ -323,8 +339,8 @@ var I18N = {
     obInput: 'Input table', obQc: 'QC table', obTable: 'Table', obPillar: 'Pillar', obTrolley: 'Trolley', obBox: 'Obstacle', bAddObj: '+ Add',
     bUndoTip: 'Undo (Ctrl+Z)', bRedoTip: 'Redo (Ctrl+Y)', bFit: 'Fit to screen', optFlow: 'Flow', optSnap: 'Snap', optAisle: 'Aisle behind operators',
     bPng: 'Export image', bPrint: 'Print', b3Reset: 'Default view', b3Top: 'Top view', opt3People: 'Operators', opt3Labels: 'Labels',
-    hint3d: 'Left drag: orbit · right drag/Shift: pan · wheel: zoom · click a machine to select it',
-    hint2d: 'Drag a machine to move · R / Shift+R rotate 90° · F turn around · Delete remove · W operator on/off · Ctrl+D duplicate · arrows move 1 cm (Shift 10 cm) · Shift+drag box select · wheel zoom · drag the floor to pan · hold Alt while dragging: no snap',
+    hint3d: 'Drag a machine to move it · drag the floor: orbit · right drag/Shift: pan · wheel: zoom · Ctrl+click: add to selection · R/F/W/S like 2D',
+    hint2d: 'Drag a machine to move · R / Shift+R rotate 90° · F turn around · Delete remove · W operator on/off · S standing/sitting · Ctrl+D duplicate · arrows move 1 cm (Shift 10 cm) · Shift+drag box select · wheel zoom · drag the floor to pan · hold Alt while dragging: no snap',
     lnTitle: 'Line', lnName: 'Line name', lnLen: 'Length (cm)', lnWid: 'Width (cm)', bErg: 'Ergonomics…', lnUsed: 'Layout uses: {0} × {1} cm (operator zones included)', lineNoName: 'Unnamed line',
     selTitle: 'Selection', sumTitle: 'Summary', issTitle: 'Checks', issNone: 'No problems',
     selNone: 'Click a machine to see and edit it; turn buttons appear next to it. Shift+click to select several. The dashed blue area in front of a machine is the operator zone (chair + seat space); the red dot is the needle.',
@@ -581,6 +597,9 @@ function codeName(code) { var o = LIB.codes[normCode(code)]; if (!o) return ''; 
 var ERG_DEF = {
   chairGap: 15,   // table front edge -> chair front edge
   chairW: 45, chairD: 45, seatH: 46,
+  standDepth: 80, // standing operator area from the table edge (anti-fatigue mat + step back)
+  standW: 90,     // standing area width (mat 90 cm)
+  standGap: 30,   // table edge -> standing operator's body centre
   opDepth: 75,    // operator zone measured from the table front edge (chair + body + leg room)
   opW: 70,        // width of the operator zone (elbow room)
   aisle: 60,      // free passage behind the operator zone (warning when blocked)
@@ -607,19 +626,32 @@ function rotPt(it, lx, ly) {
   return { x: it.x + lx * c - ly * s, y: it.y + lx * s + ly * c };
 }
 function obb(it, lcx, lcy, hx, hy) { var p = rotPt(it, lcx, lcy); return { cx: p.x, cy: p.y, hx: hx, hy: hy, a: (it.rot || 0) * Math.PI / 180 }; }
+/* the central table is locked unless unlocked in the side panel (it.lock === false) */
+function isLocked(it) { return it.lock != null ? !!it.lock : it.role === 'center'; }
+/* standing operator: per machine (it.stand), default standing for heat presses and ironing */
+var STAND_FAMS = { press: 1, iron: 1 };
+function isStanding(it) { return it.stand != null ? !!it.stand : !!STAND_FAMS[famOf(it.code)]; }
+/* all machines standing <-> sitting; returns the new state */
+function standAll() {
+  var mc = ST.items.filter(function (i) { return i.kind === 'mc'; }), toStand = mc.some(function (i) { return !isStanding(i); });
+  mc.forEach(function (i) { i.stand = toStand; });
+  return toStand;
+}
+function standDefault() { ST.items.forEach(function (i) { delete i.stand; }); }
 /* shapes of an item: table (always), operator zone, chair and the aisle strip behind the operator (machines only) */
 function shapes(it) {
   var d = itemDim(it), e = ST.erg, r = { table: obb(it, 0, 0, d.L / 2, d.W / 2), L: d.L, W: d.W };
   if (it.kind === 'mc') {
+    var st = isStanding(it), zw = st ? e.standW : e.opW, zd = st ? e.standDepth : e.opDepth;
     var sx = seatOf(famOf(it.code)) * d.L;
-    sx = Math.max(-d.L / 2 + e.opW / 2, Math.min(d.L / 2 - e.opW / 2, sx));
-    if (d.L < e.opW) sx = 0;
-    r.seatX = sx;
+    sx = Math.max(-d.L / 2 + zw / 2, Math.min(d.L / 2 - zw / 2, sx));
+    if (d.L < zw) sx = 0;
+    r.seatX = sx; r.stand = st; r.zw = zw; r.zd = zd;
     r.front = rotPt(it, sx, d.W / 2);
     if (it.noOp) return r;                    // station without its own operator (one worker runs two machines)
-    r.zone = obb(it, sx, d.W / 2 + e.opDepth / 2, e.opW / 2, e.opDepth / 2);
-    r.chair = rotPt(it, sx, d.W / 2 + e.chairGap + e.chairD / 2);
-    r.aisle = e.aisle > 0 ? obb(it, sx, d.W / 2 + e.opDepth + e.aisle / 2, e.opW / 2, e.aisle / 2) : null;
+    r.zone = obb(it, sx, d.W / 2 + zd / 2, zw / 2, zd / 2);
+    r.chair = rotPt(it, sx, d.W / 2 + (st ? e.standGap : e.chairGap + e.chairD / 2));   // operator position (seat centre or standing spot)
+    r.aisle = e.aisle > 0 ? obb(it, sx, d.W / 2 + zd + e.aisle / 2, zw / 2, e.aisle / 2) : null;
   }
   return r;
 }
@@ -813,7 +845,9 @@ function opLinks() {
     var h = homeOf(it); if (!it.noOp || !h) return;
     var a = shapes(h), b = shapes(it), big = { cx: a.table.cx, cy: a.table.cy, hx: a.table.hx + 25, hy: a.table.hy + 25, a: a.table.a };
     var p1 = a.chair || a.front, p2 = b.front;
-    out.push({ home: h, sat: it, p1: p1, p2: p2, far: !(overlap(big, b.table) > 0), dist: Math.hypot(p2.x - p1.x, p2.y - p1.y) });
+    // c1/c2: points on the two tables for the curved arrow (a little behind the table centres); back = direction away from the operator
+    var c1 = rotPt(h, a.seatX || 0, -a.W * 0.15), c2 = rotPt(it, b.seatX || 0, -b.W * 0.15), ang = (h.rot || 0) * Math.PI / 180;
+    out.push({ home: h, sat: it, p1: p1, p2: p2, c1: c1, c2: c2, back: { x: Math.sin(ang), y: -Math.cos(ang) }, far: !(overlap(big, b.table) > 0), dist: Math.hypot(p2.x - p1.x, p2.y - p1.y) });
   });
   return out;
 }
@@ -851,12 +885,13 @@ var OPT = { flow: true, snap: true, aisles: false };
 var DRAG = null, BOXR = null;
 
 function pal(light) {
-  if (light) return { bg: '#ffffff', floor: '#f7f7f5', grid: '#e3e3df', grid2: '#cfcfca', text: '#1d2330', muted: '#6b7280', accent: '#1f6feb', bad: '#c4202b', warn: '#c98a00', edge: '#3b4250', zone: 'rgba(31,111,235,.08)', zoneEdge: '#7aa3e6', chair: '#5b6474', aisle: 'rgba(201,138,0,.10)', flow: '#e0457b' };
+  if (light) return { bg: '#ffffff', floor: '#f7f7f5', grid: '#e3e3df', grid2: '#cfcfca', text: '#1d2330', muted: '#6b7280', accent: '#1f6feb', bad: '#c4202b', warn: '#c98a00', edge: '#3b4250', zone: 'rgba(31,111,235,.08)', zoneEdge: '#7aa3e6', chair: '#5b6474', aisle: 'rgba(201,138,0,.10)', flow: '#e0457b', standZone: 'rgba(22,160,133,.10)', standEdge: '#2a9d8f', mat: 'rgba(60,70,80,.18)' };
   var cs = getComputedStyle(document.documentElement), g = function (n) { return cs.getPropertyValue(n).trim(); };
   var dark = matchMedia('(prefers-color-scheme: dark)').matches;
   return { bg: g('--bg'), floor: dark ? '#141922' : '#fbfbfa', grid: dark ? '#222a36' : '#e7e7e3', grid2: dark ? '#2e3846' : '#d2d2cc', text: g('--text'), muted: g('--muted'), accent: g('--accent'),
     bad: g('--bad'), warn: g('--warn'), edge: dark ? '#cfd6e2' : '#3b4250', zone: dark ? 'rgba(76,141,255,.12)' : 'rgba(31,111,235,.08)', zoneEdge: dark ? '#4c78c0' : '#7aa3e6',
-    chair: dark ? '#8a94a6' : '#5b6474', aisle: dark ? 'rgba(227,179,65,.12)' : 'rgba(201,138,0,.10)', flow: '#e0457b' };
+    chair: dark ? '#8a94a6' : '#5b6474', aisle: dark ? 'rgba(227,179,65,.12)' : 'rgba(201,138,0,.10)', flow: '#e0457b',
+    standZone: dark ? 'rgba(42,157,143,.16)' : 'rgba(22,160,133,.10)', standEdge: '#2a9d8f', mat: dark ? 'rgba(200,210,220,.14)' : 'rgba(60,70,80,.18)' };
 }
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 function n1(v) { return Math.round(v * 10) / 10; }
@@ -880,10 +915,18 @@ function planMarkup(o) {
     var g = ['<g data-id="' + it.id + '" transform="translate(' + n1(it.x) + ' ' + n1(it.y) + ') rotate(' + (it.rot || 0) + ')" style="cursor:move">'];
     if (it.kind === 'mc' && S.zone) {
       var sx = S.seatX;
-      if (OPT.aisles || sel) g.push('<rect x="' + (sx - e.opW / 2) + '" y="' + (d.W / 2 + e.opDepth) + '" width="' + e.opW + '" height="' + e.aisle + '" fill="' + P.aisle + '" stroke="' + P.warn + '" stroke-width="' + sw + '" stroke-dasharray="' + 3 * sw + ' ' + 3 * sw + '"/>');
-      g.push('<rect x="' + (sx - e.opW / 2) + '" y="' + d.W / 2 + '" width="' + e.opW + '" height="' + e.opDepth + '" fill="' + P.zone + '" stroke="' + P.zoneEdge + '" stroke-width="' + sw + '" stroke-dasharray="' + 4 * sw + ' ' + 3 * sw + '"/>');
-      g.push('<rect x="' + (sx - e.chairW / 2) + '" y="' + (d.W / 2 + e.chairGap) + '" width="' + e.chairW + '" height="' + e.chairD + '" rx="' + e.chairW * 0.25 + '" fill="none" stroke="' + P.chair + '" stroke-width="' + 1.5 * sw + '"/>');
-      g.push('<path d="M' + (sx - e.chairW * 0.38) + ' ' + (d.W / 2 + e.chairGap + e.chairD * 0.92) + ' h' + e.chairW * 0.76 + '" stroke="' + P.chair + '" stroke-width="' + 3 * sw + '"/>');
+      var zw = S.zw, zd = S.zd;
+      if (OPT.aisles || sel) g.push('<rect x="' + (sx - zw / 2) + '" y="' + (d.W / 2 + zd) + '" width="' + zw + '" height="' + e.aisle + '" fill="' + P.aisle + '" stroke="' + P.warn + '" stroke-width="' + sw + '" stroke-dasharray="' + 3 * sw + ' ' + 3 * sw + '"/>');
+      g.push('<rect x="' + (sx - zw / 2) + '" y="' + d.W / 2 + '" width="' + zw + '" height="' + zd + '" fill="' + (S.stand ? P.standZone : P.zone) + '" stroke="' + (S.stand ? P.standEdge : P.zoneEdge) + '" stroke-width="' + sw + '" stroke-dasharray="' + 4 * sw + ' ' + 3 * sw + '"/>');
+      if (S.stand) {   // anti-fatigue mat and two footprints
+        var my = d.W / 2 + 6, mh = Math.min(zd - 10, 60);
+        g.push('<rect x="' + (sx - Math.min(zw, 90) / 2 + 3) + '" y="' + my + '" width="' + (Math.min(zw, 90) - 6) + '" height="' + mh + '" rx="4" fill="' + P.mat + '" stroke="none"/>');
+        var fy = d.W / 2 + e.standGap;
+        [-1, 1].forEach(function (k) { g.push('<ellipse cx="' + (sx + k * 9) + '" cy="' + fy + '" rx="5" ry="11" fill="' + P.chair + '" fill-opacity=".85"/>'); });
+      } else {
+        g.push('<rect x="' + (sx - e.chairW / 2) + '" y="' + (d.W / 2 + e.chairGap) + '" width="' + e.chairW + '" height="' + e.chairD + '" rx="' + e.chairW * 0.25 + '" fill="none" stroke="' + P.chair + '" stroke-width="' + 1.5 * sw + '"/>');
+        g.push('<path d="M' + (sx - e.chairW * 0.38) + ' ' + (d.W / 2 + e.chairGap + e.chairD * 0.92) + ' h' + e.chairW * 0.76 + '" stroke="' + P.chair + '" stroke-width="' + 3 * sw + '"/>');
+      }
     }
     var fam = it.kind === 'mc' ? famOf(it.code) : '';
     g.push('<rect x="' + (-d.L / 2) + '" y="' + (-d.W / 2) + '" width="' + d.L + '" height="' + d.W + '" fill="' + (it.kind === 'mc' ? FAM_COL[fam] : (it.color || '#c9ccd3')) + '" fill-opacity="' + (it.kind === 'mc' ? 0.55 : 0.45) + '" stroke="' + stroke + '" stroke-width="' + wd + '"/>');
@@ -899,7 +942,16 @@ function planMarkup(o) {
   // one operator for several machines: thin link when next to each other, double arrow (walking distance) when apart
   opLinks().forEach(function (l) {
     var col = '#7c3aed', a = l.p1, b = l.p2;
-    if (!l.far) { h.push('<line x1="' + n1(a.x) + '" y1="' + n1(a.y) + '" x2="' + n1(b.x) + '" y2="' + n1(b.y) + '" stroke="' + col + '" stroke-width="' + 2 * sw + '" stroke-dasharray="' + 3 * sw + ' ' + 2 * sw + '" pointer-events="none"/><circle cx="' + n1(b.x) + '" cy="' + n1(b.y) + '" r="' + 4 * sw + '" fill="' + col + '" pointer-events="none"/>'); return; }
+    if (!l.far) {   // next to each other: curved arrow from the operator's machine over to the other machine
+      var c1 = l.c1, c2 = l.c2, mx0 = (c1.x + c2.x) / 2, my0 = (c1.y + c2.y) / 2, ddx = c2.x - c1.x, ddy = c2.y - c1.y, dl = Math.hypot(ddx, ddy) || 1;
+      var nx = -ddy / dl, ny = ddx / dl; if (nx * l.back.x + ny * l.back.y < 0) { nx = -nx; ny = -ny; }   // bulge to the machines' back side
+      var bulge = Math.max(25, dl * 0.45), cx0 = mx0 + nx * bulge, cy0 = my0 + ny * bulge;
+      var tx = c2.x - cx0, ty = c2.y - cy0, tl = Math.hypot(tx, ty) || 1, ux0 = tx / tl, uy0 = ty / tl, hs0 = 13 * sw, hw0 = hs0 * 0.6;
+      var ex = c2.x - ux0 * hs0 * 0.9, ey = c2.y - uy0 * hs0 * 0.9;
+      h.push('<path d="M' + n1(c1.x) + ' ' + n1(c1.y) + ' Q' + n1(cx0) + ' ' + n1(cy0) + ' ' + n1(ex) + ' ' + n1(ey) + '" fill="none" stroke="' + col + '" stroke-width="' + 3.5 * sw + '" stroke-linecap="round" pointer-events="none"/>' +
+        '<polygon points="' + n1(c2.x) + ',' + n1(c2.y) + ' ' + n1(c2.x - ux0 * hs0 - uy0 * hw0) + ',' + n1(c2.y - uy0 * hs0 + ux0 * hw0) + ' ' + n1(c2.x - ux0 * hs0 + uy0 * hw0) + ',' + n1(c2.y - uy0 * hs0 - ux0 * hw0) + '" fill="' + col + '" pointer-events="none"/>');
+      return;
+    }
     var dx = b.x - a.x, dy = b.y - a.y, L0 = Math.hypot(dx, dy) || 1, ux = dx / L0, uy = dy / L0, hs = Math.min(L0 / 3, 12 * sw), hw = hs * 0.55;
     function head(p, sx) { var bx = p.x - sx * ux * hs, by = p.y - sx * uy * hs; return '<polygon points="' + n1(p.x) + ',' + n1(p.y) + ' ' + n1(bx - uy * hw) + ',' + n1(by + ux * hw) + ' ' + n1(bx + uy * hw) + ',' + n1(by - ux * hw) + '" fill="' + col + '" pointer-events="none"/>'; }
     h.push('<line x1="' + n1(a.x + ux * hs) + '" y1="' + n1(a.y + uy * hs) + '" x2="' + n1(b.x - ux * hs) + '" y2="' + n1(b.y - uy * hs) + '" stroke="' + col + '" stroke-width="' + 3 * sw + '" pointer-events="none"/>' + head(a, -1) + head(b, 1));
@@ -992,7 +1044,7 @@ function init2d() {
       var id = g.getAttribute('data-id');
       if (e.shiftKey || e.ctrlKey) { var k = SEL.indexOf(id); if (k >= 0) SEL.splice(k, 1); else SEL.push(id); }
       else if (SEL.indexOf(id) < 0) SEL = [id];
-      DRAG = { mode: 'move', p0: p, orig: selItems().map(function (it) { return { it: it, x: it.x, y: it.y }; }), moved: false, noSnap: e.altKey };
+      DRAG = { mode: 'move', p0: p, orig: selItems().filter(function (it) { return !isLocked(it); }).map(function (it) { return { it: it, x: it.x, y: it.y }; }), moved: false, noSnap: e.altKey };
       onSelChange();
     } else if (e.button === 0 && e.shiftKey) { DRAG = { mode: 'box' }; BOXR = { a: p, b: p }; }
     else DRAG = { mode: 'pan', c0: { x: e.clientX, y: e.clientY }, v0: { x: V.x, y: V.y }, moved: false };
@@ -1042,7 +1094,21 @@ function init2d() {
 function placeSelTools() {
   var tb = document.getElementById('selTools'); if (!tb) return;
   var its = selItems();
-  if (!its.length || (DRAG && DRAG.moved) || TAB !== 'plan') { tb.style.display = 'none'; return; }
+  if (!its.length || (DRAG && DRAG.moved) || (TAB !== 'plan' && TAB !== '3d')) { tb.style.display = 'none'; return; }
+  var mc0 = its.filter(function (i) { return i.kind === 'mc'; });
+  var bSt = tb.querySelector('[data-cmd="stand"]'); if (bSt) { bSt.style.display = mc0.length ? '' : 'none'; bSt.textContent = mc0.length && mc0.every(isStanding) ? '🪑' : '🧍'; }
+  if (TAB === '3d') {
+    if (!V3.ok) { tb.style.display = 'none'; return; }
+    var cx3 = 0, cz3 = 0; its.forEach(function (it) { cx3 += it.x; cz3 += it.y; }); cx3 /= its.length; cz3 /= its.length;
+    var sp = screenOf3d(cx3, 190, cz3), host3 = tb.parentNode, rh3 = host3.getBoundingClientRect();
+    if (!sp.ok) { tb.style.display = 'none'; return; }
+    var bOp3 = tb.querySelector('[data-cmd="op"]'); bOp3.style.display = mc0.length ? '' : 'none'; bOp3.classList.toggle('off', mc0.length > 0 && mc0.every(function (i) { return i.noOp; }));
+    tb.style.display = 'flex';
+    var w3 = tb.offsetWidth, h3 = tb.offsetHeight;
+    tb.style.left = Math.max(4, Math.min(sp.r.width - w3 - 4, sp.x - w3 / 2)) + (sp.r.left - rh3.left) + 'px';
+    tb.style.top = Math.max(4, sp.y - h3 - 6) + (sp.r.top - rh3.top) + 'px';
+    return;
+  }
   var x0 = Infinity, y0 = Infinity, x1 = -Infinity;
   its.forEach(function (it) { corners(shapes(it).table).forEach(function (p) { x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); y0 = Math.min(y0, p.y); }); });
   var svg = svgEl(), host = tb.parentNode, rs = svg.getBoundingClientRect(), rh = host.getBoundingClientRect();
@@ -1085,7 +1151,7 @@ function duplicateSel() {
   its.forEach(function (it) { var c = JSON.parse(JSON.stringify(it)); c.id = uid(); c.y = n1(c.y + dy); delete c.by; ST.items.push(c); ids.push(c.id); });
   SEL = ids; changed(); onSelChange();
 }
-function nudgeSel(dx, dy) { selItems().forEach(function (it) { it.x = n1(it.x + dx); it.y = n1(it.y + dy); }); if (SEL.length) changed(); }
+function nudgeSel(dx, dy) { selItems().filter(function (it) { return !isLocked(it); }).forEach(function (it) { it.x = n1(it.x + dx); it.y = n1(it.y + dy); }); if (SEL.length) changed(); }
 /* line up the selection on the first selected item's y */
 function alignSel() { var its = selItems(); if (its.length < 2) return; var y = its[0].y; its.forEach(function (it) { it.y = y; }); changed(); }
 /* place the selection side by side from left to right, edge to edge (+ gap) */
@@ -1129,7 +1195,7 @@ function exportPng(cb) {
 <script>/* view3d.js: 3D view (three.js, bundled in the page, no network). 1 unit = 1 cm, plan (x, y) -> 3D (x, z), y is up.
    Machines are drawn from simple shapes per family, proportioned on the models in the register
    (Juki DDL-9000C, Yamato CZ6020 / VF2500 / VG2700, Juki LK-1900, Juki AMS-221, Precious PC8520, Oxima OS-390...). */
-var V3 = { ok: false, scene: null, cam: null, ren: null, root: null, theta: -0.55, phi: 0.95, rad: 1500, tgt: null, people: true, labels: true, dirty: true };
+var V3 = { ruler: true, ok: false, scene: null, cam: null, ren: null, root: null, theta: -0.55, phi: 0.95, rad: 1500, tgt: null, people: true, labels: true, dirty: true };
 var MAT = {}, GEO = {};
 
 function mat(hex, o) {
@@ -1144,7 +1210,7 @@ function initMats() {
     panel: mat('#1d2a3a', { roughness: 0.3 }), screen: mat('#3d8be0', { emissive: '#1a4f8f', emissiveIntensity: 0.4 }), blue: mat('#2d6cc0'),
     red: mat('#c23b3b'), press: mat('#5b6068', { metalness: 0.3 }), board: mat('#e9e9e6', { roughness: 0.9 }), cone: [mat('#e0457b'), mat('#2f7de1'), mat('#f2c230'), mat('#3fae6a'), mat('#f5f5f5')],
     seat: mat('#36404d', { roughness: 0.8 }), shirt: mat('#3f7bd0', { roughness: 0.9 }), skin: mat('#d9a982', { roughness: 0.8 }), pants: mat('#2d3748', { roughness: 0.9 }),
-    obj: {}, floor: mat('#cfd3d8', { roughness: 1 }), lineFloor: mat('#f1efe9', { roughness: 1 }) };
+    mat: mat('#3b4048', { roughness: 1 }), arc: mat('#7c3aed', { roughness: 0.5 }), obj: {}, floor: mat('#cfd3d8', { roughness: 1 }), lineFloor: mat('#f1efe9', { roughness: 1 }) };
 }
 function geoBox(w, h, d) { var k = 'b' + w + ',' + h + ',' + d; return GEO[k] || (GEO[k] = new THREE.BoxGeometry(w, h, d)); }
 function geoCyl(rt, rb, h, seg) { var k = 'c' + rt + ',' + rb + ',' + h + ',' + (seg || 20); return GEO[k] || (GEO[k] = new THREE.CylinderGeometry(rt, rb, h, seg || 20)); }
@@ -1263,6 +1329,17 @@ function buildMachine(fam, L, W, H, sx) {
   }
   return g;
 }
+function buildStanding(g, x, W, e, person) {
+  var c = new THREE.Group(), z = W / 2 + e.standGap;
+  B(c, Math.min(e.standW, 90) - 6, 1.2, Math.min(e.standDepth - 10, 60), M.mat, 0, 0.6, -(z - W / 2 - 6) + Math.min(e.standDepth - 10, 60) / 2);   // anti-fatigue mat
+  if (person) {                                                                         // standing operator facing the table (-z)
+    [-1, 1].forEach(function (k) { B(c, 12, 80, 15, M.pants, k * 9, 40, 0); B(c, 12, 4, 24, M.dark, k * 9, 2, -4); });
+    B(c, 38, 56, 22, M.shirt, 0, 108, -2).rotation.x = 0.08;
+    var hd = new THREE.Mesh(geoSph(10.5), M.skin); hd.position.set(0, 148, -3); hd.castShadow = true; c.add(hd);
+    [-1, 1].forEach(function (k) { var a = B(c, 9, 9, 40, M.shirt, k * 20, 112, -18); a.rotation.x = 0.75; B(c, 7, 6, 8, M.skin, k * 18, 96, -34); });
+  }
+  c.position.set(x, 0, z); g.add(c);
+}
 function buildChair(g, x, z, e, person) {
   var c = new THREE.Group(), sh = e.seatH;
   for (var i = 0; i < 5; i++) { var a = B(c, 26, 2.5, 3, M.dark, 0, 5, 0); a.position.set(Math.cos(i * 1.2566) * 12, 5, Math.sin(i * 1.2566) * 12); a.rotation.y = -i * 1.2566; }
@@ -1285,6 +1362,19 @@ function buildObject(it) {
   if (H > 120) B(g, it.L, H, it.W, m, 0, H / 2, 0);
   else { partTable(g, it.L, it.W, H, { pedal: false, noDrawer: true }); B(g, it.L - 2, 2, it.W - 2, m, 0, H + 1, 0); }
   return g;
+}
+/* big operation number above the operator (like the 2D seat label) */
+function opSprite(op) {
+  var cv = document.createElement('canvas'); cv.width = 160; cv.height = 128; var x = cv.getContext('2d');
+  x.fillStyle = '#ffd36b'; x.strokeStyle = '#0b3d91'; x.lineWidth = 6; x.beginPath(); if (x.roundRect) x.roundRect(6, 6, 148, 116, 30); else x.rect(6, 6, 148, 116); x.fill(); x.stroke();
+  x.fillStyle = '#0b3d91'; x.textAlign = 'center'; x.font = 'bold ' + (String(op).length > 3 ? 54 : 78) + 'px Segoe UI, Arial'; x.fillText(op, 80, String(op).length > 3 ? 82 : 92);
+  var s = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), depthTest: false })); s.scale.set(40, 32, 1); s.renderOrder = 11; return s;
+}
+function smallSprite(txt, w) {
+  var cv = document.createElement('canvas'); cv.width = 256; cv.height = 64; var x = cv.getContext('2d');
+  x.fillStyle = 'rgba(255,255,255,.88)'; x.beginPath(); if (x.roundRect) x.roundRect(4, 6, 248, 52, 12); else x.rect(4, 6, 248, 52); x.fill();
+  x.fillStyle = '#1d2330'; x.textAlign = 'center'; x.font = 'bold 38px Segoe UI, Arial'; x.fillText(txt, 128, 46);
+  var s = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), depthTest: false })); s.scale.set(w || 56, (w || 56) / 4, 1); s.renderOrder = 9; return s;
 }
 function textSprite(t1, t2) {
   var cv = document.createElement('canvas'); cv.width = 256; cv.height = 128; var x = cv.getContext('2d');
@@ -1320,16 +1410,44 @@ function init3d() {
   V3.root = new THREE.Group(); V3.scene.add(V3.root);
   var el = V3.ren.domElement, dr = null;
   el.addEventListener('contextmenu', function (e) { e.preventDefault(); });
-  el.addEventListener('pointerdown', function (e) { el.setPointerCapture(e.pointerId); dr = { x: e.clientX, y: e.clientY, b: e.button, sh: e.shiftKey, moved: 0 }; });
+  el.addEventListener('pointerdown', function (e) {
+    el.setPointerCapture(e.pointerId);
+    dr = { x: e.clientX, y: e.clientY, b: e.button, sh: e.shiftKey, moved: 0 };
+    if (e.button !== 0 || e.shiftKey) return;
+    var id = hitId(e);
+    if (!id) return;
+    if (OPMODE) { var ti = itemById(id); if (ti && ti.kind === 'mc') { opToggleOne(ti); changed(); } dr.done = true; return; }
+    if (e.ctrlKey || e.metaKey) { var k = SEL.indexOf(id); if (k >= 0) SEL.splice(k, 1); else SEL.push(id); onSelChange(); dr.done = true; return; }
+    if (SEL.indexOf(id) < 0) { SEL = [id]; onSelChange(); }
+    var p0 = floorPt(e); if (!p0) return;
+    var mv = selItems().filter(function (it) { return !isLocked(it); }); if (!mv.length) { dr.done = true; return; }
+    dr.drag = { p0: p0, orig: mv.map(function (it) { return { it: it, x: it.x, y: it.y }; }) };
+  });
   el.addEventListener('pointermove', function (e) {
     if (!dr) return; var dx = e.clientX - dr.x, dy = e.clientY - dr.y; dr.x = e.clientX; dr.y = e.clientY; dr.moved += Math.abs(dx) + Math.abs(dy);
+    if (dr.done) return;
+    if (dr.drag) {                                                                        // move the selected machines on the floor (snap like 2D)
+      if (dr.moved < 4) return;
+      var p = floorPt(e); if (!p) return;
+      var o0 = dr.drag.orig[0], useSnap = OPT.snap && !e.altKey;
+      var ddx = (useSnap ? Math.round((o0.x + p.x - dr.drag.p0.x) / ST.erg.snap) * ST.erg.snap : o0.x + p.x - dr.drag.p0.x) - o0.x, ddy = (useSnap ? Math.round((o0.y + p.z - dr.drag.p0.z) / ST.erg.snap) * ST.erg.snap : o0.y + p.z - dr.drag.p0.z) - o0.y;
+      dr.drag.orig.forEach(function (o) { o.it.x = n1(o.x + ddx); o.it.y = n1(o.y + ddy); });
+      V3.root.children.forEach(function (g) { var it = g.userData.id && itemById(g.userData.id); if (it && SEL.indexOf(it.id) >= 0) g.position.set(it.x, 0, it.y); });
+      document.getElementById('selTools').style.display = 'none';
+      draw3d(); sideLive(); return;
+    }
     if (dr.b === 2 || dr.b === 1 || dr.sh) {                                              // pan on the floor plane
       var k = V3.rad * 0.0012, ct = Math.cos(V3.theta), st = Math.sin(V3.theta);
       V3.tgt.x += (-dx * ct - dy * st) * k; V3.tgt.z += (dx * st - dy * ct) * k;
     } else { V3.theta -= dx * 0.006; V3.phi = Math.max(0.08, Math.min(1.52, V3.phi - dy * 0.006)); }
     draw3d();
   });
-  el.addEventListener('pointerup', function (e) { if (dr && dr.moved < 5 && dr.b === 0) pick3d(e); dr = null; });
+  el.addEventListener('pointerup', function (e) {
+    if (!dr) return; var d = dr; dr = null;
+    if (d.drag && d.moved >= 4) { changed(); return; }
+    if (d.done || d.drag) { placeSelTools(); return; }
+    if (d.moved < 5 && d.b === 0 && !d.sh) { if (SEL.length) { SEL = []; onSelChange(); } }
+  });
   el.addEventListener('wheel', function (e) { e.preventDefault(); V3.rad = Math.max(150, Math.min(20000, V3.rad * (e.deltaY < 0 ? 0.88 : 1.14))); draw3d(); }, { passive: false });
   V3.ok = true;
   return true;
@@ -1344,6 +1462,7 @@ function draw3d() {
   var t = V3.tgt, r = V3.rad;
   V3.cam.position.set(t.x + r * Math.sin(V3.phi) * Math.sin(V3.theta), t.y + r * Math.cos(V3.phi), t.z + r * Math.sin(V3.phi) * Math.cos(V3.theta));
   V3.cam.lookAt(t); V3.ren.render(V3.scene, V3.cam);
+  if (TAB === '3d') placeSelTools();
 }
 function view3dReset(top) {
   var L = ST.line.length, W = ST.line.width, b = bbox(ST.items);
@@ -1353,7 +1472,7 @@ function view3dReset(top) {
 function rebuild3d() {
   if (!V3.ok) return;
   var root = V3.root, e = ST.erg, H = e.tableH;
-  while (root.children.length) { var c = root.children.pop(); c.traverse(function (o) { if (o.isSprite) { o.material.map.dispose(); o.material.dispose(); } if (o.isLine) { o.geometry.dispose(); o.material.dispose(); } }); }
+  while (root.children.length) { var c = root.children.pop(); c.traverse(function (o) { if (o.isSprite) { o.material.map.dispose(); o.material.dispose(); } if (o.isLine) { o.geometry.dispose(); o.material.dispose(); } if (o.userData && o.userData.own) o.geometry.dispose(); }); }
   var L = ST.line.length, W = ST.line.width, dark = matchMedia('(prefers-color-scheme: dark)').matches;
   V3.scene.background = new THREE.Color(dark ? '#0f1218' : '#e9ecf0');
   var big = new THREE.Mesh(geoBox(L + 4000, 1, W + 4000), M.floor); big.position.set(L / 2, -0.6, W / 2); big.receiveShadow = true; root.add(big);
@@ -1363,14 +1482,26 @@ function rebuild3d() {
   for (var y = 0; y <= W; y += 100) pts.push(new THREE.Vector3(0, 0.3, y), new THREE.Vector3(L, 0.3, y));
   root.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: '#b9bcc2' })));
   var edge = rectLoop(L, W, '#e0a100', 0.5); edge.position.set(L / 2, 0, W / 2); root.add(edge);
+  if (V3.ruler) {   // metre marks along the front and left edges, total length and width
+    var stp = L > 3000 ? 200 : 100, tk = [];
+    for (x = 0; x <= L + 0.1; x += stp) { tk.push(new THREE.Vector3(x, 0.5, W), new THREE.Vector3(x, 0.5, W + 18)); var lb = smallSprite((x / 100) + ' m', 40); lb.position.set(x, 4, W + 40); root.add(lb); }
+    for (y = 0; y <= W + 0.1; y += 100) { tk.push(new THREE.Vector3(0, 0.5, y), new THREE.Vector3(-18, 0.5, y)); var lb2 = smallSprite((y / 100) + ' m', 40); lb2.position.set(-50, 4, y); root.add(lb2); }
+    tk.push(new THREE.Vector3(0, 0.5, -45), new THREE.Vector3(L, 0.5, -45), new THREE.Vector3(L + 45, 0.5, 0), new THREE.Vector3(L + 45, 0.5, W));
+    root.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(tk), new THREE.LineBasicMaterial({ color: '#5b6474' })));
+    var lt = smallSprite((L / 100).toFixed(2) + ' m', 90); lt.position.set(L / 2, 8, -70); root.add(lt);
+    var wt = smallSprite((W / 100).toFixed(2) + ' m', 70); wt.position.set(L + 95, 8, W / 2); root.add(wt);
+  }
   var bad = issueIds('bad'), warn = issueIds('warn');
   ST.items.forEach(function (it) {
     var d = itemDim(it), g;
     if (it.kind === 'mc') {
       var S = shapes(it), fam = famOf(it.code);
       g = buildMachine(fam, d.L, d.W, H, S.seatX);
-      if (!it.noOp) buildChair(g, S.seatX, d.W / 2 + e.chairGap + e.chairD / 2, e, V3.people);
-      if (V3.labels) { var sp = textSprite(it.code, it.op || ''); sp.position.set(0, H + 85, 0); g.add(sp); }
+      if (!it.noOp) { if (S.stand) buildStanding(g, S.seatX, d.W, e, V3.people); else buildChair(g, S.seatX, d.W / 2 + e.chairGap + e.chairD / 2, e, V3.people); }
+      if (V3.labels) {   // like 2D: machine code above the machine, big operation number above the operator (on the machine when nobody sits there)
+        var sp = it.noOp ? textSprite(it.code, it.op || '') : smallSprite(it.code, 44); sp.position.set(0, H + (it.noOp ? 85 : 62), -d.W * 0.1); g.add(sp);
+        if (!it.noOp && it.op) { var os = opSprite(it.op), oz = d.W / 2 + (S.stand ? e.standGap : e.chairGap + e.chairD / 2); os.position.set(S.seatX, (S.stand ? 148 : e.seatH + 72) + (V3.people ? 34 : 10), oz); g.add(os); }
+      }
     } else {
       g = buildObject(it);
       if (V3.labels && it.name) { var sp2 = textSprite(it.name, ''); sp2.position.set(0, (it.H || 75) + 40, 0); g.add(sp2); }
@@ -1382,7 +1513,15 @@ function rebuild3d() {
   });
   // shared operators: double arrow on the floor between the operator and the far machine
   opLinks().forEach(function (l) {
-    if (!l.far) return;
+    if (!l.far) {
+      var c1 = new THREE.Vector3(l.c1.x, H + 45, l.c1.y), c2 = new THREE.Vector3(l.c2.x, H + 45, l.c2.y), mid = c1.clone().add(c2).multiplyScalar(0.5), dl = c1.distanceTo(c2);
+      var ctl = mid.clone().add(new THREE.Vector3(l.back.x * dl * 0.35, Math.max(45, dl * 0.45), l.back.y * dl * 0.35));
+      var end = c2.clone().add(ctl.clone().sub(c2).normalize().multiplyScalar(12)), curve = new THREE.QuadraticBezierCurve3(c1, ctl, end);
+      var tube = new THREE.Mesh(new THREE.TubeGeometry(curve, 28, 2.2, 8, false), M.arc); tube.userData.own = true; root.add(tube);
+      var dir = c2.clone().sub(end).normalize(), cone = new THREE.Mesh(new THREE.ConeGeometry(6, 14, 16), M.arc); cone.userData.own = true;
+      cone.position.copy(end.clone().add(dir.clone().multiplyScalar(5))); cone.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir); root.add(cone);
+      return;
+    }
     var a = new THREE.Vector3(l.p1.x, 4, l.p1.y), b = new THREE.Vector3(l.p2.x, 4, l.p2.y), mid = a.clone().add(b).multiplyScalar(0.5), half = a.distanceTo(b) / 2;
     [[b, a], [a, b]].forEach(function (pr) { var dir = pr[0].clone().sub(mid).normalize(); root.add(new THREE.ArrowHelper(dir, mid, half, 0x7c3aed, Math.min(30, half * 0.4), 18)); });
   });
@@ -1391,15 +1530,21 @@ function rebuild3d() {
   s.shadow.camera.left = -m; s.shadow.camera.right = m; s.shadow.camera.top = m; s.shadow.camera.bottom = -m; s.shadow.camera.near = 100; s.shadow.camera.far = 6000; s.shadow.camera.updateProjectionMatrix();
   draw3d();
 }
-function pick3d(e) {
+function rayFrom(e) {
   var r = V3.ren.domElement.getBoundingClientRect(), ray = new THREE.Raycaster();
   ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), V3.cam);
-  var hits = ray.intersectObjects(V3.root.children, true), id = null;
-  for (var i = 0; i < hits.length && !id; i++) { var o = hits[i].object; while (o && !o.userData.id) o = o.parent; if (o) id = o.userData.id; }
-  if (id && OPMODE) { var ti = itemById(id); if (ti && ti.kind === 'mc') { opToggleOne(ti); changed(); } return; }
-  if (id) { if (e.shiftKey || e.ctrlKey) { var k = SEL.indexOf(id); if (k >= 0) SEL.splice(k, 1); else SEL.push(id); } else SEL = [id]; }
-  else SEL = [];
-  onSelChange();
+  return ray;
+}
+function hitId(e) {
+  var hits = rayFrom(e).intersectObjects(V3.root.children, true);
+  for (var i = 0; i < hits.length; i++) { var o = hits[i].object; if (o.isSprite) continue; while (o && !o.userData.id) o = o.parent; if (o) return o.userData.id; }   // labels are drawn on top: never pick them
+  return null;
+}
+function floorPt(e) { var p = new THREE.Vector3(); return rayFrom(e).ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), p) ? p : null; }
+/* screen position (in the stage box) of a floor point at height h, for the floating buttons */
+function screenOf3d(x, h, z) {
+  var v = new THREE.Vector3(x, h, z).project(V3.cam), r = V3.ren.domElement.getBoundingClientRect();
+  return { x: (v.x + 1) / 2 * r.width, y: (1 - v.y) / 2 * r.height, r: r, ok: v.z < 1 };
 }
 function png3d() { draw3d(); return V3.ren.domElement.toDataURL('image/png'); }
 </script>
@@ -1834,7 +1979,8 @@ function renderSum() {
   ST.items.forEach(function (it) { if (it.kind === 'mc') { cnt[it.code] = (cnt[it.code] || 0) + 1; n++; } });
   var fp = flowPath(), nw = ST.items.filter(function (it) { return it.kind === 'mc' && !it.noOp; }).length;
   var multi = ST.items.filter(function (it) { return it.kind === 'mc' && !it.noOp && satellitesOf(it).length; }).length;
-  $('sumBody').innerHTML = '<div>' + esc(t('sumMc', [n, nw])) + (multi ? ' (' + esc(t('sumMulti', [multi])) + ')' : '') + (fp.n > 1 ? ' · ' + esc(t('sumFlow', [(fp.dist / 100).toFixed(1)])) : '') + '</div><div class="chips">' +
+  var nst = ST.items.filter(function (it) { return it.kind === 'mc' && !it.noOp && isStanding(it); }).length;
+  $('sumBody').innerHTML = '<div>' + esc(t('sumMc', [n, nw])) + (multi ? ' (' + esc(t('sumMulti', [multi])) + ')' : '') + (nst ? ' · ' + esc(t('sumStand', [nst])) : '') + (fp.n > 1 ? ' · ' + esc(t('sumFlow', [(fp.dist / 100).toFixed(1)])) : '') + '</div><div class="chips">' +
     Object.keys(cnt).sort(function (a, b) { return cnt[b] - cnt[a] || (a < b ? -1 : 1); }).map(function (c) { return '<span class="chip" data-code="' + esc(c) + '" title="' + esc(codeName(c)) + '"><i style="background:' + FAM_COL[famOf(c)] + '"></i>' + esc(c) + ' <b>' + cnt[c] + '</b></span>'; }).join('') + '</div>';
 }
 function fld(id, lab, val, attrs) { return '<label class="f"><span>' + esc(lab) + '</span><input id="' + id + '" value="' + esc(val) + '" ' + (attrs || '') + '></label>'; }
@@ -1849,6 +1995,7 @@ function renderSel() {
       h += '<div class="grid2">' + fld('fCode', t('fCode'), it.code, 'list="codeList" autocomplete="off"') + fld('fOp', t('fOp'), it.op || '') + '</div>';
       h += '<div class="small">' + esc(codeName(it.code) || t('notInLib')) + '</div>';
       h += '<label class="ck" style="margin-top:4px"><input type="checkbox" id="fHasOp"' + (it.noOp ? '' : ' checked') + '> ' + esc(t('fHasOp')) + '</label>';
+      h += '<label class="ck"><input type="checkbox" id="fStand"' + (isStanding(it) ? ' checked' : '') + '> ' + esc(t('fStand')) + '</label>';
       var hm = homeOf(it), sats = it.noOp ? [] : satellitesOf(it);
       if (it.noOp && hm) h += '<div class="small" style="color:#7c3aed">👤 ' + esc(t('runBy', [label(hm)])) + '</div>';
       if (sats.length) h += '<div class="small" style="color:#7c3aed">👤 ' + esc(t('alsoRuns', [sats.map(label).join(', ')])) + '</div>';
@@ -1858,6 +2005,7 @@ function renderSel() {
       h += '<div class="small models"><b>' + esc(t('realModels')) + ':</b> ' + (mh || '<span class="muted">' + esc(LIB.models.length ? t('noModels') : t('noRegister')) + '</span>') + '</div>';
     } else {
       h += '<div class="grid2">' + fld('fName', t('fName'), it.name || '') + '<label class="f"><span>' + esc(t('fColor')) + '</span><input id="fColor" type="color" value="' + esc(it.color || '#c9ccd3') + '"></label></div>';
+      h += '<label class="ck"><input type="checkbox" id="fLock"' + (isLocked(it) ? ' checked' : '') + '> ' + esc(t('fLock')) + '</label>';
       h += '<div class="grid3">' + fld('fL', t('fLen'), it.L, 'type="number" step="1"') + fld('fW', t('fWid'), it.W, 'type="number" step="1"') + fld('fH', t('fHei'), it.H || 75, 'type="number" step="1"') + '</div>';
     }
     h += '<div class="grid3">' + fld('fX', 'X (cm)', it.x, 'type="number" step="1"') + fld('fY', 'Y (cm)', it.y, 'type="number" step="1"') + fld('fRot', t('fRot'), it.rot || 0, 'type="number" step="15"') + '</div>';
@@ -1877,6 +2025,8 @@ function onSelField(e) {
   if (id === 'fCode') { var c = normCode(v); if (!c) return; it.code = c; }
   else if (id === 'fOp') it.op = v.trim();
   else if (id === 'fHasOp') { if (e.target.checked === !!it.noOp) opToggleOne(it); }
+  else if (id === 'fStand') it.stand = e.target.checked;
+  else if (id === 'fLock') it.lock = e.target.checked;
   else if (id === 'fName') it.name = v;
   else if (id === 'fColor') it.color = v;
   else if (id === 'fX') it.x = num(v, it.x);
@@ -1892,9 +2042,18 @@ function onSelField(e) {
   changed();
 }
 function opGrouped(its) { var mc = its.filter(function (i) { return i.kind === 'mc'; }), h = mc.filter(function (i) { return !i.noOp; }); return mc.length > 1 && h.length === 1 && mc.every(function (i) { return i === h[0] || (i.noOp && i.by === h[0].id); }); }
+function setSide(hide) {
+  document.body.classList.toggle('noside', hide);
+  try { localStorage.setItem('ls_noside', hide ? '1' : '0'); } catch (e) {}
+  setTimeout(function () { render2d(); resize3d(); }, 0);
+}
+function toggleStand() {
+  var mc = selItems().filter(function (i) { return i.kind === 'mc'; }); if (!mc.length) return;
+  var toStand = !mc.every(isStanding); mc.forEach(function (i) { i.stand = toStand; }); changed();
+}
 function cmd(c) {
   ({ rotL: function () { rotateSel(-90); }, rotR: function () { rotateSel(90); }, flip: function () { rotateSel(180); }, dup: duplicateSel, del: deleteSel,
-    op: toggleOperator, grpR: function () { rotateGroup(90); }, grp180: function () { rotateGroup(180); }, align: alignSel, pack: packSel }[c] || function () {})();
+    op: toggleOperator, stand: toggleStand, grpR: function () { rotateGroup(90); }, grp180: function () { rotateGroup(180); }, align: alignSel, pack: packSel }[c] || function () {})();
   renderSel();
 }
 
@@ -1956,7 +2115,7 @@ function openLineSetup() {
 function applyLineSetup() { setupLine(lineVals()); $('dlgLine').close(); changed(); fitView(); if (TAB === '3d') view3dReset(false); }
 
 /* ---------- ergonomics dialog ---------- */
-var ERG_KEYS = ['opDepth', 'opW', 'chairGap', 'chairW', 'chairD', 'seatH', 'aisle', 'tableH', 'rowGap', 'colGap', 'emptyPitch', 'snap'];
+var ERG_KEYS = ['opDepth', 'opW', 'chairGap', 'chairW', 'chairD', 'seatH', 'standDepth', 'standW', 'standGap', 'aisle', 'tableH', 'rowGap', 'colGap', 'emptyPitch', 'snap'];
 function openErg() {
   $('ergBody').innerHTML = ERG_KEYS.map(function (k) { return '<label class="f row"><span>' + esc(t('erg_' + k)) + '<br><small class="muted">' + esc(t('ergh_' + k)) + '</small></span><input type="number" step="1" min="0" data-k="' + k + '" value="' + ST.erg[k] + '"> cm</label>'; }).join('');
   $('dlgErg').showModal();
@@ -2126,6 +2285,7 @@ function onKey(e) {
   else if (k === 'r' || k === 'R') rotateSel(e.shiftKey ? -90 : 90);
   else if (k === 'f' || k === 'F') rotateSel(180);
   else if (k === 'w' || k === 'W') toggleOperator();
+  else if (k === 's' || k === 'S') toggleStand();
   else if (k === 'Delete' || k === 'Backspace') deleteSel();
   else if (k === 'ArrowLeft') nudgeSel(-st, 0); else if (k === 'ArrowRight') nudgeSel(st, 0);
   else if (k === 'ArrowUp') nudgeSel(0, -st); else if (k === 'ArrowDown') nudgeSel(0, st);
@@ -2173,7 +2333,12 @@ function startApp() {
   $('selTools').addEventListener('pointerdown', function (e) { e.stopPropagation(); });
   $('selTools').addEventListener('click', function (e) { var b = e.target.closest('button[data-cmd]'); if (b) cmd(b.dataset.cmd); });
   $('bOpMode').onclick = function () { setOpMode(!OPMODE); };
-  $('bOpAll').onclick = function () { ST.items.forEach(function (i) { delete i.noOp; }); changed(); };
+  $('bOpAll').onclick = function () { ST.items.forEach(function (i) { delete i.noOp; delete i.by; }); changed(); };
+  ['bStandAll', 'bStandAll2', 'bStandAll3'].forEach(function (id) { $(id).onclick = function () { var st = standAll(); changed(); toast(t(st ? 'allStand' : 'allSit')); }; });
+  $('bStandDef').onclick = function () { standDefault(); changed(); toast(t('standDefDone')); };
+  $('bSide').onclick = function () { setSide(!document.body.classList.contains('noside')); };
+  try { if (localStorage.getItem('ls_noside') === '1') setSide(true); } catch (e) {}
+  $('opt3Ruler').checked = V3.ruler; $('opt3Ruler').onchange = function () { V3.ruler = this.checked; rebuild3d(); };
   $('libChip').onclick = function () { if (codeList().length) setTab('lib'); else { $('fileLib').value = ''; $('fileLib').click(); } };
   $('bLib3').onclick = function () { $('fileLib').value = ''; $('fileLib').click(); };
   document.addEventListener('dragover', function (e) { if (e.dataTransfer && [].some.call(e.dataTransfer.types || [], function (x) { return x === 'Files'; })) e.preventDefault(); });

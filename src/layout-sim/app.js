@@ -42,7 +42,8 @@ function renderSum() {
   ST.items.forEach(function (it) { if (it.kind === 'mc') { cnt[it.code] = (cnt[it.code] || 0) + 1; n++; } });
   var fp = flowPath(), nw = ST.items.filter(function (it) { return it.kind === 'mc' && !it.noOp; }).length;
   var multi = ST.items.filter(function (it) { return it.kind === 'mc' && !it.noOp && satellitesOf(it).length; }).length;
-  $('sumBody').innerHTML = '<div>' + esc(t('sumMc', [n, nw])) + (multi ? ' (' + esc(t('sumMulti', [multi])) + ')' : '') + (fp.n > 1 ? ' · ' + esc(t('sumFlow', [(fp.dist / 100).toFixed(1)])) : '') + '</div><div class="chips">' +
+  var nst = ST.items.filter(function (it) { return it.kind === 'mc' && !it.noOp && isStanding(it); }).length;
+  $('sumBody').innerHTML = '<div>' + esc(t('sumMc', [n, nw])) + (multi ? ' (' + esc(t('sumMulti', [multi])) + ')' : '') + (nst ? ' · ' + esc(t('sumStand', [nst])) : '') + (fp.n > 1 ? ' · ' + esc(t('sumFlow', [(fp.dist / 100).toFixed(1)])) : '') + '</div><div class="chips">' +
     Object.keys(cnt).sort(function (a, b) { return cnt[b] - cnt[a] || (a < b ? -1 : 1); }).map(function (c) { return '<span class="chip" data-code="' + esc(c) + '" title="' + esc(codeName(c)) + '"><i style="background:' + FAM_COL[famOf(c)] + '"></i>' + esc(c) + ' <b>' + cnt[c] + '</b></span>'; }).join('') + '</div>';
 }
 function fld(id, lab, val, attrs) { return '<label class="f"><span>' + esc(lab) + '</span><input id="' + id + '" value="' + esc(val) + '" ' + (attrs || '') + '></label>'; }
@@ -57,6 +58,7 @@ function renderSel() {
       h += '<div class="grid2">' + fld('fCode', t('fCode'), it.code, 'list="codeList" autocomplete="off"') + fld('fOp', t('fOp'), it.op || '') + '</div>';
       h += '<div class="small">' + esc(codeName(it.code) || t('notInLib')) + '</div>';
       h += '<label class="ck" style="margin-top:4px"><input type="checkbox" id="fHasOp"' + (it.noOp ? '' : ' checked') + '> ' + esc(t('fHasOp')) + '</label>';
+      h += '<label class="ck"><input type="checkbox" id="fStand"' + (isStanding(it) ? ' checked' : '') + '> ' + esc(t('fStand')) + '</label>';
       var hm = homeOf(it), sats = it.noOp ? [] : satellitesOf(it);
       if (it.noOp && hm) h += '<div class="small" style="color:#7c3aed">👤 ' + esc(t('runBy', [label(hm)])) + '</div>';
       if (sats.length) h += '<div class="small" style="color:#7c3aed">👤 ' + esc(t('alsoRuns', [sats.map(label).join(', ')])) + '</div>';
@@ -66,6 +68,7 @@ function renderSel() {
       h += '<div class="small models"><b>' + esc(t('realModels')) + ':</b> ' + (mh || '<span class="muted">' + esc(LIB.models.length ? t('noModels') : t('noRegister')) + '</span>') + '</div>';
     } else {
       h += '<div class="grid2">' + fld('fName', t('fName'), it.name || '') + '<label class="f"><span>' + esc(t('fColor')) + '</span><input id="fColor" type="color" value="' + esc(it.color || '#c9ccd3') + '"></label></div>';
+      h += '<label class="ck"><input type="checkbox" id="fLock"' + (isLocked(it) ? ' checked' : '') + '> ' + esc(t('fLock')) + '</label>';
       h += '<div class="grid3">' + fld('fL', t('fLen'), it.L, 'type="number" step="1"') + fld('fW', t('fWid'), it.W, 'type="number" step="1"') + fld('fH', t('fHei'), it.H || 75, 'type="number" step="1"') + '</div>';
     }
     h += '<div class="grid3">' + fld('fX', 'X (cm)', it.x, 'type="number" step="1"') + fld('fY', 'Y (cm)', it.y, 'type="number" step="1"') + fld('fRot', t('fRot'), it.rot || 0, 'type="number" step="15"') + '</div>';
@@ -85,6 +88,8 @@ function onSelField(e) {
   if (id === 'fCode') { var c = normCode(v); if (!c) return; it.code = c; }
   else if (id === 'fOp') it.op = v.trim();
   else if (id === 'fHasOp') { if (e.target.checked === !!it.noOp) opToggleOne(it); }
+  else if (id === 'fStand') it.stand = e.target.checked;
+  else if (id === 'fLock') it.lock = e.target.checked;
   else if (id === 'fName') it.name = v;
   else if (id === 'fColor') it.color = v;
   else if (id === 'fX') it.x = num(v, it.x);
@@ -100,9 +105,18 @@ function onSelField(e) {
   changed();
 }
 function opGrouped(its) { var mc = its.filter(function (i) { return i.kind === 'mc'; }), h = mc.filter(function (i) { return !i.noOp; }); return mc.length > 1 && h.length === 1 && mc.every(function (i) { return i === h[0] || (i.noOp && i.by === h[0].id); }); }
+function setSide(hide) {
+  document.body.classList.toggle('noside', hide);
+  try { localStorage.setItem('ls_noside', hide ? '1' : '0'); } catch (e) {}
+  setTimeout(function () { render2d(); resize3d(); }, 0);
+}
+function toggleStand() {
+  var mc = selItems().filter(function (i) { return i.kind === 'mc'; }); if (!mc.length) return;
+  var toStand = !mc.every(isStanding); mc.forEach(function (i) { i.stand = toStand; }); changed();
+}
 function cmd(c) {
   ({ rotL: function () { rotateSel(-90); }, rotR: function () { rotateSel(90); }, flip: function () { rotateSel(180); }, dup: duplicateSel, del: deleteSel,
-    op: toggleOperator, grpR: function () { rotateGroup(90); }, grp180: function () { rotateGroup(180); }, align: alignSel, pack: packSel }[c] || function () {})();
+    op: toggleOperator, stand: toggleStand, grpR: function () { rotateGroup(90); }, grp180: function () { rotateGroup(180); }, align: alignSel, pack: packSel }[c] || function () {})();
   renderSel();
 }
 
@@ -164,7 +178,7 @@ function openLineSetup() {
 function applyLineSetup() { setupLine(lineVals()); $('dlgLine').close(); changed(); fitView(); if (TAB === '3d') view3dReset(false); }
 
 /* ---------- ergonomics dialog ---------- */
-var ERG_KEYS = ['opDepth', 'opW', 'chairGap', 'chairW', 'chairD', 'seatH', 'aisle', 'tableH', 'rowGap', 'colGap', 'emptyPitch', 'snap'];
+var ERG_KEYS = ['opDepth', 'opW', 'chairGap', 'chairW', 'chairD', 'seatH', 'standDepth', 'standW', 'standGap', 'aisle', 'tableH', 'rowGap', 'colGap', 'emptyPitch', 'snap'];
 function openErg() {
   $('ergBody').innerHTML = ERG_KEYS.map(function (k) { return '<label class="f row"><span>' + esc(t('erg_' + k)) + '<br><small class="muted">' + esc(t('ergh_' + k)) + '</small></span><input type="number" step="1" min="0" data-k="' + k + '" value="' + ST.erg[k] + '"> cm</label>'; }).join('');
   $('dlgErg').showModal();
@@ -334,6 +348,7 @@ function onKey(e) {
   else if (k === 'r' || k === 'R') rotateSel(e.shiftKey ? -90 : 90);
   else if (k === 'f' || k === 'F') rotateSel(180);
   else if (k === 'w' || k === 'W') toggleOperator();
+  else if (k === 's' || k === 'S') toggleStand();
   else if (k === 'Delete' || k === 'Backspace') deleteSel();
   else if (k === 'ArrowLeft') nudgeSel(-st, 0); else if (k === 'ArrowRight') nudgeSel(st, 0);
   else if (k === 'ArrowUp') nudgeSel(0, -st); else if (k === 'ArrowDown') nudgeSel(0, st);
@@ -381,7 +396,12 @@ function startApp() {
   $('selTools').addEventListener('pointerdown', function (e) { e.stopPropagation(); });
   $('selTools').addEventListener('click', function (e) { var b = e.target.closest('button[data-cmd]'); if (b) cmd(b.dataset.cmd); });
   $('bOpMode').onclick = function () { setOpMode(!OPMODE); };
-  $('bOpAll').onclick = function () { ST.items.forEach(function (i) { delete i.noOp; }); changed(); };
+  $('bOpAll').onclick = function () { ST.items.forEach(function (i) { delete i.noOp; delete i.by; }); changed(); };
+  ['bStandAll', 'bStandAll2', 'bStandAll3'].forEach(function (id) { $(id).onclick = function () { var st = standAll(); changed(); toast(t(st ? 'allStand' : 'allSit')); }; });
+  $('bStandDef').onclick = function () { standDefault(); changed(); toast(t('standDefDone')); };
+  $('bSide').onclick = function () { setSide(!document.body.classList.contains('noside')); };
+  try { if (localStorage.getItem('ls_noside') === '1') setSide(true); } catch (e) {}
+  $('opt3Ruler').checked = V3.ruler; $('opt3Ruler').onchange = function () { V3.ruler = this.checked; rebuild3d(); };
   $('libChip').onclick = function () { if (codeList().length) setTab('lib'); else { $('fileLib').value = ''; $('fileLib').click(); } };
   $('bLib3').onclick = function () { $('fileLib').value = ''; $('fileLib').click(); };
   document.addEventListener('dragover', function (e) { if (e.dataTransfer && [].some.call(e.dataTransfer.types || [], function (x) { return x === 'Files'; })) e.preventDefault(); });

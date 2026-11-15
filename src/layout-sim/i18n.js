@@ -2,6 +2,11 @@
 var LANG = 'vi';
 var I18N = {
   vi: {
+    fLock: 'Khóa vị trí (không kéo được)', bSideTip: 'Ẩn / hiện bảng bên phải', ttStand: 'Đứng / ngồi (S)', bStandAll: '🧍↔🪑 Tất cả đứng / ngồi', bStandAllTip: 'Chuyển tất cả công đoạn sang đứng, bấm lại để chuyển sang ngồi', bStandDef: 'Mặc định (ép, ủi đứng)',
+    allStand: 'Tất cả công đoạn: đứng.', allSit: 'Tất cả công đoạn: ngồi.', standDefDone: 'Mặc định: máy ép nhiệt và bàn ủi đứng, các máy khác ngồi.', fStand: 'Thao tác đứng', sumStand: '{0} người đứng', opt3Ruler: 'Thước (m)',
+    erg_standDepth: 'Đứng: chiều sâu vùng thao tác', ergh_standDepth: 'Từ mép bàn/máy ra sau: thảm chống mỏi + chỗ lùi bước (thường 75-90 cm; IE chỉnh theo tiêu chuẩn nhà máy)',
+    erg_standW: 'Đứng: bề ngang vùng thao tác', ergh_standW: 'Thảm chống mỏi thường rộng 90 cm, chân đứng rộng bằng vai',
+    erg_standGap: 'Đứng: mép bàn → giữa người', ergh_standGap: 'Người đứng cách mép bàn khoảng 25-30 cm',
     ocrCells: 'Đang đọc từng ô… {0}/{1}', opShared: 'Một người chạy {0} máy (người ngồi ở {1}).', opSplit: 'Đã tách: {0} máy, mỗi máy một người.', sumMulti: '{0} người chạy nhiều máy', runBy: 'Do người ở máy {0} vận hành', alsoRuns: 'Người này chạy thêm: {0}', bOpShare: '1 người cho các máy này', bOpSplit: 'Tách: mỗi máy 1 người', expErr: 'Không xuất được ảnh.', centerTable: 'Bàn giữa', bLineSetup: 'Thiết lập chuyền theo số máy…', lsTitle: 'Thiết lập chuyền',
     lsHelp: 'Nhập chiều dài chuyền bằng số máy chuẩn đặt nối nhau (mỗi máy chuẩn 107 cm). Chương trình tạo bàn giữa dài bằng số máy × 107 cm; hai hàng máy đặt hai bên bàn giữa khi dán layout.',
     lsUnits: 'Số máy chuẩn', lsUnit: 'Máy chuẩn (cm)', lsTable: 'Bàn giữa rộng (cm)', lsStart: 'Đầu chuyền (cm)', lsEnd: 'Cuối chuyền (cm)', lsWidth: 'Chuyền rộng (cm)',
@@ -17,8 +22,8 @@ var I18N = {
     obInput: 'Bàn đầu vào', obQc: 'Bàn QC', obTable: 'Bàn', obPillar: 'Cột', obTrolley: 'Xe đẩy', obBox: 'Vật cản', bAddObj: '+ Thêm',
     bUndoTip: 'Hoàn tác (Ctrl+Z)', bRedoTip: 'Làm lại (Ctrl+Y)', bFit: 'Vừa màn hình', optFlow: 'Đường đi', optSnap: 'Bám lưới', optAisle: 'Lối đi sau lưng',
     bPng: 'Xuất ảnh', bPrint: 'In', b3Reset: 'Góc nhìn mặc định', b3Top: 'Nhìn từ trên', opt3People: 'Người vận hành', opt3Labels: 'Nhãn',
-    hint3d: 'Kéo chuột trái: xoay · chuột phải/Shift: di chuyển · lăn chuột: phóng to · bấm vào máy để chọn',
-    hint2d: 'Kéo máy để di chuyển · R / Shift+R xoay 90° · F quay đầu · Delete xóa · W bật/tắt người · Ctrl+D nhân bản · mũi tên dịch 1 cm (Shift 10 cm) · Shift+kéo chọn vùng · lăn chuột phóng to · kéo nền để di chuyển · giữ Alt khi kéo: bỏ bám lưới',
+    hint3d: 'Kéo máy để dời máy · kéo nền: xoay · chuột phải/Shift: di chuyển · lăn chuột: phóng to · Ctrl+bấm: chọn thêm · R/F/W/S như mặt bằng 2D',
+    hint2d: 'Kéo máy để di chuyển · R / Shift+R xoay 90° · F quay đầu · Delete xóa · W bật/tắt người · S đứng/ngồi · Ctrl+D nhân bản · mũi tên dịch 1 cm (Shift 10 cm) · Shift+kéo chọn vùng · lăn chuột phóng to · kéo nền để di chuyển · giữ Alt khi kéo: bỏ bám lưới',
     lnTitle: 'Chuyền', lnName: 'Tên chuyền', lnLen: 'Dài (cm)', lnWid: 'Rộng (cm)', bErg: 'Công thái học…', lnUsed: 'Layout chiếm: {0} × {1} cm (tính cả vùng người vận hành)', lineNoName: 'Chuyền chưa đặt tên',
     selTitle: 'Đang chọn', sumTitle: 'Tổng hợp', issTitle: 'Kiểm tra', issNone: 'Không có lỗi',
     selNone: 'Bấm vào một máy để xem và sửa; các nút xoay hiện ngay cạnh máy. Shift+bấm để chọn nhiều máy. Đường viền xanh nét đứt phía trước máy là vùng người vận hành (ghế + chỗ ngồi), chấm đỏ là vị trí kim.',
@@ -64,6 +69,11 @@ var I18N = {
     ocrIgnored: 'bỏ qua', ocrLegend: 'Viền xanh lá: đọc đúng mã · cam: đã sửa theo thư viện · đỏ: không có trong thư viện · xanh dương: số công đoạn · xám: bỏ qua. Đưa chuột vào ô để xem chữ đọc được.'
   },
   en: {
+    fLock: 'Lock position (cannot be dragged)', bSideTip: 'Hide / show the right panel', ttStand: 'Standing / sitting (S)', bStandAll: '🧍↔🪑 All standing / sitting', bStandAllTip: 'Make every operation standing, press again for sitting', bStandDef: 'Default (press, iron standing)',
+    allStand: 'All operations: standing.', allSit: 'All operations: sitting.', standDefDone: 'Default: heat presses and ironing standing, other machines sitting.', fStand: 'Standing operation', sumStand: '{0} standing', opt3Ruler: 'Ruler (m)',
+    erg_standDepth: 'Standing: work area depth', ergh_standDepth: 'From the table/machine edge backwards: anti-fatigue mat + room to step back (usually 75-90 cm; IE sets the factory standard)',
+    erg_standW: 'Standing: work area width', ergh_standW: 'An anti-fatigue mat is usually 90 cm wide; feet shoulder-width apart',
+    erg_standGap: 'Standing: table edge → body centre', ergh_standGap: 'A standing operator is about 25-30 cm from the table edge',
     ocrCells: 'Reading each box… {0}/{1}', opShared: 'One operator runs {0} machines (seated at {1}).', opSplit: 'Split: {0} machines, one operator each.', sumMulti: '{0} operators run several machines', runBy: 'Run by the operator of {0}', alsoRuns: 'This operator also runs: {0}', bOpShare: 'One operator for these machines', bOpSplit: 'Split: one operator each', expErr: 'Could not export the image.', centerTable: 'Central table', bLineSetup: 'Set up line by machine count…', lsTitle: 'Line set-up',
     lsHelp: 'Enter the line length as a number of standard machines placed end to end (one standard machine = 107 cm). A central table of machines × 107 cm is created; the two machine rows are placed on both sides of it when you paste a layout.',
     lsUnits: 'Standard machines', lsUnit: 'Standard machine (cm)', lsTable: 'Central table width (cm)', lsStart: 'Line start (cm)', lsEnd: 'Line end (cm)', lsWidth: 'Line width (cm)',
@@ -79,8 +89,8 @@ var I18N = {
     obInput: 'Input table', obQc: 'QC table', obTable: 'Table', obPillar: 'Pillar', obTrolley: 'Trolley', obBox: 'Obstacle', bAddObj: '+ Add',
     bUndoTip: 'Undo (Ctrl+Z)', bRedoTip: 'Redo (Ctrl+Y)', bFit: 'Fit to screen', optFlow: 'Flow', optSnap: 'Snap', optAisle: 'Aisle behind operators',
     bPng: 'Export image', bPrint: 'Print', b3Reset: 'Default view', b3Top: 'Top view', opt3People: 'Operators', opt3Labels: 'Labels',
-    hint3d: 'Left drag: orbit · right drag/Shift: pan · wheel: zoom · click a machine to select it',
-    hint2d: 'Drag a machine to move · R / Shift+R rotate 90° · F turn around · Delete remove · W operator on/off · Ctrl+D duplicate · arrows move 1 cm (Shift 10 cm) · Shift+drag box select · wheel zoom · drag the floor to pan · hold Alt while dragging: no snap',
+    hint3d: 'Drag a machine to move it · drag the floor: orbit · right drag/Shift: pan · wheel: zoom · Ctrl+click: add to selection · R/F/W/S like 2D',
+    hint2d: 'Drag a machine to move · R / Shift+R rotate 90° · F turn around · Delete remove · W operator on/off · S standing/sitting · Ctrl+D duplicate · arrows move 1 cm (Shift 10 cm) · Shift+drag box select · wheel zoom · drag the floor to pan · hold Alt while dragging: no snap',
     lnTitle: 'Line', lnName: 'Line name', lnLen: 'Length (cm)', lnWid: 'Width (cm)', bErg: 'Ergonomics…', lnUsed: 'Layout uses: {0} × {1} cm (operator zones included)', lineNoName: 'Unnamed line',
     selTitle: 'Selection', sumTitle: 'Summary', issTitle: 'Checks', issNone: 'No problems',
     selNone: 'Click a machine to see and edit it; turn buttons appear next to it. Shift+click to select several. The dashed blue area in front of a machine is the operator zone (chair + seat space); the red dot is the needle.',

@@ -30,6 +30,7 @@ header h1{font-size:16px;margin:0 6px 0 0}
 .tabs button.on{background:var(--sel);color:var(--accent);font-weight:600}
 .hr{margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 #paneWork{flex:1;display:grid;grid-template-columns:1fr 330px;min-height:0}
+body.noside #paneWork{grid-template-columns:1fr}body.noside aside{display:none}body.noside #bSide{background:var(--sel);color:var(--accent)}
 @media (max-width:900px){#paneWork{grid-template-columns:1fr;grid-template-rows:60vh auto}}
 .stage{position:relative;display:flex;flex-direction:column;min-width:0;min-height:0;border-right:1px solid var(--line)}
 .toolbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:7px 10px;background:var(--panel);border-bottom:1px solid var(--line)}
@@ -100,6 +101,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
   <div class="hr">
     <button id="bNew" data-t="bNew">Mới</button><button id="bOpen" data-t="bOpen">Mở…</button><button id="bSave" class="primary" data-t="bSave" data-tt="bSaveTip">Lưu…</button>
     <button id="libChip" class="chipbtn"></button>
+    <button id="bSide" data-tt="bSideTip">◨</button>
     <select id="lang" aria-label="Language"><option value="vi">VI</option><option value="en">EN</option></select>
   </div>
 </header>
@@ -114,6 +116,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
       <span class="sep"></span>
       <button id="bUndo" data-tt="bUndoTip" title="Ctrl+Z">↶</button><button id="bRedo" data-tt="bRedoTip" title="Ctrl+Y">↷</button>
       <button id="bFit" data-t="bFit">Vừa màn hình</button>
+      <button id="bStandAll" data-t="bStandAll" data-tt="bStandAllTip">🧍↔🪑 Tất cả đứng / ngồi</button>
       <label><input type="checkbox" id="optFlow"><span data-t="optFlow">Đường đi</span></label>
       <label><input type="checkbox" id="optSnap"><span data-t="optSnap">Bám lưới</span></label>
       <label><input type="checkbox" id="optAisle"><span data-t="optAisle">Lối đi sau lưng</span></label>
@@ -124,13 +127,15 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
       <button id="b3Reset" data-t="b3Reset">Góc nhìn mặc định</button><button id="b3Top" data-t="b3Top">Nhìn từ trên</button>
       <label><input type="checkbox" id="opt3People"><span data-t="opt3People">Người vận hành</span></label>
       <label><input type="checkbox" id="opt3Labels"><span data-t="opt3Labels">Nhãn</span></label>
+      <label><input type="checkbox" id="opt3Ruler"><span data-t="opt3Ruler">Thước (m)</span></label>
+      <button id="bStandAll3" data-t="bStandAll">🧍↔🪑 Tất cả đứng / ngồi</button>
       <span class="sep"></span><button id="bPng3" onclick="exportImage()" data-t="bPng">Xuất ảnh</button>
       <span class="muted small" data-t="hint3d">Kéo chuột trái: xoay · chuột phải/Shift: di chuyển · lăn chuột: phóng to · bấm vào máy để chọn</span>
     </div>
     <div id="opModeBar" class="banner" style="display:none" data-t="opModeBar">Chế độ người vận hành: bấm vào máy để bỏ / trả người vận hành. Esc hoặc bấm lại nút để thoát.</div>
     <svg id="plan" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI,Roboto,Arial,sans-serif"></svg>
     <div id="v3" style="display:none"></div>
-    <div id="selTools"><button data-cmd="rotL" data-tt="ttRotL">⟲</button><button data-cmd="rotR" data-tt="ttRotR">⟳</button><button data-cmd="flip" data-tt="ttFlip">⇅ 180°</button><button data-cmd="op" data-tt="ttOp">👤</button><button data-cmd="del" data-tt="ttDel">🗑</button></div>
+    <div id="selTools"><button data-cmd="rotL" data-tt="ttRotL">⟲</button><button data-cmd="rotR" data-tt="ttRotR">⟳</button><button data-cmd="flip" data-tt="ttFlip">⇅ 180°</button><button data-cmd="op" data-tt="ttOp">👤</button><button data-cmd="stand" data-tt="ttStand">🧍</button><button data-cmd="del" data-tt="ttDel">🗑</button></div>
     <div class="hint"><span data-t="hint2d">Kéo máy để di chuyển · R / Shift+R xoay 90° · F quay đầu · Delete xóa · Ctrl+D nhân bản · mũi tên dịch 1 cm (Shift 10 cm) · Shift+kéo chọn vùng · lăn chuột phóng to · kéo nền để di chuyển · Alt khi kéo: bỏ bám lưới</span> <span id="zoomTxt" class="muted"></span></div>
   </div>
   <aside>
@@ -144,6 +149,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
     <div class="card"><h3 data-t="opCardTitle">Người vận hành</h3>
       <div class="muted small" data-t="opCardHelp">Một người làm nhiều máy: chọn các máy rồi bấm 👤.</div>
       <div class="btns"><button id="bOpMode" data-t="bOpMode">👤 Bấm máy để bật/tắt người</button><button id="bOpAll" data-t="bOpAll">Tất cả có người</button></div>
+      <div class="btns"><button id="bStandAll2" data-t="bStandAll">🧍↔🪑 Tất cả đứng / ngồi</button><button id="bStandDef" data-t="bStandDef">Mặc định (ép, ủi đứng)</button></div>
     </div>
     <div class="card"><h3 data-t="selTitle">Đang chọn</h3><div id="selBody"></div></div>
     <div class="card"><h3 id="issHead"></h3><ul id="issList"></ul></div>

@@ -4,12 +4,13 @@ var OPT = { flow: true, snap: true, aisles: false };
 var DRAG = null, BOXR = null;
 
 function pal(light) {
-  if (light) return { bg: '#ffffff', floor: '#f7f7f5', grid: '#e3e3df', grid2: '#cfcfca', text: '#1d2330', muted: '#6b7280', accent: '#1f6feb', bad: '#c4202b', warn: '#c98a00', edge: '#3b4250', zone: 'rgba(31,111,235,.08)', zoneEdge: '#7aa3e6', chair: '#5b6474', aisle: 'rgba(201,138,0,.10)', flow: '#e0457b' };
+  if (light) return { bg: '#ffffff', floor: '#f7f7f5', grid: '#e3e3df', grid2: '#cfcfca', text: '#1d2330', muted: '#6b7280', accent: '#1f6feb', bad: '#c4202b', warn: '#c98a00', edge: '#3b4250', zone: 'rgba(31,111,235,.08)', zoneEdge: '#7aa3e6', chair: '#5b6474', aisle: 'rgba(201,138,0,.10)', flow: '#e0457b', standZone: 'rgba(22,160,133,.10)', standEdge: '#2a9d8f', mat: 'rgba(60,70,80,.18)' };
   var cs = getComputedStyle(document.documentElement), g = function (n) { return cs.getPropertyValue(n).trim(); };
   var dark = matchMedia('(prefers-color-scheme: dark)').matches;
   return { bg: g('--bg'), floor: dark ? '#141922' : '#fbfbfa', grid: dark ? '#222a36' : '#e7e7e3', grid2: dark ? '#2e3846' : '#d2d2cc', text: g('--text'), muted: g('--muted'), accent: g('--accent'),
     bad: g('--bad'), warn: g('--warn'), edge: dark ? '#cfd6e2' : '#3b4250', zone: dark ? 'rgba(76,141,255,.12)' : 'rgba(31,111,235,.08)', zoneEdge: dark ? '#4c78c0' : '#7aa3e6',
-    chair: dark ? '#8a94a6' : '#5b6474', aisle: dark ? 'rgba(227,179,65,.12)' : 'rgba(201,138,0,.10)', flow: '#e0457b' };
+    chair: dark ? '#8a94a6' : '#5b6474', aisle: dark ? 'rgba(227,179,65,.12)' : 'rgba(201,138,0,.10)', flow: '#e0457b',
+    standZone: dark ? 'rgba(42,157,143,.16)' : 'rgba(22,160,133,.10)', standEdge: '#2a9d8f', mat: dark ? 'rgba(200,210,220,.14)' : 'rgba(60,70,80,.18)' };
 }
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 function n1(v) { return Math.round(v * 10) / 10; }
@@ -33,10 +34,18 @@ function planMarkup(o) {
     var g = ['<g data-id="' + it.id + '" transform="translate(' + n1(it.x) + ' ' + n1(it.y) + ') rotate(' + (it.rot || 0) + ')" style="cursor:move">'];
     if (it.kind === 'mc' && S.zone) {
       var sx = S.seatX;
-      if (OPT.aisles || sel) g.push('<rect x="' + (sx - e.opW / 2) + '" y="' + (d.W / 2 + e.opDepth) + '" width="' + e.opW + '" height="' + e.aisle + '" fill="' + P.aisle + '" stroke="' + P.warn + '" stroke-width="' + sw + '" stroke-dasharray="' + 3 * sw + ' ' + 3 * sw + '"/>');
-      g.push('<rect x="' + (sx - e.opW / 2) + '" y="' + d.W / 2 + '" width="' + e.opW + '" height="' + e.opDepth + '" fill="' + P.zone + '" stroke="' + P.zoneEdge + '" stroke-width="' + sw + '" stroke-dasharray="' + 4 * sw + ' ' + 3 * sw + '"/>');
-      g.push('<rect x="' + (sx - e.chairW / 2) + '" y="' + (d.W / 2 + e.chairGap) + '" width="' + e.chairW + '" height="' + e.chairD + '" rx="' + e.chairW * 0.25 + '" fill="none" stroke="' + P.chair + '" stroke-width="' + 1.5 * sw + '"/>');
-      g.push('<path d="M' + (sx - e.chairW * 0.38) + ' ' + (d.W / 2 + e.chairGap + e.chairD * 0.92) + ' h' + e.chairW * 0.76 + '" stroke="' + P.chair + '" stroke-width="' + 3 * sw + '"/>');
+      var zw = S.zw, zd = S.zd;
+      if (OPT.aisles || sel) g.push('<rect x="' + (sx - zw / 2) + '" y="' + (d.W / 2 + zd) + '" width="' + zw + '" height="' + e.aisle + '" fill="' + P.aisle + '" stroke="' + P.warn + '" stroke-width="' + sw + '" stroke-dasharray="' + 3 * sw + ' ' + 3 * sw + '"/>');
+      g.push('<rect x="' + (sx - zw / 2) + '" y="' + d.W / 2 + '" width="' + zw + '" height="' + zd + '" fill="' + (S.stand ? P.standZone : P.zone) + '" stroke="' + (S.stand ? P.standEdge : P.zoneEdge) + '" stroke-width="' + sw + '" stroke-dasharray="' + 4 * sw + ' ' + 3 * sw + '"/>');
+      if (S.stand) {   // anti-fatigue mat and two footprints
+        var my = d.W / 2 + 6, mh = Math.min(zd - 10, 60);
+        g.push('<rect x="' + (sx - Math.min(zw, 90) / 2 + 3) + '" y="' + my + '" width="' + (Math.min(zw, 90) - 6) + '" height="' + mh + '" rx="4" fill="' + P.mat + '" stroke="none"/>');
+        var fy = d.W / 2 + e.standGap;
+        [-1, 1].forEach(function (k) { g.push('<ellipse cx="' + (sx + k * 9) + '" cy="' + fy + '" rx="5" ry="11" fill="' + P.chair + '" fill-opacity=".85"/>'); });
+      } else {
+        g.push('<rect x="' + (sx - e.chairW / 2) + '" y="' + (d.W / 2 + e.chairGap) + '" width="' + e.chairW + '" height="' + e.chairD + '" rx="' + e.chairW * 0.25 + '" fill="none" stroke="' + P.chair + '" stroke-width="' + 1.5 * sw + '"/>');
+        g.push('<path d="M' + (sx - e.chairW * 0.38) + ' ' + (d.W / 2 + e.chairGap + e.chairD * 0.92) + ' h' + e.chairW * 0.76 + '" stroke="' + P.chair + '" stroke-width="' + 3 * sw + '"/>');
+      }
     }
     var fam = it.kind === 'mc' ? famOf(it.code) : '';
     g.push('<rect x="' + (-d.L / 2) + '" y="' + (-d.W / 2) + '" width="' + d.L + '" height="' + d.W + '" fill="' + (it.kind === 'mc' ? FAM_COL[fam] : (it.color || '#c9ccd3')) + '" fill-opacity="' + (it.kind === 'mc' ? 0.55 : 0.45) + '" stroke="' + stroke + '" stroke-width="' + wd + '"/>');
@@ -52,7 +61,16 @@ function planMarkup(o) {
   // one operator for several machines: thin link when next to each other, double arrow (walking distance) when apart
   opLinks().forEach(function (l) {
     var col = '#7c3aed', a = l.p1, b = l.p2;
-    if (!l.far) { h.push('<line x1="' + n1(a.x) + '" y1="' + n1(a.y) + '" x2="' + n1(b.x) + '" y2="' + n1(b.y) + '" stroke="' + col + '" stroke-width="' + 2 * sw + '" stroke-dasharray="' + 3 * sw + ' ' + 2 * sw + '" pointer-events="none"/><circle cx="' + n1(b.x) + '" cy="' + n1(b.y) + '" r="' + 4 * sw + '" fill="' + col + '" pointer-events="none"/>'); return; }
+    if (!l.far) {   // next to each other: curved arrow from the operator's machine over to the other machine
+      var c1 = l.c1, c2 = l.c2, mx0 = (c1.x + c2.x) / 2, my0 = (c1.y + c2.y) / 2, ddx = c2.x - c1.x, ddy = c2.y - c1.y, dl = Math.hypot(ddx, ddy) || 1;
+      var nx = -ddy / dl, ny = ddx / dl; if (nx * l.back.x + ny * l.back.y < 0) { nx = -nx; ny = -ny; }   // bulge to the machines' back side
+      var bulge = Math.max(25, dl * 0.45), cx0 = mx0 + nx * bulge, cy0 = my0 + ny * bulge;
+      var tx = c2.x - cx0, ty = c2.y - cy0, tl = Math.hypot(tx, ty) || 1, ux0 = tx / tl, uy0 = ty / tl, hs0 = 13 * sw, hw0 = hs0 * 0.6;
+      var ex = c2.x - ux0 * hs0 * 0.9, ey = c2.y - uy0 * hs0 * 0.9;
+      h.push('<path d="M' + n1(c1.x) + ' ' + n1(c1.y) + ' Q' + n1(cx0) + ' ' + n1(cy0) + ' ' + n1(ex) + ' ' + n1(ey) + '" fill="none" stroke="' + col + '" stroke-width="' + 3.5 * sw + '" stroke-linecap="round" pointer-events="none"/>' +
+        '<polygon points="' + n1(c2.x) + ',' + n1(c2.y) + ' ' + n1(c2.x - ux0 * hs0 - uy0 * hw0) + ',' + n1(c2.y - uy0 * hs0 + ux0 * hw0) + ' ' + n1(c2.x - ux0 * hs0 + uy0 * hw0) + ',' + n1(c2.y - uy0 * hs0 - ux0 * hw0) + '" fill="' + col + '" pointer-events="none"/>');
+      return;
+    }
     var dx = b.x - a.x, dy = b.y - a.y, L0 = Math.hypot(dx, dy) || 1, ux = dx / L0, uy = dy / L0, hs = Math.min(L0 / 3, 12 * sw), hw = hs * 0.55;
     function head(p, sx) { var bx = p.x - sx * ux * hs, by = p.y - sx * uy * hs; return '<polygon points="' + n1(p.x) + ',' + n1(p.y) + ' ' + n1(bx - uy * hw) + ',' + n1(by + ux * hw) + ' ' + n1(bx + uy * hw) + ',' + n1(by - ux * hw) + '" fill="' + col + '" pointer-events="none"/>'; }
     h.push('<line x1="' + n1(a.x + ux * hs) + '" y1="' + n1(a.y + uy * hs) + '" x2="' + n1(b.x - ux * hs) + '" y2="' + n1(b.y - uy * hs) + '" stroke="' + col + '" stroke-width="' + 3 * sw + '" pointer-events="none"/>' + head(a, -1) + head(b, 1));
@@ -145,7 +163,7 @@ function init2d() {
       var id = g.getAttribute('data-id');
       if (e.shiftKey || e.ctrlKey) { var k = SEL.indexOf(id); if (k >= 0) SEL.splice(k, 1); else SEL.push(id); }
       else if (SEL.indexOf(id) < 0) SEL = [id];
-      DRAG = { mode: 'move', p0: p, orig: selItems().map(function (it) { return { it: it, x: it.x, y: it.y }; }), moved: false, noSnap: e.altKey };
+      DRAG = { mode: 'move', p0: p, orig: selItems().filter(function (it) { return !isLocked(it); }).map(function (it) { return { it: it, x: it.x, y: it.y }; }), moved: false, noSnap: e.altKey };
       onSelChange();
     } else if (e.button === 0 && e.shiftKey) { DRAG = { mode: 'box' }; BOXR = { a: p, b: p }; }
     else DRAG = { mode: 'pan', c0: { x: e.clientX, y: e.clientY }, v0: { x: V.x, y: V.y }, moved: false };
@@ -195,7 +213,21 @@ function init2d() {
 function placeSelTools() {
   var tb = document.getElementById('selTools'); if (!tb) return;
   var its = selItems();
-  if (!its.length || (DRAG && DRAG.moved) || TAB !== 'plan') { tb.style.display = 'none'; return; }
+  if (!its.length || (DRAG && DRAG.moved) || (TAB !== 'plan' && TAB !== '3d')) { tb.style.display = 'none'; return; }
+  var mc0 = its.filter(function (i) { return i.kind === 'mc'; });
+  var bSt = tb.querySelector('[data-cmd="stand"]'); if (bSt) { bSt.style.display = mc0.length ? '' : 'none'; bSt.textContent = mc0.length && mc0.every(isStanding) ? '🪑' : '🧍'; }
+  if (TAB === '3d') {
+    if (!V3.ok) { tb.style.display = 'none'; return; }
+    var cx3 = 0, cz3 = 0; its.forEach(function (it) { cx3 += it.x; cz3 += it.y; }); cx3 /= its.length; cz3 /= its.length;
+    var sp = screenOf3d(cx3, 190, cz3), host3 = tb.parentNode, rh3 = host3.getBoundingClientRect();
+    if (!sp.ok) { tb.style.display = 'none'; return; }
+    var bOp3 = tb.querySelector('[data-cmd="op"]'); bOp3.style.display = mc0.length ? '' : 'none'; bOp3.classList.toggle('off', mc0.length > 0 && mc0.every(function (i) { return i.noOp; }));
+    tb.style.display = 'flex';
+    var w3 = tb.offsetWidth, h3 = tb.offsetHeight;
+    tb.style.left = Math.max(4, Math.min(sp.r.width - w3 - 4, sp.x - w3 / 2)) + (sp.r.left - rh3.left) + 'px';
+    tb.style.top = Math.max(4, sp.y - h3 - 6) + (sp.r.top - rh3.top) + 'px';
+    return;
+  }
   var x0 = Infinity, y0 = Infinity, x1 = -Infinity;
   its.forEach(function (it) { corners(shapes(it).table).forEach(function (p) { x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); y0 = Math.min(y0, p.y); }); });
   var svg = svgEl(), host = tb.parentNode, rs = svg.getBoundingClientRect(), rh = host.getBoundingClientRect();
@@ -238,7 +270,7 @@ function duplicateSel() {
   its.forEach(function (it) { var c = JSON.parse(JSON.stringify(it)); c.id = uid(); c.y = n1(c.y + dy); delete c.by; ST.items.push(c); ids.push(c.id); });
   SEL = ids; changed(); onSelChange();
 }
-function nudgeSel(dx, dy) { selItems().forEach(function (it) { it.x = n1(it.x + dx); it.y = n1(it.y + dy); }); if (SEL.length) changed(); }
+function nudgeSel(dx, dy) { selItems().filter(function (it) { return !isLocked(it); }).forEach(function (it) { it.x = n1(it.x + dx); it.y = n1(it.y + dy); }); if (SEL.length) changed(); }
 /* line up the selection on the first selected item's y */
 function alignSel() { var its = selItems(); if (its.length < 2) return; var y = its[0].y; its.forEach(function (it) { it.y = y; }); changed(); }
 /* place the selection side by side from left to right, edge to edge (+ gap) */

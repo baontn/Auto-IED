@@ -2,6 +2,9 @@
 var ERG_DEF = {
   chairGap: 15,   // table front edge -> chair front edge
   chairW: 45, chairD: 45, seatH: 46,
+  standDepth: 80, // standing operator area from the table edge (anti-fatigue mat + step back)
+  standW: 90,     // standing area width (mat 90 cm)
+  standGap: 30,   // table edge -> standing operator's body centre
   opDepth: 75,    // operator zone measured from the table front edge (chair + body + leg room)
   opW: 70,        // width of the operator zone (elbow room)
   aisle: 60,      // free passage behind the operator zone (warning when blocked)
@@ -28,19 +31,32 @@ function rotPt(it, lx, ly) {
   return { x: it.x + lx * c - ly * s, y: it.y + lx * s + ly * c };
 }
 function obb(it, lcx, lcy, hx, hy) { var p = rotPt(it, lcx, lcy); return { cx: p.x, cy: p.y, hx: hx, hy: hy, a: (it.rot || 0) * Math.PI / 180 }; }
+/* the central table is locked unless unlocked in the side panel (it.lock === false) */
+function isLocked(it) { return it.lock != null ? !!it.lock : it.role === 'center'; }
+/* standing operator: per machine (it.stand), default standing for heat presses and ironing */
+var STAND_FAMS = { press: 1, iron: 1 };
+function isStanding(it) { return it.stand != null ? !!it.stand : !!STAND_FAMS[famOf(it.code)]; }
+/* all machines standing <-> sitting; returns the new state */
+function standAll() {
+  var mc = ST.items.filter(function (i) { return i.kind === 'mc'; }), toStand = mc.some(function (i) { return !isStanding(i); });
+  mc.forEach(function (i) { i.stand = toStand; });
+  return toStand;
+}
+function standDefault() { ST.items.forEach(function (i) { delete i.stand; }); }
 /* shapes of an item: table (always), operator zone, chair and the aisle strip behind the operator (machines only) */
 function shapes(it) {
   var d = itemDim(it), e = ST.erg, r = { table: obb(it, 0, 0, d.L / 2, d.W / 2), L: d.L, W: d.W };
   if (it.kind === 'mc') {
+    var st = isStanding(it), zw = st ? e.standW : e.opW, zd = st ? e.standDepth : e.opDepth;
     var sx = seatOf(famOf(it.code)) * d.L;
-    sx = Math.max(-d.L / 2 + e.opW / 2, Math.min(d.L / 2 - e.opW / 2, sx));
-    if (d.L < e.opW) sx = 0;
-    r.seatX = sx;
+    sx = Math.max(-d.L / 2 + zw / 2, Math.min(d.L / 2 - zw / 2, sx));
+    if (d.L < zw) sx = 0;
+    r.seatX = sx; r.stand = st; r.zw = zw; r.zd = zd;
     r.front = rotPt(it, sx, d.W / 2);
     if (it.noOp) return r;                    // station without its own operator (one worker runs two machines)
-    r.zone = obb(it, sx, d.W / 2 + e.opDepth / 2, e.opW / 2, e.opDepth / 2);
-    r.chair = rotPt(it, sx, d.W / 2 + e.chairGap + e.chairD / 2);
-    r.aisle = e.aisle > 0 ? obb(it, sx, d.W / 2 + e.opDepth + e.aisle / 2, e.opW / 2, e.aisle / 2) : null;
+    r.zone = obb(it, sx, d.W / 2 + zd / 2, zw / 2, zd / 2);
+    r.chair = rotPt(it, sx, d.W / 2 + (st ? e.standGap : e.chairGap + e.chairD / 2));   // operator position (seat centre or standing spot)
+    r.aisle = e.aisle > 0 ? obb(it, sx, d.W / 2 + zd + e.aisle / 2, zw / 2, e.aisle / 2) : null;
   }
   return r;
 }
@@ -234,7 +250,9 @@ function opLinks() {
     var h = homeOf(it); if (!it.noOp || !h) return;
     var a = shapes(h), b = shapes(it), big = { cx: a.table.cx, cy: a.table.cy, hx: a.table.hx + 25, hy: a.table.hy + 25, a: a.table.a };
     var p1 = a.chair || a.front, p2 = b.front;
-    out.push({ home: h, sat: it, p1: p1, p2: p2, far: !(overlap(big, b.table) > 0), dist: Math.hypot(p2.x - p1.x, p2.y - p1.y) });
+    // c1/c2: points on the two tables for the curved arrow (a little behind the table centres); back = direction away from the operator
+    var c1 = rotPt(h, a.seatX || 0, -a.W * 0.15), c2 = rotPt(it, b.seatX || 0, -b.W * 0.15), ang = (h.rot || 0) * Math.PI / 180;
+    out.push({ home: h, sat: it, p1: p1, p2: p2, c1: c1, c2: c2, back: { x: Math.sin(ang), y: -Math.cos(ang) }, far: !(overlap(big, b.table) > 0), dist: Math.hypot(p2.x - p1.x, p2.y - p1.y) });
   });
   return out;
 }
