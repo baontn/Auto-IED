@@ -23,8 +23,14 @@ input[type=checkbox]{padding:0}
 .tag{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;white-space:nowrap;font-weight:600}
 .t-ok{background:var(--okbg);color:var(--ok)}.t-warn{background:var(--warnbg);color:var(--warn)}.t-bad{background:var(--badbg);color:var(--bad)}.t-info{background:var(--infobg);color:var(--info)}
 .tagline{padding:6px 8px;border-radius:8px;margin-top:6px}
+.wipbar{background:var(--panel);border-bottom:1px solid var(--line);padding:6px 14px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;flex:none;font-size:13px}
+button.link{background:none;border:0;padding:0 2px;color:var(--accent);text-decoration:underline;cursor:pointer;font:inherit;font-weight:700}
+button.danger{color:var(--bad);border-color:var(--bad)}
+.chgtag{background:var(--badbg);color:var(--bad);border-color:var(--bad);font-weight:700}
+.rmop{padding:0 5px;font-size:11px;line-height:1.3;opacity:.55}.rmop:hover{opacity:1;background:var(--badbg);color:var(--bad)}
 header{background:var(--panel);border-bottom:1px solid var(--line);padding:7px 14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;flex:none}
 header h1{font-size:16px;margin:0 6px 0 0}
+.homebtn{display:inline-flex;align-items:center;padding:4px 10px;border:1px solid var(--line);border-radius:8px;color:var(--text);text-decoration:none;font-size:13px;background:var(--bg)}.homebtn:hover{border-color:var(--accent);color:var(--accent)}
 .tabs{display:flex;gap:4px}
 .tabs button{border:none;border-radius:8px}
 .tabs button.on{background:var(--sel);color:var(--accent);font-weight:600}
@@ -105,7 +111,8 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
 </head>
 <body>
 <header>
-  <h1 data-t="appTitle">Mô phỏng bố trí chuyền</h1><span class="tag t-info">v2.1</span>
+  <a id="bHome" class="homebtn" href="../index.html" data-t="bHome" data-tt="bHomeTip">← IE Tools</a>
+  <h1 data-t="appTitle">Mô phỏng bố trí chuyền</h1><span class="tag t-info">v2.2</span>
   <nav class="tabs"><button data-tab="proj" data-t="tabProj">🏠 Dự án</button><button data-tab="plan" class="on" data-t="tabPlan">Mặt bằng 2D</button><button data-tab="3d" data-t="tab3d">3D</button><button data-tab="sim" data-t="tabSim">⏱ Mô phỏng WIP</button><button data-tab="lib" data-t="tabLib">Thư viện máy</button></nav>
   <div class="hr">
     <button id="bNew" data-t="bNew">Mới</button><button id="bOpen" data-t="bOpen">Mở…</button><button id="bSave" class="primary" data-t="bSave" data-tt="bSaveTip">Lưu</button>
@@ -120,7 +127,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
   <div class="stage">
     <div class="toolbar" id="tb2d">
       <button id="bPaste" class="primary" data-t="bPaste" data-tt="bPasteTip">📋 Dán layout</button>
-      <input id="addCode" list="codeList" style="width:90px" data-tp="addCodePh" placeholder="Mã máy"><button id="bAddMc" data-t="bAddMc">+ Máy</button>
+      <input id="addCode" list="codeList" style="width:90px" data-tp="addCodePh" placeholder="Mã máy"><button id="bAddMc" data-t="bAddMc" data-tt="bAddMcTip">+ Máy</button><button id="bAddOp" data-t="bAddOp" data-tt="bAddOpTip">+ Máy theo công đoạn</button>
       <select id="addObj"><option value="input" data-t="obInput">Bàn đầu vào</option><option value="qc" data-t="obQc">Bàn QC</option><option value="table" data-t="obTable">Bàn</option><option value="pillar" data-t="obPillar">Cột</option><option value="trolley" data-t="obTrolley">Xe đẩy</option><option value="box" data-t="obBox">Vật cản</option></select><button id="bAddObj" data-t="bAddObj">+ Thêm</button>
       <span class="sep"></span>
       <button id="bUndo" data-tt="bUndoTip" title="Ctrl+Z">↶</button><button id="bRedo" data-tt="bRedoTip" title="Ctrl+Y">↷</button>
@@ -131,8 +138,12 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
       <label><input type="checkbox" id="optWip"><span data-t="optWip">WIP</span></label>
       <label><input type="checkbox" id="optAisle"><span data-t="optAisle">Lối đi sau lưng</span></label>
       <span class="sep"></span>
+      <button id="bWip2d" data-t="bWip2d" data-tt="bWip2dTip">⏱ Mô phỏng WIP</button>
+      <button id="chgTag" class="chgtag" style="display:none"></button>
+      <span class="sep"></span>
       <button id="bPng" data-t="bPng">Xuất ảnh</button><button id="bPrint" data-t="bPrint">In</button>
     </div>
+    <div id="wipBar" class="wipbar" style="display:none"></div>
     <div class="toolbar" id="tb3d" style="display:none">
       <button id="b3Reset" data-t="b3Reset">Góc nhìn mặc định</button><button id="b3Top" data-t="b3Top">Nhìn từ trên</button>
       <label><input type="checkbox" id="opt3People"><span data-t="opt3People">Người vận hành</span></label>
@@ -149,6 +160,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
     <div class="hint"><span data-t="hint2d">Kéo máy để di chuyển · R / Shift+R xoay 90° · F quay đầu · Delete xóa · Ctrl+D nhân bản · mũi tên dịch 1 cm (Shift 10 cm) · Shift+kéo chọn vùng · lăn chuột phóng to · kéo nền để di chuyển · Alt khi kéo: bỏ bám lưới</span> <span id="zoomTxt" class="muted"></span></div>
   </div>
   <aside>
+    <div class="card" id="chgCard"><h3 data-t="chgTitle">Thay đổi so với file layout</h3><div id="chgBody" class="small"></div></div>
     <div class="card"><h3 data-t="lnTitle">Chuyền</h3>
       <div class="grid3"><label class="f" style="grid-column:span 2"><span data-t="pjStyle">Mã hàng</span><input id="lnStyle"></label><label class="f"><span data-t="lnName">Tên chuyền</span><input id="lnName"></label>
       <label class="f"><span data-t="lnLen">Dài (cm)</span><input id="lnL" type="number" step="10"></label><label class="f"><span data-t="lnWid">Rộng (cm)</span><input id="lnW" type="number" step="10"></label>
@@ -273,6 +285,16 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
   <div id="seqPrev" class="small" style="margin-top:6px"></div></div>
   <div class="df"><button data-close data-t="cancel">Hủy</button><button id="seqOk" class="primary" data-t="apply">Áp dụng</button></div>
 </dialog>
+<dialog id="dlgOp"><div class="dh"><span data-t="opDlgTitle">Công đoạn: thêm máy hoặc bỏ công đoạn</span><button data-close>✕</button></div>
+  <div class="db"><div class="row" style="gap:10px;flex-wrap:wrap">
+    <label class="f"><span data-t="opDlgOp">Công đoạn</span><input id="odOp" list="opList" style="width:110px" autocomplete="off"></label>
+    <label class="f"><span data-t="opDlgQty">Số máy thêm</span><input id="odQty" type="number" min="1" max="20" value="1" style="width:70px"></label>
+    <label class="f" id="odCodeRow" style="display:none"><span data-t="opDlgCode">Mã máy</span><input id="odCode" list="codeList" style="width:110px"></label></div>
+    <datalist id="opList"></datalist>
+    <div id="odPrev" class="small" style="margin-top:8px;min-height:2.4em"></div>
+    <div class="muted small" data-t="opDlgNote">Mọi thay đổi số máy so với file layout được ghi trong thẻ "Thay đổi so với file layout": phải sửa file layout theo đó.</div></div>
+  <div class="df"><button id="odDel" class="danger" data-t="opRemove">🗑 Bỏ công đoạn</button><span style="flex:1"></span><button data-close data-t="cancel">Hủy</button><button id="odAdd" class="primary" data-t="opAdd">+ Thêm máy</button></div>
+</dialog>
 <dialog id="dlgDir"><div class="dh"><span data-t="dirTitle">Nơi lưu dự án</span></div>
   <div class="db"><p data-t="dirHelp">Chọn thư mục (trên máy hoặc thư mục chung) để lưu các dự án layout. Chương trình ghi nhớ thư mục này: mỗi lần bấm "Lưu" file được ghi thẳng vào đó, không phải tải xuống.</p><div id="dirName" class="small muted"></div></div>
   <div class="df"><button id="dirLater" data-t="dirLater">Để sau</button><button id="dirPick" class="primary" data-t="dirPick">📁 Chọn thư mục…</button></div>
@@ -320,6 +342,26 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 var LANG = 'vi';
 var I18N = {
   vi: {
+    bHome: '← IE Tools', bHomeTip: 'Về trang chủ IE Tools (mặt bằng đang làm được giữ trong trình duyệt)',
+    bAddOp: '+ Máy theo công đoạn', bAddOpTip: 'Nhập số công đoạn: chương trình lấy đúng loại máy của công đoạn đó trong layout; cũng dùng để bỏ công đoạn', bAddMcTip: 'Nhập mã máy, hoặc số công đoạn để thêm máy của công đoạn đó',
+    bWip2d: '⏱ Mô phỏng WIP', bWip2dTip: 'Chạy mô phỏng WIP ngay trên mặt bằng; khi thanh kết quả đang mở, mỗi lần sửa mặt bằng sẽ tự chạy lại',
+    opDlgTitle: 'Công đoạn: thêm máy hoặc bỏ công đoạn', opDlgOp: 'Công đoạn', opDlgQty: 'Số máy thêm', opDlgCode: 'Mã máy', opDlgHelp: 'Nhập số công đoạn (ví dụ 45).',
+    opDlgNote: 'Mọi thay đổi số máy so với file layout được ghi trong thẻ "Thay đổi so với file layout": phải sửa file layout theo đó.',
+    opFound: 'Công đoạn {0}: máy {1} ({2}), hiện có {3} máy trên mặt bằng. Máy mới đặt vào chỗ trống gần máy cùng công đoạn.', opFoundBase: 'Công đoạn {0}: máy {1} ({2}) theo file layout (hiện không có trên mặt bằng).',
+    opNotFound: 'Không có công đoạn {0} trên mặt bằng và trong file layout: nhập mã máy để thêm.', opAdd: '+ Thêm máy', opRemove: '🗑 Bỏ công đoạn',
+    opAdded: 'Đã thêm {0} máy {1} cho công đoạn {2}.', opAddedNoSpot: 'Đã thêm {0} máy {1} cho công đoạn {2}: không còn chỗ trống gần máy cùng công đoạn, máy được đặt dưới mặt bằng, kéo vào vị trí.',
+    opRemoved: 'Đã bỏ công đoạn {0}: xóa {1} máy, {2} máy ghép giữ công đoạn còn lại.', opNone: 'Không có máy nào của công đoạn {0} trên mặt bằng.',
+    opRemoveAsk: 'Bỏ công đoạn {0}? Xóa {1} máy; {2} máy ghép chỉ giữ công đoạn còn lại. Công đoạn cũng được bỏ khỏi trình tự và mô phỏng. Có thể khôi phục trong thẻ "Thay đổi so với file layout".',
+    chgTitle: 'Thay đổi so với file layout', chgNone: 'Mặt bằng khớp với file layout (số máy theo từng công đoạn).',
+    chgNoBase: 'Chưa có mốc đối chiếu: mở hoặc dán layout từ file Excel, hoặc đặt mặt bằng hiện tại làm mốc.', chgWarn: 'Mặt bằng đã khác file layout. Bắt buộc sửa file layout theo các thay đổi dưới đây.',
+    chgBase: 'Mốc: {0} · {1}', chgOp: 'Công đoạn', chgMc: 'Máy', chgFile: 'File', chgNow: 'Hiện tại', chgNoOp: '(không số)', chgOff: 'Công đoạn đã bỏ:', chgRestore: 'Khôi phục công đoạn',
+    chgCopy: '📋 Sao chép danh sách', chgCopied: 'Đã sao chép danh sách thay đổi.', chgAccept: '✓ Đã sửa file layout: đặt mốc mới',
+    chgAcceptAsk: 'Xác nhận file layout đã được sửa theo các thay đổi? Mặt bằng hiện tại sẽ thành mốc mới.', chgSetBase: 'Đặt mặt bằng hiện tại làm mốc',
+    chgTag: '⚠ {0} thay đổi so với file layout', chgLine: 'Công đoạn {0} · {1}: {2} → {3} máy ({4})', chgRestored: 'Đã khôi phục công đoạn {0}.',
+    chgBaseNow: 'mặt bằng hiện tại', chgBaseFixed: '{0} (đã sửa)', chgBasePaste: 'dán từ Excel / ảnh',
+    wipOut: 'Ra {0} sp/giờ', wipPrev: 'trước {0}, {1}', wipBn: 'nút thắt', wipEff: 'hiệu suất chuyền {0}% ({1} người)', wipTot: 'WIP cuối {0} sp', wipTop: 'nhiều nhất tại', wipNoOp: 'không có máy / người: {0}',
+    wipLive: '(tự chạy lại khi sửa mặt bằng)', wipMore: 'Chi tiết', wipClose: 'Đóng', wipNoSam: 'Chưa có SAM của các công đoạn: mở trang Mô phỏng WIP để nhập SAM.',
+    simRmOp: 'Bỏ công đoạn này (xóa máy của công đoạn)', simOff: 'Đã bỏ: {0}',
     lsHC: 'Số công nhân (HC)', simHC: 'HC chuyền {0} (người trên mặt bằng {1})', simHCplus: 'thêm người hỗ trợ: {0}', simHCminus: 'bớt người ở công đoạn dư năng lực: {0}', simEffCol: 'Hiệu suất (%)', simLoadPct: 'tải {0}%',
     smWarm: 'Bỏ qua thời gian khởi động (chuyền chạy ổn định: mô phỏng trước một ca để hàng lấp đầy chuyền)', tabSim: '⏱ Mô phỏng WIP', simTitle: 'Mô phỏng dòng chảy sản phẩm và WIP', simHelp: 'Dùng SAM từng công đoạn (đọc từ file layout, sửa được trong bảng), trình tự công đoạn (nếu không có: từ công đoạn đầu đến công đoạn cuối theo số), máy và người vận hành trên mặt bằng (người chạy nhiều máy chia thời gian). Hàng đi theo bó; cụm phụ hợp vào công đoạn đầu cụm lắp ráp.',
     smHours: 'Thời gian (giờ)', smEff: 'Hiệu suất (%)', smBundle: 'Bó hàng (sản phẩm)', smMode: 'Đầu vào', smPush: 'Luôn có hàng', smRateOpt: 'Theo sản lượng (sp/giờ)', smRate: 'Sản lượng đầu vào (sp/giờ)', smWarn: 'Cảnh báo WIP từ (sp)',
@@ -366,7 +408,7 @@ var I18N = {
     appTitle: 'Mô phỏng bố trí chuyền', tabPlan: 'Mặt bằng 2D', tab3d: '3D', tabLib: 'Thư viện máy',
     bNew: 'Mới', bOpen: 'Mở…', bSave: 'Lưu', bSaveTip: 'Lưu layout thành file .layout.json (Ctrl+S)',
     libNeed: 'Chưa có thư viện máy: chọn file Excel thư viện máy (sheet Machine_Needle có cột Machine_Code, Dimension).', bLib: 'Chọn file Excel thư viện…',
-    bPaste: '📋 Dán layout', bPasteTip: 'Dán vùng layout đã sao chép từ Excel', addCodePh: 'Mã máy', bAddMc: '+ Máy',
+    bPaste: '📋 Dán layout', bPasteTip: 'Dán vùng layout đã sao chép từ Excel', addCodePh: 'Mã máy / CĐ', bAddMc: '+ Máy',
     obInput: 'Bàn đầu vào', obQc: 'Bàn QC', obTable: 'Bàn', obPillar: 'Cột', obTrolley: 'Xe đẩy', obBox: 'Vật cản', bAddObj: '+ Thêm',
     bUndoTip: 'Hoàn tác (Ctrl+Z)', bRedoTip: 'Làm lại (Ctrl+Y)', bFit: 'Vừa màn hình', optFlow: 'Đường đi', optSnap: 'Bám lưới', optAisle: 'Lối đi sau lưng',
     bPng: 'Xuất ảnh', bPrint: 'In', b3Reset: 'Góc nhìn mặc định', b3Top: 'Nhìn từ trên', opt3People: 'Người vận hành', opt3Labels: 'Nhãn',
@@ -417,6 +459,26 @@ var I18N = {
     ocrIgnored: 'bỏ qua', ocrLegend: 'Viền xanh lá: đọc đúng mã · cam: đã sửa theo thư viện · đỏ: không có trong thư viện · xanh dương: số công đoạn · xám: bỏ qua. Đưa chuột vào ô để xem chữ đọc được.'
   },
   en: {
+    bHome: '← IE Tools', bHomeTip: 'Back to the IE Tools home page (the current plan is kept in this browser)',
+    bAddOp: '+ Machine by operation', bAddOpTip: 'Type an operation number: the machine type of that operation in the layout is used; also removes an operation', bAddMcTip: 'Type a machine code, or an operation number to add that operation\'s machine',
+    bWip2d: '⏱ WIP simulation', bWip2dTip: 'Run the WIP simulation on the plan; while the result bar is open it runs again after every change',
+    opDlgTitle: 'Operation: add machines or remove the operation', opDlgOp: 'Operation', opDlgQty: 'Machines to add', opDlgCode: 'Machine code', opDlgHelp: 'Type an operation number (e.g. 45).',
+    opDlgNote: 'Every change of machines against the layout file is listed in the card "Changes against the layout file": the layout file must be edited accordingly.',
+    opFound: 'Operation {0}: machine {1} ({2}), {3} on the plan now. New machines go to a free place next to the machines of the same operation.', opFoundBase: 'Operation {0}: machine {1} ({2}) from the layout file (not on the plan now).',
+    opNotFound: 'Operation {0} is neither on the plan nor in the layout file: type a machine code to add.', opAdd: '+ Add machines', opRemove: '🗑 Remove operation',
+    opAdded: 'Added {0} × {1} for operation {2}.', opAddedNoSpot: 'Added {0} × {1} for operation {2}: no free place next to the same operation, placed below the plan, drag it into place.',
+    opRemoved: 'Operation {0} removed: {1} machines deleted, {2} combined machines keep their other operation.', opNone: 'No machine of operation {0} on the plan.',
+    opRemoveAsk: 'Remove operation {0}? {1} machines are deleted; {2} combined machines keep their other operation. The operation also leaves the sequence and the simulation. It can be restored in the card "Changes against the layout file".',
+    chgTitle: 'Changes against the layout file', chgNone: 'The plan matches the layout file (machines per operation).',
+    chgNoBase: 'No reference yet: open or paste a layout from an Excel file, or take the current plan as the reference.', chgWarn: 'The plan differs from the layout file. The layout file MUST be edited with the changes below.',
+    chgBase: 'Reference: {0} · {1}', chgOp: 'Operation', chgMc: 'Machine', chgFile: 'File', chgNow: 'Now', chgNoOp: '(no number)', chgOff: 'Removed operations:', chgRestore: 'Restore the operation',
+    chgCopy: '📋 Copy the list', chgCopied: 'Change list copied.', chgAccept: '✓ Layout file edited: new reference',
+    chgAcceptAsk: 'Confirm that the layout file was edited with these changes? The current plan becomes the new reference.', chgSetBase: 'Take the current plan as the reference',
+    chgTag: '⚠ {0} changes against the layout file', chgLine: 'Operation {0} · {1}: {2} → {3} machines ({4})', chgRestored: 'Operation {0} restored.',
+    chgBaseNow: 'current plan', chgBaseFixed: '{0} (edited)', chgBasePaste: 'pasted from Excel / picture',
+    wipOut: 'Output {0} pcs/h', wipPrev: 'was {0}, {1}', wipBn: 'bottleneck', wipEff: 'line efficiency {0}% ({1} people)', wipTot: 'WIP at end {0} pcs', wipTop: 'most at', wipNoOp: 'no machine / operator: {0}',
+    wipLive: '(runs again after each change)', wipMore: 'Details', wipClose: 'Close', wipNoSam: 'No SAM for the operations yet: open the WIP simulation page to enter SAM.',
+    simRmOp: 'Remove this operation (deletes its machines)', simOff: 'Removed: {0}',
     lsHC: 'Headcount (HC)', simHC: 'Line HC {0} (operators on the plan {1})', simHCplus: 'helpers added: {0}', simHCminus: 'operators removed where capacity is spare: {0}', simEffCol: 'Efficiency (%)', simLoadPct: 'load {0}%',
     smWarm: 'Skip the start-up (steady line: a shift is simulated first so the line is full of work)', tabSim: '⏱ WIP simulation', simTitle: 'Product flow and WIP simulation', simHelp: 'Uses the SAM of each operation (read from the layout file, editable in the table), the operation sequence (without one: from the first to the last operation by number), the machines and operators on the plan (an operator running several machines shares the time). Work moves in bundles; sub-assemblies join the first assembly operation.',
     smHours: 'Time (hours)', smEff: 'Efficiency (%)', smBundle: 'Bundle (pieces)', smMode: 'Input', smPush: 'Always available', smRateOpt: 'At a rate (pcs/hour)', smRate: 'Input rate (pcs/hour)', smWarn: 'WIP warning from (pcs)',
@@ -463,7 +525,7 @@ var I18N = {
     appTitle: 'Line layout simulator', tabPlan: '2D plan', tab3d: '3D', tabLib: 'Machine library',
     bNew: 'New', bOpen: 'Open…', bSave: 'Save', bSaveTip: 'Save the layout as a .layout.json file (Ctrl+S)',
     libNeed: 'No machine library yet: choose the machine library Excel file (sheet Machine_Needle with Machine_Code, Dimension).', bLib: 'Choose library Excel…',
-    bPaste: '📋 Paste layout', bPasteTip: 'Paste a layout range copied from Excel', addCodePh: 'Machine code', bAddMc: '+ Machine',
+    bPaste: '📋 Paste layout', bPasteTip: 'Paste a layout range copied from Excel', addCodePh: 'Code / op.', bAddMc: '+ Machine',
     obInput: 'Input table', obQc: 'QC table', obTable: 'Table', obPillar: 'Pillar', obTrolley: 'Trolley', obBox: 'Obstacle', bAddObj: '+ Add',
     bUndoTip: 'Undo (Ctrl+Z)', bRedoTip: 'Redo (Ctrl+Y)', bFit: 'Fit to screen', optFlow: 'Flow', optSnap: 'Snap', optAisle: 'Aisle behind operators',
     bPng: 'Export image', bPrint: 'Print', b3Reset: 'Default view', b3Top: 'Top view', opt3People: 'Operators', opt3Labels: 'Labels',
@@ -1015,8 +1077,8 @@ function opLinks() {
   return out;
 }
 /* ---------- undo / persistence ---------- */
-function snap() { return JSON.stringify({ line: ST.line, erg: ST.erg, items: ST.items, seq: ST.seq, seqText: ST.seqText || '', info: ST.info || {}, ops: ST.ops || {} }); }
-function restore(s) { var o = JSON.parse(s); ST.line = o.line; ST.erg = Object.assign({}, ERG_DEF, o.erg || {}); ST.items = o.items || []; ST.seq = o.seq || 1; ST.seqText = o.seqText || ''; ST.info = o.info || {}; ST.ops = o.ops || {}; }
+function snap() { return JSON.stringify({ line: ST.line, erg: ST.erg, items: ST.items, seq: ST.seq, seqText: ST.seqText || '', info: ST.info || {}, ops: ST.ops || {}, base: ST.base || null, opsOff: ST.opsOff || [] }); }
+function restore(s) { var o = JSON.parse(s); ST.line = o.line; ST.erg = Object.assign({}, ERG_DEF, o.erg || {}); ST.items = o.items || []; ST.seq = o.seq || 1; ST.seqText = o.seqText || ''; ST.info = o.info || {}; ST.ops = o.ops || {}; ST.base = o.base || null; ST.opsOff = o.opsOff || []; }
 var LAST = null;
 function commit() {         // call after every finished change
   var s = snap();
@@ -1029,12 +1091,12 @@ function redo() { if (!REDO.length) return false; UNDO.push(LAST); LAST = REDO.p
 function fileJson() {
   // the codes' sizes are written into the file so that it opens the same on a PC without the library
   var used = {}; ST.items.forEach(function (it) { if (it.kind === 'mc') { var d = dimOf(it.code); used[it.code] = { L: d.L, W: d.W, fam: famOf(it.code) }; } });
-  return JSON.stringify({ app: 'layoutsim', version: 1, savedAt: new Date().toISOString(), line: ST.line, erg: ST.erg, items: ST.items, seqText: ST.seqText || '', info: ST.info || {}, ops: ST.ops || {}, codes: used }, null, 1);
+  return JSON.stringify({ app: 'layoutsim', version: 1, savedAt: new Date().toISOString(), line: ST.line, erg: ST.erg, items: ST.items, seqText: ST.seqText || '', info: ST.info || {}, ops: ST.ops || {}, base: ST.base || null, opsOff: ST.opsOff || [], codes: used }, null, 1);
 }
 function openJson(txt) {
   var o = JSON.parse(txt);
   if (o.app !== 'layoutsim') throw new Error('not a layout file');
-  ST.line = Object.assign({ name: '', length: 2400, width: 600, fixed: true }, o.line); ST.erg = Object.assign({}, ERG_DEF, o.erg || {}); ST.items = o.items || []; ST.seqText = o.seqText || ''; ST.info = o.info || {}; ST.ops = o.ops || {};
+  ST.line = Object.assign({ name: '', length: 2400, width: 600, fixed: true }, o.line); ST.erg = Object.assign({}, ERG_DEF, o.erg || {}); ST.items = o.items || []; ST.seqText = o.seqText || ''; ST.info = o.info || {}; ST.ops = o.ops || {}; ST.base = o.base || null; ST.opsOff = o.opsOff || [];
   ST.seq = 1; ST.items.forEach(function (it) { var n = parseInt(String(it.id).slice(1), 10); if (n >= ST.seq) ST.seq = n + 1; });
   var added = 0;   // codes unknown on this PC: take the size stored in the file
   Object.keys(o.codes || {}).forEach(function (c) { if (!LIB.codes[c]) { LIB.codes[c] = { code: c, en: '', vn: '', L: o.codes[c].L, W: o.codes[c].W, custom: true, fromFile: true }; added++; } });
@@ -2511,6 +2573,7 @@ function seqParse(text) {
     var ops = body.split(/=>|->|→|>|,|;/).map(function (x) { return x.trim(); }).filter(Boolean);
     if (ops.length) lines.push({ name: name, ops: ops });
   });
+  if (typeof opIsOff === 'function' && (ST.opsOff || []).length) lines = lines.map(function (ln) { return { name: ln.name, ops: ln.ops.filter(function (o) { return !opIsOff(o); }) }; }).filter(function (ln) { return ln.ops.length; });   // removed operations
   var asm = -1;
   lines.forEach(function (ln, i) { if (asm < 0 && (/lắp ráp|lap rap|assembly|ráp/i.test(ln.name) || ln.ops.some(function (o) { return /^(QC|PACK)/i.test(o); }))) asm = i; });
   if (asm < 0 && lines.length) { asm = 0; lines.forEach(function (ln, i) { if (ln.ops.length > lines[asm].ops.length) asm = i; }); }
@@ -2680,7 +2743,7 @@ function loadProject(txt, handle, label) {
 }
 function newProject() {
   if (ST.items.some(function (i) { return i.kind === 'mc'; }) && !confirm(t('projNewConfirm'))) return;
-  ST.items = []; ST.seqText = ''; ST.info = {}; ST.line = { name: '', length: 2400, width: 600, fixed: false }; SEL = []; PROJ.handle = null;
+  ST.items = []; ST.seqText = ''; ST.info = {}; ST.ops = {}; ST.base = null; ST.opsOff = []; ST.line = { name: '', length: 2400, width: 600, fixed: false }; SEL = []; PROJ.handle = null;
   LAST = null; commit(); UNDO = []; REDO = []; renderAll(); setTab('plan'); fitView(); openLineSetup();
 }
 
@@ -2929,18 +2992,23 @@ function simParams() {
   return { hours: Math.max(0.5, num($('smHours').value, 8)), eff: Math.max(0.05, Math.min(1.5, num($('smEff').value, 80) / 100)), bundle: Math.max(1, Math.round(num($('smBundle').value, 10))),
     rate: $('smMode').value === 'rate' ? Math.max(1, num($('smRate').value, 60)) : 0, wipWarn: Math.max(1, num($('smWarn').value, 30)), warm: $('smWarm').checked };
 }
-function renderSim() {
-  if (!$('paneSim')) return;
+/* defaults from the layout file: its efficiency and target output (input at the target rate), unless edited */
+function simDefaults() {
   var i = ST.info || {};
   if (!$('smEff').dataset.touched && i.eff) $('smEff').value = i.eff;
   if (!$('smRate').dataset.touched && i.target) $('smRate').value = i.target;
   if (!$('smMode').dataset.touched) { $('smMode').value = i.target ? 'rate' : 'push'; $('smRate').disabled = !i.target; }   // follows the file: its target output, else input always available
+}
+function renderSim() {
+  if (!$('paneSim')) return;
+  var i = ST.info || {};
+  simDefaults();
   var p = simParams(), B = simBalance(p.eff), r = SIMR, rowsBy = {};
   if (r) r.rows.forEach(function (x) { rowsBy[x.op] = x; });
   var takt = i.target ? 60 / i.target : 0, missing = B.rows.filter(function (x) { return !x.sam; }).map(function (x) { return x.op; });
   var comb = {};   // operations done on the same machine (layout label "37/42")
   ST.items.forEach(function (it) { if (it.kind !== 'mc') return; var ops = opsOf(it); if (ops.length > 1) ops.forEach(function (o) { ops.forEach(function (q) { if (q !== o) { comb[o] = comb[o] || []; if (comb[o].indexOf(q) < 0) comb[o].push(q); } }); }); });
-  $('smSrc').innerHTML = esc(B.L.fromSeq ? t('simSrcSeq', [B.L.lines.length]) : t('simSrcDef')) + (B.L.added && B.L.added.length ? ' · ' + esc(t('simCombAdd', [B.L.added.join(', ')])) : '') + ' · ' + esc(B.hc ? t('simHC', [B.hc, B.onPlan]) : t('simOpers', [B.opers.length])) +
+  $('smSrc').innerHTML = esc(B.L.fromSeq ? t('simSrcSeq', [B.L.lines.length]) : t('simSrcDef')) + (B.L.added && B.L.added.length ? ' · ' + esc(t('simCombAdd', [B.L.added.join(', ')])) : '') + ((ST.opsOff || []).length ? ' · ' + esc(t('simOff', [ST.opsOff.map(function (x) { return x.op; }).join(', ')])) : '') + ' · ' + esc(B.hc ? t('simHC', [B.hc, B.onPlan]) : t('simOpers', [B.opers.length])) +
     (B.hc && B.hc !== B.onPlan ? ' · ' + esc(t(B.hc > B.onPlan ? 'simHCplus' : 'simHCminus', [B.rows.filter(function (x) { return x.adj; }).map(function (x) { return x.op + ' ' + (x.adj > 0 ? '+' : '') + x.adj; }).join(', ')])) : '') +
     (missing.length ? '<div class="t-warn tagline">⚠ ' + esc(t('simNoSam', [missing.join(', ')])) + '</div>' : '');
   var maxCap = Math.max.apply(null, B.rows.map(function (x) { return isFinite(x.cap) ? x.cap : 0; }).concat([1]));
@@ -2952,7 +3020,7 @@ function renderSim() {
       var w = isFinite(x.cap) ? Math.round(100 * x.cap / maxCap) : 100;
       // load = output needed (the target, else the slowest operation) / capacity of this operation
       var need = i.target || B.capMin, load = isFinite(x.cap) && x.cap > 0 && need ? Math.round(100 * need / x.cap) : null;
-      return '<tr' + cls + ' data-op="' + esc(x.op) + '"><td><b>' + esc(x.op) + '</b>' + (comb[x.op] ? ' <span class="tag t-info" title="' + esc(t('simComb', [comb[x.op].join(', ')])) + '">⇄ ' + esc(comb[x.op].join(', ')) + '</span>' : '') + (bn ? ' <span class="tag t-bad">' + esc(t('simBn')) + '</span>' : '') + '</td><td>' + esc(x.mc) + '</td>' +
+      return '<tr' + cls + ' data-op="' + esc(x.op) + '"><td><button class="rmop" data-rmop="' + esc(x.op) + '" title="' + esc(t('simRmOp')) + '">✕</button> <b>' + esc(x.op) + '</b>' + (comb[x.op] ? ' <span class="tag t-info" title="' + esc(t('simComb', [comb[x.op].join(', ')])) + '">⇄ ' + esc(comb[x.op].join(', ')) + '</span>' : '') + (bn ? ' <span class="tag t-bad">' + esc(t('simBn')) + '</span>' : '') + '</td><td>' + esc(x.mc) + '</td>' +
         '<td class="n"><input style="width:84px" type="number" step="0.0001" min="0" data-sam="' + esc(x.op) + '" value="' + (x.sam || '') + '"></td><td class="n">' + x.stations + '</td><td class="n">' + x.people.toFixed(2) + (x.adj ? ' <span class="tag ' + (x.adj > 0 ? 't-info' : 't-warn') + '">' + (x.adj > 0 ? '+' : '') + x.adj + '</span>' : '') + '</td>' +
         '<td class="n"><input style="width:62px" type="number" step="1" min="5" max="150" data-eff="' + esc(x.op) + '" value="' + (x.effOwn ? Math.round(x.eff * 100) : '') + '" placeholder="' + Math.round(p.eff * 100) + '"></td>' +
         '<td class="n">' + (isFinite(x.cap) ? Math.round(x.cap) : '∞') + '</td><td><div class="bar"><i style="width:' + w + '%;background:' + (bn || (load && load > 100) ? 'var(--bad)' : 'var(--accent)') + '"></i>' + (takt ? '<b style="left:' + Math.min(100, Math.round(100 * (i.target || 0) / maxCap)) + '%"></b>' : '') +
@@ -2989,6 +3057,7 @@ function initSim() {
     SIMR = null; commit(); setTimeout(renderSim, 0);   // redraw after the input has lost focus
   });
   $('smTable').addEventListener('click', function (e) {
+    var rm = e.target.closest('[data-rmop]'); if (rm) { if (removeOp(rm.dataset.rmop, true)) renderSim(); return; }
     var tr = e.target.closest('tr[data-op]'); if (!tr || e.target.tagName === 'INPUT') return;
     SEL = ST.items.filter(function (it) { return it.kind === 'mc' && opsOf(it).indexOf(tr.dataset.op) >= 0; }).map(function (it) { return it.id; });
     setTab('plan'); onSelChange(); render2d();
@@ -2996,13 +3065,231 @@ function initSim() {
   $('smToPlan').onclick = function () { OPT.wip = true; $('optWip').checked = true; setTab('plan'); };
 }
 </script>
+<script>/* changes.js: changes against the imported layout file (machines per operation), add machines by operation,
+   remove / restore operations, quick WIP simulation on the 2D plan. */
+var KSEP = '\u0001';
+function normOp(s) { return String(s == null ? '' : s).trim().replace(/^0+(?=\d)/, '').toUpperCase(); }
+function opKey(it) { return opsOf(it).map(function (o) { return o.toUpperCase(); }).join('/'); }
+function mcCount(items) {
+  var m = {};
+  (items || ST.items).forEach(function (it) { if (it.kind !== 'mc') return; var k = opKey(it) + KSEP + it.code; m[k] = (m[k] || 0) + 1; });
+  return m;
+}
+/* the reference = machines per operation of the layout file just imported */
+function setBase(src) { ST.base = { at: new Date().toISOString(), src: src || '', mc: mcCount() }; ST.opsOff = []; }
+function addToBase(items) { if (!ST.base) return setBase(''); var m = mcCount(items); Object.keys(m).forEach(function (k) { ST.base.mc[k] = (ST.base.mc[k] || 0) + m[k]; }); }
+function baseChanges() {
+  if (!ST.base) return [];
+  var a = ST.base.mc || {}, b = mcCount(), keys = {}, out = [];
+  Object.keys(a).concat(Object.keys(b)).forEach(function (k) { keys[k] = 1; });
+  Object.keys(keys).forEach(function (k) { var f = a[k] || 0, to = b[k] || 0; if (f !== to) { var p = k.split(KSEP); out.push({ op: p[0], code: p[1], from: f, to: to }); } });
+  return out.sort(function (x, y) { return simNum(x.op) - simNum(y.op) || (x.op < y.op ? -1 : x.op > y.op ? 1 : 0) || (x.code < y.code ? -1 : 1); });
+}
+function chgText(c) { return t('chgLine', [c.op || t('chgNoOp'), c.code, c.from, c.to, (c.to > c.from ? '+' : '') + (c.to - c.from)]); }
+function opIsOff(op) { var k = normOp(op); return (ST.opsOff || []).some(function (x) { return normOp(x.op) === k; }); }
+
+/* ---------- machine of an operation ---------- */
+function mcForOp(op) {
+  var k = normOp(op); if (!k) return null;
+  var exact = null, part = null, n = 0;
+  ST.items.forEach(function (it) {
+    if (it.kind !== 'mc') return;
+    var ops = opsOf(it).map(function (o) { return o.toUpperCase(); });
+    if (ops.indexOf(k) < 0) return; n++;
+    if (ops.length === 1) { if (!exact) exact = it; } else if (!part) part = it;
+  });
+  var src = exact || part;
+  if (src) return { op: k, code: src.code, src: src, n: n };
+  // not on the plan any more: the machine of the layout file, or of a removed operation
+  var off = (ST.opsOff || []).filter(function (x) { return normOp(x.op) === k; })[0];
+  if (off && off.items.length) return { op: k, code: off.items[0].code, src: null, n: 0, fromBase: true };
+  var code = null;
+  Object.keys((ST.base || {}).mc || {}).forEach(function (key) { var p = key.split(KSEP); if (!code && p[0].split('/').indexOf(k) >= 0) code = p[1]; });
+  return code ? { op: k, code: code, src: null, n: 0, fromBase: true } : null;
+}
+/* free place: no overlap of table / operator zone with anything, inside the line, not in the walkway */
+function spotFree(it, anyPlace) {
+  var s = shapes(it), wo = walkObb();
+  if (!anyPlace && (outside(s.table) || (s.zone && outside(s.zone)))) return false;
+  if (wo && (overlap(wo, s.table) > TOL || (s.zone && overlap(wo, s.zone) > TOL))) return false;
+  return ST.items.every(function (o) {
+    if (o === it) return true;
+    var q = shapes(o);
+    return !(overlap(s.table, q.table) > TOL || (s.zone && overlap(s.zone, q.table) > TOL) || (q.zone && overlap(q.zone, s.table) > TOL) || (s.zone && q.zone && overlap(s.zone, q.zone) > TOL));
+  });
+}
+function placeNear(it, src) {
+  if (src) {
+    var step = Math.max(extentX(it), 20);
+    for (var k = 1; k <= 60; k++) {
+      for (var sg = 1; sg >= -1; sg -= 2) { it.x = n1(src.x + sg * k * step); it.y = src.y; if (spotFree(it)) return true; }
+      if (k % 10 === 0) step = Math.max(10, step / 2);   // tables of other sizes leave smaller gaps
+    }
+  }
+  var b = bbox(ST.items.filter(function (o) { return o !== it; })), c = viewCenter();   // no gap found: below the plan, to be dragged in place
+  it.x = src ? src.x : snapV(c.x); it.y = b ? n1(b.y1 + 40 + dimOf(it.code).W / 2) : snapV(c.y);
+  var x0 = it.x, st = Math.max(extentX(it), 20);
+  for (var j = 0; j < 80 && !spotFree(it, true); j++) it.x = n1(x0 + (j % 2 ? -1 : 1) * Math.ceil((j + 1) / 2) * st);   // not on top of another machine
+  return false;
+}
+function addByOp(op, n, code) {
+  var m = mcForOp(op), k = normOp(op);
+  code = normCode(code || (m && m.code)); if (!code || !k) return null;
+  restoreOp(k, true);
+  var ids = [], free = true;
+  for (var i = 0; i < Math.max(1, n || 1); i++) {
+    var src = m && m.src;
+    var it = { id: uid(), kind: 'mc', code: code, op: k, x: 0, y: 0, rot: src ? src.rot || 0 : 0 };
+    if (src && src.stand != null) it.stand = src.stand;
+    if (src && src.zone) it.zone = src.zone;
+    ST.items.push(it);
+    if (!placeNear(it, src || (ids.length ? itemById(ids[ids.length - 1]) : null))) free = false;
+    ids.push(it.id);
+  }
+  SEL = ids; changed(); onSelChange();
+  toast(t(free ? 'opAdded' : 'opAddedNoSpot', [ids.length, code, k]));
+  return ids;
+}
+/* remove an operation: its machines go, a combined machine ("37/42") keeps its other operation; kept for restore */
+function removeOpPlan(op) {
+  var k = normOp(op), del = [], rel = [];
+  ST.items.forEach(function (it) {
+    if (it.kind !== 'mc') return;
+    var ops = opsOf(it); if (ops.map(function (o) { return o.toUpperCase(); }).indexOf(k) < 0) return;
+    if (ops.length === 1) del.push(it); else rel.push(it);
+  });
+  return { op: k, del: del, rel: rel };
+}
+function removeOp(op, ask) {
+  var r = removeOpPlan(op);
+  if (!r.del.length && !r.rel.length) { toast(t('opNone', [r.op]), true); return false; }
+  if (ask && !confirm(t('opRemoveAsk', [r.op, r.del.length, r.rel.length]))) return false;
+  var rec = { op: r.op, at: new Date().toISOString(), items: r.del.map(function (it) { return JSON.parse(JSON.stringify(it)); }), rel: r.rel.map(function (it) { return { id: it.id, op: it.op }; }) };
+  ST.items = ST.items.filter(function (it) { return r.del.indexOf(it) < 0; });
+  r.rel.forEach(function (it) { it.op = opsOf(it).filter(function (o) { return o.toUpperCase() !== r.op; }).join('/'); });
+  ST.items.forEach(function (i) { if (i.by && !itemById(i.by)) delete i.by; });
+  ST.opsOff = (ST.opsOff || []).filter(function (x) { return normOp(x.op) !== r.op; }).concat([rec]);
+  SEL = SEL.filter(itemById); SIMR = null;
+  changed(); onSelChange();
+  toast(t('opRemoved', [r.op, r.del.length, r.rel.length]));
+  return true;
+}
+/* put a removed operation back (machines at their old place, combined labels back); quiet = only forget the record */
+function restoreOp(op, quiet) {
+  var k = normOp(op), rec = (ST.opsOff || []).filter(function (x) { return normOp(x.op) === k; })[0]; if (!rec) return false;
+  ST.opsOff = ST.opsOff.filter(function (x) { return x !== rec; });
+  if (quiet) return true;
+  rec.items.forEach(function (c) { if (!itemById(c.id)) ST.items.push(c); else { var cp = JSON.parse(JSON.stringify(c)); cp.id = uid(); ST.items.push(cp); } });
+  rec.rel.forEach(function (x) { var it = itemById(x.id); if (it) it.op = x.op; });
+  SIMR = null; changed(); toast(t('chgRestored', [k]));
+  return true;
+}
+
+/* ---------- card "Thay đổi so với file layout" + tag in the 2D toolbar ---------- */
+function renderChanges() {
+  var box = $('chgBody'); if (!box) return;
+  var ch = baseChanges(), off = ST.opsOff || [], h = '';
+  $('chgTag').style.display = ch.length ? '' : 'none';
+  $('chgTag').textContent = t('chgTag', [ch.length]);
+  if (!ST.base) {
+    h = '<div class="muted">' + esc(t('chgNoBase')) + '</div>' + (ST.items.some(function (i) { return i.kind === 'mc'; }) ? '<div class="row" style="margin-top:6px"><button data-chg="base">' + esc(t('chgSetBase')) + '</button></div>' : '');
+  } else {
+    var b = ST.base, when = b.at ? new Date(b.at).toLocaleString() : '';
+    h += '<div class="muted small">' + esc(t('chgBase', [b.src || '—', when])) + '</div>';
+    if (!ch.length) h += '<div class="t-ok tagline">' + esc(t('chgNone')) + '</div>';
+    else {
+      h += '<div class="t-bad tagline"><b>⚠ ' + esc(t('chgWarn')) + '</b></div><table class="mini" style="width:100%;margin-top:6px"><tr><th>' + esc(t('chgOp')) + '</th><th>' + esc(t('chgMc')) + '</th><th class="n">' + esc(t('chgFile')) + '</th><th class="n">' + esc(t('chgNow')) + '</th><th class="n">±</th></tr>' +
+        ch.map(function (c) { var d = c.to - c.from; return '<tr data-chgop="' + esc(c.op) + '" data-chgcode="' + esc(c.code) + '" style="cursor:pointer"><td><b>' + esc(c.op || t('chgNoOp')) + '</b></td><td title="' + esc(codeName(c.code)) + '">' + esc(c.code) + '</td><td class="n">' + c.from + '</td><td class="n">' + c.to + '</td><td class="n"><b class="' + (d > 0 ? 't-info' : 't-bad') + '" style="padding:0 4px;border-radius:4px">' + (d > 0 ? '+' : '') + d + '</b></td></tr>'; }).join('') + '</table>';
+    }
+    if (off.length) h += '<div style="margin-top:6px">' + esc(t('chgOff')) + ' ' + off.map(function (x) { return '<span class="chip">' + esc(x.op) + ' <button data-restore="' + esc(x.op) + '" title="' + esc(t('chgRestore')) + '" style="padding:0 5px;font-size:12px">↺</button></span>'; }).join(' ') + '</div>';
+    if (ch.length) h += '<div class="row" style="margin-top:8px;gap:6px;flex-wrap:wrap"><button data-chg="copy">' + esc(t('chgCopy')) + '</button><button data-chg="accept">' + esc(t('chgAccept')) + '</button></div>';
+  }
+  box.innerHTML = h;
+}
+function chgClick(e) {
+  var b = e.target.closest('[data-chg]'), rs = e.target.closest('[data-restore]'), tr = e.target.closest('tr[data-chgop]');
+  if (rs) { restoreOp(rs.dataset.restore); return; }
+  if (b && b.dataset.chg === 'base') { setBase(t('chgBaseNow')); changed(); return; }
+  if (b && b.dataset.chg === 'accept') { if (confirm(t('chgAcceptAsk'))) { setBase(t('chgBaseFixed', [(ST.base || {}).src || ''])); changed(); } return; }
+  if (b && b.dataset.chg === 'copy') {
+    var txt = [t('chgTitle') + ((ST.info || {}).style ? ' · ' + ST.info.style : '') + (ST.line.name ? ' · ' + ST.line.name : '')].concat(baseChanges().map(chgText)).join('\n');
+    var done = function () { toast(t('chgCopied')); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done, function () { prompt(t('chgCopy'), txt); }); else prompt(t('chgCopy'), txt);
+    return;
+  }
+  if (tr) {
+    var op = tr.dataset.chgop, code = tr.dataset.chgcode;
+    SEL = ST.items.filter(function (it) { return it.kind === 'mc' && it.code === code && opKey(it) === op; }).map(function (it) { return it.id; });
+    if (TAB !== 'plan') setTab('plan'); onSelChange(); render2d();
+  }
+}
+
+/* ---------- dialog "thêm máy theo công đoạn / bỏ công đoạn" ---------- */
+function openOpDlg(op) {
+  var ops = {}; ST.items.forEach(function (it) { if (it.kind === 'mc') opsOf(it).forEach(function (o) { ops[o.toUpperCase()] = 1; }); });
+  $('opList').innerHTML = Object.keys(ops).sort(function (a, b) { return simNum(a) - simNum(b); }).map(function (o) { return '<option value="' + esc(o) + '">'; }).join('');
+  $('odOp').value = op || ''; $('odQty').value = 1; $('odCode').value = '';
+  opDlgPrev();
+  $('dlgOp').showModal(); setTimeout(function () { $('odOp').focus(); }, 30);
+}
+function opDlgPrev() {
+  var op = $('odOp').value, m = mcForOp(op), k = normOp(op), r = k ? removeOpPlan(k) : null, h = '';
+  if (!k) h = '<span class="muted">' + esc(t('opDlgHelp')) + '</span>';
+  else if (m && m.src) h = esc(t('opFound', [k, m.code, codeName(m.code) || '—', m.n]));
+  else if (m) h = esc(t('opFoundBase', [k, m.code, codeName(m.code) || '—']));
+  else h = '<span class="t-warn">' + esc(t('opNotFound', [k])) + '</span>';
+  $('odPrev').innerHTML = h;
+  $('odCodeRow').style.display = k && !m ? '' : 'none';
+  $('odAdd').disabled = !k || (!m && !normCode($('odCode').value));
+  $('odDel').disabled = !r || (!r.del.length && !r.rel.length);
+}
+function initChanges() {
+  $('chgBody').addEventListener('click', chgClick);
+  $('chgTag').onclick = function () { if (document.body.classList.contains('noside')) setSide(false); setTimeout(function () { $('chgCard').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }, 50); };
+  $('bAddOp').onclick = function () { openOpDlg(''); };
+  ['odOp', 'odCode'].forEach(function (id) { $(id).addEventListener('input', opDlgPrev); });
+  $('odOp').addEventListener('keydown', function (e) { if (e.key === 'Enter' && !$('odAdd').disabled) $('odAdd').click(); });
+  $('odAdd').onclick = function () { var op = $('odOp').value, n = Math.max(1, Math.min(20, Math.round(num($('odQty').value, 1)))); if (addByOp(op, n, $('odCode').value)) $('dlgOp').close(); };
+  $('odDel').onclick = function () { if (removeOp($('odOp').value, true)) $('dlgOp').close(); };
+  $('bWip2d').onclick = function () { WIPBAR.on = true; quickWip(); };
+  $('wipBar').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-wip]'); if (!b) return;
+    if (b.dataset.wip === 'close') { WIPBAR.on = false; $('wipBar').style.display = 'none'; }
+    else if (b.dataset.wip === 'more') setTab('sim');
+    else if (b.dataset.wip === 'op') { SEL = ST.items.filter(function (it) { return it.kind === 'mc' && opsOf(it).indexOf(b.dataset.op) >= 0; }).map(function (it) { return it.id; }); onSelChange(); render2d(); }
+  });
+}
+
+/* ---------- quick WIP simulation on the 2D plan (re-runs by itself after each change while the bar is open) ---------- */
+var WIPBAR = { on: false, prev: null, timer: 0 };
+function quickWip() {
+  simDefaults();
+  var p = simParams(), prev = SIMR ? SIMR.outH : WIPBAR.last;
+  var B = simBalance(p.eff);
+  if (!B.rows.some(function (r) { return r.sam > 0 && r.people > 0; })) { $('wipBar').style.display = TAB === 'plan' ? '' : 'none'; $('wipBar').innerHTML = '<span>' + esc(t('wipNoSam')) + '</span><button data-wip="more">' + esc(t('wipMore')) + '</button><button data-wip="close">✕</button>'; return; }
+  simRun(p); OPT.wip = true; $('optWip').checked = true;
+  var r = SIMR, top = r.rows.filter(function (x) { return (x.wipEnd || 0) + (x.feedEnd || 0) > 0; }).sort(function (a, b) { return ((b.wipEnd || 0) + (b.feedEnd || 0)) - ((a.wipEnd || 0) + (a.feedEnd || 0)); })[0];
+  var tot = r.rows.reduce(function (a, x) { return a + (x.wipEnd || 0) + (x.feedEnd || 0); }, 0), out = Math.round(r.outH);
+  var d = prev != null ? out - Math.round(prev) : 0;
+  WIPBAR.last = r.outH;
+  $('wipBar').style.display = TAB === 'plan' ? '' : 'none';
+  $('wipBar').innerHTML = '<b>⏱ ' + esc(t('wipOut', [out])) + '</b>' + (prev != null && d ? ' <span class="tag ' + (d > 0 ? 't-ok' : 't-bad') + '">' + esc(t('wipPrev', [Math.round(prev), (d > 0 ? '+' : '') + d])) + '</span>' : '') +
+    (r.bottleneck.length ? ' · ' + esc(t('wipBn')) + ' ' + r.bottleneck.map(function (o) { return '<button class="link" data-wip="op" data-op="' + esc(o) + '">' + esc(o) + '</button>'; }).join(', ') : '') +
+    ' · ' + esc(t('wipEff', [Math.round(r.lineEff * 100), r.people])) + ' · ' + esc(t('wipTot', [tot])) +
+    (top ? ' · ' + esc(t('wipTop')) + ' <button class="link" data-wip="op" data-op="' + esc(top.op) + '">' + esc(top.op) + '</button> (' + ((top.wipEnd || 0) + (top.feedEnd || 0)) + ')' : '') +
+    (r.noOper.length ? ' · <span class="t-warn">' + esc(t('wipNoOp', [r.noOper.join(', ')])) + '</span>' : '') +
+    ' <span class="muted small">' + esc(t('wipLive')) + '</span><span style="flex:1"></span><button data-wip="more">' + esc(t('wipMore')) + '</button><button data-wip="close" title="' + esc(t('wipClose')) + '">✕</button>';
+  render2d();
+}
+function wipSoon() { if (!WIPBAR.on) return; clearTimeout(WIPBAR.timer); WIPBAR.timer = setTimeout(quickWip, 250); }
+</script>
 <script>/* app.js: tabs, side panel, dialogs, library tab, save/open, keyboard. */
 var TAB = 'plan';
 function $(id) { return document.getElementById(id); }
 function num(v, d) { var n = parseFloat(String(v).replace(',', '.')); return isFinite(n) ? n : d; }
 function toast(msg, bad) { var e = $('toast'); e.textContent = msg; e.className = 'toast show' + (bad ? ' bad' : ''); clearTimeout(e._t); e._t = setTimeout(function () { e.className = 'toast'; }, 3200); }
 
-function changed() { runChecks(); commit(); render2d(); renderSide(); if (TAB === '3d') rebuild3d(); }
+function changed() { runChecks(); commit(); render2d(); renderSide(); if (TAB === '3d') rebuild3d(); wipSoon(); }
 function onSelChange() { renderSel(); placeSelTools(); if (TAB === '3d') rebuild3d(); }
 function renderAll() { runChecks(); render2d(); renderSide(); if (TAB === '3d') rebuild3d(); if (TAB === 'lib') renderLib(); }
 
@@ -3013,7 +3300,7 @@ function setTab(tb) {
   $('paneLib').style.display = tb === 'lib' ? '' : 'none'; $('paneProj').style.display = tb === 'proj' ? '' : 'none'; $('paneSim').style.display = tb === 'sim' ? '' : 'none';
   if (tb === 'sim') renderSim();
   if (tb === 'proj') renderProj();
-  $('plan').style.display = tb === 'plan' ? '' : 'none'; $('tb2d').style.display = tb === 'plan' ? '' : 'none';
+  $('plan').style.display = tb === 'plan' ? '' : 'none'; $('tb2d').style.display = tb === 'plan' ? '' : 'none'; $('wipBar').style.display = tb === 'plan' && WIPBAR.on ? '' : 'none';
   $('v3').style.display = tb === '3d' ? '' : 'none'; $('tb3d').style.display = tb === '3d' ? '' : 'none';
   if (tb === 'plan') render2d();
   if (tb === '3d') {
@@ -3030,7 +3317,7 @@ function renderSide() {
   $('lnName').value = ST.line.name || ''; $('lnStyle').value = (ST.info || {}).style || ''; $('lnL').value = ST.line.length; $('lnW').value = ST.line.width;
   var b = bbox(ST.items);
   $('lnUsed').textContent = b ? t('lnUsed', [Math.round(b.x1 - Math.min(0, b.x0)), Math.round(b.y1 - Math.min(0, b.y0))]) : '';
-  renderSel(); renderIssues(); renderSum(); renderSeq();
+  renderSel(); renderIssues(); renderSum(); renderSeq(); renderChanges();
 }
 function renderSeq() {
   var sq = seqParse(ST.seqText);
@@ -3181,6 +3468,7 @@ function pasteGo() {
   if (PASTE.ops && Object.keys(PASTE.ops).length) ST.ops = Object.assign(replace ? {} : (ST.ops || {}), PASTE.ops);   // SAM per operation from the layout file
   if (PASTE.seq && PASTE.seq.length) ST.seqText = PASTE.seq.map(function (q) { return (q.name ? q.name + ': ' : '') + q.text; }).join('\n');
   if ($('pasteFit').checked) { var bb = bbox(ST.items); ST.line.length = Math.ceil((bb.x1 + 60) / 10) * 10; ST.line.width = Math.ceil((bb.y1 + 60) / 10) * 10; }
+  if (replace) setBase([(PASTE.meta || {}).file, (PASTE.meta || {}).sheet].filter(Boolean).join(' / ') || t('chgBasePaste')); else addToBase(items);   // reference for "Thay đổi so với file layout"
   SEL = items.map(function (i) { return i.id; });
   $('dlgPaste').close(); changed(); fitView(); if (TAB === '3d') view3dReset(false);
   toast(t('pasteDone', [items.filter(function (i) { return i.kind === 'mc'; }).length]));
@@ -3413,7 +3701,11 @@ function startApp() {
   initImagePaste();
   $('pasteTxt').addEventListener('input', pastePreview);
   $('pasteGo').onclick = pasteGo;
-  $('bAddMc').onclick = function () { var c = $('addCode').value; if (!normCode(c)) { $('addCode').focus(); return; } addMachine(c); $('addCode').value = ''; };
+  $('bAddMc').onclick = function () {
+    var c = $('addCode').value; if (!normCode(c)) { $('addCode').focus(); return; }
+    if (!LIB.codes[normCode(c)] && mcForOp(c)) addByOp(c, 1); else addMachine(c);   // an operation number: the machine of that operation
+    $('addCode').value = '';
+  };
   $('addCode').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('bAddMc').click(); });
   $('bAddObj').onclick = function () { addObject($('addObj').value); };
   $('bUndo').onclick = function () { if (undo()) renderAll(); };
@@ -3477,7 +3769,7 @@ function startApp() {
   init2d();
   runChecks(); renderSide();
   requestAnimationFrame(function () { fitView(); firstRun(); });
-  initSim();
+  initSim(); initChanges();
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () { render2d(); if (TAB === '3d') rebuild3d(); });
 }
 </script>

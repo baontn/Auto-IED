@@ -15,6 +15,7 @@ function seqParse(text) {
     var ops = body.split(/=>|->|→|>|,|;/).map(function (x) { return x.trim(); }).filter(Boolean);
     if (ops.length) lines.push({ name: name, ops: ops });
   });
+  if (typeof opIsOff === 'function' && (ST.opsOff || []).length) lines = lines.map(function (ln) { return { name: ln.name, ops: ln.ops.filter(function (o) { return !opIsOff(o); }) }; }).filter(function (ln) { return ln.ops.length; });   // removed operations
   var asm = -1;
   lines.forEach(function (ln, i) { if (asm < 0 && (/lắp ráp|lap rap|assembly|ráp/i.test(ln.name) || ln.ops.some(function (o) { return /^(QC|PACK)/i.test(o); }))) asm = i; });
   if (asm < 0 && lines.length) { asm = 0; lines.forEach(function (ln, i) { if (ln.ops.length > lines[asm].ops.length) asm = i; }); }
