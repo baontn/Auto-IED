@@ -2221,6 +2221,7 @@ function xlCellLayouts(ws) {
       if (v && isC(v)) { if (c - last > 5 && run.length) { if (run.length >= 3) segs.push({ r: r, c0: run[0], c1: run[run.length - 1], n: run.length }); run = []; } run.push(c); last = c; }
       else if (c - last > 5 && run.length) { if (run.length >= 3) segs.push({ r: r, c0: run[0], c1: run[run.length - 1], n: run.length }); run = []; }
     }
+    if (run.length >= 3) segs.push({ r: r, c0: run[0], c1: run[run.length - 1], n: run.length });   // a run that reaches the last columns
   }
   var blocks = [];   // segments on nearby rows that overlap in columns form one layout
   segs.forEach(function (sg) {
