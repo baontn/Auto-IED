@@ -66,17 +66,22 @@ function xlIsCode(cl) {
   return !codeList().length && /^[A-Z]{4}$/.test(cl);
 }
 var OPS_RE = /^\d{1,3}[a-z]?(\s*[\/+,&]\s*\d{1,3}[a-z]?)*$/i;
+/* one box with both: "31- 1SLM", "35/41- 1CSM", "51 -1ZZM", "116-GFIS" (operation, dash, machine code) */
+var OPCODE_RE = /^(\d{1,3}[a-z]?(?:\s*[\/+,&]\s*\d{1,3}[a-z]?)*)\s*[-–—:.]\s*([A-Za-z0-9]{3,5})$/;
+/* the central table / conveyor drawn as a long box ("Băng chuyền đôi 30cm", "Bàn giữa") */
+var BELT_RE = /băng\s*chuyền|bang\s*chuyen|conveyor|bàn\s*giữa|ban\s*giua|central\s*table|center\s*table/i;
 /* machine boxes paired with the operation box touching them, grouped into layouts (blocks separated by empty space) and rows */
 function xlLayouts(shapes) {
-  var codes = [], nums = [];
+  var codes = [], nums = [], belts = [], st = [];
   shapes.forEach(function (s) {
     if (s.kind !== 'sp' || !s.text) return;
-    var t0 = s.text.trim(), cl = t0.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    var t0 = s.text.trim(), cl = t0.toUpperCase().replace(/[^A-Z0-9]/g, ''), mm = t0.match(OPCODE_RE);
     s.cx = (s.x0 + s.x1) / 2; s.cy = (s.y0 + s.y1) / 2; s.w = s.x1 - s.x0; s.h = s.y1 - s.y0;
-    if (OPS_RE.test(t0)) { s.op = t0.replace(/\s+/g, ''); nums.push(s); }
+    if (BELT_RE.test(t0) && s.w > 3 * s.h) belts.push(s);
+    else if (OPS_RE.test(t0)) { s.op = t0.replace(/\s+/g, ''); nums.push(s); }
+    else if (mm && xlIsCode(mm[2].toUpperCase())) st.push({ code: mm[2].toUpperCase(), op: mm[1].replace(/\s+/g, ''), side: null, cx: s.cx, x0: s.x0, x1: s.x1, w: s.w, cy: s.cy, y0: s.y0, y1: s.y1, h: s.h, one: true });
     else if (cl.length === 4 && t0.replace(/\s/g, '').length <= 5 && xlIsCode(cl)) { s.code = cl; codes.push(s); }
   });
-  var st = [];
   codes.forEach(function (c) {
     var best = null, bd = Infinity;
     nums.forEach(function (n) {
@@ -106,11 +111,14 @@ function xlLayouts(shapes) {
     var rows = [];
     g.forEach(function (s) { var r = rows[rows.length - 1]; if (r && Math.abs(s.cy - r.cy) < medH * 0.5) { r.items.push(s); r.cy = (r.cy * (r.items.length - 1) + s.cy) / r.items.length; } else rows.push({ cy: s.cy, items: [s] }); });
     var x0 = Math.min.apply(null, g.map(function (s) { return s.x0; })), k = 107 / (median(g.map(function (s) { return s.w; })) || 1);
+    var gx0 = Math.min.apply(null, g.map(function (s) { return s.x0; })), gx1 = Math.max.apply(null, g.map(function (s) { return s.x1; }));
+    var belt = belts.filter(function (b) { return Math.min(b.x1, gx1) - Math.max(b.x0, gx0) > 0.3 * (gx1 - gx0); }).sort(function (a, b) { return Math.abs(a.cy - rows[0].cy) - Math.abs(b.cy - rows[0].cy); })[0];
+    var midY = belt ? belt.cy : (rows[0].cy + rows[rows.length - 1].cy) / 2;
     var prow = rows.map(function (r) {
       r.items.sort(function (a, b) { return a.cx - b.cx; });
       var up = r.items.filter(function (s) { return s.side === 'top'; }).length, dn = r.items.filter(function (s) { return s.side === 'bottom'; }).length;
-      var side = up || dn ? (up >= dn ? 'top' : 'bottom') : null;
-      return { cy: r.cy, side: side, sideFound: !!side, cells: r.items.map(function (s, ci) { return { col: ci, code: s.code, op: s.op, side: s.side || side || 'top', x: (s.cx - x0) * k }; }) };
+      var side = up || dn ? (up >= dn ? 'top' : 'bottom') : rows.length > 1 || belt ? (r.cy < midY ? 'top' : 'bottom') : null;
+      return { cy: r.cy, side: side, sideFound: !!(up || dn), cells: r.items.map(function (s, ci) { return { col: ci, code: s.code, op: s.op, side: s.side || side || 'top', x: (s.cx - x0) * k }; }) };
     });
     return { rows: prow, n: g.length, x0: x0, y0: Math.min.apply(null, g.map(function (s) { return s.y0; })), x1: Math.max.apply(null, g.map(function (s) { return s.x1; })), y1: Math.max.apply(null, g.map(function (s) { return s.y1; })), stations: g };
   });

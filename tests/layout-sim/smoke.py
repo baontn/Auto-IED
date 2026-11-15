@@ -43,7 +43,7 @@ def make_lib(path):
         for _ in range(q): s.append([n, b, m])
     wb.save(path)
 
-def make_layout_xlsx(path):
+def make_layout_xlsx(path, combined=False):
     """a minimal .xlsx whose sheet holds a layout drawn with shapes (as the IE layouts are), synthetic data"""
     E = 9525
     def sp(i, txt, x, y, w=86, h=50):
@@ -53,6 +53,11 @@ def make_layout_xlsx(path):
     shapes, i = [], 2
     def add(t, x, y, w=86, h=50):
         nonlocal i; shapes.append(sp(i, t, x, y, w, h)); i += 1
+    if combined:   # one box per machine "31- 1SLA" (vertical boxes), a conveyor between the two rows, a manual table box
+        for k, tx in enumerate(['31- 1SLA', '32 -3OLM', '33/34- 2CSM', '35-BT1M']): add(tx, 3000 + k * 50, 3000, 46, 110)
+        add('MNHD', 3200, 3060, 90, 50)
+        add('Băng chuyền đôi 30cm', 3000, 3115, 600, 22)
+        for k, tx in enumerate(['36- 1SLA', '37- 3OLM', '97- BT1M']): add(tx, 3000 + k * 50, 3140, 46, 110)
     # branch rows: numbers above codes, then codes above numbers
     for k, (c, o) in enumerate([('SFAM', '41'), ('SFAM', '43'), ('2CSM', '45'), ('1SLA', '47')]): add(o, 100 + k * 86, 1000); add(c, 100 + k * 86, 1050)
     for k, (c, o) in enumerate([('3OLM', '52'), ('3OLM', '53'), ('4OLB', '55')]): add(c, 100 + k * 86, 1100); add(o, 100 + k * 86, 1150)
@@ -375,7 +380,15 @@ async def main():
         check('⟨31·32⟩' in await pg.inner_text('#smTable'), 'simulation table shows the arranged people of the file')
         if SHOTS: await pg.screenshot(path=SHOTS + '/ls-arrange.png')
         await pg.click('[data-tab="plan"]')
-        # automatic layout: operation table + work flow, no layout drawn
+        # one box per machine ("31- 1SLA"), rows above / below a conveyor
+        cb = os.path.join(tmp, 'combined.xlsx'); make_layout_xlsx(cb, combined=True)
+        await pg.evaluate("()=>{openPaste()}"); await pg.set_input_files('#fileXl', cb); await pg.wait_for_timeout(700)
+        r = await pg.evaluate("()=>{const o=[...document.querySelectorAll('#xlPick option')].map(o=>o.value+' '+o.textContent);const i=o.findIndex(x=>/8 máy|8 machines/.test(x));return [o, i]}")
+        if r[1] >= 0: await pg.select_option('#xlPick', index=r[1]); await pg.wait_for_timeout(200)
+        r = await pg.evaluate("()=>PASTE.rows.map(r=>r.side+':'+r.cells.map(c=>c.code+'/'+c.op).join(',')).join(' | ')")
+        check(r == 'top:1SLA/31,3OLM/32,2CSM/33/34,BT1M/35,MNHD/ | bottom:1SLA/36,3OLM/37,BT1M/97', 'boxes "31- 1SLA" read (operation + machine in one box), sides from the conveyor ' + r)
+        await pg.evaluate("()=>document.getElementById('dlgPaste').close()")
+                # automatic layout: operation table + work flow, no layout drawn
         ax = os.path.join(tmp, 'auto.xlsx'); make_auto_xlsx(ax)
         await pg.evaluate("()=>{openPaste()}"); await pg.set_input_files('#fileXl', ax); await pg.wait_for_timeout(700)
         r = await pg.evaluate("()=>[document.querySelectorAll('#xlPick option').length, document.getElementById('xlPick').value, PASTE.auto, PASTE.nMc, PASTE.rows.map(r=>r.zone+':'+r.side+':'+r.cells.map(c=>c.code+'/'+c.op).join(',')).join(' | ')]")
