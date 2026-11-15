@@ -4,7 +4,7 @@ function $(id) { return document.getElementById(id); }
 function num(v, d) { var n = parseFloat(String(v).replace(',', '.')); return isFinite(n) ? n : d; }
 function toast(msg, bad) { var e = $('toast'); e.textContent = msg; e.className = 'toast show' + (bad ? ' bad' : ''); clearTimeout(e._t); e._t = setTimeout(function () { e.className = 'toast'; }, 3200); }
 
-function changed() { runChecks(); commit(); render2d(); renderSide(); if (TAB === '3d') rebuild3d(); }
+function changed() { runChecks(); commit(); render2d(); renderSide(); if (TAB === '3d') rebuild3d(); wipSoon(); }
 function onSelChange() { renderSel(); placeSelTools(); if (TAB === '3d') rebuild3d(); }
 function renderAll() { runChecks(); render2d(); renderSide(); if (TAB === '3d') rebuild3d(); if (TAB === 'lib') renderLib(); }
 
@@ -15,7 +15,7 @@ function setTab(tb) {
   $('paneLib').style.display = tb === 'lib' ? '' : 'none'; $('paneProj').style.display = tb === 'proj' ? '' : 'none'; $('paneSim').style.display = tb === 'sim' ? '' : 'none';
   if (tb === 'sim') renderSim();
   if (tb === 'proj') renderProj();
-  $('plan').style.display = tb === 'plan' ? '' : 'none'; $('tb2d').style.display = tb === 'plan' ? '' : 'none';
+  $('plan').style.display = tb === 'plan' ? '' : 'none'; $('tb2d').style.display = tb === 'plan' ? '' : 'none'; $('wipBar').style.display = tb === 'plan' && WIPBAR.on ? '' : 'none';
   $('v3').style.display = tb === '3d' ? '' : 'none'; $('tb3d').style.display = tb === '3d' ? '' : 'none';
   if (tb === 'plan') render2d();
   if (tb === '3d') {
@@ -32,7 +32,7 @@ function renderSide() {
   $('lnName').value = ST.line.name || ''; $('lnStyle').value = (ST.info || {}).style || ''; $('lnL').value = ST.line.length; $('lnW').value = ST.line.width;
   var b = bbox(ST.items);
   $('lnUsed').textContent = b ? t('lnUsed', [Math.round(b.x1 - Math.min(0, b.x0)), Math.round(b.y1 - Math.min(0, b.y0))]) : '';
-  renderSel(); renderIssues(); renderSum(); renderSeq();
+  renderSel(); renderIssues(); renderSum(); renderSeq(); renderChanges();
 }
 function renderSeq() {
   var sq = seqParse(ST.seqText);
@@ -183,6 +183,7 @@ function pasteGo() {
   if (PASTE.ops && Object.keys(PASTE.ops).length) ST.ops = Object.assign(replace ? {} : (ST.ops || {}), PASTE.ops);   // SAM per operation from the layout file
   if (PASTE.seq && PASTE.seq.length) ST.seqText = PASTE.seq.map(function (q) { return (q.name ? q.name + ': ' : '') + q.text; }).join('\n');
   if ($('pasteFit').checked) { var bb = bbox(ST.items); ST.line.length = Math.ceil((bb.x1 + 60) / 10) * 10; ST.line.width = Math.ceil((bb.y1 + 60) / 10) * 10; }
+  if (replace) setBase([(PASTE.meta || {}).file, (PASTE.meta || {}).sheet].filter(Boolean).join(' / ') || t('chgBasePaste')); else addToBase(items);   // reference for "Thay đổi so với file layout"
   SEL = items.map(function (i) { return i.id; });
   $('dlgPaste').close(); changed(); fitView(); if (TAB === '3d') view3dReset(false);
   toast(t('pasteDone', [items.filter(function (i) { return i.kind === 'mc'; }).length]));
@@ -415,7 +416,11 @@ function startApp() {
   initImagePaste();
   $('pasteTxt').addEventListener('input', pastePreview);
   $('pasteGo').onclick = pasteGo;
-  $('bAddMc').onclick = function () { var c = $('addCode').value; if (!normCode(c)) { $('addCode').focus(); return; } addMachine(c); $('addCode').value = ''; };
+  $('bAddMc').onclick = function () {
+    var c = $('addCode').value; if (!normCode(c)) { $('addCode').focus(); return; }
+    if (!LIB.codes[normCode(c)] && mcForOp(c)) addByOp(c, 1); else addMachine(c);   // an operation number: the machine of that operation
+    $('addCode').value = '';
+  };
   $('addCode').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('bAddMc').click(); });
   $('bAddObj').onclick = function () { addObject($('addObj').value); };
   $('bUndo').onclick = function () { if (undo()) renderAll(); };
@@ -479,6 +484,6 @@ function startApp() {
   init2d();
   runChecks(); renderSide();
   requestAnimationFrame(function () { fitView(); firstRun(); });
-  initSim();
+  initSim(); initChanges();
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () { render2d(); if (TAB === '3d') rebuild3d(); });
 }

@@ -72,7 +72,7 @@ function loadProject(txt, handle, label) {
 }
 function newProject() {
   if (ST.items.some(function (i) { return i.kind === 'mc'; }) && !confirm(t('projNewConfirm'))) return;
-  ST.items = []; ST.seqText = ''; ST.info = {}; ST.line = { name: '', length: 2400, width: 600, fixed: false }; SEL = []; PROJ.handle = null;
+  ST.items = []; ST.seqText = ''; ST.info = {}; ST.ops = {}; ST.base = null; ST.opsOff = []; ST.line = { name: '', length: 2400, width: 600, fixed: false }; SEL = []; PROJ.handle = null;
   LAST = null; commit(); UNDO = []; REDO = []; renderAll(); setTab('plan'); fitView(); openLineSetup();
 }
 

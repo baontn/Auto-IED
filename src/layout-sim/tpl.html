@@ -23,8 +23,14 @@ input[type=checkbox]{padding:0}
 .tag{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;white-space:nowrap;font-weight:600}
 .t-ok{background:var(--okbg);color:var(--ok)}.t-warn{background:var(--warnbg);color:var(--warn)}.t-bad{background:var(--badbg);color:var(--bad)}.t-info{background:var(--infobg);color:var(--info)}
 .tagline{padding:6px 8px;border-radius:8px;margin-top:6px}
+.wipbar{background:var(--panel);border-bottom:1px solid var(--line);padding:6px 14px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;flex:none;font-size:13px}
+button.link{background:none;border:0;padding:0 2px;color:var(--accent);text-decoration:underline;cursor:pointer;font:inherit;font-weight:700}
+button.danger{color:var(--bad);border-color:var(--bad)}
+.chgtag{background:var(--badbg);color:var(--bad);border-color:var(--bad);font-weight:700}
+.rmop{padding:0 5px;font-size:11px;line-height:1.3;opacity:.55}.rmop:hover{opacity:1;background:var(--badbg);color:var(--bad)}
 header{background:var(--panel);border-bottom:1px solid var(--line);padding:7px 14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;flex:none}
 header h1{font-size:16px;margin:0 6px 0 0}
+.homebtn{display:inline-flex;align-items:center;padding:4px 10px;border:1px solid var(--line);border-radius:8px;color:var(--text);text-decoration:none;font-size:13px;background:var(--bg)}.homebtn:hover{border-color:var(--accent);color:var(--accent)}
 .tabs{display:flex;gap:4px}
 .tabs button{border:none;border-radius:8px}
 .tabs button.on{background:var(--sel);color:var(--accent);font-weight:600}
@@ -105,6 +111,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
 </head>
 <body>
 <header>
+  <a id="bHome" class="homebtn" href="../index.html" data-t="bHome" data-tt="bHomeTip">← IE Tools</a>
   <h1 data-t="appTitle">Mô phỏng bố trí chuyền</h1><span class="tag t-info">v{{VERSION}}</span>
   <nav class="tabs"><button data-tab="proj" data-t="tabProj">🏠 Dự án</button><button data-tab="plan" class="on" data-t="tabPlan">Mặt bằng 2D</button><button data-tab="3d" data-t="tab3d">3D</button><button data-tab="sim" data-t="tabSim">⏱ Mô phỏng WIP</button><button data-tab="lib" data-t="tabLib">Thư viện máy</button></nav>
   <div class="hr">
@@ -120,7 +127,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
   <div class="stage">
     <div class="toolbar" id="tb2d">
       <button id="bPaste" class="primary" data-t="bPaste" data-tt="bPasteTip">📋 Dán layout</button>
-      <input id="addCode" list="codeList" style="width:90px" data-tp="addCodePh" placeholder="Mã máy"><button id="bAddMc" data-t="bAddMc">+ Máy</button>
+      <input id="addCode" list="codeList" style="width:90px" data-tp="addCodePh" placeholder="Mã máy"><button id="bAddMc" data-t="bAddMc" data-tt="bAddMcTip">+ Máy</button><button id="bAddOp" data-t="bAddOp" data-tt="bAddOpTip">+ Máy theo công đoạn</button>
       <select id="addObj"><option value="input" data-t="obInput">Bàn đầu vào</option><option value="qc" data-t="obQc">Bàn QC</option><option value="table" data-t="obTable">Bàn</option><option value="pillar" data-t="obPillar">Cột</option><option value="trolley" data-t="obTrolley">Xe đẩy</option><option value="box" data-t="obBox">Vật cản</option></select><button id="bAddObj" data-t="bAddObj">+ Thêm</button>
       <span class="sep"></span>
       <button id="bUndo" data-tt="bUndoTip" title="Ctrl+Z">↶</button><button id="bRedo" data-tt="bRedoTip" title="Ctrl+Y">↷</button>
@@ -131,8 +138,12 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
       <label><input type="checkbox" id="optWip"><span data-t="optWip">WIP</span></label>
       <label><input type="checkbox" id="optAisle"><span data-t="optAisle">Lối đi sau lưng</span></label>
       <span class="sep"></span>
+      <button id="bWip2d" data-t="bWip2d" data-tt="bWip2dTip">⏱ Mô phỏng WIP</button>
+      <button id="chgTag" class="chgtag" style="display:none"></button>
+      <span class="sep"></span>
       <button id="bPng" data-t="bPng">Xuất ảnh</button><button id="bPrint" data-t="bPrint">In</button>
     </div>
+    <div id="wipBar" class="wipbar" style="display:none"></div>
     <div class="toolbar" id="tb3d" style="display:none">
       <button id="b3Reset" data-t="b3Reset">Góc nhìn mặc định</button><button id="b3Top" data-t="b3Top">Nhìn từ trên</button>
       <label><input type="checkbox" id="opt3People"><span data-t="opt3People">Người vận hành</span></label>
@@ -149,6 +160,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
     <div class="hint"><span data-t="hint2d">Kéo máy để di chuyển · R / Shift+R xoay 90° · F quay đầu · Delete xóa · Ctrl+D nhân bản · mũi tên dịch 1 cm (Shift 10 cm) · Shift+kéo chọn vùng · lăn chuột phóng to · kéo nền để di chuyển · Alt khi kéo: bỏ bám lưới</span> <span id="zoomTxt" class="muted"></span></div>
   </div>
   <aside>
+    <div class="card" id="chgCard"><h3 data-t="chgTitle">Thay đổi so với file layout</h3><div id="chgBody" class="small"></div></div>
     <div class="card"><h3 data-t="lnTitle">Chuyền</h3>
       <div class="grid3"><label class="f" style="grid-column:span 2"><span data-t="pjStyle">Mã hàng</span><input id="lnStyle"></label><label class="f"><span data-t="lnName">Tên chuyền</span><input id="lnName"></label>
       <label class="f"><span data-t="lnLen">Dài (cm)</span><input id="lnL" type="number" step="10"></label><label class="f"><span data-t="lnWid">Rộng (cm)</span><input id="lnW" type="number" step="10"></label>
@@ -273,6 +285,16 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
   <div id="seqPrev" class="small" style="margin-top:6px"></div></div>
   <div class="df"><button data-close data-t="cancel">Hủy</button><button id="seqOk" class="primary" data-t="apply">Áp dụng</button></div>
 </dialog>
+<dialog id="dlgOp"><div class="dh"><span data-t="opDlgTitle">Công đoạn: thêm máy hoặc bỏ công đoạn</span><button data-close>✕</button></div>
+  <div class="db"><div class="row" style="gap:10px;flex-wrap:wrap">
+    <label class="f"><span data-t="opDlgOp">Công đoạn</span><input id="odOp" list="opList" style="width:110px" autocomplete="off"></label>
+    <label class="f"><span data-t="opDlgQty">Số máy thêm</span><input id="odQty" type="number" min="1" max="20" value="1" style="width:70px"></label>
+    <label class="f" id="odCodeRow" style="display:none"><span data-t="opDlgCode">Mã máy</span><input id="odCode" list="codeList" style="width:110px"></label></div>
+    <datalist id="opList"></datalist>
+    <div id="odPrev" class="small" style="margin-top:8px;min-height:2.4em"></div>
+    <div class="muted small" data-t="opDlgNote">Mọi thay đổi số máy so với file layout được ghi trong thẻ "Thay đổi so với file layout": phải sửa file layout theo đó.</div></div>
+  <div class="df"><button id="odDel" class="danger" data-t="opRemove">🗑 Bỏ công đoạn</button><span style="flex:1"></span><button data-close data-t="cancel">Hủy</button><button id="odAdd" class="primary" data-t="opAdd">+ Thêm máy</button></div>
+</dialog>
 <dialog id="dlgDir"><div class="dh"><span data-t="dirTitle">Nơi lưu dự án</span></div>
   <div class="db"><p data-t="dirHelp">Chọn thư mục (trên máy hoặc thư mục chung) để lưu các dự án layout. Chương trình ghi nhớ thư mục này: mỗi lần bấm "Lưu" file được ghi thẳng vào đó, không phải tải xuống.</p><div id="dirName" class="small muted"></div></div>
   <div class="df"><button id="dirLater" data-t="dirLater">Để sau</button><button id="dirPick" class="primary" data-t="dirPick">📁 Chọn thư mục…</button></div>
@@ -298,6 +320,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
 <script>/*__FLOW__*/</script>
 <script>/*__PROJECT__*/</script>
 <script>/*__SIM__*/</script>
+<script>/*__CHANGES__*/</script>
 <script>/*__APP__*/</script>
 <script>startApp();</script>
 </body>

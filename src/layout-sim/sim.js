@@ -160,18 +160,23 @@ function simParams() {
   return { hours: Math.max(0.5, num($('smHours').value, 8)), eff: Math.max(0.05, Math.min(1.5, num($('smEff').value, 80) / 100)), bundle: Math.max(1, Math.round(num($('smBundle').value, 10))),
     rate: $('smMode').value === 'rate' ? Math.max(1, num($('smRate').value, 60)) : 0, wipWarn: Math.max(1, num($('smWarn').value, 30)), warm: $('smWarm').checked };
 }
-function renderSim() {
-  if (!$('paneSim')) return;
+/* defaults from the layout file: its efficiency and target output (input at the target rate), unless edited */
+function simDefaults() {
   var i = ST.info || {};
   if (!$('smEff').dataset.touched && i.eff) $('smEff').value = i.eff;
   if (!$('smRate').dataset.touched && i.target) $('smRate').value = i.target;
   if (!$('smMode').dataset.touched) { $('smMode').value = i.target ? 'rate' : 'push'; $('smRate').disabled = !i.target; }   // follows the file: its target output, else input always available
+}
+function renderSim() {
+  if (!$('paneSim')) return;
+  var i = ST.info || {};
+  simDefaults();
   var p = simParams(), B = simBalance(p.eff), r = SIMR, rowsBy = {};
   if (r) r.rows.forEach(function (x) { rowsBy[x.op] = x; });
   var takt = i.target ? 60 / i.target : 0, missing = B.rows.filter(function (x) { return !x.sam; }).map(function (x) { return x.op; });
   var comb = {};   // operations done on the same machine (layout label "37/42")
   ST.items.forEach(function (it) { if (it.kind !== 'mc') return; var ops = opsOf(it); if (ops.length > 1) ops.forEach(function (o) { ops.forEach(function (q) { if (q !== o) { comb[o] = comb[o] || []; if (comb[o].indexOf(q) < 0) comb[o].push(q); } }); }); });
-  $('smSrc').innerHTML = esc(B.L.fromSeq ? t('simSrcSeq', [B.L.lines.length]) : t('simSrcDef')) + (B.L.added && B.L.added.length ? ' · ' + esc(t('simCombAdd', [B.L.added.join(', ')])) : '') + ' · ' + esc(B.hc ? t('simHC', [B.hc, B.onPlan]) : t('simOpers', [B.opers.length])) +
+  $('smSrc').innerHTML = esc(B.L.fromSeq ? t('simSrcSeq', [B.L.lines.length]) : t('simSrcDef')) + (B.L.added && B.L.added.length ? ' · ' + esc(t('simCombAdd', [B.L.added.join(', ')])) : '') + ((ST.opsOff || []).length ? ' · ' + esc(t('simOff', [ST.opsOff.map(function (x) { return x.op; }).join(', ')])) : '') + ' · ' + esc(B.hc ? t('simHC', [B.hc, B.onPlan]) : t('simOpers', [B.opers.length])) +
     (B.hc && B.hc !== B.onPlan ? ' · ' + esc(t(B.hc > B.onPlan ? 'simHCplus' : 'simHCminus', [B.rows.filter(function (x) { return x.adj; }).map(function (x) { return x.op + ' ' + (x.adj > 0 ? '+' : '') + x.adj; }).join(', ')])) : '') +
     (missing.length ? '<div class="t-warn tagline">⚠ ' + esc(t('simNoSam', [missing.join(', ')])) + '</div>' : '');
   var maxCap = Math.max.apply(null, B.rows.map(function (x) { return isFinite(x.cap) ? x.cap : 0; }).concat([1]));
@@ -183,7 +188,7 @@ function renderSim() {
       var w = isFinite(x.cap) ? Math.round(100 * x.cap / maxCap) : 100;
       // load = output needed (the target, else the slowest operation) / capacity of this operation
       var need = i.target || B.capMin, load = isFinite(x.cap) && x.cap > 0 && need ? Math.round(100 * need / x.cap) : null;
-      return '<tr' + cls + ' data-op="' + esc(x.op) + '"><td><b>' + esc(x.op) + '</b>' + (comb[x.op] ? ' <span class="tag t-info" title="' + esc(t('simComb', [comb[x.op].join(', ')])) + '">⇄ ' + esc(comb[x.op].join(', ')) + '</span>' : '') + (bn ? ' <span class="tag t-bad">' + esc(t('simBn')) + '</span>' : '') + '</td><td>' + esc(x.mc) + '</td>' +
+      return '<tr' + cls + ' data-op="' + esc(x.op) + '"><td><button class="rmop" data-rmop="' + esc(x.op) + '" title="' + esc(t('simRmOp')) + '">✕</button> <b>' + esc(x.op) + '</b>' + (comb[x.op] ? ' <span class="tag t-info" title="' + esc(t('simComb', [comb[x.op].join(', ')])) + '">⇄ ' + esc(comb[x.op].join(', ')) + '</span>' : '') + (bn ? ' <span class="tag t-bad">' + esc(t('simBn')) + '</span>' : '') + '</td><td>' + esc(x.mc) + '</td>' +
         '<td class="n"><input style="width:84px" type="number" step="0.0001" min="0" data-sam="' + esc(x.op) + '" value="' + (x.sam || '') + '"></td><td class="n">' + x.stations + '</td><td class="n">' + x.people.toFixed(2) + (x.adj ? ' <span class="tag ' + (x.adj > 0 ? 't-info' : 't-warn') + '">' + (x.adj > 0 ? '+' : '') + x.adj + '</span>' : '') + '</td>' +
         '<td class="n"><input style="width:62px" type="number" step="1" min="5" max="150" data-eff="' + esc(x.op) + '" value="' + (x.effOwn ? Math.round(x.eff * 100) : '') + '" placeholder="' + Math.round(p.eff * 100) + '"></td>' +
         '<td class="n">' + (isFinite(x.cap) ? Math.round(x.cap) : '∞') + '</td><td><div class="bar"><i style="width:' + w + '%;background:' + (bn || (load && load > 100) ? 'var(--bad)' : 'var(--accent)') + '"></i>' + (takt ? '<b style="left:' + Math.min(100, Math.round(100 * (i.target || 0) / maxCap)) + '%"></b>' : '') +
@@ -220,6 +225,7 @@ function initSim() {
     SIMR = null; commit(); setTimeout(renderSim, 0);   // redraw after the input has lost focus
   });
   $('smTable').addEventListener('click', function (e) {
+    var rm = e.target.closest('[data-rmop]'); if (rm) { if (removeOp(rm.dataset.rmop, true)) renderSim(); return; }
     var tr = e.target.closest('tr[data-op]'); if (!tr || e.target.tagName === 'INPUT') return;
     SEL = ST.items.filter(function (it) { return it.kind === 'mc' && opsOf(it).indexOf(tr.dataset.op) >= 0; }).map(function (it) { return it.id; });
     setTab('plan'); onSelChange(); render2d();
