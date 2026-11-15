@@ -2,6 +2,17 @@
 var LANG = 'vi';
 var I18N = {
   vi: {
+    centerTableB: 'Bàn giữa (nhánh)', zoneMain: 'Chuyền chính', zoneBranch: 'Chuyền nhánh', walkLbl: 'Lối đi {0} cm', pasteZone: 'Chuyền', isWalk: '{0}: lấn vào lối đi giữa 2 chuyền ({1} cm).',
+    lsBr: 'Có chuyền nhánh (chuyền phụ bên cạnh, tùy mã hàng)', lsBPos: 'Vị trí', lsBTop: 'Phía trên chuyền chính', lsBBottom: 'Phía dưới chuyền chính', lsBWalk: 'Lối đi giữa 2 chuyền (cm)', lsBOff: 'Lệch so với đầu chuyền chính (cm)',
+    lsBCalc: 'Chuyền nhánh: {0} máy chuẩn, bàn giữa {1} cm, rộng {2} cm · lối đi {3} cm · tổng bề ngang {4} cm',
+    bXlOpen: '📂 Mở file layout Excel (đọc chính xác các hình)…', xlHelp: 'Đọc trực tiếp các hình mã máy / công đoạn và trình tự "=>" trong file .xlsx/.xlsm, không cần nhận dạng chữ.',
+    xlNone: 'Không tìm thấy layout vẽ bằng hình (mã máy + số công đoạn) trong {0}.', xlErr: 'Không đọc được file Excel', xlHidden: 'ẩn', xlLay: 'layout {0}: {1} hàng, {2} máy',
+    xlRead: '{0} · sheet "{1}": {2} máy; {3} dòng trình tự. Kiểm tra bảng bên dưới rồi bấm "Đưa vào mặt bằng".', xlSeqFound: 'Trình tự công đoạn đọc được trong file (sẽ dùng để tính đường đi):',
+    seqTitle: 'Trình tự & đường đi bán thành phẩm', bSeq: 'Nhập trình tự…', bSug: '💡 Tìm gợi ý cải tiến', seqDlgTitle: 'Trình tự công đoạn',
+    seqHelp: 'Mỗi dòng một cụm: tên cụm rồi các công đoạn nối bằng =>. Cuối mỗi cụm phụ được đưa vào công đoạn đầu của cụm lắp ráp (dòng có QC / PACKING hoặc tên "lắp ráp"). Một công đoạn có nhiều máy: bán thành phẩm đi tới máy gần nhất.',
+    seqNone: 'Chưa có trình tự công đoạn: bấm "Nhập trình tự…" hoặc mở file layout Excel có các ô "41=>43=>…".', seqTotal: 'Đường đi bán thành phẩm: {0} m', seqLine: 'Cụm {0}',
+    seqMissing: 'Công đoạn chưa có máy trên mặt bằng: {0}', sugWait: 'Đang tính…', sugNone: 'Không tìm thấy cải tiến rõ ràng.', sugApply: 'Áp dụng', sugApplied: 'Đã đổi chỗ {0} ↔ {1}.',
+    sugLong: 'Vận chuyển xa {0} → {1}: {2} m (nên đặt gần nhau)', sugWalk: 'Một người chạy {0} và {1} cách {2} m: nên đặt 2 máy sát nhau', sugSwap: 'Đổi chỗ {0} ↔ {1}: đường đi giảm {2} m',
     fLock: 'Khóa vị trí (không kéo được)', bSideTip: 'Ẩn / hiện bảng bên phải', ttStand: 'Đứng / ngồi (S)', bStandAll: '🧍↔🪑 Tất cả đứng / ngồi', bStandAllTip: 'Chuyển tất cả công đoạn sang đứng, bấm lại để chuyển sang ngồi', bStandDef: 'Mặc định (ép, ủi đứng)',
     allStand: 'Tất cả công đoạn: đứng.', allSit: 'Tất cả công đoạn: ngồi.', standDefDone: 'Mặc định: máy ép nhiệt và bàn ủi đứng, các máy khác ngồi.', fStand: 'Thao tác đứng', sumStand: '{0} người đứng', opt3Ruler: 'Thước (m)',
     erg_standDepth: 'Đứng: chiều sâu vùng thao tác', ergh_standDepth: 'Từ mép bàn/máy ra sau: thảm chống mỏi + chỗ lùi bước (thường 75-90 cm; IE chỉnh theo tiêu chuẩn nhà máy)',
@@ -69,6 +80,17 @@ var I18N = {
     ocrIgnored: 'bỏ qua', ocrLegend: 'Viền xanh lá: đọc đúng mã · cam: đã sửa theo thư viện · đỏ: không có trong thư viện · xanh dương: số công đoạn · xám: bỏ qua. Đưa chuột vào ô để xem chữ đọc được.'
   },
   en: {
+    centerTableB: 'Central table (branch)', zoneMain: 'Main line', zoneBranch: 'Branch line', walkLbl: 'Walkway {0} cm', pasteZone: 'Line', isWalk: '{0}: in the walkway between the two lines ({1} cm).',
+    lsBr: 'Branch line (a smaller line next to it, depends on the style)', lsBPos: 'Position', lsBTop: 'Above the main line', lsBBottom: 'Below the main line', lsBWalk: 'Walkway between the lines (cm)', lsBOff: 'Offset from the main line start (cm)',
+    lsBCalc: 'Branch line: {0} standard machines, central table {1} cm, width {2} cm · walkway {3} cm · total width {4} cm',
+    bXlOpen: '📂 Open layout Excel file (reads the shapes exactly)…', xlHelp: 'Reads the machine / operation shapes and the "=>" sequence directly from the .xlsx/.xlsm file, no text recognition needed.',
+    xlNone: 'No layout drawn with shapes (machine code + operation number) found in {0}.', xlErr: 'Cannot read the Excel file', xlHidden: 'hidden', xlLay: 'layout {0}: {1} rows, {2} machines',
+    xlRead: '{0} · sheet "{1}": {2} machines; {3} sequence lines. Check the table below, then press "Place on the plan".', xlSeqFound: 'Operation sequence read in the file (used for the flow distance):',
+    seqTitle: 'Sequence & garment flow', bSeq: 'Enter sequence…', bSug: '💡 Find improvements', seqDlgTitle: 'Operation sequence',
+    seqHelp: 'One line per group: group name, then the operations joined by =>. The end of each sub-assembly goes to the first operation of the assembly line (the line with QC / PACKING or named "lắp ráp"). An operation on several machines: the piece goes to the nearest one.',
+    seqNone: 'No operation sequence yet: press "Enter sequence…" or open a layout Excel file with "41=>43=>…" boxes.', seqTotal: 'Garment flow: {0} m', seqLine: 'Group {0}',
+    seqMissing: 'Operations without a machine on the plan: {0}', sugWait: 'Calculating…', sugNone: 'No clear improvement found.', sugApply: 'Apply', sugApplied: 'Swapped {0} ↔ {1}.',
+    sugLong: 'Long transport {0} → {1}: {2} m (place them closer)', sugWalk: 'One operator runs {0} and {1}, {2} m apart: place the two machines side by side', sugSwap: 'Swap {0} ↔ {1}: flow shorter by {2} m',
     fLock: 'Lock position (cannot be dragged)', bSideTip: 'Hide / show the right panel', ttStand: 'Standing / sitting (S)', bStandAll: '🧍↔🪑 All standing / sitting', bStandAllTip: 'Make every operation standing, press again for sitting', bStandDef: 'Default (press, iron standing)',
     allStand: 'All operations: standing.', allSit: 'All operations: sitting.', standDefDone: 'Default: heat presses and ironing standing, other machines sitting.', fStand: 'Standing operation', sumStand: '{0} standing', opt3Ruler: 'Ruler (m)',
     erg_standDepth: 'Standing: work area depth', ergh_standDepth: 'From the table/machine edge backwards: anti-fatigue mat + room to step back (usually 75-90 cm; IE sets the factory standard)',

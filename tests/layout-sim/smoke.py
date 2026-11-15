@@ -10,7 +10,7 @@ then checks: picture paste (OCR, offline), placement, drag + snap, overlap / ope
 save/open round trip, PNG + Excel export, English UI, i18n key completeness, 3D view, no page errors.
 --shots DIR also saves screenshots (used for the manual: manual/img/ls-*.png).
 """
-import asyncio, json, os, pathlib, sys, tempfile
+import asyncio, json, os, pathlib, sys, tempfile, zipfile
 from openpyxl import Workbook
 from playwright.async_api import async_playwright
 
@@ -42,6 +42,41 @@ def make_lib(path):
     for n, b, m, q in MODELS:
         for _ in range(q): s.append([n, b, m])
     wb.save(path)
+
+def make_layout_xlsx(path):
+    """a minimal .xlsx whose sheet holds a layout drawn with shapes (as the IE layouts are), synthetic data"""
+    E = 9525
+    def sp(i, txt, x, y, w=86, h=50):
+        return ('<xdr:twoCellAnchor><xdr:from><xdr:col>0</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>0</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from><xdr:to><xdr:col>1</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>1</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:to>'
+                '<xdr:sp><xdr:nvSpPr><xdr:cNvPr id="%d" name="R%d"/><xdr:cNvSpPr/></xdr:nvSpPr><xdr:spPr><a:xfrm><a:off x="%d" y="%d"/><a:ext cx="%d" cy="%d"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></xdr:spPr>'
+                '<xdr:txBody><a:bodyPr/><a:p><a:r><a:t>%s</a:t></a:r></a:p></xdr:txBody></xdr:sp><xdr:clientData/></xdr:twoCellAnchor>') % (i, i, x * E, y * E, w * E, h * E, txt)
+    shapes, i = [], 2
+    def add(t, x, y, w=86, h=50):
+        nonlocal i; shapes.append(sp(i, t, x, y, w, h)); i += 1
+    # branch rows: numbers above codes, then codes above numbers
+    for k, (c, o) in enumerate([('SFAM', '41'), ('SFAM', '43'), ('2CSM', '45'), ('1SLA', '47')]): add(o, 100 + k * 86, 1000); add(c, 100 + k * 86, 1050)
+    for k, (c, o) in enumerate([('3OLM', '52'), ('3OLM', '53'), ('4OLB', '55')]): add(c, 100 + k * 86, 1100); add(o, 100 + k * 86, 1150)
+    # main rows (after a title row gap)
+    for k, (c, o) in enumerate([('1SLA', '31'), ('2CSM', '33'), ('3OLM', '66'), ('1SLA', '67'), ('BT1M', '97')]): add(o, 100 + k * 86, 1300); add(c, 100 + k * 86, 1350)
+    for k, (c, o) in enumerate([('4CSM', '35'), ('2CSM', '68'), ('CHPM', '70')]): add(c, 100 + k * 86, 1400, 86 if c != 'CHPM' else 130); add(o, 100 + k * 86, 1450, 86 if c != 'CHPM' else 130)
+    add('SMNT', 600, 1290, 44, 23)
+    # operation sequence boxes
+    add('Cụm thân', 0, 600, 110, 36); add('31=>33=>35', 120, 600, 300, 36)
+    add('Cụm bát', 0, 650, 110, 36); add('41=>43=>45=>47', 120, 650, 300, 36)
+    add('Cụm cánh', 0, 700, 110, 36); add('52=>53=>55', 120, 700, 300, 36)
+    add('Cụm lắp ráp', 500, 560, 150, 36); add('66=>67=>68=>70=>97=>QC=>PACKING', 500, 620, 500, 36)
+    ns = 'xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"'
+    files = {
+        '[Content_Types].xml': '<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/drawings/drawing1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/></Types>',
+        '_rels/.rels': '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>',
+        'xl/workbook.xml': '<?xml version="1.0" encoding="UTF-8"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Layout 48" sheetId="1" r:id="rId1"/></sheets></workbook>',
+        'xl/_rels/workbook.xml.rels': '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>',
+        'xl/worksheets/sheet1.xml': '<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheetData/><drawing r:id="rId1"/></worksheet>',
+        'xl/worksheets/_rels/sheet1.xml.rels': '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing1.xml"/></Relationships>',
+        'xl/drawings/drawing1.xml': '<?xml version="1.0" encoding="UTF-8"?><xdr:wsDr %s>%s</xdr:wsDr>' % (ns, ''.join(shapes)),
+    }
+    with zipfile.ZipFile(path, 'w', zipfile.ZIP_DEFLATED) as z:
+        for k, v in files.items(): z.writestr(k, v)
 
 async def launch(p):
     args = ['--use-angle=swiftshader', '--enable-unsafe-swiftshader']
@@ -75,7 +110,7 @@ async def main():
         r = await pg.evaluate("""()=>{const v=Object.keys(I18N.vi),e=Object.keys(I18N.en);
           const used=[...document.querySelectorAll('[data-t],[data-tt],[data-tp]')].map(x=>x.dataset.t||x.dataset.tt||x.dataset.tp);
           FAMS.forEach(f=>used.push('fam_'+f)); ERG_KEYS.forEach(k=>{used.push('erg_'+k);used.push('ergh_'+k)});
-          ['isUnknown','isOut','isOverlap','isSeat','isSeat2','isAisle'].forEach(k=>used.push(k));
+          ['isUnknown','isOut','isOverlap','isSeat','isSeat2','isAisle','isWalk'].forEach(k=>used.push(k));
           return [v.filter(k=>!e.includes(k)), e.filter(k=>!v.includes(k)), used.filter(k=>!v.includes(k))]}""")
         check(r == [[], [], []], 'i18n complete ' + json.dumps(r))
         await pg.click('#bPaste'); await pg.fill('#pasteTxt', PASTE); await pg.dispatch_event('#pasteTxt', 'input')
@@ -187,6 +222,24 @@ async def main():
         check(ok[0] == ok[1] and ok[2] == 'top,bottom', 'OCR of a layout picture: ' + ok[1] + ' / sides ' + ok[2])
         check(not [u for u in NET if not u.startswith(('file:', 'blob:', 'data:'))], 'no network request ' + str(NET[:3]))
         await pg.evaluate("()=>document.getElementById('dlgPaste').close()")
+        # branch line + layout Excel file with shapes + operation sequence + flow suggestions
+        xl = os.path.join(tmp, 'layout.xlsx'); make_layout_xlsx(xl)
+        await pg.evaluate("()=>{ST.items=[];ST.seqText='';changed()}")
+        await pg.click('#bLineSetup'); await pg.fill('#lsUnits', '8'); await pg.check('#lsBr'); await pg.fill('#lsBUnits', '6'); await pg.dispatch_event('#lsBUnits', 'input'); await pg.click('#lsOk')
+        z = await pg.evaluate("()=>lineZones().map(z=>z.id+':'+z.y+':'+z.W)")
+        check(len(z) == 3 and z[1].startswith('walk:') and z[1].endswith(':100'), 'branch line above, 1 m walkway ' + str(z))
+        await pg.click('#bPaste'); await pg.set_input_files('#fileXl', xl); await pg.wait_for_timeout(600)
+        r = await pg.evaluate("()=>[PASTE.nMc, PASTE.rows.length, PASTE.rows.map(r=>r.zone).join(','), (PASTE.seq||[]).length, PASTE.rows[0].cells.map(c=>c.code+':'+c.op).join(' ')]")
+        check(r[:4] == [15, 4, 'branch,branch,main,main', 4] and r[4] == 'SFAM:41 SFAM:43 2CSM:45 1SLA:47', 'Excel shapes: 15 machines, 4 rows (2 branch + 2 main), 4 sequence lines ' + str(r))
+        await pg.click('#pasteGo'); await pg.wait_for_timeout(200)
+        r = await pg.evaluate("()=>[ST.items.filter(i=>i.zone=='branch'&&i.kind=='mc').length, ST.items.filter(i=>i.kind=='mc'&&!i.zone).length, seqParse(ST.seqText).lines.length, Math.round(flowCalc().total)]")
+        check(r[0] == 7 and r[1] == 8 and r[2] == 4 and r[3] > 500, 'placed on branch (7) and main (8); flow from the sequence %d cm' % r[3])
+        await pg.click('#bSug'); await pg.wait_for_timeout(1500)
+        check(len(await pg.inner_text('#sugBody')) > 10, 'improvement suggestions listed')
+        await pg.evaluate("()=>{const w=zoneById('walk');const it=ST.items.find(i=>i.kind=='mc'&&!i.zone);it.y=w.y+w.W/2;changed()}")
+        check('isWalk' in await pg.evaluate('()=>ISSUES.map(x=>x.k)'), 'machine in the walkway flagged')
+        if SHOTS: await pg.evaluate('()=>{SEL=[];onSelChange();fitView()}'); await pg.screenshot(path=SHOTS + '/ls-branch.png')
+        await pg.keyboard.press('Control+z')
         await pg.select_option('#lang', 'en'); await pg.wait_for_timeout(150)
         check(await pg.inner_text('h1') == 'Line layout simulator', 'English UI'); await pg.select_option('#lang', 'vi')
         check(not errs, 'no page errors ' + str(errs))

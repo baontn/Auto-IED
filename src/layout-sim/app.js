@@ -30,8 +30,27 @@ function renderSide() {
   $('lnName').value = ST.line.name || ''; $('lnL').value = ST.line.length; $('lnW').value = ST.line.width;
   var b = bbox(ST.items);
   $('lnUsed').textContent = b ? t('lnUsed', [Math.round(b.x1 - Math.min(0, b.x0)), Math.round(b.y1 - Math.min(0, b.y0))]) : '';
-  renderSel(); renderIssues(); renderSum();
+  renderSel(); renderIssues(); renderSum(); renderSeq();
 }
+function renderSeq() {
+  var sq = seqParse(ST.seqText);
+  if (!sq.lines.length) { $('seqBody').innerHTML = '<div class="muted">' + esc(t('seqNone')) + '</div>'; $('bSug').disabled = true; return; }
+  var r = flowCalc(sq);
+  $('bSug').disabled = false;
+  $('seqBody').innerHTML = '<div><b>' + esc(t('seqTotal', [(r.total / 100).toFixed(1)])) + '</b></div>' + sq.lines.map(function (ln, i) {
+    return '<div><i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:' + FLOW_COLS[i % FLOW_COLS.length] + '"></i> ' + esc((ln.name || t('seqLine', [i + 1])) + (i === sq.asm ? ' ★' : '')) + ': ' + (r.perLine[i] / 100).toFixed(1) + ' m</div>';
+  }).join('') + (r.missing.length ? '<div class="t-warn tagline">⚠ ' + esc(t('seqMissing', [r.missing.join(', ')])) + '</div>' : '');
+}
+function renderSug(res) {
+  if (!res) { $('sugBody').innerHTML = ''; return; }
+  if (!res.sug.length) { $('sugBody').innerHTML = '<div class="t-ok tagline">' + esc(t('sugNone')) + '</div>'; return; }
+  $('sugBody').innerHTML = '<ol style="margin:6px 0 0 18px;padding:0">' + res.sug.map(function (g, i) {
+    var txt = g.kind === 'long' ? t('sugLong', [g.e.a, g.e.b, (g.e.d / 100).toFixed(1)]) : g.kind === 'walk' ? t('sugWalk', [label(g.l.home), label(g.l.sat), (g.l.dist / 100).toFixed(1)]) : t('sugSwap', [label(g.a), label(g.b), (g.gain / 100).toFixed(1)]);
+    return '<li style="margin-bottom:4px"><a href="#" data-sug="' + i + '">' + esc(txt) + '</a>' + (g.kind === 'swap' ? ' <button data-apply="' + i + '" style="padding:1px 7px;font-size:12px">' + esc(t('sugApply')) + '</button>' : '') + '</li>';
+  }).join('') + '</ol>';
+  SUG = res;
+}
+var SUG = null;
 function renderIssues() {
   var bad = ISSUES.filter(function (x) { return x.sev === 'bad'; }).length, warn = ISSUES.length - bad;
   $('issHead').innerHTML = esc(t('issTitle')) + ' ' + (bad ? '<span class="tag t-bad">' + bad + '</span> ' : '') + (warn ? '<span class="tag t-warn">' + warn + '</span>' : '') + (!ISSUES.length ? '<span class="tag t-ok">' + esc(t('issNone')) + '</span>' : '');
@@ -43,7 +62,7 @@ function renderSum() {
   var fp = flowPath(), nw = ST.items.filter(function (it) { return it.kind === 'mc' && !it.noOp; }).length;
   var multi = ST.items.filter(function (it) { return it.kind === 'mc' && !it.noOp && satellitesOf(it).length; }).length;
   var nst = ST.items.filter(function (it) { return it.kind === 'mc' && !it.noOp && isStanding(it); }).length;
-  $('sumBody').innerHTML = '<div>' + esc(t('sumMc', [n, nw])) + (multi ? ' (' + esc(t('sumMulti', [multi])) + ')' : '') + (nst ? ' · ' + esc(t('sumStand', [nst])) : '') + (fp.n > 1 ? ' · ' + esc(t('sumFlow', [(fp.dist / 100).toFixed(1)])) : '') + '</div><div class="chips">' +
+  $('sumBody').innerHTML = '<div>' + esc(t('sumMc', [n, nw])) + (multi ? ' (' + esc(t('sumMulti', [multi])) + ')' : '') + (nst ? ' · ' + esc(t('sumStand', [nst])) : '') + (fp.n > 1 && !seqParse(ST.seqText).lines.length ? ' · ' + esc(t('sumFlow', [(fp.dist / 100).toFixed(1)])) : '') + '</div><div class="chips">' +
     Object.keys(cnt).sort(function (a, b) { return cnt[b] - cnt[a] || (a < b ? -1 : 1); }).map(function (c) { return '<span class="chip" data-code="' + esc(c) + '" title="' + esc(codeName(c)) + '"><i style="background:' + FAM_COL[famOf(c)] + '"></i>' + esc(c) + ' <b>' + cnt[c] + '</b></span>'; }).join('') + '</div>';
 }
 function fld(id, lab, val, attrs) { return '<label class="f"><span>' + esc(lab) + '</span><input id="' + id + '" value="' + esc(val) + '" ' + (attrs || '') + '></label>'; }
@@ -127,29 +146,38 @@ function openPaste() {
   $('pasteGo').disabled = true; $('pasteReplace').checked = true; $('pasteFit').checked = !ST.line.fixed;
   if (!$('dlgPaste').open) $('dlgPaste').showModal();
 }
-function pastePreview() {
-  var txt = $('pasteTxt').value; PASTE = parsePaste(txt);
+function pastePreview() { PASTE = parsePaste($('pasteTxt').value); renderPastePreview(); }
+function renderPastePreview() {
+  var br = !!centerOf('branch');
+  if (br) {   // with a branch line: with 3+ rows the two rows on the branch side go to the branch line
+    var pos = (ST.line.branch || {}).pos || 'top', n = PASTE.rows.length;
+    PASTE.rows.forEach(function (r, i) { if (r.zone) return; r.zone = n >= 3 && (pos === 'top' ? i < 2 : i >= n - 2) ? 'branch' : 'main'; });
+  }
   var unk = {}; PASTE.rows.forEach(function (r) { r.cells.forEach(function (c) { if (!LIB.codes[c.code]) unk[c.code] = 1; }); });
   var h = '';
   if (!PASTE.nMc) h = '<div class="muted">' + esc(t('pasteNone')) + '</div>';
   else {
-    h += '<div>' + esc(t('pasteFound', [PASTE.rows.length, PASTE.nMc])) + '</div><table class="mini"><tr><th>#</th><th>' + esc(t('pasteRowMc')) + '</th><th>' + esc(t('pasteSide')) + '</th></tr>';
+    h += '<div>' + esc(t('pasteFound', [PASTE.rows.length, PASTE.nMc])) + '</div><table class="mini"><tr><th>#</th><th>' + esc(t('pasteRowMc')) + '</th><th>' + esc(t('pasteSide')) + '</th>' + (br ? '<th>' + esc(t('pasteZone')) + '</th>' : '') + '</tr>';
     PASTE.rows.forEach(function (r, i) {
-      h += '<tr><td>' + (i + 1) + '</td><td class="small">' + r.cells.map(function (c) { return esc(c.code) + (c.op ? '<sub>' + esc(c.op) + '</sub>' : ''); }).join(' ') + '</td><td><select data-row="' + i + '"><option value="top"' + (r.side === 'top' ? ' selected' : '') + '>' + esc(t('sideTop')) + '</option><option value="bottom"' + (r.side === 'bottom' ? ' selected' : '') + '>' + esc(t('sideBottom')) + '</option></select>' + (r.sideFound ? '' : ' <span class="muted small">' + esc(t('sideGuess')) + '</span>') + '</td></tr>';
+      h += '<tr><td>' + (i + 1) + '</td><td class="small">' + r.cells.map(function (c) { return esc(c.code) + (c.op ? '<sub>' + esc(c.op) + '</sub>' : ''); }).join(' ') + '</td><td><select data-row="' + i + '"><option value="top"' + (r.side === 'top' ? ' selected' : '') + '>' + esc(t('sideTop')) + '</option><option value="bottom"' + (r.side === 'bottom' ? ' selected' : '') + '>' + esc(t('sideBottom')) + '</option></select>' + (r.sideFound ? '' : ' <span class="muted small">' + esc(t('sideGuess')) + '</span>') + '</td>' +
+        (br ? '<td><select data-zone="' + i + '"><option value="main"' + (r.zone !== 'branch' ? ' selected' : '') + '>' + esc(t('zoneMain')) + '</option><option value="branch"' + (r.zone === 'branch' ? ' selected' : '') + '>' + esc(t('zoneBranch')) + '</option></select></td>' : '') + '</tr>';
     });
     h += '</table>';
     var u = Object.keys(unk); if (u.length) h += '<div class="t-warn tagline">⚠ ' + esc(t('pasteUnknown', [u.join(', '), DEF_DIM.L + '×' + DEF_DIM.W])) + '</div>';
+    if (PASTE.seq && PASTE.seq.length) h += '<div class="tagline t-info">' + esc(t('xlSeqFound')) + '<br>' + PASTE.seq.map(function (q) { return esc((q.name ? q.name + ': ' : '') + q.text); }).join('<br>') + '</div>';
   }
   $('pastePrev').innerHTML = h; $('pasteGo').disabled = !PASTE.nMc;
 }
 function pasteGo() {
   if (!PASTE || !PASTE.nMc) return;
-  document.querySelectorAll('#pastePrev select[data-row]').forEach(function (s) { PASTE.rows[+s.dataset.row].side = s.value; });
-  var replace = $('pasteReplace').checked, y0 = 60, ct = centerTable();
+  document.querySelectorAll('#pastePrev select[data-row]').forEach(function (s) { var r = PASTE.rows[+s.dataset.row]; r.side = s.value; if (!PASTE.fromXl) return; r.cells.forEach(function (c) { if (!c.sideFixed) c.side = s.value; }); });
+  document.querySelectorAll('#pastePrev select[data-zone]').forEach(function (s) { PASTE.rows[+s.dataset.zone].zone = s.value; });
+  var replace = $('pasteReplace').checked, y0 = 60, cts = ST.items.filter(function (i) { return i.role === 'center'; });
   if (!replace) { var b = bbox(ST.items); if (b) y0 = Math.round(b.y1 + 60); }
-  var useCt = ct && (replace || ST.items.length === 1);
-  var items = buildFromPaste(PASTE, { addInput: $('pasteInput').checked, x0: 60, y0: y0, center: useCt ? ct : null });
-  if (replace) ST.items = (ct ? [ct] : []).concat(items); else ST.items = ST.items.concat(items);
+  var useCt = cts.length && (replace || ST.items.length === cts.length);
+  var items = buildFromPaste(PASTE, { addInput: $('pasteInput').checked, x0: 60, y0: y0, centers: useCt ? { main: centerOf('main'), branch: centerOf('branch') } : null });
+  if (replace) ST.items = cts.concat(items); else ST.items = ST.items.concat(items);
+  if (PASTE.seq && PASTE.seq.length) ST.seqText = PASTE.seq.map(function (q) { return (q.name ? q.name + ': ' : '') + q.text; }).join('\n');
   if ($('pasteFit').checked) { var bb = bbox(ST.items); ST.line.length = Math.ceil((bb.x1 + 60) / 10) * 10; ST.line.width = Math.ceil((bb.y1 + 60) / 10) * 10; }
   SEL = items.map(function (i) { return i.id; });
   $('dlgPaste').close(); changed(); fitView(); if (TAB === '3d') view3dReset(false);
@@ -161,22 +189,33 @@ function lineVals() {
   var L = ST.line;
   return { name: $('lsName').value.trim(), units: Math.max(1, Math.round(num($('lsUnits').value, L.units || LINE_DEF.units))), unit: Math.max(10, num($('lsUnit').value, LINE_DEF.unit)),
     tableW: Math.max(0, num($('lsTable').value, LINE_DEF.tableW)), start: Math.max(0, num($('lsStart').value, LINE_DEF.start)), end: Math.max(0, num($('lsEnd').value, LINE_DEF.end)),
-    width: num($('lsWidth').value, 0) };
+    width: num($('lsWidth').value, 0),
+    branch: !$('lsBr').checked ? null : { units: Math.max(1, Math.round(num($('lsBUnits').value, 6))), unit: Math.max(10, num($('lsUnit').value, LINE_DEF.unit)), tableW: Math.max(0, num($('lsBTable').value, LINE_DEF.tableW)),
+      start: 30, end: 30, pos: $('lsBPos').value, walk: Math.max(0, num($('lsBWalk').value, 100)), offset: Math.max(0, num($('lsBOff').value, 0)), width: num($('lsBWidth').value, 0) } };
 }
 function lineCalc() {
   var o = lineVals(), L = o.start + o.units * o.unit + o.end, W = o.width || lineAutoWidth(o.tableW);
   $('lsWidth').placeholder = lineAutoWidth(o.tableW);
-  $('lsCalc').innerHTML = esc(t('lsCalc', [o.start, o.units, o.unit, o.end, Math.round(L), Math.round(o.units * o.unit), o.tableW, Math.round(W)]));
+  $('lsCalc').innerHTML = esc(t('lsCalc', [o.start, o.units, o.unit, o.end, Math.round(L), Math.round(o.units * o.unit), o.tableW, Math.round(W)])) +
+    (o.branch ? '<br>' + esc(t('lsBCalc', [o.branch.units, Math.round(o.branch.units * o.branch.unit), o.branch.width || lineAutoWidth(o.branch.tableW), o.branch.walk, Math.round(W + o.branch.walk + (o.branch.width || lineAutoWidth(o.branch.tableW)))])) : '');
+  $('lsBrBox').style.display = $('lsBr').checked ? '' : 'none'; $('lsBWidth').placeholder = lineAutoWidth(num($('lsBTable').value, 30));
 }
 function openLineSetup() {
   var L = ST.line, ct = centerTable();
   $('lsName').value = L.name || ''; $('lsUnits').value = L.units || LINE_DEF.units; $('lsUnit').value = L.unit || LINE_DEF.unit;
   $('lsTable').value = ct ? ct.W : (L.tableW != null ? L.tableW : LINE_DEF.tableW); $('lsStart').value = L.start != null ? L.start : LINE_DEF.start; $('lsEnd').value = L.end != null ? L.end : LINE_DEF.end;
-  $('lsWidth').value = L.units ? L.width : '';
+  $('lsWidth').value = L.units ? (L.mainWidth || (L.zones ? zoneById('main').W : L.width)) : '';
+  var B = L.branch, cb = centerOf('branch');
+  $('lsBr').checked = !!B; $('lsBUnits').value = B ? B.units : 6; $('lsBTable').value = cb ? cb.W : (B ? B.tableW : LINE_DEF.tableW); $('lsBPos').value = B ? B.pos : 'top';
+  $('lsBWalk').value = B ? B.walk : 100; $('lsBOff').value = B ? B.offset : (L.start != null ? L.start : LINE_DEF.start); $('lsBWidth').value = B && B.width ? B.width : '';
   lineCalc(); $('dlgLine').showModal();
 }
 function applyLineSetup() { setupLine(lineVals()); $('dlgLine').close(); changed(); fitView(); if (TAB === '3d') view3dReset(false); }
 
+function seqPrev() {
+  var sq = seqParse($('seqTxt').value);
+  $('seqPrev').innerHTML = sq.lines.length ? sq.lines.map(function (ln, i) { return '<div>' + (i === sq.asm ? '★ ' : '') + '<b>' + esc(ln.name || t('seqLine', [i + 1])) + '</b>: ' + esc(ln.ops.join(' → ')) + (i !== sq.asm ? ' → <i>' + esc(sq.lines[sq.asm].ops[0]) + '</i>' : '') + '</div>'; }).join('') : '<div class="muted">' + esc(t('seqNone')) + '</div>';
+}
 /* ---------- ergonomics dialog ---------- */
 var ERG_KEYS = ['opDepth', 'opW', 'chairGap', 'chairW', 'chairD', 'seatH', 'standDepth', 'standW', 'standGap', 'aisle', 'tableH', 'rowGap', 'colGap', 'emptyPitch', 'snap'];
 function openErg() {
@@ -396,6 +435,19 @@ function startApp() {
   $('selTools').addEventListener('pointerdown', function (e) { e.stopPropagation(); });
   $('selTools').addEventListener('click', function (e) { var b = e.target.closest('button[data-cmd]'); if (b) cmd(b.dataset.cmd); });
   $('bOpMode').onclick = function () { setOpMode(!OPMODE); };
+  $('bSeq').onclick = function () { $('seqTxt').value = ST.seqText || ''; seqPrev(); $('dlgSeq').showModal(); };
+  $('seqTxt').oninput = seqPrev;
+  $('seqOk').onclick = function () { ST.seqText = $('seqTxt').value.trim(); $('dlgSeq').close(); renderSug(null); changed(); };
+  $('bSug').onclick = function () { $('sugBody').innerHTML = '<div class="muted">' + esc(t('sugWait')) + '</div>'; setTimeout(function () { renderSug(flowSuggest()); }, 30); };
+  $('sugBody').addEventListener('click', function (e) {
+    var a = e.target.closest('[data-sug]'), b = e.target.closest('[data-apply]');
+    if (b && SUG) { var g = SUG.sug[+b.dataset.apply]; applySwap(g.a.id, g.b.id); changed(); toast(t('sugApplied', [label(g.a), label(g.b)])); renderSug(flowSuggest()); return; }
+    if (a && SUG) { e.preventDefault(); SEL = SUG.sug[+a.dataset.sug].ids.filter(function (v, i, arr) { return arr.indexOf(v) === i; }); onSelChange(); render2d(); }
+  });
+  $('bXlOpen').onclick = function () { $('fileXl').value = ''; $('fileXl').click(); };
+  $('fileXl').onchange = function () { if (this.files[0]) xlOpen(this.files[0]); };
+  $('xlPick').onchange = xlUse;
+  $('lsBr').onchange = lineCalc; ['lsBUnits', 'lsBTable', 'lsBWalk', 'lsBOff', 'lsBWidth', 'lsBPos'].forEach(function (id) { $(id).oninput = lineCalc; $(id).onchange = lineCalc; });
   $('bOpAll').onclick = function () { ST.items.forEach(function (i) { delete i.noOp; delete i.by; }); changed(); };
   ['bStandAll', 'bStandAll2', 'bStandAll3'].forEach(function (id) { $(id).onclick = function () { var st = standAll(); changed(); toast(t(st ? 'allStand' : 'allSit')); }; });
   $('bStandDef').onclick = function () { standDefault(); changed(); toast(t('standDefDone')); };

@@ -154,6 +154,11 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
     <div class="card"><h3 data-t="selTitle">Đang chọn</h3><div id="selBody"></div></div>
     <div class="card"><h3 id="issHead"></h3><ul id="issList"></ul></div>
     <div class="card"><h3 data-t="sumTitle">Tổng hợp</h3><div id="sumBody" class="small"></div></div>
+    <div class="card"><h3 data-t="seqTitle">Trình tự & đường đi bán thành phẩm</h3>
+      <div id="seqBody" class="small"></div>
+      <div class="btns"><button id="bSeq" data-t="bSeq">Nhập trình tự…</button><button id="bSug" data-t="bSug">💡 Tìm gợi ý cải tiến</button></div>
+      <div id="sugBody" class="small"></div>
+    </div>
   </aside>
 </div>
 
@@ -179,6 +184,8 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
 <dialog id="dlgPaste"><div class="dh"><span data-t="pasteTitle">Dán layout từ Excel</span><button data-close>✕</button></div>
   <div class="db">
     <div class="muted small" data-t="pasteHelp">Trong Excel, chọn vùng layout (các hình hoặc các ô có mã máy và số công đoạn), Ctrl+C, rồi Ctrl+V vào cửa sổ này. Hình (shape) hoặc ảnh chụp màn hình được đọc bằng nhận dạng chữ (OCR) ngay trên máy. Hàng số nằm phía nào của hàng mã máy thì người vận hành ngồi phía đó (có thể đổi từng hàng).</div>
+    <div class="btns" style="margin-top:6px"><button id="bXlOpen" class="primary" data-t="bXlOpen">📂 Mở file layout Excel (đọc chính xác các hình)…</button><span class="muted small" data-t="xlHelp">Đọc trực tiếp các hình mã máy / công đoạn và trình tự "=>" trong file .xlsx/.xlsm, không cần nhận dạng chữ.</span></div>
+    <div id="xlBox" style="display:none" class="btns"><select id="xlPick" style="flex:1"></select></div>
     <div id="ocrDrop" class="drop"><span data-t="ocrDropTxt">Ctrl+V để dán ảnh / hình, hoặc kéo thả file ảnh vào đây</span> <button id="bOcrFile" data-t="bOcrFile">Chọn file ảnh…</button></div>
     <div id="pasteLib" class="banner" style="display:none"><span data-t="pasteLibNeed">Chưa có thư viện máy trên trình duyệt này: chọn file Excel thư viện để đọc đúng mã và kích thước.</span><button id="bLib3" class="primary" data-t="bLib">Chọn file Excel thư viện…</button></div>
     <div id="ocrStatus" class="small"></div><div id="ocrView"></div>
@@ -206,8 +213,23 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
       <label class="f"><span data-t="lsWidth">Chuyền rộng (cm)</span><input id="lsWidth" type="number" min="50" step="10"></label>
     </div>
     <div class="calc" id="lsCalc"></div>
+    <label class="ck" style="margin-top:10px"><input type="checkbox" id="lsBr"><b data-t="lsBr">Có chuyền nhánh (chuyền phụ bên cạnh, tùy mã hàng)</b></label>
+    <div id="lsBrBox" class="grid3" style="margin-top:6px">
+      <label class="f"><span data-t="lsUnits">Số máy chuẩn</span><input id="lsBUnits" type="number" min="1" step="1"></label>
+      <label class="f"><span data-t="lsTable">Bàn giữa rộng (cm)</span><input id="lsBTable" type="number" min="0" step="1"></label>
+      <label class="f"><span data-t="lsBPos">Vị trí</span><select id="lsBPos"><option value="top" data-t="lsBTop">Phía trên chuyền chính</option><option value="bottom" data-t="lsBBottom">Phía dưới chuyền chính</option></select></label>
+      <label class="f"><span data-t="lsBWalk">Lối đi giữa 2 chuyền (cm)</span><input id="lsBWalk" type="number" min="0" step="10"></label>
+      <label class="f"><span data-t="lsBOff">Lệch so với đầu chuyền chính (cm)</span><input id="lsBOff" type="number" min="0" step="10"></label>
+      <label class="f"><span data-t="lsWidth">Chuyền rộng (cm)</span><input id="lsBWidth" type="number" min="50" step="10"></label>
+    </div>
   </div>
   <div class="df"><button data-close data-t="cancel">Hủy</button><button id="lsOk" class="primary" data-t="apply">Áp dụng</button></div>
+</dialog>
+<dialog id="dlgSeq"><div class="dh"><span data-t="seqDlgTitle">Trình tự công đoạn</span><button data-close>✕</button></div>
+  <div class="db"><div class="muted small" data-t="seqHelp">Mỗi dòng một cụm: tên cụm rồi các công đoạn nối bằng =>. Cuối mỗi cụm phụ được đưa vào công đoạn đầu của cụm lắp ráp (dòng có QC / PACKING hoặc tên "lắp ráp"). Một công đoạn có nhiều máy: bán thành phẩm đi tới máy gần nhất.</div>
+  <textarea id="seqTxt" spellcheck="false" style="width:100%;height:150px;font-family:Consolas,monospace;font-size:12px" placeholder="Cụm tim: 31=>33=>34=>35=>36=>38=>40&#10;Cụm bát áo: 41=>43=>45=>46=>47=>49=>51&#10;Cụm lắp ráp: 66=>67=>68=>70=>72=>74=>76=>77=>79=>80=>81=>97=>QC=>PACKING"></textarea>
+  <div id="seqPrev" class="small" style="margin-top:6px"></div></div>
+  <div class="df"><button data-close data-t="cancel">Hủy</button><button id="seqOk" class="primary" data-t="apply">Áp dụng</button></div>
 </dialog>
 <dialog id="dlgErg"><div class="dh"><span data-t="ergTitle">Công thái học và khoảng cách</span><button data-close>✕</button></div>
   <div class="db"><div class="muted small" data-t="ergHelp">Vùng người vận hành được vẽ phía trước mỗi máy và kiểm tra chồng lấn. Giá trị mặc định là đề xuất; IE chỉnh theo tiêu chuẩn nhà máy.</div><div id="ergBody"></div></div>
@@ -215,7 +237,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
 </dialog>
 
 <datalist id="codeList"></datalist><datalist id="mapList"></datalist>
-<input type="file" id="fileImg" accept="image/*" hidden><input type="file" id="fileOpen" accept=".json,application/json" hidden><input type="file" id="fileLib" accept=".xlsx,.xls,.xlsm" hidden><input type="file" id="fileMap" accept=".xlsx,.xls" hidden>
+<input type="file" id="fileXl" accept=".xlsx,.xlsm" hidden><input type="file" id="fileImg" accept="image/*" hidden><input type="file" id="fileOpen" accept=".json,application/json" hidden><input type="file" id="fileLib" accept=".xlsx,.xls,.xlsm" hidden><input type="file" id="fileMap" accept=".xlsx,.xls" hidden>
 <div id="toast" class="toast"></div>
 
 <script>/*__XLSX__*/</script>
@@ -226,6 +248,8 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
 <script>/*__PLAN2D__*/</script>
 <script>/*__VIEW3D__*/</script>
 <script>/*__IMGPASTE__*/</script>
+<script>/*__XLIMPORT__*/</script>
+<script>/*__FLOW__*/</script>
 <script>/*__APP__*/</script>
 <script>startApp();</script>
 </body>

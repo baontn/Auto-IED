@@ -4,12 +4,13 @@ var OPT = { flow: true, snap: true, aisles: false };
 var DRAG = null, BOXR = null;
 
 function pal(light) {
-  if (light) return { bg: '#ffffff', floor: '#f7f7f5', grid: '#e3e3df', grid2: '#cfcfca', text: '#1d2330', muted: '#6b7280', accent: '#1f6feb', bad: '#c4202b', warn: '#c98a00', edge: '#3b4250', zone: 'rgba(31,111,235,.08)', zoneEdge: '#7aa3e6', chair: '#5b6474', aisle: 'rgba(201,138,0,.10)', flow: '#e0457b', standZone: 'rgba(22,160,133,.10)', standEdge: '#2a9d8f', mat: 'rgba(60,70,80,.18)' };
+  if (light) return { bg: '#ffffff', floor: '#f7f7f5', grid: '#e3e3df', grid2: '#cfcfca', text: '#1d2330', muted: '#6b7280', accent: '#1f6feb', bad: '#c4202b', warn: '#c98a00', edge: '#3b4250', zone: 'rgba(31,111,235,.08)', zoneEdge: '#7aa3e6', chair: '#5b6474', aisle: 'rgba(201,138,0,.10)', flow: '#e0457b', outFloor: '#ececea', walk: 'rgba(224,161,0,.12)', walkEdge: '#b07d00', standZone: 'rgba(22,160,133,.10)', standEdge: '#2a9d8f', mat: 'rgba(60,70,80,.18)' };
   var cs = getComputedStyle(document.documentElement), g = function (n) { return cs.getPropertyValue(n).trim(); };
   var dark = matchMedia('(prefers-color-scheme: dark)').matches;
   return { bg: g('--bg'), floor: dark ? '#141922' : '#fbfbfa', grid: dark ? '#222a36' : '#e7e7e3', grid2: dark ? '#2e3846' : '#d2d2cc', text: g('--text'), muted: g('--muted'), accent: g('--accent'),
     bad: g('--bad'), warn: g('--warn'), edge: dark ? '#cfd6e2' : '#3b4250', zone: dark ? 'rgba(76,141,255,.12)' : 'rgba(31,111,235,.08)', zoneEdge: dark ? '#4c78c0' : '#7aa3e6',
     chair: dark ? '#8a94a6' : '#5b6474', aisle: dark ? 'rgba(227,179,65,.12)' : 'rgba(201,138,0,.10)', flow: '#e0457b',
+    outFloor: dark ? '#0d1016' : '#ececea', walk: dark ? 'rgba(227,179,65,.14)' : 'rgba(224,161,0,.12)', walkEdge: dark ? '#e3b341' : '#b07d00',
     standZone: dark ? 'rgba(42,157,143,.16)' : 'rgba(22,160,133,.10)', standEdge: '#2a9d8f', mat: dark ? 'rgba(200,210,220,.14)' : 'rgba(60,70,80,.18)' };
 }
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
@@ -19,14 +20,26 @@ function n1(v) { return Math.round(v * 10) / 10; }
 function planMarkup(o) {
   var P = o.P, s = o.s, L = ST.line.length, W = ST.line.width, e = ST.erg, h = [];
   var fs = o.fs || Math.max(5, Math.min(40, 12 / s)), sw = 1 / s;   // font size in cm, 1 px stroke in cm
-  h.push('<rect x="0" y="0" width="' + L + '" height="' + W + '" fill="' + P.floor + '"/>');
+  var zs = lineZones(), multi = zs.length > 1;
+  h.push('<rect x="0" y="0" width="' + L + '" height="' + W + '" fill="' + (multi ? P.outFloor : P.floor) + '"/>');
+  if (multi) zs.forEach(function (z) { if (z.id !== 'walk') h.push('<rect x="' + z.x + '" y="' + z.y + '" width="' + z.L + '" height="' + z.W + '" fill="' + P.floor + '"/>'); });
   var step = 50 * s < 10 ? 100 : 50;
   for (var x = 0; x <= L; x += step) h.push('<line x1="' + x + '" y1="0" x2="' + x + '" y2="' + W + '" stroke="' + (x % 100 ? P.grid : P.grid2) + '" stroke-width="' + sw + '"/>');
   for (var y = 0; y <= W; y += step) h.push('<line x1="0" y1="' + y + '" x2="' + L + '" y2="' + y + '" stroke="' + (y % 100 ? P.grid : P.grid2) + '" stroke-width="' + sw + '"/>');
   var rs = Math.max(100, Math.ceil(60 / s / 100) * 100);
   for (x = 0; x <= L; x += rs) h.push('<text x="' + x + '" y="' + (-fs * 0.5) + '" font-size="' + fs * 0.85 + '" fill="' + P.muted + '" text-anchor="middle">' + (x / 100) + ' m</text>');
   for (y = rs; y <= W; y += rs) h.push('<text x="' + (-fs * 0.4) + '" y="' + (y + fs * 0.3) + '" font-size="' + fs * 0.85 + '" fill="' + P.muted + '" text-anchor="end">' + (y / 100) + '</text>');
-  h.push('<rect x="0" y="0" width="' + L + '" height="' + W + '" fill="none" stroke="' + P.edge + '" stroke-width="' + 2 * sw + '"/>');
+  if (!multi) h.push('<rect x="0" y="0" width="' + L + '" height="' + W + '" fill="none" stroke="' + P.edge + '" stroke-width="' + 2 * sw + '"/>');
+  else zs.forEach(function (z) {
+    if (z.id === 'walk') {   // walkway between the two lines: hatched, with its width
+      h.push('<rect x="' + z.x + '" y="' + z.y + '" width="' + z.L + '" height="' + z.W + '" fill="' + P.walk + '" stroke="' + P.walkEdge + '" stroke-width="' + 1.5 * sw + '" stroke-dasharray="' + 8 * sw + ' ' + 5 * sw + '"/>');
+      for (var hx = z.x; hx < z.x + z.L; hx += 60) h.push('<line x1="' + hx + '" y1="' + (z.y + z.W) + '" x2="' + Math.min(hx + z.W, z.x + z.L) + '" y2="' + (z.y + Math.max(0, z.W - (z.x + z.L - hx))) + '" stroke="' + P.walkEdge + '" stroke-opacity=".35" stroke-width="' + sw + '"/>');
+      h.push('<text x="' + (z.x + z.L / 2) + '" y="' + (z.y + z.W / 2 + fs * 0.35) + '" font-size="' + fs * 0.9 + '" font-weight="700" fill="' + P.walkEdge + '" text-anchor="middle" stroke="' + P.floor + '" stroke-width="' + fs * 0.2 + '" paint-order="stroke">' + esc(t('walkLbl', [z.W])) + '</text>');
+    } else {
+      h.push('<rect x="' + z.x + '" y="' + z.y + '" width="' + z.L + '" height="' + z.W + '" fill="none" stroke="' + P.edge + '" stroke-width="' + 2 * sw + '"/>');
+      h.push('<text x="' + (z.x + fs * 0.4) + '" y="' + (z.y + fs * 1.1) + '" font-size="' + fs * 0.85 + '" font-weight="700" fill="' + P.muted + '">' + esc(t(z.id === 'branch' ? 'zoneBranch' : 'zoneMain')) + '</text>');
+    }
+  });
   var bad = issueIds('bad'), warn = issueIds('warn'), labels = [];
   ST.items.forEach(function (it) {
     var S = shapes(it), d = { L: S.L, W: S.W }, sel = !o.exp && SEL.indexOf(it.id) >= 0;
@@ -73,7 +86,9 @@ function planMarkup(o) {
       h.push('<text x="' + n1(ax) + '" y="' + n1(ay + f * 0.35) + '" font-size="' + f + '" font-weight="700" fill="' + col + '" stroke="rgba(255,255,255,.9)" stroke-width="' + f * 0.22 + '" paint-order="stroke" text-anchor="middle" pointer-events="none">' + (l.dist / 100).toFixed(1) + ' m</text>');
     }
   });
-  if (OPT.flow && !o.exp) {   // the flow line is for IE on screen, not for the mechanics' print
+  var fm = OPT.flow && !o.exp ? flowMarkup(o, fs, sw) : null;   // garment flow following the operation sequence
+  if (fm !== null) h.push(fm);
+  else if (OPT.flow && !o.exp) {   // the flow line is for IE on screen, not for the mechanics' print
     var fp = flowPath();
     if (fp.pts.length > 1) {
       h.push('<polyline points="' + fp.pts.map(function (p) { return n1(p.x) + ',' + n1(p.y); }).join(' ') + '" fill="none" stroke="' + P.flow + '" stroke-opacity=".75" stroke-width="' + 2 * sw + '" stroke-dasharray="' + 6 * sw + ' ' + 4 * sw + '" pointer-events="none"/>');

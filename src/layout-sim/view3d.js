@@ -16,7 +16,7 @@ function initMats() {
     panel: mat('#1d2a3a', { roughness: 0.3 }), screen: mat('#3d8be0', { emissive: '#1a4f8f', emissiveIntensity: 0.4 }), blue: mat('#2d6cc0'),
     red: mat('#c23b3b'), press: mat('#5b6068', { metalness: 0.3 }), board: mat('#e9e9e6', { roughness: 0.9 }), cone: [mat('#e0457b'), mat('#2f7de1'), mat('#f2c230'), mat('#3fae6a'), mat('#f5f5f5')],
     seat: mat('#36404d', { roughness: 0.8 }), shirt: mat('#3f7bd0', { roughness: 0.9 }), skin: mat('#d9a982', { roughness: 0.8 }), pants: mat('#2d3748', { roughness: 0.9 }),
-    mat: mat('#3b4048', { roughness: 1 }), arc: mat('#7c3aed', { roughness: 0.5 }), obj: {}, floor: mat('#cfd3d8', { roughness: 1 }), lineFloor: mat('#f1efe9', { roughness: 1 }) };
+    mat: mat('#3b4048', { roughness: 1 }), walk: mat('#f2d27a', { roughness: 1 }), arc: mat('#7c3aed', { roughness: 0.5 }), obj: {}, floor: mat('#cfd3d8', { roughness: 1 }), lineFloor: mat('#f1efe9', { roughness: 1 }) };
 }
 function geoBox(w, h, d) { var k = 'b' + w + ',' + h + ',' + d; return GEO[k] || (GEO[k] = new THREE.BoxGeometry(w, h, d)); }
 function geoCyl(rt, rb, h, seg) { var k = 'c' + rt + ',' + rb + ',' + h + ',' + (seg || 20); return GEO[k] || (GEO[k] = new THREE.CylinderGeometry(rt, rb, h, seg || 20)); }
@@ -285,12 +285,15 @@ function rebuild3d() {
   var L = ST.line.length, W = ST.line.width, dark = matchMedia('(prefers-color-scheme: dark)').matches;
   V3.scene.background = new THREE.Color(dark ? '#0f1218' : '#e9ecf0');
   var big = new THREE.Mesh(geoBox(L + 4000, 1, W + 4000), M.floor); big.position.set(L / 2, -0.6, W / 2); big.receiveShadow = true; root.add(big);
-  var fl = new THREE.Mesh(geoBox(L, 1, W), M.lineFloor); fl.position.set(L / 2, -0.4, W / 2); fl.receiveShadow = true; root.add(fl);
+  lineZones().forEach(function (z) {
+    var fl = new THREE.Mesh(geoBox(z.L, 1, z.W), z.id === 'walk' ? M.walk : M.lineFloor); fl.position.set(z.x + z.L / 2, z.id === 'walk' ? -0.3 : -0.4, z.y + z.W / 2); fl.receiveShadow = true; root.add(fl);
+    if (z.id === 'walk' && V3.labels) { var wl = smallSprite(t('walkLbl', [z.W]), 160); wl.position.set(z.x + z.L / 2, 6, z.y + z.W / 2); root.add(wl); }
+  });
   var pts = [];
   for (var x = 0; x <= L; x += 100) pts.push(new THREE.Vector3(x, 0.3, 0), new THREE.Vector3(x, 0.3, W));
   for (var y = 0; y <= W; y += 100) pts.push(new THREE.Vector3(0, 0.3, y), new THREE.Vector3(L, 0.3, y));
   root.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: '#b9bcc2' })));
-  var edge = rectLoop(L, W, '#e0a100', 0.5); edge.position.set(L / 2, 0, W / 2); root.add(edge);
+  lineZones().forEach(function (z) { if (z.id === 'walk') return; var edge = rectLoop(z.L, z.W, '#e0a100', 0.5); edge.position.set(z.x + z.L / 2, 0, z.y + z.W / 2); root.add(edge); });
   if (V3.ruler) {   // metre marks along the front and left edges, total length and width
     var stp = L > 3000 ? 200 : 100, tk = [];
     for (x = 0; x <= L + 0.1; x += stp) { tk.push(new THREE.Vector3(x, 0.5, W), new THREE.Vector3(x, 0.5, W + 18)); var lb = smallSprite((x / 100) + ' m', 70); lb.position.set(x, 4, W + 50); root.add(lb); }

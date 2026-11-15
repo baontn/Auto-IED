@@ -78,10 +78,11 @@ function overlap(a, b) {
   }
   return best;
 }
-function outside(o) {
-  var L = ST.line.length, W = ST.line.width;
-  return corners(o).some(function (p) { return p.x < -0.5 || p.y < -0.5 || p.x > L + 0.5 || p.y > W + 0.5; });
+function outside(o) {   // every corner must be inside the main line or the branch line (not in the walkway)
+  var zs = lineZones().filter(function (z) { return z.id !== 'walk'; });
+  return corners(o).some(function (p) { return !zs.some(function (z) { return p.x >= z.x - 0.5 && p.y >= z.y - 0.5 && p.x <= z.x + z.L + 0.5 && p.y <= z.y + z.W + 0.5; }); });
 }
+function walkObb() { var w = zoneById('walk'); return w ? { cx: w.x + w.L / 2, cy: w.y + w.W / 2, hx: w.L / 2, hy: w.W / 2, a: 0 } : null; }
 function extentX(it) { var d = itemDim(it), a = (it.rot || 0) * Math.PI / 180; return Math.abs(d.L * Math.cos(a)) + Math.abs(d.W * Math.sin(a)); }
 function bbox(items) {
   var x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
@@ -99,7 +100,9 @@ function runChecks() {
   for (var i = 0; i < S.length; i++) {
     var A = S[i];
     if (A.it.kind === 'mc' && !dimOf(A.it.code).known) out.push({ sev: 'warn', ids: [A.it.id], k: 'isUnknown', a: [A.it.code] });
-    if (outside(A.s.table) || (A.s.zone && outside(A.s.zone))) out.push({ sev: 'bad', ids: [A.it.id], k: 'isOut', a: [label(A.it)] });
+    var wo = walkObb();
+    if (wo && (overlap(wo, A.s.table) > TOL || (A.s.zone && overlap(wo, A.s.zone) > TOL))) out.push({ sev: 'bad', ids: [A.it.id], k: 'isWalk', a: [label(A.it), zoneById('walk').W] });
+    else if (outside(A.s.table) || (A.s.zone && outside(A.s.zone))) out.push({ sev: 'bad', ids: [A.it.id], k: 'isOut', a: [label(A.it)] });
     for (var j = i + 1; j < S.length; j++) {
       var B = S[j];
       if (overlap(A.s.table, B.s.table) > TOL) out.push({ sev: 'bad', ids: [A.it.id, B.it.id], k: 'isOverlap', a: [label(A.it), label(B.it)] });
@@ -163,70 +166,96 @@ function parsePaste(text) {
   });
   return { rows: out, nCols: nCols, nMc: out.reduce(function (s, r) { return s + r.cells.length; }, 0) };
 }
-/* turn a parsed grid into placed items. opt: {addInput, x0, y0} */
+/* turn parsed rows into placed items.
+   p.rows[i] = {cells:[{col, code, op, side?, x?}], side, zone?}: x (cm, centre, from a drawing) or col (text grid) gives the order/position along the row;
+   rows of a line that has a central table go first above it, then below it (backs against the table), further rows below.
+   opt: {addInput, x0, y0, centers: {main: item, branch: item}} */
 function buildFromPaste(p, opt) {
-  var e = ST.erg, items = [], pitch = [];
-  for (var c = 0; c < p.nCols; c++) {
-    var m = 0;
-    p.rows.forEach(function (r) { r.cells.forEach(function (x) { if (x.col === c) m = Math.max(m, dimOf(x.code).L); }); });
-    pitch.push(m || e.emptyPitch);
-  }
-  var firstCol = Math.min.apply(null, p.rows.map(function (r) { return r.cells.length ? r.cells[0].col : Infinity; }).concat([p.nCols]));
-  // columns left of the first machine column (empty in every row, e.g. a label column) take no space
-  var inputL = 60, x0 = opt.x0 + (opt.addInput ? inputL + 40 : 0), xs = [], acc = x0;
-  for (c = firstCol; c < p.nCols; c++) { xs[c] = acc + pitch[c] / 2; acc += pitch[c] + e.colGap; }
-  var y = opt.y0, ct = opt.center;
-  if (ct) {   // a central table: columns start at its left end, first row above it, second row below it (backs against the table)
-    var shift = (ct.x - ct.L / 2) - x0;
-    for (c = firstCol; c < p.nCols; c++) xs[c] += shift;
-    var tTop = ct.y - ct.W / 2, tBot = ct.y + ct.W / 2, ys = [];
-    p.rows.forEach(function (r, k) {
-      if (k > 1) return;
+  var e = ST.erg, items = [], hasX = p.rows.some(function (r) { return r.cells.some(function (c) { return c.x != null; }); });
+  if (!hasX) {     // text grid: columns, pitch = longest machine of the column (empty column = one standard cell)
+    var pitch = [];
+    for (var c = 0; c < p.nCols; c++) {
+      var m = 0; p.rows.forEach(function (r) { r.cells.forEach(function (x) { if (x.col === c) m = Math.max(m, dimOf(x.code).L); }); });
+      pitch.push(m || e.emptyPitch);
+    }
+    var firstCol = Math.min.apply(null, p.rows.map(function (r) { return r.cells.length ? r.cells[0].col : Infinity; }).concat([p.nCols]));
+    var xs = [], acc = 0;
+    for (c = firstCol; c < p.nCols; c++) { xs[c] = acc + pitch[c] / 2; acc += pitch[c] + e.colGap; }
+    p.rows.forEach(function (r) { r.cells.forEach(function (x) { x.rx = xs[x.col]; }); });
+  } else p.rows.forEach(function (r) { r.cells.forEach(function (x) { x.rx = x.x; }); });
+  // real machine lengths: never overlap inside a row
+  p.rows.forEach(function (r) {
+    r.cells.sort(function (a, b) { return a.rx - b.rx; });
+    for (var i = 1; i < r.cells.length; i++) { var pa = r.cells[i - 1], cu = r.cells[i], mn = pa.rx + dimOf(pa.code).L / 2 + e.colGap + dimOf(cu.code).L / 2; if (cu.rx < mn - 0.5) cu.rx = mn; }
+  });
+  var inputL = 60, zones = {}, order = [];
+  p.rows.forEach(function (r) { var z = r.zone || 'main'; if (!zones[z]) { zones[z] = []; order.push(z); } zones[z].push(r); });
+  var yCursor = opt.y0, mainSpan = null;
+  order.forEach(function (zid) {
+    var rows = zones[zid], ct = opt.centers && opt.centers[zid], x0, ys = [];
+    function place(r, yOf, zoneId) {
       r.cells.forEach(function (x) {
-        var W = dimOf(x.code).W, top = r.side === 'top', yy;
-        if (k === 0) yy = top ? tTop - W / 2 : tTop - e.opDepth - W / 2; else yy = top ? tBot + e.opDepth + W / 2 : tBot + W / 2;
-        items.push({ id: uid(), kind: 'mc', code: x.code, op: x.op, x: n1(xs[x.col]), y: n1(yy), rot: top ? 180 : 0 });
+        var W = dimOf(x.code).W, top = (x.side || r.side) === 'top', yy = yOf(W, top);
+        items.push({ id: uid(), kind: 'mc', code: x.code, op: x.op, x: n1(x0 + x.rx), y: n1(yy), rot: top ? 180 : 0, zone: zoneId === 'main' ? undefined : zoneId });
         ys.push(yy - W / 2 - (top ? e.opDepth : 0), yy + W / 2 + (top ? 0 : e.opDepth));
       });
-    });
-    y = (ys.length ? Math.max.apply(null, ys) : tBot) + e.rowGap;
-    if (opt.addInput && items.length) {
-      var y0i = Math.min.apply(null, ys), hh = Math.max.apply(null, ys) - y0i;
-      items.unshift({ id: uid(), kind: 'obj', name: 'Input', L: inputL, W: Math.round(hh), H: 75, x: ct.x - ct.L / 2 - 40 - inputL / 2, y: y0i + hh / 2, rot: 0, color: '#8fb3d9' });
     }
-    p = { rows: p.rows.slice(2), nCols: p.nCols };
-    opt = Object.assign({}, opt, { addInput: false });
-  }
-  p.rows.forEach(function (r) {
-    var Wmax = 0; r.cells.forEach(function (x) { Wmax = Math.max(Wmax, dimOf(x.code).W); });
-    if (!Wmax) return;
-    var top = r.side === 'top', front = top ? y + e.opDepth : y + Wmax;
-    r.cells.forEach(function (x) {
-      var W = dimOf(x.code).W;
-      items.push({ id: uid(), kind: 'mc', code: x.code, op: x.op, x: n1(xs[x.col]), y: top ? front + W / 2 : front - W / 2, rot: top ? 180 : 0 });
-    });
-    y = (top ? front + Wmax : front + e.opDepth) + e.rowGap;
+    function band(r, y) {   // a row without a table: operators on their side, machines lined up on the operator side
+      var Wmax = 0, anyTop = false, anyBot = false;
+      r.cells.forEach(function (x) { Wmax = Math.max(Wmax, dimOf(x.code).W); if ((x.side || r.side) === 'top') anyTop = true; else anyBot = true; });
+      var tt = y + (anyTop ? e.opDepth : 0);
+      place(r, function (W, top) { return top ? tt + W / 2 : tt + Wmax - W / 2; }, zid);
+      return tt + Wmax + (anyBot ? e.opDepth : 0) + e.rowGap;
+    }
+    if (ct) {
+      x0 = ct.x - ct.L / 2;
+      var tTop = ct.y - ct.W / 2, tBot = ct.y + ct.W / 2;
+      if (rows[0]) place(rows[0], function (W, top) { return top ? tTop - W / 2 : tTop - e.opDepth - W / 2; }, zid);
+      if (rows[1]) place(rows[1], function (W, top) { return top ? tBot + e.opDepth + W / 2 : tBot + W / 2; }, zid);
+      var yy = (ys.length ? Math.max.apply(null, ys) : tBot) + e.rowGap;
+      rows.slice(2).forEach(function (r) { yy = band(r, yy); });
+    } else {
+      x0 = opt.x0 + (opt.addInput && zid === 'main' ? inputL + 40 : 0);
+      rows.forEach(function (r) { yCursor = band(r, yCursor); });
+    }
+    if (zid === 'main' && ys.length) mainSpan = { y0: Math.min.apply(null, ys), y1: Math.max.apply(null, ys), x0: x0 };
   });
-  if (opt.addInput && items.length) {
-    var h = y - e.rowGap - opt.y0;
-    if (h <= 0) return items;
-    items.unshift({ id: uid(), kind: 'obj', name: 'Input', L: inputL, W: Math.round(h), H: 75, x: opt.x0 + inputL / 2, y: opt.y0 + h / 2, rot: 0, color: '#8fb3d9' });
+  if (opt.addInput && mainSpan) {
+    var hh = mainSpan.y1 - mainSpan.y0;
+    items.unshift({ id: uid(), kind: 'obj', name: 'Input', L: inputL, W: Math.round(hh), H: 75, x: mainSpan.x0 - 40 - inputL / 2, y: mainSpan.y0 + hh / 2, rot: 0, color: '#8fb3d9' });
   }
   return items;
 }
 
 /* ---------- line set-up in standard machine units ---------- */
-function centerTable() { for (var i = 0; i < ST.items.length; i++) if (ST.items[i].role === 'center') return ST.items[i]; return null; }
+function centerOf(zid) { for (var i = 0; i < ST.items.length; i++) { var it = ST.items[i]; if (it.role === 'center' && (it.zone || 'main') === zid) return it; } return null; }
+function centerTable() { return centerOf('main'); }
 function lineAutoWidth(tableW) { var e = ST.erg; return Math.ceil(tableW + 2 * (DEF_DIM.W + 1 + e.opDepth + Math.max(e.aisle, 40))); }
-/* o = {name, units, unit, tableW, start, end, width}: line length = start + units x unit + end, central table units x unit long */
+/* floor areas: main line, optional branch line and the walkway between them */
+function lineZones() { return ST.line.zones || [{ id: 'main', x: 0, y: 0, L: ST.line.length, W: ST.line.width }]; }
+function zoneById(id) { return lineZones().filter(function (z) { return z.id === id; })[0] || null; }
+/* o = {name, units, unit, tableW, start, end, width, branch: null | {units, unit, tableW, start, end, width, pos: 'top'|'bottom', walk, offset}}
+   main line length = start + units x unit + end, central table units x unit long; a branch line is another line next to it, a walkway between */
 function setupLine(o) {
-  var L = Math.round(o.start + o.units * o.unit + o.end), W = Math.round(o.width || lineAutoWidth(o.tableW));
-  var dx = 0, dy = 0, c = centerTable(), nx = o.start + o.units * o.unit / 2, ny = W / 2;
-  if (c) { dx = nx - c.x; dy = ny - c.y; }
-  ST.line = { name: o.name || '', length: L, width: W, fixed: true, units: o.units, unit: o.unit, tableW: o.tableW, start: o.start, end: o.end };
-  if (c) ST.items.forEach(function (it) { it.x = n1(it.x + dx); it.y = n1(it.y + dy); });   // keep machines placed around the table
-  else { c = { id: uid(), kind: 'obj', role: 'center', name: t('centerTable'), H: 75, rot: 0, color: '#d9cdb0' }; ST.items.unshift(c); }
-  c.L = o.units * o.unit; c.W = o.tableW; c.x = nx; c.y = ny;
+  var mL = Math.round(o.start + o.units * o.unit + o.end), mW = Math.round(o.width || lineAutoWidth(o.tableW)), br = o.branch, bL = 0, bW = 0, walk = 0;
+  if (br) { bL = Math.round(br.start + br.units * br.unit + br.end); bW = Math.round(br.width || lineAutoWidth(br.tableW)); walk = Math.round(br.walk); }
+  var mainY = br && br.pos === 'top' ? bW + walk : 0, brY = br ? (br.pos === 'top' ? 0 : mW + walk) : 0, brX = br ? Math.round(br.offset || 0) : 0;
+  var zones = [{ id: 'main', x: 0, y: mainY, L: mL, W: mW }];
+  if (br) {
+    var wx0 = Math.min(0, brX), wx1 = Math.max(mL, brX + bL);
+    zones.push({ id: 'walk', x: wx0, y: br.pos === 'top' ? bW : mW, L: wx1 - wx0, W: walk }, { id: 'branch', x: brX, y: brY, L: bL, W: bW });
+  }
+  ST.line = { name: o.name || '', length: Math.max(mL, brX + bL), width: mW + (br ? walk + bW : 0), fixed: true, units: o.units, unit: o.unit, tableW: o.tableW, start: o.start, end: o.end,
+    mainWidth: o.width || 0, zones: zones, branch: br || null };
+  function center(zid, x, y, L, W) {
+    var c = centerOf(zid), dx = 0, dy = 0;
+    if (c) { dx = x - c.x; dy = y - c.y; ST.items.forEach(function (it) { if (it !== c && (it.zone || 'main') === zid) { it.x = n1(it.x + dx); it.y = n1(it.y + dy); } }); }
+    else { c = { id: uid(), kind: 'obj', role: 'center', zone: zid === 'main' ? undefined : zid, name: zid === 'main' ? t('centerTable') : t('centerTableB'), H: 75, rot: 0, color: '#d9cdb0' }; ST.items.unshift(c); }
+    c.L = L; c.W = W; c.x = n1(x); c.y = n1(y);
+  }
+  center('main', o.start + o.units * o.unit / 2, mainY + mW / 2, o.units * o.unit, o.tableW);
+  if (br) center('branch', brX + br.start + br.units * br.unit / 2, brY + bW / 2, br.units * br.unit, br.tableW);
+  else { var cb = centerOf('branch'); if (cb) ST.items = ST.items.filter(function (it) { return it !== cb; }); }
 }
 /* ---------- shared operators: it.by = id of the machine whose operator also runs this one ---------- */
 function homeOf(it) { var h = it && it.by ? itemById(it.by) : null; return h && !h.noOp ? h : null; }
@@ -257,8 +286,8 @@ function opLinks() {
   return out;
 }
 /* ---------- undo / persistence ---------- */
-function snap() { return JSON.stringify({ line: ST.line, erg: ST.erg, items: ST.items, seq: ST.seq }); }
-function restore(s) { var o = JSON.parse(s); ST.line = o.line; ST.erg = Object.assign({}, ERG_DEF, o.erg || {}); ST.items = o.items || []; ST.seq = o.seq || 1; }
+function snap() { return JSON.stringify({ line: ST.line, erg: ST.erg, items: ST.items, seq: ST.seq, seqText: ST.seqText || '' }); }
+function restore(s) { var o = JSON.parse(s); ST.line = o.line; ST.erg = Object.assign({}, ERG_DEF, o.erg || {}); ST.items = o.items || []; ST.seq = o.seq || 1; ST.seqText = o.seqText || ''; }
 var LAST = null;
 function commit() {         // call after every finished change
   var s = snap();
@@ -271,12 +300,12 @@ function redo() { if (!REDO.length) return false; UNDO.push(LAST); LAST = REDO.p
 function fileJson() {
   // the codes' sizes are written into the file so that it opens the same on a PC without the library
   var used = {}; ST.items.forEach(function (it) { if (it.kind === 'mc') { var d = dimOf(it.code); used[it.code] = { L: d.L, W: d.W, fam: famOf(it.code) }; } });
-  return JSON.stringify({ app: 'layoutsim', version: 1, savedAt: new Date().toISOString(), line: ST.line, erg: ST.erg, items: ST.items, codes: used }, null, 1);
+  return JSON.stringify({ app: 'layoutsim', version: 1, savedAt: new Date().toISOString(), line: ST.line, erg: ST.erg, items: ST.items, seqText: ST.seqText || '', codes: used }, null, 1);
 }
 function openJson(txt) {
   var o = JSON.parse(txt);
   if (o.app !== 'layoutsim') throw new Error('not a layout file');
-  ST.line = Object.assign({ name: '', length: 2400, width: 600, fixed: true }, o.line); ST.erg = Object.assign({}, ERG_DEF, o.erg || {}); ST.items = o.items || [];
+  ST.line = Object.assign({ name: '', length: 2400, width: 600, fixed: true }, o.line); ST.erg = Object.assign({}, ERG_DEF, o.erg || {}); ST.items = o.items || []; ST.seqText = o.seqText || '';
   ST.seq = 1; ST.items.forEach(function (it) { var n = parseInt(String(it.id).slice(1), 10); if (n >= ST.seq) ST.seq = n + 1; });
   var added = 0;   // codes unknown on this PC: take the size stored in the file
   Object.keys(o.codes || {}).forEach(function (c) { if (!LIB.codes[c]) { LIB.codes[c] = { code: c, en: '', vn: '', L: o.codes[c].L, W: o.codes[c].W, custom: true, fromFile: true }; added++; } });
