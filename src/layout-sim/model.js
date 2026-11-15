@@ -171,18 +171,24 @@ function parsePaste(text) {
    rows of a line that has a central table go first above it, then below it (backs against the table), further rows below.
    opt: {addInput, x0, y0, centers: {main: item, branch: item}} */
 function buildFromPaste(p, opt) {
-  var e = ST.erg, items = [], hasX = p.rows.some(function (r) { return r.cells.some(function (c) { return c.x != null; }); });
-  if (!hasX) {     // text grid: columns, pitch = longest machine of the column (empty column = one standard cell)
+  var e = ST.erg, items = [];
+  // positions along the rows, per line: from the drawing (cells carry x) or from the text grid columns
+  var groups = {};
+  p.rows.forEach(function (r) { var z = r.zone || 'main'; (groups[z] = groups[z] || []).push(r); });
+  Object.keys(groups).forEach(function (z) {
+    var rows = groups[z];
+    if (rows.some(function (r) { return r.cells.some(function (c) { return c.x != null; }); })) { rows.forEach(function (r) { r.cells.forEach(function (x) { x.rx = x.x != null ? x.x : x.col * DEF_DIM.L; }); }); return; }
+    var nCols = 0; rows.forEach(function (r) { r.cells.forEach(function (x) { nCols = Math.max(nCols, x.col + 1); }); });
     var pitch = [];
-    for (var c = 0; c < p.nCols; c++) {
-      var m = 0; p.rows.forEach(function (r) { r.cells.forEach(function (x) { if (x.col === c) m = Math.max(m, dimOf(x.code).L); }); });
+    for (var c = 0; c < nCols; c++) {   // text grid: pitch = longest machine of the column (empty column = one standard cell)
+      var m = 0; rows.forEach(function (r) { r.cells.forEach(function (x) { if (x.col === c) m = Math.max(m, dimOf(x.code).L); }); });
       pitch.push(m || e.emptyPitch);
     }
-    var firstCol = Math.min.apply(null, p.rows.map(function (r) { return r.cells.length ? r.cells[0].col : Infinity; }).concat([p.nCols]));
+    var firstCol = Math.min.apply(null, rows.map(function (r) { return r.cells.length ? r.cells[0].col : Infinity; }).concat([nCols]));
     var xs = [], acc = 0;
-    for (c = firstCol; c < p.nCols; c++) { xs[c] = acc + pitch[c] / 2; acc += pitch[c] + e.colGap; }
-    p.rows.forEach(function (r) { r.cells.forEach(function (x) { x.rx = xs[x.col]; }); });
-  } else p.rows.forEach(function (r) { r.cells.forEach(function (x) { x.rx = x.x; }); });
+    for (c = firstCol; c < nCols; c++) { xs[c] = acc + pitch[c] / 2; acc += pitch[c] + e.colGap; }
+    rows.forEach(function (r) { r.cells.forEach(function (x) { x.rx = xs[x.col]; }); });
+  });
   // real machine lengths: never overlap inside a row
   p.rows.forEach(function (r) {
     r.cells.sort(function (a, b) { return a.rx - b.rx; });

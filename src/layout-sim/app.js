@@ -439,7 +439,7 @@ function startApp() {
   });
   $('bXlOpen').onclick = function () { $('fileXl').value = ''; $('fileXl').click(); };
   $('fileXl').onchange = function () { if (this.files[0]) xlOpen(this.files[0]); };
-  $('xlPick').onchange = xlUse;
+  $('xlPick').onchange = xlUse; $('xlPickB').onchange = xlUse;
   $('lsBr').onchange = lineCalc; ['lsBUnits', 'lsBTable', 'lsBWalk', 'lsBOff', 'lsBWidth', 'lsBPos'].forEach(function (id) { $(id).oninput = lineCalc; $(id).onchange = lineCalc; });
   $('bOpAll').onclick = function () { ST.items.forEach(function (i) { delete i.noOp; delete i.by; }); changed(); };
   ['bStandAll', 'bStandAll2', 'bStandAll3'].forEach(function (id) { $(id).onclick = function () { var st = standAll(); changed(); toast(t(st ? 'allStand' : 'allSit')); }; });

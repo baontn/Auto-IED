@@ -137,15 +137,43 @@ function xlSeqs(shapes) {
   return seqs;
 }
 
+/* ---------- layouts written in cells: a row of machine codes with the operation numbers in the row above or below ---------- */
+var XL_SKIP_SHEETS = /template|obd|\bsam\b|summary|type machine|needle|costing|calculation/i;
+function xlCellLayouts(ws) {
+  if (!ws || !ws['!ref']) return [];
+  var R = XLSX.utils.decode_range(ws['!ref']), r1 = Math.min(R.e.r, 3000), c1 = Math.min(R.e.c, 120), segs = [];
+  function txt(r, c) { var x = ws[XLSX.utils.encode_cell({ r: r, c: c })]; return x && x.v != null ? String(x.w != null ? x.w : x.v).trim() : ''; }
+  function isC(v) { var cl = v.toUpperCase().replace(/[^A-Z0-9]/g, ''); return cl.length === 4 && v.replace(/\s/g, '').length <= 5 && xlIsCode(cl); }
+  for (var r = R.s.r; r <= r1; r++) {           // runs of 3+ codes side by side (gaps of up to 4 empty columns)
+    var run = [], last = -9;
+    for (var c = R.s.c; c <= c1 + 5; c++) {
+      var v = c <= c1 ? txt(r, c) : '';
+      if (v && isC(v)) { if (c - last > 5 && run.length) { if (run.length >= 3) segs.push({ r: r, c0: run[0], c1: run[run.length - 1], n: run.length }); run = []; } run.push(c); last = c; }
+      else if (c - last > 5 && run.length) { if (run.length >= 3) segs.push({ r: r, c0: run[0], c1: run[run.length - 1], n: run.length }); run = []; }
+    }
+  }
+  var blocks = [];   // segments on nearby rows that overlap in columns form one layout
+  segs.forEach(function (sg) {
+    var b = blocks.filter(function (x) { return sg.r - x.r1 <= 4 && sg.c0 <= x.c1 + 2 && sg.c1 >= x.c0 - 2; })[0];
+    if (b) { b.r1 = sg.r; b.c0 = Math.min(b.c0, sg.c0); b.c1 = Math.max(b.c1, sg.c1); b.n += sg.n; } else blocks.push({ r0: sg.r, r1: sg.r, c0: sg.c0, c1: sg.c1, n: sg.n });
+  });
+  return blocks.map(function (b) {
+    var lines = [];
+    for (var rr = Math.max(R.s.r, b.r0 - 1); rr <= b.r1 + 1; rr++) { var cells = []; for (var cc = b.c0; cc <= b.c1; cc++) { var v = txt(rr, cc); cells.push(/^#/.test(v) ? '' : v); } lines.push(cells.join('\t')); }
+    var tsv = lines.join('\n') + '\n', p = parsePaste(tsv);
+    var withOp = 0; p.rows.forEach(function (r) { r.cells.forEach(function (c) { if (OPS_RE.test(String(c.op || '').trim())) withOp++; }); });
+    return { cells: true, tsv: tsv, rows: p.rows, n: p.nMc, withOp: withOp, ref: XLSX.utils.encode_range({ s: { r: b.r0, c: b.c0 }, e: { r: b.r1, c: b.c1 } }) };
+  }).filter(function (l) { return l.n >= 3 && l.withOp >= l.n * 0.6 && l.rows.length <= 8; });   // a real layout has operation numbers next to its machines (not a code / group table)
+}
 /* ---------- style name and header info of the layout sheet (same rules as IE Báo cáo máy / Layout Check) ---------- */
-var XL_STYLE_RE = /([A-Z]{3}\d{2})-(\d{5}(?:[._\/&+]\d{2,5})*)-(\d{4}(?:\s*[._\/&+-]\s*\d{2,4})*)\s*[(_]\s*([A-Z0-9]{2})\s*[)_]?/gi;
+var XL_STYLE_RE = /([A-Z]{3}\d{2})-(\d{5}(?:[._\/&+]\d{2,5})*)-(\d{4}(?:\s*[._\/&+-]\s*\d{2,4})*)\s*(?:[(_]\s*([A-Z0-9]{2})\s*[)_]?|([A-Z][A-Z0-9]|\d[A-Z])(?![A-Z0-9]))/gi;   // size in brackets, after _, or stuck to the number (3808XX)
 var XL_SPECIAL_RE = /\b(SP\d{5}V\d{2}|DS\d{3}[A-Z0-9]{5,}|[SF]2\d{3}[A-Z0-9]{3,})\b/g;
 /* "ABC25-00013-1103(MB)", combined forms expanded: 00115_116 -> 00115, 00116; 3901.04 -> 3901, 3904; special customer codes kept as written */
 function xlExpandStyles(text) {
   var out = [], tt = String(text == null ? '' : text).toUpperCase(), m;
   XL_STYLE_RE.lastIndex = 0;
   while ((m = XL_STYLE_RE.exec(tt))) {
-    var cust = m[1], mids = m[2].split(/[._\/&+]/), sp = m[3].split(/[._\/&+-]/).map(function (x) { return x.trim(); }).filter(Boolean), size = m[4];
+    var cust = m[1], mids = m[2].split(/[._\/&+]/), sp = m[3].split(/[._\/&+-]/).map(function (x) { return x.trim(); }).filter(Boolean), size = m[4] || m[5];
     var ml = [mids[0]]; for (var i = 1; i < mids.length; i++) ml.push(mids[0].slice(0, 5 - mids[i].length) + mids[i]);
     var sl = [sp[0]]; for (var j = 1; j < sp.length; j++) sl.push(sp[0].slice(0, 4 - sp[j].length) + sp[j]);
     ml.forEach(function (a) { sl.forEach(function (b) { var st = cust + '-' + a + '-' + b + '(' + size + ')'; if (out.indexOf(st) < 0) out.push(st); }); });
@@ -188,16 +216,24 @@ function xlOpen(f) {
         var shapes = xlShapes(xlFile(z, s.drawing)), lays = xlLayouts(shapes);
         if (lays.length) XLI.sheets.push({ name: s.name, hidden: s.hidden, layouts: lays, seqs: xlSeqs(shapes) });
       });
-      var wb = null;   // cells of the layout sheets only (style, workers, SAM, OBD version)
-      try { wb = XLSX.read(new Uint8Array(rd.result), { type: 'array', sheets: XLI.sheets.map(function (s) { return s.name; }) }); } catch (e2) { console.warn('cells', e2); }
+      var wb = null;   // cells: layouts written in cells, style, workers, SAM, OBD version
+      try { wb = XLSX.read(new Uint8Array(rd.result), { type: 'array' }); } catch (e2) { console.warn('cells', e2); }
+      if (wb) wb.SheetNames.forEach(function (sn, k) {
+        if (XL_SKIP_SHEETS.test(sn)) return;
+        var cl = xlCellLayouts(wb.Sheets[sn]); if (!cl.length) return;
+        var hid = !!(wb.Workbook && wb.Workbook.Sheets && wb.Workbook.Sheets[k] && wb.Workbook.Sheets[k].Hidden);
+        var ex = XLI.sheets.filter(function (s) { return s.name === sn; })[0];
+        if (ex) ex.layouts = ex.layouts.concat(cl); else XLI.sheets.push({ name: sn, hidden: hid, layouts: cl, seqs: [] });
+      });
       XLI.sheets.forEach(function (s) { s.info = xlSheetInfo(wb && wb.Sheets[s.name], s.name, f.name); });
       if (!XLI.sheets.length) { st.className = 'small t-warn tagline'; st.textContent = t('xlNone', [f.name]); return; }
       document.getElementById('ocrView').innerHTML = '';
       var sel = document.getElementById('xlPick');
       sel.innerHTML = XLI.sheets.map(function (s, i) {
-        return s.layouts.map(function (l, j) { return '<option value="' + i + ':' + j + '">' + esc((s.info.style && s.name.toUpperCase().indexOf(s.info.style.toUpperCase()) < 0 ? s.info.style + ' · ' : '') + s.name + (s.hidden ? ' (' + t('xlHidden') + ')' : '') + ' · ' + t('xlLay', [j + 1, l.rows.length, l.n])) + '</option>'; }).join('');
+        return s.layouts.map(function (l, j) { return '<option value="' + i + ':' + j + '">' + esc((s.info.style && s.name.toUpperCase().indexOf(s.info.style.toUpperCase()) < 0 ? s.info.style + ' · ' : '') + s.name + (s.hidden ? ' (' + t('xlHidden') + ')' : '') + ' · ' + t('xlLay', [j + 1, l.rows.length, l.n]) + (l.cells ? ' · ' + t('xlCells', [l.ref]) : '')) + '</option>'; }).join('');
       }).join('');
       document.getElementById('xlBox').style.display = '';
+      xlFillBranchPick();
       // the visible sheet with the most machines first
       var bi = 0, bn = -1; [].forEach.call(sel.options, function (o, k) { var p = o.value.split(':'), s = XLI.sheets[+p[0]]; if (!s.hidden && s.layouts[+p[1]].n > bn) { bn = s.layouts[+p[1]].n; bi = k; } });
       sel.selectedIndex = bi; xlUse();
@@ -205,8 +241,39 @@ function xlOpen(f) {
   };
   rd.readAsArrayBuffer(f);
 }
+/* the rows of a layout as paste rows (zone set by the caller) */
+function xlRows(lay) {
+  if (lay.cells) return parsePaste(lay.tsv).rows;
+  return lay.rows.map(function (r) { return { side: r.side || 'top', sideFound: r.sideFound, cells: r.cells.map(function (c) { return Object.assign({}, c); }) }; });
+}
+function xlFillBranchPick() {
+  var sel = document.getElementById('xlPickB'), on = !!centerOf('branch');
+  document.getElementById('xlBranch').style.display = on ? '' : 'none';
+  if (!on) { sel.value = ''; return; }
+  sel.innerHTML = '<option value="">' + esc(t('xlBranchNone')) + '</option>' + document.getElementById('xlPick').innerHTML;
+}
 function xlUse() {
+  var pb = document.getElementById('xlPickB').value;
+  if (pb) {   // two layouts: the one chosen for the main line + another one on the branch line
+    var p1 = document.getElementById('xlPick').value.split(':'), p2 = pb.split(':'), s1 = XLI.sheets[+p1[0]], s2 = XLI.sheets[+p2[0]];
+    var main = xlRows(s1.layouts[+p1[1]]).map(function (r) { r.zone = 'main'; return r; }), br = xlRows(s2.layouts[+p2[1]]).map(function (r) { r.zone = 'branch'; return r; });
+    var rows = ((ST.line.branch || {}).pos === 'bottom' ? main.concat(br) : br.concat(main));
+    PASTE = { rows: rows, nCols: 0, nMc: rows.reduce(function (a, r) { return a + r.cells.length; }, 0), fromXl: true, seq: s1.seqs.length ? s1.seqs : s2.seqs,
+      meta: { style: s1.info.style, file: XLI.name, sheet: s1.name, optr: s1.info.optr, sam: s1.info.sam, obd: s1.info.obd } };
+    var stb = document.getElementById('ocrStatus'); stb.className = 'small'; stb.textContent = t('xlTwo', [PASTE.nMc]);
+    document.getElementById('ocrView').innerHTML = '';
+    renderPastePreview(); return;
+  }
   var p = document.getElementById('xlPick').value.split(':'), sh = XLI.sheets[+p[0]], lay = sh.layouts[+p[1]];
+  var meta = { style: sh.info.style, file: XLI.name, sheet: sh.name, optr: sh.info.optr, sam: sh.info.sam, obd: sh.info.obd };
+  var st0 = document.getElementById('ocrStatus'); st0.className = 'small';
+  if (lay.cells) {   // a layout written in cells: the same reader as a paste from Excel
+    document.getElementById('pasteTxt').value = lay.tsv;
+    PASTE = parsePaste(lay.tsv); PASTE.seq = sh.seqs; PASTE.meta = meta;
+    st0.textContent = t('xlRead', [XLI.name, sh.name, PASTE.nMc, sh.seqs.length]) + ' ' + t('xlCells', [lay.ref]) + '.' + (sh.info.style ? ' ' + t('xlStyle', [sh.info.style, sh.info.optr || '?', sh.info.sam || '?', sh.info.obd || '?']) : '');
+    document.getElementById('ocrView').innerHTML = '';
+    renderPastePreview(); return;
+  }
   var rows = lay.rows.map(function (r) { return { side: r.side || 'top', sideFound: r.sideFound, cells: r.cells.map(function (c) { return Object.assign({}, c); }) }; });
   PASTE = { rows: rows, nCols: Math.max.apply(null, rows.map(function (r) { return r.cells.length; })), nMc: lay.n, fromXl: true, seq: sh.seqs,
     meta: { style: sh.info.style, file: XLI.name, sheet: sh.name, optr: sh.info.optr, sam: sh.info.sam, obd: sh.info.obd } };

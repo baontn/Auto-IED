@@ -78,6 +78,17 @@ def make_layout_xlsx(path):
     with zipfile.ZipFile(path, 'w', zipfile.ZIP_DEFLATED) as z:
         for k, v in files.items(): z.writestr(k, v)
 
+def make_cells_xlsx(path):
+    """a layout written in cells (rows of codes with operation numbers above / below), plus a code table that is not a layout"""
+    wb = Workbook(); ws = wb.active; ws.title = 'Initial layout'
+    ws['A3'] = 'STYLE No /Mã hàng'; ws['E3'] = 'XYZ26-00002-1102XX'; ws['F3'] = 'TL OPTR /Tổng số công nhân:'; ws['H3'] = 12
+    top = [('31', '1SLA'), ('32', '3OLM'), ('33/34', '2CSM'), ('35', 'BT1M')]; bot = [('1SLA', '36'), ('3OLM', '37'), ('BT1M', '97')]
+    for k, (o, c) in enumerate(top): ws.cell(row=19, column=18 + k, value=o); ws.cell(row=20, column=18 + k, value=c)
+    for k, (c, o) in enumerate(bot): ws.cell(row=22, column=19 + k, value=c); ws.cell(row=23, column=19 + k, value=o)
+    m = wb.create_sheet('Machine')
+    for k in range(10): m.append(['1SLA', '1SLM', '1SLM', 'note'])
+    wb.save(path)
+
 async def launch(p):
     args = ['--use-angle=swiftshader', '--enable-unsafe-swiftshader']
     try: return await p.chromium.launch(args=args)
@@ -240,6 +251,12 @@ async def main():
         check('isWalk' in await pg.evaluate('()=>ISSUES.map(x=>x.k)'), 'machine in the walkway flagged')
         if SHOTS: await pg.evaluate('()=>{SEL=[];onSelChange();fitView()}'); await pg.screenshot(path=SHOTS + '/ls-branch.png')
         await pg.keyboard.press('Control+z')
+        # layout written in cells (Excel without shapes)
+        cx = os.path.join(tmp, 'cells.xlsx'); make_cells_xlsx(cx)
+        await pg.evaluate("()=>{openPaste()}"); await pg.set_input_files('#fileXl', cx); await pg.wait_for_timeout(700)
+        r = await pg.evaluate("()=>[document.querySelectorAll('#xlPick option').length, PASTE.nMc, PASTE.rows.map(r=>r.side+':'+r.cells.map(c=>c.code+'/'+c.op).join(',')).join(' | '), PASTE.meta.style, PASTE.meta.optr]")
+        check(r == [1, 7, 'top:1SLA/31,3OLM/32,2CSM/33/34,BT1M/35 | bottom:1SLA/36,3OLM/37,BT1M/97', 'XYZ26-00002-1102(XX)', '12'], 'cell layout read (code table ignored), style and workers ' + str(r))
+        await pg.evaluate("()=>document.getElementById('dlgPaste').close()")
         # projects: style field, save (download fallback + recent list in the browser), new project, reopen from recent
         await pg.fill('#lnStyle', 'ABC26-00001-1101(XX)'); await pg.dispatch_event('#lnStyle', 'change')
         await pg.evaluate('()=>{window.showSaveFilePicker=undefined}')
