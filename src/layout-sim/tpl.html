@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Layout Sim</title>
+<style>
+:root{--bg:#f3f4f6;--panel:#fff;--text:#1d2330;--muted:#6b7280;--line:#e2e5ea;--accent:#1f6feb;--accent-tx:#fff;
+--ok:#15803d;--okbg:#e7f6ec;--warn:#9a6700;--warnbg:#fff5d6;--bad:#c4202b;--badbg:#fde8e8;--info:#0b5cad;--infobg:#e6f0ff;--sel:#eaf1ff}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1218;--panel:#181c24;--text:#e6e9ef;--muted:#9aa3b2;--line:#2b313d;--accent:#4c8dff;--accent-tx:#0b0f17;
+--ok:#56d364;--okbg:#12301b;--warn:#e3b341;--warnbg:#3a2d0b;--bad:#ff7b72;--badbg:#3d1416;--info:#79b8ff;--infobg:#132a46;--sel:#1c2a40;color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 "Segoe UI",Roboto,Arial,sans-serif;display:flex;flex-direction:column}
+button{font:inherit;padding:5px 11px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--text);cursor:pointer;white-space:nowrap}
+button:hover:not(:disabled){border-color:var(--accent)}
+button.primary{background:var(--accent);color:var(--accent-tx);border-color:var(--accent)}
+button.danger{color:var(--bad)}
+button:disabled{opacity:.4;cursor:not-allowed}
+input,select,textarea{font:inherit;padding:5px 7px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--text);min-width:0}
+input[type=checkbox]{padding:0}
+.muted{color:var(--muted)} .small{font-size:12px}
+.tag{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;white-space:nowrap;font-weight:600}
+.t-ok{background:var(--okbg);color:var(--ok)}.t-warn{background:var(--warnbg);color:var(--warn)}.t-bad{background:var(--badbg);color:var(--bad)}.t-info{background:var(--infobg);color:var(--info)}
+.tagline{padding:6px 8px;border-radius:8px;margin-top:6px}
+header{background:var(--panel);border-bottom:1px solid var(--line);padding:7px 14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;flex:none}
+header h1{font-size:16px;margin:0 6px 0 0}
+.tabs{display:flex;gap:4px}
+.tabs button{border:none;border-radius:8px}
+.tabs button.on{background:var(--sel);color:var(--accent);font-weight:600}
+.hr{margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+#paneWork{flex:1;display:grid;grid-template-columns:1fr 330px;min-height:0}
+body.noside #paneWork{grid-template-columns:1fr}body.noside aside{display:none}body.noside #bSide{background:var(--sel);color:var(--accent)}
+@media (max-width:900px){#paneWork{grid-template-columns:1fr;grid-template-rows:60vh auto}}
+.stage{position:relative;display:flex;flex-direction:column;min-width:0;min-height:0;border-right:1px solid var(--line)}
+.toolbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:7px 10px;background:var(--panel);border-bottom:1px solid var(--line)}
+.toolbar .sep{width:1px;height:22px;background:var(--line);margin:0 2px}
+.toolbar label{display:flex;gap:4px;align-items:center;font-size:13px}
+#plan{flex:1;width:100%;min-height:0;display:block;touch-action:none;user-select:none;background:var(--bg)}
+#v3{flex:1;min-height:0;position:relative}
+#v3 canvas{display:block;width:100%;height:100%;touch-action:none}
+.hint{font-size:12px;color:var(--muted);padding:4px 10px;border-top:1px solid var(--line);background:var(--panel)}
+aside{overflow:auto;padding:10px;display:flex;flex-direction:column;gap:10px;min-height:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.card h3{margin:0 0 8px;font-size:14px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+label.f{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--muted)}
+label.f input,label.f select{color:var(--text);font-size:13px;width:100%}
+label.f.row{flex-direction:row;align-items:center;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid var(--line)}
+label.f.row input{width:80px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin:6px 0}
+.btns{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.btns button{padding:4px 9px;font-size:13px}
+.models{margin-top:6px;line-height:1.6}
+#issList{list-style:none;margin:0;padding:0;max-height:260px;overflow:auto}
+#issList li{padding:5px 8px;border-radius:6px;margin-bottom:3px;font-size:12.5px;cursor:pointer}
+#issList li.bad{background:var(--badbg);color:var(--bad)}#issList li.warn{background:var(--warnbg);color:var(--warn)}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.chip{display:inline-flex;align-items:center;gap:4px;background:var(--sel);border-radius:14px;padding:2px 9px;font-size:12px;cursor:pointer}
+.chip i{width:9px;height:9px;border-radius:2px;display:inline-block}
+.banner{background:var(--warnbg);color:var(--warn);padding:8px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;flex:none}
+#paneLib,#paneProj,#paneSim{flex:1;overflow:auto;padding:14px}
+#paneSim .card{margin-bottom:12px}
+.grid6{display:grid;grid-template-columns:repeat(6,minmax(110px,1fr));gap:8px;margin-top:8px}
+@media (max-width:900px){.grid6{grid-template-columns:1fr 1fr}}
+.barT{position:absolute;left:6px;top:-1px;font-size:11px;font-weight:700;line-height:20px;color:var(--text);text-shadow:0 0 3px var(--panel),0 0 3px var(--panel);white-space:nowrap}
+.bar{position:relative;height:18px;background:var(--line);border-radius:5px;min-width:80px}.bar i{position:absolute;left:0;top:0;bottom:0;border-radius:5px}.bar b{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--warn)}
+tr.bn td{background:var(--badbg)}tr.wip td{background:var(--warnbg)}tr[data-op]{cursor:pointer}
+.kpis{display:flex;flex-wrap:wrap;gap:8px}.kpis div{background:var(--sel);border-radius:10px;padding:8px 12px;min-width:120px}.kpis span{display:block;font-size:12px;color:var(--muted)}.kpis b{font-size:22px}.kpis i{font-style:normal;font-size:12px;color:var(--muted);margin-left:4px}
+ul.sug{margin:8px 0 0 18px;padding:0}ul.sug li{margin-bottom:3px}
+#paneProj .card{margin-bottom:12px;max-width:1100px}
+#paneLib .card{margin-bottom:12px}
+table{border-collapse:collapse;width:100%}
+th,td{border-bottom:1px solid var(--line);padding:5px 7px;text-align:left;vertical-align:top}
+th{position:sticky;top:0;background:var(--panel);color:var(--muted);font-weight:600;font-size:12px;z-index:1}
+td.n,th.n{text-align:right}
+tr.ok td{background:var(--okbg)}
+.scroll{max-height:60vh;overflow:auto;border:1px solid var(--line);border-radius:8px}
+.w60{width:64px}.w80{width:84px}
+label.ck{display:flex;gap:4px;align-items:center;font-size:12px;white-space:nowrap}
+dialog{border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--text);padding:0;max-width:min(860px,94vw);width:100%}
+dialog::backdrop{background:rgba(0,0,0,.35)}
+dialog .dh{padding:12px 16px;border-bottom:1px solid var(--line);font-weight:700;display:flex;justify-content:space-between;align-items:center}
+dialog .db{padding:12px 16px;max-height:70vh;overflow:auto}
+dialog .df{padding:10px 16px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;align-items:center}
+#pasteTxt{width:100%;height:130px;font-family:Consolas,monospace;font-size:12px;white-space:pre;overflow:auto}
+table.mini td,table.mini th{padding:3px 6px}
+table.mini sub{color:var(--muted);margin-right:3px}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(20px);background:var(--text);color:var(--bg);padding:8px 16px;border-radius:10px;opacity:0;transition:.25s;pointer-events:none;z-index:50;max-width:90vw}
+.toast.show{opacity:1;transform:translateX(-50%)}.toast.bad{background:var(--bad);color:#fff}
+.drop{border:2px dashed var(--line);border-radius:10px;padding:12px;margin:8px 0;text-align:center;color:var(--muted);display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap}
+.drop.on{border-color:var(--accent);background:var(--sel)}
+.ocrwrap{position:relative;margin-top:6px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff}
+.ocrwrap img{display:block;width:100%;height:auto}.ocrwrap svg{position:absolute;inset:0;width:100%;height:100%}
+#ocrView>img{max-width:100%;opacity:.6}
+#selTools{position:absolute;z-index:4;display:none;gap:3px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:3px;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+#selTools button{padding:3px 8px;font-size:15px;line-height:1.2}
+#selTools button.off{background:var(--badbg);color:var(--bad)}
+.calc{background:var(--sel);border-radius:8px;padding:8px 10px;margin-top:8px;font-size:13px}
+button.chipbtn{border-radius:16px;font-size:13px;padding:4px 11px;background:var(--sel);color:var(--accent);border-color:transparent}
+button.chipbtn.warn{background:var(--warnbg);color:var(--warn)}
+body.opmode #plan [data-id]{cursor:pointer!important}
+kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 4px;font-size:11px;background:var(--bg)}
+</style>
+</head>
+<body>
+<header>
+  <h1 data-t="appTitle">Mô phỏng bố trí chuyền</h1><span class="tag t-info">v{{VERSION}}</span>
+  <nav class="tabs"><button data-tab="proj" data-t="tabProj">🏠 Dự án</button><button data-tab="plan" class="on" data-t="tabPlan">Mặt bằng 2D</button><button data-tab="3d" data-t="tab3d">3D</button><button data-tab="sim" data-t="tabSim">⏱ Mô phỏng WIP</button><button data-tab="lib" data-t="tabLib">Thư viện máy</button></nav>
+  <div class="hr">
+    <button id="bNew" data-t="bNew">Mới</button><button id="bOpen" data-t="bOpen">Mở…</button><button id="bSave" class="primary" data-t="bSave" data-tt="bSaveTip">Lưu</button>
+    <button id="libChip" class="chipbtn"></button>
+    <button id="bSide" data-tt="bSideTip">◨</button>
+    <select id="lang" aria-label="Language"><option value="vi">VI</option><option value="en">EN</option></select>
+  </div>
+</header>
+<div class="banner" id="libBanner" style="display:none"><span data-t="libNeed">Chưa có thư viện máy: chọn file Excel thư viện máy (sheet Machine_Needle có cột Machine_Code, Dimension).</span><button id="bLib2" class="primary" data-t="bLib">Chọn file Excel thư viện…</button></div>
+
+<div id="paneWork">
+  <div class="stage">
+    <div class="toolbar" id="tb2d">
+      <button id="bPaste" class="primary" data-t="bPaste" data-tt="bPasteTip">📋 Dán layout</button>
+      <input id="addCode" list="codeList" style="width:90px" data-tp="addCodePh" placeholder="Mã máy"><button id="bAddMc" data-t="bAddMc">+ Máy</button>
+      <select id="addObj"><option value="input" data-t="obInput">Bàn đầu vào</option><option value="qc" data-t="obQc">Bàn QC</option><option value="table" data-t="obTable">Bàn</option><option value="pillar" data-t="obPillar">Cột</option><option value="trolley" data-t="obTrolley">Xe đẩy</option><option value="box" data-t="obBox">Vật cản</option></select><button id="bAddObj" data-t="bAddObj">+ Thêm</button>
+      <span class="sep"></span>
+      <button id="bUndo" data-tt="bUndoTip" title="Ctrl+Z">↶</button><button id="bRedo" data-tt="bRedoTip" title="Ctrl+Y">↷</button>
+      <button id="bFit" data-t="bFit">Vừa màn hình</button>
+      <button id="bStandAll" data-t="bStandAll" data-tt="bStandAllTip">🧍↔🪑 Tất cả đứng / ngồi</button>
+      <label><input type="checkbox" id="optFlow"><span data-t="optFlow">Đường đi</span></label>
+      <label><input type="checkbox" id="optSnap"><span data-t="optSnap">Bám lưới</span></label>
+      <label><input type="checkbox" id="optWip"><span data-t="optWip">WIP</span></label>
+      <label><input type="checkbox" id="optAisle"><span data-t="optAisle">Lối đi sau lưng</span></label>
+      <span class="sep"></span>
+      <button id="bPng" data-t="bPng">Xuất ảnh</button><button id="bPrint" data-t="bPrint">In</button>
+    </div>
+    <div class="toolbar" id="tb3d" style="display:none">
+      <button id="b3Reset" data-t="b3Reset">Góc nhìn mặc định</button><button id="b3Top" data-t="b3Top">Nhìn từ trên</button>
+      <label><input type="checkbox" id="opt3People"><span data-t="opt3People">Người vận hành</span></label>
+      <label><input type="checkbox" id="opt3Labels"><span data-t="opt3Labels">Nhãn</span></label>
+      <label><input type="checkbox" id="opt3Ruler"><span data-t="opt3Ruler">Thước (m)</span></label>
+      <button id="bStandAll3" data-t="bStandAll">🧍↔🪑 Tất cả đứng / ngồi</button>
+      <span class="sep"></span><button id="bPng3" onclick="exportImage()" data-t="bPng">Xuất ảnh</button>
+      <span class="muted small" data-t="hint3d">Kéo chuột trái: xoay · chuột phải/Shift: di chuyển · lăn chuột: phóng to · bấm vào máy để chọn</span>
+    </div>
+    <div id="opModeBar" class="banner" style="display:none" data-t="opModeBar">Chế độ người vận hành: bấm vào máy để bỏ / trả người vận hành. Esc hoặc bấm lại nút để thoát.</div>
+    <svg id="plan" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI,Roboto,Arial,sans-serif"></svg>
+    <div id="v3" style="display:none"></div>
+    <div id="selTools"><button data-cmd="rotL" data-tt="ttRotL">⟲</button><button data-cmd="rotR" data-tt="ttRotR">⟳</button><button data-cmd="flip" data-tt="ttFlip">⇅ 180°</button><button data-cmd="op" data-tt="ttOp">👤</button><button data-cmd="stand" data-tt="ttStand">🧍</button><button data-cmd="del" data-tt="ttDel">🗑</button></div>
+    <div class="hint"><span data-t="hint2d">Kéo máy để di chuyển · R / Shift+R xoay 90° · F quay đầu · Delete xóa · Ctrl+D nhân bản · mũi tên dịch 1 cm (Shift 10 cm) · Shift+kéo chọn vùng · lăn chuột phóng to · kéo nền để di chuyển · Alt khi kéo: bỏ bám lưới</span> <span id="zoomTxt" class="muted"></span></div>
+  </div>
+  <aside>
+    <div class="card"><h3 data-t="lnTitle">Chuyền</h3>
+      <div class="grid3"><label class="f" style="grid-column:span 2"><span data-t="pjStyle">Mã hàng</span><input id="lnStyle"></label><label class="f"><span data-t="lnName">Tên chuyền</span><input id="lnName"></label>
+      <label class="f"><span data-t="lnLen">Dài (cm)</span><input id="lnL" type="number" step="10"></label><label class="f"><span data-t="lnWid">Rộng (cm)</span><input id="lnW" type="number" step="10"></label>
+      <label class="f"><span>&nbsp;</span><button id="bErg" data-t="bErg">Công thái học…</button></label></div>
+      <div class="muted small" id="lnUsed"></div>
+      <div class="btns"><button id="bLineSetup" data-t="bLineSetup">Thiết lập chuyền theo số máy…</button></div>
+    </div>
+    <div class="card"><h3 data-t="opCardTitle">Người vận hành</h3>
+      <div class="muted small" data-t="opCardHelp">Một người làm nhiều máy: chọn các máy rồi bấm 👤.</div>
+      <div class="btns"><button id="bOpMode" data-t="bOpMode">👤 Bấm máy để bật/tắt người</button><button id="bOpAll" data-t="bOpAll">Tất cả có người</button></div>
+      <div class="btns"><button id="bStandAll2" data-t="bStandAll">🧍↔🪑 Tất cả đứng / ngồi</button><button id="bStandDef" data-t="bStandDef">Mặc định (ép, ủi đứng)</button></div>
+    </div>
+    <div class="card"><h3 data-t="selTitle">Đang chọn</h3><div id="selBody"></div></div>
+    <div class="card"><h3 id="issHead"></h3><ul id="issList"></ul></div>
+    <div class="card"><h3 data-t="sumTitle">Tổng hợp</h3><div id="sumBody" class="small"></div></div>
+    <div class="card"><h3 data-t="seqTitle">Trình tự & đường đi bán thành phẩm</h3>
+      <div id="seqBody" class="small"></div>
+      <div class="btns"><button id="bSeq" data-t="bSeq">Nhập trình tự…</button><button id="bSug" data-t="bSug">💡 Tìm gợi ý cải tiến</button></div>
+      <div id="sugBody" class="small"></div>
+    </div>
+  </aside>
+</div>
+
+<div id="paneProj" style="display:none">
+  <div class="card"><h3 data-t="projCur">Dự án hiện tại</h3>
+    <div class="grid2"><label class="f"><span data-t="pjStyle">Mã hàng</span><input id="pjStyle" data-tp="pjStylePh" placeholder="VD: MNS25-00013-1103(MB)"></label><label class="f"><span data-t="lnName">Tên chuyền</span><input id="pjLine"></label></div>
+    <div id="pjInfo" class="small muted"></div>
+    <div class="btns"><button id="pjSave" class="primary" data-t="pjSave">💾 Lưu dự án</button><button id="pjSaveAs" data-t="pjSaveAs">Lưu thành dự án mới…</button><button id="pjNew" data-t="pjNew">➕ Dự án mới</button><button id="pjOpen" data-t="pjOpen">📂 Mở file dự án…</button><button id="pjPaste" data-t="pjPaste">📋 Dán / mở layout Excel…</button></div>
+  </div>
+  <div class="card"><h3 data-t="projDir">Thư mục dự án</h3>
+    <div class="muted small" data-t="projDirHelp">Chọn thư mục chung chứa các file dự án (.layout.json): danh sách hiện ở đây, "Lưu dự án" ghi vào thư mục này.</div>
+    <div class="btns"><button id="pjDir" data-t="pjDir">Chọn thư mục…</button><button id="pjRescan" data-t="pjRescan">⟳ Đọc lại</button><span class="small"><b id="pjDirName"></b></span></div>
+    <div id="pjDirList" class="scroll" style="margin-top:6px;max-height:40vh"></div>
+  </div>
+  <div class="card"><h3 data-t="projRecentT">Dự án gần đây (lưu trong trình duyệt này)</h3><div id="pjRecent" class="scroll" style="max-height:40vh"></div></div>
+</div>
+<div id="paneSim" style="display:none">
+  <div class="card"><h3 data-t="simTitle">Mô phỏng dòng chảy sản phẩm và WIP</h3>
+    <div class="muted small" data-t="simHelp">Dùng SAM từng công đoạn (đọc từ file layout, sửa được trong bảng), trình tự công đoạn (nếu không có: từ công đoạn đầu đến công đoạn cuối theo số), máy và người vận hành trên mặt bằng (người chạy nhiều máy chia thời gian). Hàng đi theo bó; cụm phụ hợp vào công đoạn đầu cụm lắp ráp.</div>
+    <div class="grid6">
+      <label class="f"><span data-t="smHours">Thời gian (giờ)</span><input id="smHours" type="number" min="0.5" step="0.5" value="8"></label>
+      <label class="f"><span data-t="smEff">Hiệu suất (%)</span><input id="smEff" type="number" min="5" max="150" step="1" value="80"></label>
+      <label class="f"><span data-t="smBundle">Bó hàng (sản phẩm)</span><input id="smBundle" type="number" min="1" step="1" value="10"></label>
+      <label class="f"><span data-t="smMode">Đầu vào</span><select id="smMode"><option value="push" data-t="smPush">Luôn có hàng</option><option value="rate" data-t="smRateOpt">Theo sản lượng (sp/giờ)</option></select></label>
+      <label class="f"><span data-t="smRate">Sản lượng đầu vào (sp/giờ)</span><input id="smRate" type="number" min="1" step="1" value="60" disabled></label>
+      <label class="f"><span data-t="smWarn">Cảnh báo WIP từ (sp)</span><input id="smWarn" type="number" min="1" step="1" value="30"></label>
+    </div>
+    <label class="ck" style="margin-top:8px"><input type="checkbox" id="smWarm" checked><span data-t="smWarm">Bỏ qua thời gian khởi động (chuyền chạy ổn định: mô phỏng trước một ca để hàng lấp đầy chuyền)</span></label>
+    <div class="btns"><button id="smRun" class="primary" data-t="smRun">▶ Chạy mô phỏng</button><button id="smToPlan" data-t="smToPlan">Xem WIP trên mặt bằng</button></div>
+    <div id="smSrc" class="small" style="margin-top:6px"></div>
+  </div>
+  <div class="card"><h3 data-t="simRes">Kết quả</h3><div id="smRes" class="small"></div></div>
+  <div class="card"><h3 data-t="simTab">Cân bằng chuyền theo công đoạn</h3><div class="muted small" data-t="simTabHelp">Năng lực = phần thời gian người làm công đoạn × 60 × hiệu suất / SAM. Vạch vàng: sản lượng mục tiêu. Bấm một dòng để xem các máy trên mặt bằng.</div><div id="smTable" class="scroll" style="margin-top:6px;max-height:60vh"></div></div>
+</div>
+<div id="paneLib" style="display:none">
+  <div class="card"><h3 data-t="libTitle">Thư viện máy</h3>
+    <div class="muted small" data-t="libHelp">Chọn file Excel của công ty: sheet Machine_Needle (Machine_Code, Machine_Name, Machine_Name_VN, Dimension = dài*rộng, cm) và sheet danh sách máy (Sewing Name, Sewing brand, Sewingmodel). File chỉ được đọc trên máy này, không gửi đi đâu.</div>
+    <div class="btns"><button id="bLib" class="primary" data-t="bLib">Chọn file Excel thư viện…</button></div>
+    <div id="libInfo" class="small" style="margin-top:6px"></div>
+  </div>
+  <div class="card"><h3 data-t="codesTitle">Mã máy và kích thước</h3>
+    <div class="muted small" data-t="codesHelp">Kích thước trong file là dài × rộng bàn máy (chưa gồm người và ghế). Nhập ô "Kích thước dùng" để sửa riêng trên máy này. Kiểu 3D chọn hình dáng máy.</div>
+    <div class="btns"><input id="codeQ" data-tp="search" placeholder="Tìm…"></div>
+    <div class="scroll" style="margin-top:6px"><table><thead><tr><th data-t="thCode">Mã</th><th data-t="thName">Tên</th><th class="n" data-t="thDimFile">Kích thước file</th><th data-t="thDimUse">Kích thước dùng (cm)</th><th data-t="thFam">Kiểu 3D</th><th data-t="thModels">Model thực tế</th><th class="n" data-t="thUsed">Trên layout</th></tr></thead><tbody id="codeTb"></tbody></table></div>
+  </div>
+  <div class="card"><h3 data-t="mapTitle">Model máy → mã máy (IE Tech xác nhận)</h3>
+    <div class="muted small" data-t="mapHelp">Gợi ý tự động theo tên và model. Một model có thể dùng cho nhiều mã (ví dụ máy trần đè mặt phẳng = 2CSM, 3CSM, 2ILM… tùy cách cài đặt): chọn mã thường dùng, các mã khác ghi ở cột gợi ý. Đánh dấu "Đã xác nhận" sau khi kiểm tra. Xuất Excel để gửi, nhập lại file đã sửa.</div>
+    <div class="btns"><input id="mapQ" data-tp="search" placeholder="Tìm…"><select id="mapF"><option value="all" data-t="mapAll">Tất cả</option><option value="todo" data-t="mapTodo">Chưa xác nhận</option><option value="ok" data-t="mapDone">Đã xác nhận</option><option value="none" data-t="mapNone">Chưa có mã</option><option value="line" data-t="mapLine">Máy trên chuyền</option></select>
+      <button id="bMapExp" data-t="bMapExp">Xuất Excel</button><button id="bMapImp" data-t="bMapImp">Nhập Excel…</button><span id="mapCount" class="muted small"></span></div>
+    <div class="scroll" style="margin-top:6px"><table><thead><tr><th data-t="thMName">Tên máy</th><th data-t="thBrand">Hãng</th><th data-t="thModel">Model</th><th class="n" data-t="thQty">SL</th><th data-t="thSug">Gợi ý</th><th data-t="thCode">Mã</th><th data-t="thOk">Xác nhận</th></tr></thead><tbody id="mapTb"></tbody></table></div>
+  </div>
+</div>
+
+<dialog id="dlgPaste"><div class="dh"><span data-t="pasteTitle">Dán layout từ Excel</span><button data-close>✕</button></div>
+  <div class="db">
+    <div class="muted small" data-t="pasteHelp">Trong Excel, chọn vùng layout (các hình hoặc các ô có mã máy và số công đoạn), Ctrl+C, rồi Ctrl+V vào cửa sổ này. Hình (shape) hoặc ảnh chụp màn hình được đọc bằng nhận dạng chữ (OCR) ngay trên máy. Hàng số nằm phía nào của hàng mã máy thì người vận hành ngồi phía đó (có thể đổi từng hàng).</div>
+    <div class="btns" style="margin-top:6px"><button id="bXlOpen" class="primary" data-t="bXlOpen">📂 Mở file layout Excel (đọc chính xác các hình)…</button><span class="muted small" data-t="xlHelp">Đọc trực tiếp các hình mã máy / công đoạn và trình tự "=>" trong file .xlsx/.xlsm, không cần nhận dạng chữ.</span></div>
+    <div id="xlBox" style="display:none" class="btns"><select id="xlPick" style="flex:1"></select><span id="xlBranch" style="display:none;flex:1"><span class="small" data-t="xlBranchLbl">Chuyền nhánh:</span> <select id="xlPickB" style="max-width:100%"></select></span></div>
+    <div id="ocrDrop" class="drop"><span data-t="ocrDropTxt">Ctrl+V để dán ảnh / hình, hoặc kéo thả file ảnh vào đây</span> <button id="bOcrFile" data-t="bOcrFile">Chọn file ảnh…</button></div>
+    <div id="pasteLib" class="banner" style="display:none"><span data-t="pasteLibNeed">Chưa có thư viện máy trên trình duyệt này: chọn file Excel thư viện để đọc đúng mã và kích thước.</span><button id="bLib3" class="primary" data-t="bLib">Chọn file Excel thư viện…</button></div>
+    <div id="ocrStatus" class="small"></div><div id="ocrView"></div>
+    <div class="small muted" style="margin-top:6px" data-t="pasteTxtLbl">Kết quả dạng bảng (sửa trực tiếp nếu đọc sai; mỗi ô cách nhau bằng phím Tab):</div>
+    <textarea id="pasteTxt" spellcheck="false"></textarea>
+    <div id="pastePrev" style="margin-top:8px"></div>
+  </div>
+  <div class="df">
+    <label class="ck"><input type="checkbox" id="pasteReplace" checked><span data-t="pasteReplace">Thay layout hiện tại</span></label>
+    <label class="ck"><input type="checkbox" id="pasteInput" checked><span data-t="pasteInput">Thêm bàn đầu vào</span></label>
+    <label class="ck"><input type="checkbox" id="pasteFit"><span data-t="pasteFit">Chỉnh kích thước chuyền theo layout</span></label>
+    <button data-close data-t="cancel">Hủy</button><button id="pasteGo" class="primary" data-t="pasteGo" disabled>Đưa vào mặt bằng</button>
+  </div>
+</dialog>
+<dialog id="dlgLine"><div class="dh"><span data-t="lsTitle">Thiết lập chuyền</span><button data-close>✕</button></div>
+  <div class="db">
+    <div class="muted small" data-t="lsHelp">Nhập chiều dài chuyền bằng số máy chuẩn đặt nối nhau (mỗi máy chuẩn 107 cm). Chương trình tạo bàn giữa dài bằng số máy × 107 cm; hai hàng máy đặt hai bên bàn giữa khi dán layout.</div>
+    <div class="grid3" style="margin-top:8px">
+      <label class="f" style="grid-column:span 3"><span data-t="lnName">Tên chuyền</span><input id="lsName"></label>
+      <label class="f"><span data-t="lsUnits">Số máy chuẩn</span><input id="lsUnits" type="number" min="1" step="1"></label>
+      <label class="f"><span data-t="lsUnit">Máy chuẩn (cm)</span><input id="lsUnit" type="number" min="10" step="1"></label>
+      <label class="f"><span data-t="lsTable">Bàn giữa rộng (cm)</span><input id="lsTable" type="number" min="0" step="1"></label>
+      <label class="f"><span data-t="lsStart">Đầu chuyền (cm)</span><input id="lsStart" type="number" min="0" step="10"></label>
+      <label class="f"><span data-t="lsEnd">Cuối chuyền (cm)</span><input id="lsEnd" type="number" min="0" step="10"></label>
+      <label class="f"><span data-t="lsWidth">Chuyền rộng (cm)</span><input id="lsWidth" type="number" min="50" step="10"></label>
+      <label class="f"><span data-t="lsHC">Số công nhân (HC)</span><input id="lsHC" type="number" min="0" step="1"></label>
+    </div>
+    <div class="calc" id="lsCalc"></div>
+    <label class="ck" style="margin-top:10px"><input type="checkbox" id="lsBr"><b data-t="lsBr">Có chuyền nhánh (chuyền phụ bên cạnh, tùy mã hàng)</b></label>
+    <div id="lsBrBox" class="grid3" style="margin-top:6px">
+      <label class="f"><span data-t="lsUnits">Số máy chuẩn</span><input id="lsBUnits" type="number" min="1" step="1"></label>
+      <label class="f"><span data-t="lsTable">Bàn giữa rộng (cm)</span><input id="lsBTable" type="number" min="0" step="1"></label>
+      <label class="f"><span data-t="lsBPos">Vị trí</span><select id="lsBPos"><option value="top" data-t="lsBTop">Phía trên chuyền chính</option><option value="bottom" data-t="lsBBottom">Phía dưới chuyền chính</option></select></label>
+      <label class="f"><span data-t="lsBWalk">Lối đi giữa 2 chuyền (cm)</span><input id="lsBWalk" type="number" min="0" step="10"></label>
+      <label class="f"><span data-t="lsBOff">Lệch so với đầu chuyền chính (cm)</span><input id="lsBOff" type="number" min="0" step="10"></label>
+      <label class="f"><span data-t="lsWidth">Chuyền rộng (cm)</span><input id="lsBWidth" type="number" min="50" step="10"></label>
+    </div>
+  </div>
+  <div class="df"><button data-close data-t="cancel">Hủy</button><button id="lsOk" class="primary" data-t="apply">Áp dụng</button></div>
+</dialog>
+<dialog id="dlgSeq"><div class="dh"><span data-t="seqDlgTitle">Trình tự công đoạn</span><button data-close>✕</button></div>
+  <div class="db"><div class="muted small" data-t="seqHelp">Mỗi dòng một cụm: tên cụm rồi các công đoạn nối bằng =>. Cuối mỗi cụm phụ được đưa vào công đoạn đầu của cụm lắp ráp (dòng có QC / PACKING hoặc tên "lắp ráp"). Một công đoạn có nhiều máy: bán thành phẩm đi tới máy gần nhất.</div>
+  <textarea id="seqTxt" spellcheck="false" style="width:100%;height:150px;font-family:Consolas,monospace;font-size:12px" placeholder="Cụm tim: 31=>33=>34=>35=>36=>38=>40&#10;Cụm bát áo: 41=>43=>45=>46=>47=>49=>51&#10;Cụm lắp ráp: 66=>67=>68=>70=>72=>74=>76=>77=>79=>80=>81=>97=>QC=>PACKING"></textarea>
+  <div id="seqPrev" class="small" style="margin-top:6px"></div></div>
+  <div class="df"><button data-close data-t="cancel">Hủy</button><button id="seqOk" class="primary" data-t="apply">Áp dụng</button></div>
+</dialog>
+<dialog id="dlgDir"><div class="dh"><span data-t="dirTitle">Nơi lưu dự án</span></div>
+  <div class="db"><p data-t="dirHelp">Chọn thư mục (trên máy hoặc thư mục chung) để lưu các dự án layout. Chương trình ghi nhớ thư mục này: mỗi lần bấm "Lưu" file được ghi thẳng vào đó, không phải tải xuống.</p><div id="dirName" class="small muted"></div></div>
+  <div class="df"><button id="dirLater" data-t="dirLater">Để sau</button><button id="dirPick" class="primary" data-t="dirPick">📁 Chọn thư mục…</button></div>
+</dialog>
+<dialog id="dlgErg"><div class="dh"><span data-t="ergTitle">Công thái học và khoảng cách</span><button data-close>✕</button></div>
+  <div class="db"><div class="muted small" data-t="ergHelp">Vùng người vận hành được vẽ phía trước mỗi máy và kiểm tra chồng lấn. Giá trị mặc định là đề xuất; IE chỉnh theo tiêu chuẩn nhà máy.</div><div id="ergBody"></div></div>
+  <div class="df"><button id="ergReset" data-t="ergReset">Về mặc định</button><button data-close data-t="cancel">Hủy</button><button id="ergOk" class="primary" data-t="apply">Áp dụng</button></div>
+</dialog>
+
+<datalist id="codeList"></datalist><datalist id="mapList"></datalist>
+<input type="file" id="fileXl" accept=".xlsx,.xlsm" hidden><input type="file" id="fileImg" accept="image/*" hidden><input type="file" id="fileOpen" accept=".json,application/json" hidden><input type="file" id="fileLib" accept=".xlsx,.xls,.xlsm" hidden><input type="file" id="fileMap" accept=".xlsx,.xls" hidden>
+<div id="toast" class="toast"></div>
+
+<script>/*__XLSX__*/</script>
+<script>/*__THREE__*/</script>
+<script>/*__I18N__*/</script>
+<script>/*__LIB__*/</script>
+<script>/*__MODEL__*/</script>
+<script>/*__PLAN2D__*/</script>
+<script>/*__VIEW3D__*/</script>
+<script>/*__IMGPASTE__*/</script>
+<script>/*__XLIMPORT__*/</script>
+<script>/*__FLOW__*/</script>
+<script>/*__PROJECT__*/</script>
+<script>/*__SIM__*/</script>
+<script>/*__APP__*/</script>
+<script>startApp();</script>
+</body>
+</html>
