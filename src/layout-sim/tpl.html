@@ -117,6 +117,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
   <div class="hr">
     <button id="bNew" data-t="bNew">Mới</button><button id="bOpen" data-t="bOpen">Mở…</button><button id="bSave" class="primary" data-t="bSave" data-tt="bSaveTip">Lưu</button>
     <button id="libChip" class="chipbtn"></button>
+    <a id="bMan" class="homebtn" href="../manual/layout-sim.html" target="_blank" data-tt="bManTip">📖</a>
     <button id="bSide" data-tt="bSideTip">◨</button>
     <select id="lang" aria-label="Language"><option value="vi">VI</option><option value="en">EN</option></select>
   </div>
@@ -171,6 +172,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
     <div class="card"><h3 data-t="opCardTitle">Người vận hành</h3>
       <div class="muted small" data-t="opCardHelp">Một người làm nhiều máy: chọn các máy rồi bấm 👤.</div>
       <div class="btns"><button id="bOpMode" data-t="bOpMode">👤 Bấm máy để bật/tắt người</button><button id="bOpAll" data-t="bOpAll">Tất cả có người</button></div>
+      <div class="btns"><button id="bArr" data-t="bArr" data-tt="bArrTip">👥 Theo CN sắp xếp trong file</button></div>
       <div class="btns"><button id="bStandAll2" data-t="bStandAll">🧍↔🪑 Tất cả đứng / ngồi</button><button id="bStandDef" data-t="bStandDef">Mặc định (ép, ủi đứng)</button></div>
     </div>
     <div class="card"><h3 data-t="selTitle">Đang chọn</h3><div id="selBody"></div></div>
@@ -209,7 +211,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
       <label class="f"><span data-t="smWarn">Cảnh báo WIP từ (sp)</span><input id="smWarn" type="number" min="1" step="1" value="30"></label>
     </div>
     <label class="ck" style="margin-top:8px"><input type="checkbox" id="smWarm" checked><span data-t="smWarm">Bỏ qua thời gian khởi động (chuyền chạy ổn định: mô phỏng trước một ca để hàng lấp đầy chuyền)</span></label>
-    <div class="btns"><button id="smRun" class="primary" data-t="smRun">▶ Chạy mô phỏng</button><button id="smToPlan" data-t="smToPlan">Xem WIP trên mặt bằng</button></div>
+    <div class="btns"><button id="smRun" class="primary" data-t="smRun">▶ Chạy mô phỏng</button><button id="smToPlan" data-t="smToPlan">Xem WIP trên mặt bằng</button><button id="smArr" data-t="bArr" data-tt="bArrTip">👥 Theo CN sắp xếp trong file</button></div>
     <div id="smSrc" class="small" style="margin-top:6px"></div>
   </div>
   <div class="card"><h3 data-t="simRes">Kết quả</h3><div id="smRes" class="small"></div></div>

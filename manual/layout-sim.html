@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Layout Sim: Hướng dẫn sử dụng</title><link rel="icon" href="../icon.png"><link rel="stylesheet" href="manual.css"></head><body>
+<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>Layout Sim v2.3: Hướng dẫn sử dụng</b><a href="layout-sim.en.html" title="English" onclick="try{localStorage.setItem('ie_site_lang','en')}catch(e){}">EN</a><a href="../index.html">‹ Trang chủ</a></header>
+<div class="wrap">
+<nav class="toc"><b>Nội dung</b>
+<a href="#gioi-thieu">1. Giới thiệu</a>
+<a href="#bat-dau">2. Lần đầu sử dụng</a>
+<a href="#thu-vien">3. Thư viện máy</a>
+<a href="#chuyen">4. Thiết lập chuyền</a>
+<a href="#dua-layout">5. Đưa layout vào mặt bằng</a>
+<a href="#sap-xep">6. Sắp xếp máy trên mặt bằng 2D</a>
+<a href="#nguoi">7. Người vận hành</a>
+<a class="sub" href="#cn-sap-xep">CN sắp xếp trong file</a>
+<a href="#cong-doan">8. Thêm máy theo công đoạn, bỏ công đoạn</a>
+<a href="#thay-doi">9. Thay đổi so với file layout</a>
+<a href="#trinh-tu">10. Trình tự và quãng đường</a>
+<a href="#mo-phong">11. Mô phỏng WIP</a>
+<a href="#3d">12. Xem 3D</a>
+<a href="#du-an">13. Lưu và mở dự án</a>
+<a href="#xuat">14. Xuất ảnh, in</a>
+<a href="#phim">15. Phím tắt</a>
+<a href="#loi">16. Lỗi thường gặp</a>
+</nav>
+<main>
+<section id="gioi-thieu"><h1>Layout Sim</h1>
+<p class="lead">Mô phỏng bố trí chuyền may theo đúng tỷ lệ: đưa layout từ file Excel vào mặt bằng, sắp xếp máy, kiểm tra vùng người vận hành, tính quãng đường đi của bán thành phẩm, mô phỏng WIP và xem 3D. Chạy trên Chrome hoặc Edge, không gửi dữ liệu đi đâu.</p>
+<h2>1. Giới thiệu</h2>
+<table><tr><th>Việc</th><th>Ở đâu</th></tr>
+<tr><td>Đưa layout của mã hàng vào chuyền (đọc file Excel layout, dán vùng Excel hoặc dán ảnh)</td><td>Tab <b>Mặt bằng 2D</b>, nút <span class="btn">📋 Dán layout</span></td></tr>
+<tr><td>Sắp xếp, xoay máy, người vận hành, đứng/ngồi, kiểm tra va chạm và lối đi</td><td>Tab <b>Mặt bằng 2D</b> và <b>3D</b></td></tr>
+<tr><td>Thêm/bớt máy theo công đoạn, theo dõi các thay đổi phải sửa vào file layout</td><td>Nút <span class="btn">+ Máy theo công đoạn</span>, thẻ <b>Thay đổi so với file layout</b></td></tr>
+<tr><td>Cân bằng chuyền, sản lượng, WIP từng công đoạn</td><td>Tab <b>⏱ Mô phỏng WIP</b> hoặc nút <span class="btn">⏱ Mô phỏng WIP</span> trên mặt bằng 2D</td></tr>
+<tr><td>Lưu, mở dự án</td><td>Tab <b>🏠 Dự án</b>, nút <span class="btn">Lưu</span> (Ctrl+S)</td></tr>
+<tr><td>Thư viện máy (kích thước, model)</td><td>Tab <b>Thư viện máy</b></td></tr></table>
+<div class="note">Các ảnh trong tài liệu dùng <b>dữ liệu mẫu giả</b> (thư viện 11 mã máy, layout mẫu), không phải dữ liệu công ty.</div>
+</section>
+
+<section id="bat-dau"><h2>2. Lần đầu sử dụng</h2>
+<ol>
+<li>Mở <code>layout-sim/LayoutSim.html</code> từ trang chủ IE Tools (nút <span class="btn">Mở Layout Sim</span>) bằng Edge hoặc Chrome. File <code>ocr-engine.js</code> phải nằm cạnh file HTML (dùng cho chức năng dán ảnh).</li>
+<li>Hộp <b>Nơi lưu dự án</b> hiện ra: bấm <span class="btn">📁 Chọn thư mục…</span>, chọn thư mục để lưu các dự án layout (trên máy hoặc thư mục chung), bấm <span class="btn">Cho phép / Allow</span>. Có thể bấm <span class="btn">Để sau</span>.</li>
+<li>Bấm chip thư viện ở góc phải trên (<span class="btn">📚 … mã · … model</span>) và chọn file Excel thư viện máy của công ty (xem mục 3).</li>
+<li>Bấm <span class="btn">Thiết lập chuyền theo số máy…</span> để nhập kích thước chuyền (mục 4).</li></ol>
+<div class="ok">Từ lần sau chương trình nhớ thư mục dự án, thư viện máy và mặt bằng đang làm (lưu trong trình duyệt). Nút <span class="btn">← IE Tools</span> ở góc trái trên quay về trang chủ; mặt bằng đang làm vẫn được giữ.</div>
+</section>
+
+<section id="thu-vien"><h2>3. Thư viện máy</h2>
+<p>File Excel của công ty (ví dụ <code>Machine_Upload_Template_Master.xlsx</code>) có:</p>
+<ul><li>sheet <code>Machine_Needle</code>: <code>Machine_Code</code> (mã nhóm máy, ví dụ 1SLM, 2CSM, BT1M), <code>Machine_Name</code>, <code>Machine_Name_VN</code>, <code>Dimension</code> = dài*rộng của mặt bàn máy, đơn vị cm (không gồm ghế và người);</li>
+<li>sheet danh sách máy: <code>Sewing Name</code>, <code>Sewing brand</code>, <code>Sewingmodel</code>.</li></ul>
+<p>File chỉ được đọc trên máy tính này, không gửi đi đâu. Mã máy không có kích thước được vẽ theo kích thước mặc định và có cảnh báo trong thẻ <b>Kiểm tra</b>.</p>
+<figure><a href="img/ls-lib.png"><img src="img/ls-lib.png" alt="Thư viện máy" loading="lazy"></a><figcaption>Tab <b>Thư viện máy</b>: danh sách mã (kích thước, nhóm hình 3D) và bảng <b>Model máy → mã máy</b> để IE Tech xác nhận; có thể <span class="btn">Xuất Excel</span> / <span class="btn">Nhập Excel…</span> bảng ánh xạ.</figcaption></figure>
+</section>
+
+<section id="chuyen"><h2>4. Thiết lập chuyền</h2>
+<p>Bấm <span class="btn">Thiết lập chuyền theo số máy…</span> trong thẻ <b>Chuyền</b>.</p>
+<table><tr><th>Ô</th><th>Ý nghĩa</th></tr>
+<tr><td>Số máy chuẩn, Máy chuẩn (cm)</td><td>Chiều dài chuyền tính theo số máy chuẩn; mặc định 1 máy chuẩn = 107 cm.</td></tr>
+<tr><td>Bàn giữa rộng (cm)</td><td>Bàn giữa dài bằng số máy × 107 cm, rộng mặc định 30 cm.</td></tr>
+<tr><td>Đầu chuyền, Cuối chuyền (cm)</td><td>Khoảng trống đầu và cuối chuyền (bàn đầu vào, đóng gói…).</td></tr>
+<tr><td>Chuyền rộng (cm)</td><td>Để trống = tự tính theo bàn giữa, máy, vùng người vận hành và lối đi.</td></tr>
+<tr><td>Số công nhân (HC)</td><td>Số người của chuyền dùng cho mô phỏng WIP. Để trống = lấy số công nhân trong file layout.</td></tr>
+<tr><td>Có chuyền nhánh</td><td>Chuyền phụ bên cạnh (tùy mã hàng): số máy, bàn giữa, vị trí trên/dưới, lối đi giữa 2 chuyền (mặc định 100 cm), độ lệch so với đầu chuyền chính.</td></tr></table>
+<figure><a href="img/ls-linesetup.png"><img src="img/ls-linesetup.png" alt="Thiết lập chuyền" loading="lazy"></a><figcaption>Thiết lập chuyền 8 máy chuẩn và một chuyền nhánh 6 máy, lối đi 1 m.</figcaption></figure>
+<p>Nút <span class="btn">Công thái học…</span>: kích thước vùng người ngồi/đứng, ghế, lối đi sau lưng, khoảng cách giữa các hàng máy.</p>
+</section>
+
+<section id="dua-layout"><h2>5. Đưa layout vào mặt bằng</h2>
+<p>Bấm <span class="btn">📋 Dán layout</span>. Có ba cách:</p>
+<ol>
+<li><b>Mở file layout Excel</b> (cách chính xác nhất): bấm <span class="btn">📂 Mở file layout Excel (đọc chính xác các hình)…</span>, chọn file <code>.xlsx</code>/<code>.xlsm</code>. Chương trình đọc các hình mã máy + số công đoạn, hoặc layout ghi trong ô (một hàng mã máy, số công đoạn ở hàng trên/dưới), trên mọi sheet. Chọn layout trong danh sách (sheet, số hàng, số máy). Nếu có chuyền nhánh, chọn layout thứ hai cho chuyền nhánh.</li>
+<li><b>Dán vùng Excel</b>: sao chép vùng layout trong Excel, dán (Ctrl+V) vào ô văn bản.</li>
+<li><b>Dán ảnh</b>: dán ảnh chụp layout; chương trình nhận dạng chữ ngay trên máy (không cần mạng). Kiểm tra lại các mã đọc được.</li></ol>
+<p>Cùng lúc chương trình đọc từ file: <b>mã hàng</b> (ô B3, D3, D4, B11, tên sheet/file, giống IE Báo cáo máy), số công nhân, SAM, phiên bản OBD, sản lượng mục tiêu, hiệu suất, <b>bảng công đoạn</b> (SAM, loại máy, cột <b>Arrange. Optr / CN sắp xếp</b>) và trình tự <code>31=&gt;32=&gt;…</code>.</p>
+<figure><a href="img/ls-paste.png"><img src="img/ls-paste.png" alt="Dán layout" loading="lazy"></a><figcaption>Xem trước: các hàng máy, phía người ngồi (trên/dưới) và chuyền (chính/nhánh) của từng hàng; mã chưa có trong thư viện được cảnh báo. Bấm <span class="btn">Đưa vào mặt bằng</span>.</figcaption></figure>
+<ul><li><b>Thay layout hiện tại</b>: bỏ các máy cũ (giữ bàn giữa). Bỏ tích để thêm vào mặt bằng đang có.</li>
+<li><b>Chỉnh kích thước chuyền theo layout</b>: chuyền rộng/dài theo layout khi chưa thiết lập chuyền.</li></ul>
+<figure><a href="img/ls-2d.png"><img src="img/ls-2d.png" alt="Mặt bằng 2D" loading="lazy"></a><figcaption>Layout đã đặt vào chuyền: mã máy trên mặt bàn, số công đoạn lớn, vùng người vận hành (khung xanh nét đứt), bàn giữa và bàn đầu vào. Bấm một máy để hiện các nút xoay / người / đứng-ngồi / xóa.</figcaption></figure>
+</section>
+
+<section id="sap-xep"><h2>6. Sắp xếp máy trên mặt bằng 2D</h2>
+<ul>
+<li>Kéo máy để di chuyển; kéo nền để di chuyển khung nhìn; lăn chuột để phóng to. Shift+kéo trên nền: chọn nhiều máy.</li>
+<li>Bấm vào máy: hiện thanh nút nổi <span class="btn">⟲</span> <span class="btn">⟳</span> <span class="btn">⇅ 180°</span> <span class="btn">👤</span> <span class="btn">🧍</span> <span class="btn">🗑</span>. Thẻ <b>Đang chọn</b> bên phải cho sửa mã máy, công đoạn, tọa độ, góc xoay.</li>
+<li>Ô <b>Mã máy / CĐ</b> + <span class="btn">+ Máy</span>: thêm máy theo mã, hoặc gõ số công đoạn để thêm đúng máy của công đoạn đó (mục 8). <span class="btn">+ Thêm</span>: bàn đầu vào, bàn QC, bàn, cột, xe đẩy, vật cản.</li>
+<li><b>Bám lưới</b>: máy bám theo lưới khi kéo (giữ Alt để bỏ). <b>Lối đi sau lưng</b>: hiện vùng lối đi sau người vận hành.</li>
+<li>Nút <span class="btn">◨</span> (góc phải trên) ẩn/hiện cột bên phải để có thêm chỗ cho mặt bằng.</li></ul>
+<p>Thẻ <b>Kiểm tra</b> liệt kê lỗi (đỏ) và cảnh báo (vàng): máy chồng nhau, vùng người vận hành bị máy khác chắn, lối đi sau lưng bị chắn, máy ra ngoài chuyền hoặc nằm trên lối đi, mã máy chưa có kích thước. Bấm một dòng để chọn máy đó.</p>
+<figure><a href="img/ls-check.png"><img src="img/ls-check.png" alt="Kiểm tra" loading="lazy"></a><figcaption>Máy vi phạm được tô đỏ trên mặt bằng và liệt kê trong thẻ Kiểm tra.</figcaption></figure>
+</section>
+
+<section id="nguoi"><h2>7. Người vận hành</h2>
+<ul>
+<li>Mỗi máy mặc định có một người vận hành (ghế hoặc chỗ đứng). Bàn ép, bàn ủi mặc định đứng.</li>
+<li><b>Một người làm nhiều máy</b>: chọn các máy (Shift+bấm, máy có người bấm trước) rồi bấm <span class="btn">👤</span> hoặc phím W. Máy cạnh nhau được nối bằng mũi tên cong; máy ở xa có thêm khoảng cách đi lại. Bấm <span class="btn">👤</span> lần nữa để tách.</li>
+<li><span class="btn">👤 Bấm máy để bật/tắt người</span>: mỗi lần bấm vào máy là bật/tắt người của máy đó. <span class="btn">Tất cả có người</span>: trả người cho mọi máy.</li>
+<li><span class="btn">🧍↔🪑 Tất cả đứng / ngồi</span> và <span class="btn">Mặc định (ép, ủi đứng)</span>; từng máy: nút 🧍 hoặc phím S.</li></ul>
+<figure><a href="img/ls-share.png"><img src="img/ls-share.png" alt="Một người nhiều máy" loading="lazy"></a><figcaption>Một người chạy nhiều máy: mũi tên tím nối chỗ ngồi với các máy người đó phụ trách.</figcaption></figure>
+<h3 id="cn-sap-xep">7.1 CN sắp xếp trong file layout</h3>
+<p>Khi mở file layout Excel, chương trình đọc cột <b>Arrange. Optr / CN sắp xếp</b> của bảng công đoạn và <b>tự đặt người vận hành trên mặt bằng</b> theo đó:</p>
+<table><tr><th>Trong file</th><th>Trên mặt bằng</th></tr>
+<tr><td>Ô gộp qua nhiều công đoạn (ví dụ 31, 33, 34 gộp = 1)</td><td>Các công đoạn đó do chung số người ghi trong ô. Nếu số máy nhiều hơn số người, các máy gần nhau được giao cho cùng một người (có mũi tên).</td></tr>
+<tr><td>Công đoạn 0.5 người (ví dụ 46 = 0.5, 47 = 0.5)</td><td>Các công đoạn dưới 1 người được ghép theo thứ tự trong bảng cho đến đủ 1 người: một người làm cả 46 và 47.</td></tr>
+<tr><td>1.5, 2, 3 … người</td><td>Làm tròn lên số người; số máy ít hơn số người thì người thêm là người hỗ trợ trong mô phỏng.</td></tr>
+<tr><td>0 người</td><td>Máy không có người riêng (do người khác làm).</td></tr>
+<tr><td>Dòng không có số công đoạn nhưng có số người (máy thêm của công đoạn phía trên)</td><td>Cộng vào công đoạn phía trên.</td></tr></table>
+<p>Thông báo sau khi đặt layout cho biết tổng số người theo file, số máy làm chung người. Nếu đã sửa người vận hành bằng tay và muốn làm lại theo file: bấm <span class="btn">👥 Theo CN sắp xếp trong file</span> (thẻ Người vận hành hoặc trang Mô phỏng WIP).</p>
+<figure><a href="img/ls-arrange.png"><img src="img/ls-arrange.png" alt="CN sắp xếp" loading="lazy"></a><figcaption>Trang Mô phỏng WIP: cột <b>CN sắp xếp (file)</b> cạnh <b>Số người</b> trên mặt bằng; ⟨31·32⟩ = ô gộp, hai công đoạn chung người.</figcaption></figure>
+</section>
+
+<section id="cong-doan"><h2>8. Thêm máy theo công đoạn, bỏ công đoạn</h2>
+<p>Bấm <span class="btn">+ Máy theo công đoạn</span>, gõ số công đoạn:</p>
+<ul>
+<li>Chương trình tìm loại máy của công đoạn trong layout (ví dụ 45 → 2CSM) và cho biết số máy đang có. Nhập <b>Số máy thêm</b>, bấm <span class="btn">+ Thêm máy</span>: máy mới được đặt vào chỗ trống gần máy cùng công đoạn (không còn chỗ thì đặt dưới mặt bằng, kéo vào vị trí).</li>
+<li>Công đoạn không có trên mặt bằng và trong file: nhập mã máy để thêm.</li>
+<li><span class="btn">🗑 Bỏ công đoạn</span>: xóa các máy của công đoạn; máy ghép (ví dụ “37/42”) chỉ bỏ số công đoạn đó và giữ công đoạn còn lại. Công đoạn cũng được bỏ khỏi trình tự và mô phỏng. Cũng có thể bấm ✕ ở đầu dòng công đoạn trong bảng mô phỏng.</li></ul>
+<figure><a href="img/ls-opdlg.png"><img src="img/ls-opdlg.png" alt="Thêm máy theo công đoạn" loading="lazy"></a><figcaption>Thêm 2 máy cho công đoạn 45: chương trình đã tìm ra máy 2CSM.</figcaption></figure>
+</section>
+
+<section id="thay-doi"><h2>9. Thay đổi so với file layout</h2>
+<p>Khi đưa layout từ file vào, chương trình ghi lại <b>số máy theo từng công đoạn</b> làm mốc. Mọi khác biệt sau đó (thêm/xóa máy, bỏ công đoạn, đổi công đoạn của máy) hiện trong thẻ <b>Thay đổi so với file layout</b> (đầu cột phải) và nhãn đỏ <span class="tag t-bad">⚠ N thay đổi so với file layout</span> trên thanh công cụ.</p>
+<div class="warn"><b>Bắt buộc sửa file layout Excel theo các thay đổi này</b> trước khi dùng layout cho chuyền (Layout Check và IE Báo cáo máy đọc file layout, không đọc Layout Sim).</div>
+<ul>
+<li>Bảng: công đoạn, mã máy, số máy trong file, số máy hiện tại, chênh lệch. Bấm một dòng để chọn các máy đó.</li>
+<li><span class="btn">📋 Sao chép danh sách</span>: chép danh sách để gửi người sửa layout.</li>
+<li>Công đoạn đã bỏ: nút ↺ khôi phục (máy về đúng chỗ cũ).</li>
+<li>Sau khi đã sửa file layout: bấm <span class="btn">✓ Đã sửa file layout: đặt mốc mới</span>.</li></ul>
+<figure><a href="img/ls-changes.png"><img src="img/ls-changes.png" alt="Thay đổi so với file layout" loading="lazy"></a><figcaption>Thêm 2 máy 2CSM cho công đoạn 45 và 1 máy 1SLA cho 47: thẻ thay đổi và nhãn trên thanh công cụ; thanh kết quả mô phỏng WIP ở trên mặt bằng.</figcaption></figure>
+</section>
+
+<section id="trinh-tu"><h2>10. Trình tự và quãng đường</h2>
+<ul>
+<li>Trình tự đọc từ file layout (<code>Work Flow: 31=&gt;32=&gt;…</code>) hoặc bấm <span class="btn">Nhập trình tự…</span>: mỗi dòng một cụm, tên cụm rồi các công đoạn nối bằng <code>=&gt;</code>. Cuối mỗi cụm phụ đi vào công đoạn đầu của cụm lắp ráp (dòng có QC/PACKING hoặc tên “lắp ráp”).</li>
+<li>Tích <b>Đường đi</b> để vẽ đường đi bán thành phẩm; thẻ <b>Trình tự &amp; đường đi bán thành phẩm</b> cho tổng quãng đường (m) và từng cụm.</li>
+<li><span class="btn">💡 Tìm gợi ý cải tiến</span>: các đoạn đi dài, người đi xa giữa hai máy, đổi chỗ hai máy để giảm quãng đường (nút <span class="btn">Áp dụng</span>).</li></ul>
+<figure><a href="img/ls-branch.png"><img src="img/ls-branch.png" alt="Chuyền nhánh" loading="lazy"></a><figcaption>Chuyền chính, lối đi 1 m và chuyền nhánh; đường đi các cụm vẽ bằng màu khác nhau.</figcaption></figure>
+</section>
+
+<section id="mo-phong"><h2>11. Mô phỏng WIP</h2>
+<p>Tab <b>⏱ Mô phỏng WIP</b>:</p>
+<ul>
+<li><b>SAM</b> từng công đoạn đọc từ bảng công đoạn trong file layout; sửa được trong bảng.</li>
+<li><b>Hiệu suất (%)</b>: hiệu suất chung (lấy từ file nếu có); cột <b>Hiệu suất (%)</b> trong bảng cho từng công đoạn (để trống = hiệu suất chung).</li>
+<li><b>Đầu vào</b>: luôn có hàng, hoặc theo sản lượng đầu vào (sp/giờ, mặc định = mục tiêu trong file). <b>Bó hàng</b>: số sản phẩm mỗi bó. <b>Bỏ qua thời gian khởi động</b>: chuyền đã chạy ổn định.</li>
+<li><b>Số người</b>: theo người vận hành trên mặt bằng (một người nhiều máy chia thời gian theo SAM). Nếu chuyền có <b>HC</b> (Thiết lập chuyền, hoặc số công nhân trong file) khác số người trên mặt bằng: người thêm hỗ trợ công đoạn chậm nhất (+1), thiếu người thì bớt ở công đoạn dư năng lực nhất (−1).</li>
+<li>Công đoạn ghép trên một máy (“37/42”) do một người làm, đánh dấu ⇄ trong bảng.</li>
+<li>Không có trình tự: hàng đi từ công đoạn nhỏ nhất đến lớn nhất.</li></ul>
+<p>Bấm <span class="btn">▶ Chạy mô phỏng</span>: sản lượng mô phỏng, năng lực công đoạn chậm nhất (nút cổ chai), hiệu suất chuyền, tổng WIP, WIP cuối ca và WIP lớn nhất từng công đoạn, gợi ý (nút cổ chai, WIP dồn, công đoạn ít việc). Thanh năng lực ghi số sp/giờ và mức tải; trên 100 % là không đủ năng lực.</p>
+<figure><a href="img/ls-sim.png"><img src="img/ls-sim.png" alt="Mô phỏng WIP" loading="lazy"></a><figcaption>Kết quả mô phỏng và bảng cân bằng chuyền theo công đoạn; dòng đỏ = nút cổ chai, dòng vàng = WIP vượt mức cảnh báo.</figcaption></figure>
+<div class="ok">Nút <span class="btn">⏱ Mô phỏng WIP</span> trên thanh công cụ <b>Mặt bằng 2D</b> chạy mô phỏng ngay trên mặt bằng: thanh kết quả (sản lượng và chênh lệch so với lần trước, nút cổ chai, hiệu suất, WIP) và nhãn WIP trên từng máy. Khi thanh đang mở, mỗi lần sửa mặt bằng (thêm máy, đổi người…) mô phỏng tự chạy lại. Bấm số công đoạn trên thanh để chọn máy đó; <span class="btn">Chi tiết</span> mở trang Mô phỏng WIP.</div>
+</section>
+
+<section id="3d"><h2>12. Xem 3D</h2>
+<p>Tab <b>3D</b>: máy dựng theo nhóm máy và kích thước thật, người vận hành ngồi/đứng, nhãn mã máy và số công đoạn, thước mét. Kéo nền để xoay, chuột phải/Shift để di chuyển, lăn chuột để phóng to; kéo máy để dời máy; R/F/W/S như mặt bằng 2D.</p>
+<figure><a href="img/ls-3d.png"><img src="img/ls-3d.png" alt="3D" loading="lazy"></a><figcaption>Xem 3D với nhãn và thước mét.</figcaption></figure>
+</section>
+
+<section id="du-an"><h2>13. Lưu và mở dự án</h2>
+<ul>
+<li><span class="btn">Lưu</span> hoặc Ctrl+S: ghi file <code>.layout.json</code> vào thư mục dự án đã chọn (cùng file cho các lần lưu sau, không phải tải xuống). Tên file theo mã hàng và tên chuyền.</li>
+<li>Tab <b>🏠 Dự án</b>: dự án hiện tại (mã hàng, file/sheet nguồn, công nhân, SAM, OBD), <span class="btn">Lưu thành dự án mới…</span>, <span class="btn">➕ Dự án mới</span>, <span class="btn">📂 Mở file dự án…</span>, danh sách file trong thư mục dự án và các dự án gần đây trong trình duyệt này.</li>
+<li>File dự án mang theo kích thước các mã máy đã dùng, mở được trên máy chưa có thư viện.</li></ul>
+<figure><a href="img/ls-proj.png"><img src="img/ls-proj.png" alt="Dự án" loading="lazy"></a><figcaption>Tab Dự án: thư mục dự án và các dự án gần đây.</figcaption></figure>
+</section>
+
+<section id="xuat"><h2>14. Xuất ảnh, in</h2>
+<p><span class="btn">Xuất ảnh</span>: ảnh PNG độ phân giải cao (khoảng 3 điểm ảnh/cm, chữ lớn) để gửi cơ điện; ở tab 3D xuất ảnh góc nhìn hiện tại. <span class="btn">In</span>: in mặt bằng.</p>
+</section>
+
+<section id="phim"><h2>15. Phím tắt</h2>
+<table><tr><th>Phím</th><th>Tác dụng</th></tr>
+<tr><td>R / Shift+R</td><td>Xoay máy 90° phải / trái</td></tr>
+<tr><td>F</td><td>Quay đầu 180°</td></tr>
+<tr><td>W</td><td>Người vận hành: bật/tắt (1 máy) hoặc 1 người cho các máy đã chọn</td></tr>
+<tr><td>S</td><td>Đứng / ngồi</td></tr>
+<tr><td>Delete</td><td>Xóa</td></tr>
+<tr><td>Ctrl+D</td><td>Nhân bản</td></tr>
+<tr><td>Mũi tên (Shift)</td><td>Dịch 1 cm (10 cm)</td></tr>
+<tr><td>Ctrl+Z / Ctrl+Y</td><td>Hoàn tác / làm lại</td></tr>
+<tr><td>Ctrl+S</td><td>Lưu dự án</td></tr></table>
+</section>
+
+<section id="loi"><h2>16. Lỗi thường gặp</h2>
+<table><tr><th>Hiện tượng</th><th>Cách xử lý</th></tr>
+<tr><td>Máy vẽ kích thước mặc định, cảnh báo “chưa có kích thước”</td><td>Chọn file Excel thư viện máy (chip 📚); mã máy phải có trong sheet <code>Machine_Needle</code>.</td></tr>
+<tr><td>Không tìm thấy layout trong file Excel</td><td>Layout phải vẽ bằng hình (mã máy + số công đoạn) hoặc ghi trong ô; nếu không, sao chép vùng layout và dán, hoặc dán ảnh.</td></tr>
+<tr><td>Mô phỏng báo công đoạn chưa có SAM</td><td>Nhập SAM trong bảng của trang Mô phỏng WIP.</td></tr>
+<tr><td>Số người mô phỏng khác số người trên mặt bằng</td><td>Do HC của chuyền (Thiết lập chuyền hoặc số công nhân trong file); xem dòng thông tin đầu trang Mô phỏng WIP.</td></tr>
+<tr><td>Không lưu được vào thư mục</td><td>Tab Dự án → <span class="btn">Chọn thư mục…</span>, bấm Cho phép.</td></tr>
+<tr><td>Sau khi cập nhật, giao diện cũ</td><td>Nhấn Ctrl+F5.</td></tr></table>
+</section>
+</main></div></body></html>

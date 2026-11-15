@@ -180,7 +180,9 @@ function renderSim() {
     (B.hc && B.hc !== B.onPlan ? ' · ' + esc(t(B.hc > B.onPlan ? 'simHCplus' : 'simHCminus', [B.rows.filter(function (x) { return x.adj; }).map(function (x) { return x.op + ' ' + (x.adj > 0 ? '+' : '') + x.adj; }).join(', ')])) : '') +
     (missing.length ? '<div class="t-warn tagline">⚠ ' + esc(t('simNoSam', [missing.join(', ')])) + '</div>' : '');
   var maxCap = Math.max.apply(null, B.rows.map(function (x) { return isFinite(x.cap) ? x.cap : 0; }).concat([1]));
-  $('smTable').innerHTML = '<table><tr><th>' + esc(t('simOp')) + '</th><th>' + esc(t('simMc')) + '</th><th class="n">SAM</th><th class="n">' + esc(t('simSt')) + '</th><th class="n">' + esc(t('simPeople')) + '</th><th class="n">' + esc(t('simEffCol')) + '</th><th class="n">' + esc(t('simCap')) + '</th><th style="width:24%">' + esc(t('simLoad')) + '</th>' +
+  var arr = null;   // people arranged in the layout file, per operation (with the operations sharing the cell)
+  if (hasArr()) { arr = {}; arrGroups().forEach(function (g) { g.ops.forEach(function (o) { arr[o] = g; }); }); }
+  $('smTable').innerHTML = '<table><tr><th>' + esc(t('simOp')) + '</th><th>' + esc(t('simMc')) + '</th><th class="n">SAM</th><th class="n">' + esc(t('simSt')) + '</th><th class="n">' + esc(t('simPeople')) + '</th>' + (arr ? '<th class="n" title="' + esc(t('simArrTip')) + '">' + esc(t('simArr')) + '</th>' : '') + '<th class="n">' + esc(t('simEffCol')) + '</th><th class="n">' + esc(t('simCap')) + '</th><th style="width:24%">' + esc(t('simLoad')) + '</th>' +
     (r ? '<th class="n">' + esc(t('simWipEnd')) + '</th><th class="n">' + esc(t('simWipMax')) + '</th>' : '') + '</tr>' +
     B.rows.map(function (x) {
       var bn = B.bottleneck.indexOf(x.op) >= 0, rr = rowsBy[x.op], wip = rr ? (rr.wipEnd != null ? rr.wipEnd : 0) + (rr.feedEnd || 0) : 0;
@@ -190,6 +192,7 @@ function renderSim() {
       var need = i.target || B.capMin, load = isFinite(x.cap) && x.cap > 0 && need ? Math.round(100 * need / x.cap) : null;
       return '<tr' + cls + ' data-op="' + esc(x.op) + '"><td><button class="rmop" data-rmop="' + esc(x.op) + '" title="' + esc(t('simRmOp')) + '">✕</button> <b>' + esc(x.op) + '</b>' + (comb[x.op] ? ' <span class="tag t-info" title="' + esc(t('simComb', [comb[x.op].join(', ')])) + '">⇄ ' + esc(comb[x.op].join(', ')) + '</span>' : '') + (bn ? ' <span class="tag t-bad">' + esc(t('simBn')) + '</span>' : '') + '</td><td>' + esc(x.mc) + '</td>' +
         '<td class="n"><input style="width:84px" type="number" step="0.0001" min="0" data-sam="' + esc(x.op) + '" value="' + (x.sam || '') + '"></td><td class="n">' + x.stations + '</td><td class="n">' + x.people.toFixed(2) + (x.adj ? ' <span class="tag ' + (x.adj > 0 ? 't-info' : 't-warn') + '">' + (x.adj > 0 ? '+' : '') + x.adj + '</span>' : '') + '</td>' +
+        (arr ? '<td class="n">' + (arr[x.op] ? arr[x.op].v + (arr[x.op].ops.length > 1 ? ' <span class="muted small" title="' + esc(t('simArrGrp', [arr[x.op].ops.join(', ')])) + '">⟨' + esc(arr[x.op].ops.join('·')) + '⟩</span>' : '') : '<span class="muted">—</span>') + '</td>' : '') +
         '<td class="n"><input style="width:62px" type="number" step="1" min="5" max="150" data-eff="' + esc(x.op) + '" value="' + (x.effOwn ? Math.round(x.eff * 100) : '') + '" placeholder="' + Math.round(p.eff * 100) + '"></td>' +
         '<td class="n">' + (isFinite(x.cap) ? Math.round(x.cap) : '∞') + '</td><td><div class="bar"><i style="width:' + w + '%;background:' + (bn || (load && load > 100) ? 'var(--bad)' : 'var(--accent)') + '"></i>' + (takt ? '<b style="left:' + Math.min(100, Math.round(100 * (i.target || 0) / maxCap)) + '%"></b>' : '') +
         '<span class="barT">' + (isFinite(x.cap) ? Math.round(x.cap) + ' ' + esc(t('simPcsH')) : '∞') + (load != null ? ' · ' + esc(t('simLoadPct', [load])) : '') + '</span></div></td>' +
@@ -231,4 +234,53 @@ function initSim() {
     setTab('plan'); onSelChange(); render2d();
   });
   $('smToPlan').onclick = function () { OPT.wip = true; $('optWip').checked = true; setTab('plan'); };
+}
+
+/* ---------- people arranged in the layout file ("Arrange. Optr / CN sắp xếp") ---------- */
+/* groups of operations: a merged cell = one group; value = people for the whole group */
+function arrGroups() {
+  var g = {}, ops = ST.ops || {};
+  Object.keys(ops).forEach(function (op) {
+    var o = ops[op]; if (o.ar == null || !isFinite(o.ar)) return;
+    var k = o.ag || op; g[k] = g[k] || { key: k, ops: [], v: o.ar, ai: o.ai != null ? o.ai : 1e6 };
+    g[k].ops.push(op); g[k].ai = Math.min(g[k].ai, o.ai != null ? o.ai : 1e6);
+  });
+  return Object.keys(g).map(function (k) { return g[k]; }).sort(function (a, b) { return a.ai - b.ai; });
+}
+function hasArr() { return arrGroups().length > 0; }
+/* operator units: a group with 1 person or more = its own people (rounded up); groups of less than one person
+   (0.5 …) are joined in table order until one full person (the IE's "0.5 + 0.5" arrangement) */
+function arrUnits() {
+  var out = [], pool = null;
+  arrGroups().forEach(function (g) {
+    var v = Math.round(g.v * 1000) / 1000;
+    if (v <= 0) { out.push({ ops: g.ops.slice(), p: 0, v: 0 }); return; }
+    if (v >= 1) { out.push({ ops: g.ops.slice(), p: Math.ceil(v - 1e-6), v: v }); return; }
+    if (pool && pool.v + v <= 1.0001) { pool.ops = pool.ops.concat(g.ops); pool.v = Math.round((pool.v + v) * 1000) / 1000; return; }
+    pool = { ops: g.ops.slice(), p: 1, v: v, pooled: true }; out.push(pool);
+  });
+  return out;
+}
+/* set the operators on the plan as arranged in the file: machines of a unit with fewer people than machines
+   are run by the same person (neighbouring machines together); a unit with 0 people has no own operator */
+function applyArrangement() {
+  var units = arrUnits(); if (!units.length) return null;
+  var done = {}, shared = 0, none = 0;
+  function mcsOf(ops) {
+    return ST.items.filter(function (it) { return it.kind === 'mc' && !done[it.id] && ops.indexOf(opsOf(it)[0]) >= 0; })
+      .sort(function (a, b) { return (a.zone === 'branch' ? 0 : 1) - (b.zone === 'branch' ? 0 : 1) || Math.round(a.y / 60) - Math.round(b.y / 60) || a.x - b.x; });
+  }
+  units.forEach(function (u) { mcsOf(u.ops).forEach(function (it) { delete it.noOp; delete it.by; }); });
+  units.forEach(function (u) {
+    var M = mcsOf(u.ops); M.forEach(function (it) { done[it.id] = 1; });
+    if (!M.length) return;
+    if (u.p === 0) { M.forEach(function (it) { it.noOp = true; }); none += M.length; return; }
+    if (M.length <= u.p) return;
+    var k = u.p, at = 0;
+    for (var i = 0; i < k; i++) {
+      var n = Math.round((M.length - at) / (k - i)), chunk = M.slice(at, at + n); at += n;
+      if (chunk.length > 1) { opShare(chunk); shared += chunk.length - 1; }
+    }
+  });
+  return { units: units.length, shared: shared, none: none, people: units.reduce(function (a, u) { return a + u.p; }, 0), total: Math.round(units.reduce(function (a, u) { return a + u.v; }, 0) * 100) / 100 };
 }

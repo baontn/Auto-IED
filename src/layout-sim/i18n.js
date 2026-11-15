@@ -2,6 +2,10 @@
 var LANG = 'vi';
 var I18N = {
   vi: {
+    bManTip: 'Hướng dẫn sử dụng',
+    bArr: '👥 Theo CN sắp xếp trong file', bArrTip: 'Đặt người vận hành trên mặt bằng theo cột "Arrange. Optr / CN sắp xếp" của file layout: ô gộp nhiều công đoạn = các công đoạn đó do chung người làm; các công đoạn 0.5 người được ghép với nhau đến đủ 1 người',
+    arrDone: 'Người vận hành theo CN sắp xếp trong file ({0} người): {1} máy làm chung người, {2} máy không có người riêng.', arrNone: 'File layout không có cột "Arrange. Optr / CN sắp xếp" (mở lại file layout Excel).',
+    simArr: 'CN sắp xếp (file)', simArrTip: 'Số người sắp xếp trong file layout (cột Arrange. Optr / CN sắp xếp)', simArrGrp: 'Ô gộp: các công đoạn {0} do chung người làm',
     bHome: '← IE Tools', bHomeTip: 'Về trang chủ IE Tools (mặt bằng đang làm được giữ trong trình duyệt)',
     bAddOp: '+ Máy theo công đoạn', bAddOpTip: 'Nhập số công đoạn: chương trình lấy đúng loại máy của công đoạn đó trong layout; cũng dùng để bỏ công đoạn', bAddMcTip: 'Nhập mã máy, hoặc số công đoạn để thêm máy của công đoạn đó',
     bWip2d: '⏱ Mô phỏng WIP', bWip2dTip: 'Chạy mô phỏng WIP ngay trên mặt bằng; khi thanh kết quả đang mở, mỗi lần sửa mặt bằng sẽ tự chạy lại',
@@ -119,6 +123,10 @@ var I18N = {
     ocrIgnored: 'bỏ qua', ocrLegend: 'Viền xanh lá: đọc đúng mã · cam: đã sửa theo thư viện · đỏ: không có trong thư viện · xanh dương: số công đoạn · xám: bỏ qua. Đưa chuột vào ô để xem chữ đọc được.'
   },
   en: {
+    bManTip: 'User guide',
+    bArr: '👥 As arranged in the file', bArrTip: 'Set the operators on the plan from the column "Arrange. Optr / CN sắp xếp" of the layout file: a cell merged over several operations = done by the same people; operations of 0.5 person are joined until one full person',
+    arrDone: 'Operators as arranged in the file ({0} people): {1} machines run by a shared operator, {2} machines without own operator.', arrNone: 'The layout file has no column "Arrange. Optr / CN sắp xếp" (open the layout Excel file again).',
+    simArr: 'Arranged (file)', simArrTip: 'People arranged in the layout file (column Arrange. Optr / CN sắp xếp)', simArrGrp: 'Merged cell: operations {0} done by the same people',
     bHome: '← IE Tools', bHomeTip: 'Back to the IE Tools home page (the current plan is kept in this browser)',
     bAddOp: '+ Machine by operation', bAddOpTip: 'Type an operation number: the machine type of that operation in the layout is used; also removes an operation', bAddMcTip: 'Type a machine code, or an operation number to add that operation\'s machine',
     bWip2d: '⏱ WIP simulation', bWip2dTip: 'Run the WIP simulation on the plan; while the result bar is open it runs again after every change',
@@ -245,6 +253,7 @@ function applyI18n() {
   document.documentElement.lang = LANG;
   document.querySelectorAll('[data-t]').forEach(function (e) { e.textContent = t(e.dataset.t); });
   document.querySelectorAll('[data-tt]').forEach(function (e) { e.title = t(e.dataset.tt); });
+  var man = document.getElementById('bMan'); if (man) man.href = '../manual/layout-sim' + (LANG === 'en' ? '.en' : '') + '.html';
   document.querySelectorAll('[data-tp]').forEach(function (e) { e.placeholder = t(e.dataset.tp); });
   document.title = t('appTitle') + ' · Layout Sim';
 }
