@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Layout Sim: Hướng dẫn sử dụng</title><link rel="icon" href="../icon.png"><link rel="stylesheet" href="manual.css"></head><body>
-<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>Layout Sim v2.3: Hướng dẫn sử dụng</b><a href="layout-sim.en.html" title="English" onclick="try{localStorage.setItem('ie_site_lang','en')}catch(e){}">EN</a><a href="../index.html">‹ Trang chủ</a></header>
+<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>Layout Sim v2.4: Hướng dẫn sử dụng</b><a href="layout-sim.en.html" title="English" onclick="try{localStorage.setItem('ie_site_lang','en')}catch(e){}">EN</a><a href="../index.html">‹ Trang chủ</a></header>
 <div class="wrap">
 <nav class="toc"><b>Nội dung</b>
 <a href="#gioi-thieu">1. Giới thiệu</a>
@@ -58,10 +58,12 @@
 <table><tr><th>Ô</th><th>Ý nghĩa</th></tr>
 <tr><td>Số máy chuẩn, Máy chuẩn (cm)</td><td>Chiều dài chuyền tính theo số máy chuẩn; mặc định 1 máy chuẩn = 107 cm.</td></tr>
 <tr><td>Bàn giữa rộng (cm)</td><td>Bàn giữa dài bằng số máy × 107 cm, rộng mặc định 30 cm.</td></tr>
-<tr><td>Đầu chuyền, Cuối chuyền (cm)</td><td>Khoảng trống đầu và cuối chuyền (bàn đầu vào, đóng gói…).</td></tr>
+<tr><td>Khu đầu vào dài (cm), Khu đầu vào cách chuyền (cm)</td><td>Khu đầu vào (bàn đầu vào) nằm <b>phía trước</b> chuyền, rộng bằng chuyền; mặc định dài 90 cm, cách chuyền 30 cm. Bàn đầu vào của layout được đặt vào giữa khu này.</td></tr>
+<tr><td>Cuối chuyền (cm)</td><td>Khoảng trống sau bàn giữa (đóng gói…).</td></tr>
 <tr><td>Chuyền rộng (cm)</td><td>Để trống = tự tính theo bàn giữa, máy, vùng người vận hành và lối đi.</td></tr>
 <tr><td>Số công nhân (HC)</td><td>Số người của chuyền dùng cho mô phỏng WIP. Để trống = lấy số công nhân trong file layout.</td></tr>
-<tr><td>Có chuyền nhánh</td><td>Chuyền phụ bên cạnh (tùy mã hàng): số máy, bàn giữa, vị trí trên/dưới, lối đi giữa 2 chuyền (mặc định 100 cm), độ lệch so với đầu chuyền chính.</td></tr></table>
+<tr><td>Có chuyền nhánh</td><td>Chuyền phụ bên cạnh (tùy mã hàng): số máy, bàn giữa, vị trí trên/dưới, lối đi giữa 2 chuyền (mặc định 100 cm). Bàn giữa của chuyền nhánh bắt đầu cùng mốc 0 m với chuyền chính; chuyền nhánh cũng có khu đầu vào riêng phía trước.</td></tr></table>
+<div class="note"><b>Mốc 0 m</b> là đầu bàn giữa (cạnh trái). Thước mét trên mặt bằng 2D và 3D tính từ đó.</div>
 <figure><a href="img/ls-linesetup.png"><img src="img/ls-linesetup.png" alt="Thiết lập chuyền" loading="lazy"></a><figcaption>Thiết lập chuyền 8 máy chuẩn và một chuyền nhánh 6 máy, lối đi 1 m.</figcaption></figure>
 <p>Nút <span class="btn">Công thái học…</span>: kích thước vùng người ngồi/đứng, ghế, lối đi sau lưng, khoảng cách giữa các hàng máy.</p>
 </section>
@@ -84,6 +86,7 @@
 <li>Kéo máy để di chuyển; kéo nền để di chuyển khung nhìn; lăn chuột để phóng to. Shift+kéo trên nền: chọn nhiều máy.</li>
 <li>Bấm vào máy: hiện thanh nút nổi <span class="btn">⟲</span> <span class="btn">⟳</span> <span class="btn">⇅ 180°</span> <span class="btn">👤</span> <span class="btn">🧍</span> <span class="btn">🗑</span>. Thẻ <b>Đang chọn</b> bên phải cho sửa mã máy, công đoạn, tọa độ, góc xoay.</li>
 <li>Ô <b>Mã máy / CĐ</b> + <span class="btn">+ Máy</span>: thêm máy theo mã, hoặc gõ số công đoạn để thêm đúng máy của công đoạn đó (mục 8). <span class="btn">+ Thêm</span>: bàn đầu vào, bàn QC, bàn, cột, xe đẩy, vật cản.</li>
+<li><b>Khép sát</b> (nút <span class="btn">⇥⇤</span> trên thanh nút nổi, nút <span class="btn">⇥⇤ Khép sát</span> trong thẻ Đang chọn, hoặc phím K): các máy đã chọn được đẩy sát nhau theo từng hàng, không còn khe hở (tính từ máy bên trái); cạnh máy quay về bàn giữa áp sát bàn giữa; hàng máy phía ngoài di chuyển theo. Chọn cả chuyền (Ctrl+A) rồi bấm K để khép sát toàn bộ.</li>
 <li><b>Bám lưới</b>: máy bám theo lưới khi kéo (giữ Alt để bỏ). <b>Lối đi sau lưng</b>: hiện vùng lối đi sau người vận hành.</li>
 <li>Nút <span class="btn">◨</span> (góc phải trên) ẩn/hiện cột bên phải để có thêm chỗ cho mặt bằng.</li></ul>
 <p>Thẻ <b>Kiểm tra</b> liệt kê lỗi (đỏ) và cảnh báo (vàng): máy chồng nhau, vùng người vận hành bị máy khác chắn, lối đi sau lưng bị chắn, máy ra ngoài chuyền hoặc nằm trên lối đi, mã máy chưa có kích thước. Bấm một dòng để chọn máy đó.</p>
@@ -93,7 +96,7 @@
 <section id="nguoi"><h2>7. Người vận hành</h2>
 <ul>
 <li>Mỗi máy mặc định có một người vận hành (ghế hoặc chỗ đứng). Bàn ép, bàn ủi mặc định đứng.</li>
-<li><b>Một người làm nhiều máy</b>: chọn các máy (Shift+bấm, máy có người bấm trước) rồi bấm <span class="btn">👤</span> hoặc phím W. Máy cạnh nhau được nối bằng mũi tên cong; máy ở xa có thêm khoảng cách đi lại. Bấm <span class="btn">👤</span> lần nữa để tách.</li>
+<li><b>Một người làm nhiều máy</b>: chọn các máy (Shift+bấm, máy có người bấm trước) rồi bấm <span class="btn">👤</span> hoặc phím W. Mũi tên cong màu tím vẽ <b>phía sau lưng người vận hành</b> (không đè lên bàn giữa); máy ở xa có thêm khoảng cách đi lại. Bấm <span class="btn">👤</span> lần nữa để tách.</li>
 <li><span class="btn">👤 Bấm máy để bật/tắt người</span>: mỗi lần bấm vào máy là bật/tắt người của máy đó. <span class="btn">Tất cả có người</span>: trả người cho mọi máy.</li>
 <li><span class="btn">🧍↔🪑 Tất cả đứng / ngồi</span> và <span class="btn">Mặc định (ép, ủi đứng)</span>; từng máy: nút 🧍 hoặc phím S.</li></ul>
 <figure><a href="img/ls-share.png"><img src="img/ls-share.png" alt="Một người nhiều máy" loading="lazy"></a><figcaption>Một người chạy nhiều máy: mũi tên tím nối chỗ ngồi với các máy người đó phụ trách.</figcaption></figure>
@@ -174,6 +177,8 @@
 <tr><td>F</td><td>Quay đầu 180°</td></tr>
 <tr><td>W</td><td>Người vận hành: bật/tắt (1 máy) hoặc 1 người cho các máy đã chọn</td></tr>
 <tr><td>S</td><td>Đứng / ngồi</td></tr>
+<tr><td>K</td><td>Khép sát các máy đã chọn</td></tr>
+<tr><td>Ctrl+A</td><td>Chọn tất cả</td></tr>
 <tr><td>Delete</td><td>Xóa</td></tr>
 <tr><td>Ctrl+D</td><td>Nhân bản</td></tr>
 <tr><td>Mũi tên (Shift)</td><td>Dịch 1 cm (10 cm)</td></tr>

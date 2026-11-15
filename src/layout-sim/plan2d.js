@@ -20,15 +20,15 @@ function n1(v) { return Math.round(v * 10) / 10; }
 function planMarkup(o) {
   var P = o.P, s = o.s, L = ST.line.length, W = ST.line.width, e = ST.erg, h = [];
   var fs = o.fs || Math.max(5, Math.min(40, 12 / s)), sw = 1 / s;   // font size in cm, 1 px stroke in cm
-  var zs = lineZones(), multi = zs.length > 1;
-  h.push('<rect x="0" y="0" width="' + L + '" height="' + W + '" fill="' + (multi ? P.outFloor : P.floor) + '"/>');
+  var zs = lineZones(), multi = zs.length > 1, EX = lineExtent();
+  h.push('<rect x="' + EX.x0 + '" y="' + EX.y0 + '" width="' + (EX.x1 - EX.x0) + '" height="' + (EX.y1 - EX.y0) + '" fill="' + (multi ? P.outFloor : P.floor) + '"/>');
   if (multi) zs.forEach(function (z) { if (z.id !== 'walk') h.push('<rect x="' + z.x + '" y="' + z.y + '" width="' + z.L + '" height="' + z.W + '" fill="' + P.floor + '"/>'); });
   var step = 50 * s < 10 ? 100 : 50;
-  for (var x = 0; x <= L; x += step) h.push('<line x1="' + x + '" y1="0" x2="' + x + '" y2="' + W + '" stroke="' + (x % 100 ? P.grid : P.grid2) + '" stroke-width="' + sw + '"/>');
-  for (var y = 0; y <= W; y += step) h.push('<line x1="0" y1="' + y + '" x2="' + L + '" y2="' + y + '" stroke="' + (y % 100 ? P.grid : P.grid2) + '" stroke-width="' + sw + '"/>');
+  for (var x = Math.ceil(EX.x0 / step) * step; x <= EX.x1; x += step) h.push('<line x1="' + x + '" y1="' + EX.y0 + '" x2="' + x + '" y2="' + EX.y1 + '" stroke="' + (x % 100 ? P.grid : P.grid2) + '" stroke-width="' + sw + '"/>');
+  for (var y = 0; y <= W; y += step) h.push('<line x1="' + EX.x0 + '" y1="' + y + '" x2="' + EX.x1 + '" y2="' + y + '" stroke="' + (y % 100 ? P.grid : P.grid2) + '" stroke-width="' + sw + '"/>');
   var rs = Math.max(100, Math.ceil(60 / s / 100) * 100);
   for (x = 0; x <= L; x += rs) h.push('<text x="' + x + '" y="' + (-fs * 0.5) + '" font-size="' + fs * 0.85 + '" fill="' + P.muted + '" text-anchor="middle">' + (x / 100) + ' m</text>');
-  for (y = rs; y <= W; y += rs) h.push('<text x="' + (-fs * 0.4) + '" y="' + (y + fs * 0.3) + '" font-size="' + fs * 0.85 + '" fill="' + P.muted + '" text-anchor="end">' + (y / 100) + '</text>');
+  for (y = rs; y <= W; y += rs) h.push('<text x="' + (EX.x0 - fs * 0.4) + '" y="' + (y + fs * 0.3) + '" font-size="' + fs * 0.85 + '" fill="' + P.muted + '" text-anchor="end">' + (y / 100) + '</text>');
   if (!multi) h.push('<rect x="0" y="0" width="' + L + '" height="' + W + '" fill="none" stroke="' + P.edge + '" stroke-width="' + 2 * sw + '"/>');
   else zs.forEach(function (z) {
     if (z.id === 'walk') {   // walkway between the two lines: hatched, with its width
@@ -37,7 +37,7 @@ function planMarkup(o) {
       h.push('<text x="' + (z.x + z.L / 2) + '" y="' + (z.y + z.W / 2 + fs * 0.35) + '" font-size="' + fs * 0.9 + '" font-weight="700" fill="' + P.walkEdge + '" text-anchor="middle" stroke="' + P.floor + '" stroke-width="' + fs * 0.2 + '" paint-order="stroke">' + esc(t('walkLbl', [z.W])) + '</text>');
     } else {
       h.push('<rect x="' + z.x + '" y="' + z.y + '" width="' + z.L + '" height="' + z.W + '" fill="none" stroke="' + P.edge + '" stroke-width="' + 2 * sw + '"/>');
-      h.push('<text x="' + (z.x + fs * 0.4) + '" y="' + (z.y + fs * 1.1) + '" font-size="' + fs * 0.85 + '" font-weight="700" fill="' + P.muted + '">' + esc(t(z.id === 'branch' ? 'zoneBranch' : 'zoneMain')) + '</text>');
+      h.push('<text x="' + (z.x + fs * 0.4) + '" y="' + (z.y + fs * 1.1) + '" font-size="' + fs * 0.85 + '" font-weight="700" fill="' + P.muted + '">' + esc(t(z.id === 'branch' ? 'zoneBranch' : /^input/.test(z.id) ? 'zoneInput' : 'zoneMain')) + '</text>');
     }
   });
   var bad = issueIds('bad'), warn = issueIds('warn'), labels = [];
@@ -160,7 +160,7 @@ function toWorld(ev) { var r = svgEl().getBoundingClientRect(); return { x: V.x 
 function fitView() {
   var svg = svgEl(), w = svg.clientWidth, h = svg.clientHeight; if (!w) return;
   var b = bbox(ST.items) || { x0: 0, y0: 0, x1: 0, y1: 0 };
-  var x0 = Math.min(0, b.x0), y0 = Math.min(0, b.y0), x1 = Math.max(ST.line.length, b.x1), y1 = Math.max(ST.line.width, b.y1);
+  var EX = lineExtent(), x0 = Math.min(EX.x0, b.x0), y0 = Math.min(EX.y0, b.y0), x1 = Math.max(EX.x1, b.x1), y1 = Math.max(EX.y1, b.y1);
   var pad = 60;
   V.s = Math.min(w / (x1 - x0 + 2 * pad), h / (y1 - y0 + 2 * pad));
   V.x = x0 - pad - ((w / V.s) - (x1 - x0 + 2 * pad)) / 2; V.y = y0 - pad - ((h / V.s) - (y1 - y0 + 2 * pad)) / 2;
@@ -300,6 +300,36 @@ function packSel() {
   its.forEach(function (it) { var w = extentX(it); it.x = n1(acc + w / 2); acc += w + ST.erg.colGap; });
   changed();
 }
+/* close up the selection: machines of a row touch each other (no gap, from the left one), and the row nearest the
+   central table touches it with the edge facing it (rows further out move with it) */
+function tableExt(it) { var c = corners(shapes(it).table), xs = c.map(function (p) { return p.x; }), ys = c.map(function (p) { return p.y; }); return { x0: Math.min.apply(null, xs), x1: Math.max.apply(null, xs), y0: Math.min.apply(null, ys), y1: Math.max.apply(null, ys) }; }
+function closeSel() {
+  var its = selItems().filter(function (it) { return it.kind === 'mc' && !isLocked(it); }); if (!its.length) return;
+  var groups = {};
+  its.forEach(function (it) {
+    var ct = centerOf(it.zone === 'branch' ? 'branch' : 'main'), side = ct ? (it.y < ct.y ? 'top' : 'bot') : 'all', k = (it.zone || 'main') + '|' + side;
+    (groups[k] = groups[k] || { ct: ct, side: side, its: [] }).its.push(it);
+  });
+  Object.keys(groups).forEach(function (k) {
+    var g = groups[k], ct = g.ct, cTop = ct ? ct.y - ct.W / 2 : 0, cBot = ct ? ct.y + ct.W / 2 : 0;
+    var dist = function (e) { return g.side === 'top' ? cTop - e.y1 : g.side === 'bot' ? e.y0 - cBot : e.y0; };
+    var list = g.its.map(function (it) { return { it: it, e: tableExt(it) }; }).sort(function (a, b) { return dist(a.e) - dist(b.e); });
+    var rows = [];   // machines whose tables overlap in y form a row
+    list.forEach(function (m) {
+      var r = rows.filter(function (r) { var ov = Math.min(r.y1, m.e.y1) - Math.max(r.y0, m.e.y0); return ov > 0.3 * Math.min(r.y1 - r.y0, m.e.y1 - m.e.y0); })[0];
+      if (r) { r.ms.push(m); r.y0 = Math.min(r.y0, m.e.y0); r.y1 = Math.max(r.y1, m.e.y1); } else rows.push({ ms: [m], y0: m.e.y0, y1: m.e.y1 });
+    });
+    var dy = 0;
+    rows.forEach(function (r, ri) {
+      r.ms.sort(function (a, b) { return a.e.x0 - b.e.x0; });
+      var cur = r.ms[0].e.x0;
+      r.ms.forEach(function (m) { m.it.x = n1(m.it.x + cur - m.e.x0); cur += m.e.x1 - m.e.x0; });
+      if (ri === 0 && ct) dy = g.side === 'top' ? cTop - r.y1 : cBot - r.y0;   // the edge facing the central table touches it
+      if (dy) r.ms.forEach(function (m) { m.it.y = n1(m.it.y + dy); });
+    });
+  });
+  changed();
+}
 function addMachine(code) {
   code = normCode(code); if (!code) return;
   var d = dimOf(code), c = viewCenter();
@@ -316,7 +346,7 @@ function viewCenter() { var svg = svgEl(), w = svg.clientWidth || 800, h = svg.c
 /* ---------- export ---------- */
 function exportPng(cb) {
   var b = bbox(ST.items) || { x0: 0, y0: 0, x1: 0, y1: 0 };
-  var x0 = Math.min(0, b.x0) - 40, y0 = Math.min(0, b.y0) - 110, x1 = Math.max(ST.line.length, b.x1) + 40, y1 = Math.max(ST.line.width, b.y1) + 40;
+  var EX = lineExtent(), x0 = Math.min(EX.x0, b.x0) - 40, y0 = Math.min(EX.y0, b.y0) - 110, x1 = Math.max(EX.x1, b.x1) + 40, y1 = Math.max(EX.y1, b.y1) + 40;
   // printable: about 3 px per cm (a 20 m line gives ~6500 px), big labels (15 cm text, operation numbers ~26 cm)
   var px = Math.max(1.5, Math.min(3.5, 7000 / (x1 - x0))), w = Math.round((x1 - x0) * px), h = Math.round((y1 - y0) * px);
   var head = '<text x="' + (x0 + 40) + '" y="' + (y0 + 45) + '" font-size="34" font-weight="700" fill="#1d2330">' + esc([(ST.info || {}).style, ST.line.name || t('lineNoName'), ST.line.length + ' × ' + ST.line.width + ' cm'].filter(Boolean).join(' · ')) + '</text>' +

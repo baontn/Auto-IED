@@ -112,7 +112,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
 <body>
 <header>
   <a id="bHome" class="homebtn" href="../index.html" data-t="bHome" data-tt="bHomeTip">← IE Tools</a>
-  <h1 data-t="appTitle">Mô phỏng bố trí chuyền</h1><span class="tag t-info">v2.3</span>
+  <h1 data-t="appTitle">Mô phỏng bố trí chuyền</h1><span class="tag t-info">v2.4</span>
   <nav class="tabs"><button data-tab="proj" data-t="tabProj">🏠 Dự án</button><button data-tab="plan" class="on" data-t="tabPlan">Mặt bằng 2D</button><button data-tab="3d" data-t="tab3d">3D</button><button data-tab="sim" data-t="tabSim">⏱ Mô phỏng WIP</button><button data-tab="lib" data-t="tabLib">Thư viện máy</button></nav>
   <div class="hr">
     <button id="bNew" data-t="bNew">Mới</button><button id="bOpen" data-t="bOpen">Mở…</button><button id="bSave" class="primary" data-t="bSave" data-tt="bSaveTip">Lưu</button>
@@ -157,7 +157,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
     <div id="opModeBar" class="banner" style="display:none" data-t="opModeBar">Chế độ người vận hành: bấm vào máy để bỏ / trả người vận hành. Esc hoặc bấm lại nút để thoát.</div>
     <svg id="plan" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI,Roboto,Arial,sans-serif"></svg>
     <div id="v3" style="display:none"></div>
-    <div id="selTools"><button data-cmd="rotL" data-tt="ttRotL">⟲</button><button data-cmd="rotR" data-tt="ttRotR">⟳</button><button data-cmd="flip" data-tt="ttFlip">⇅ 180°</button><button data-cmd="op" data-tt="ttOp">👤</button><button data-cmd="stand" data-tt="ttStand">🧍</button><button data-cmd="del" data-tt="ttDel">🗑</button></div>
+    <div id="selTools"><button data-cmd="rotL" data-tt="ttRotL">⟲</button><button data-cmd="rotR" data-tt="ttRotR">⟳</button><button data-cmd="flip" data-tt="ttFlip">⇅ 180°</button><button data-cmd="op" data-tt="ttOp">👤</button><button data-cmd="stand" data-tt="ttStand">🧍</button><button data-cmd="close" data-tt="ttClose">⇥⇤</button><button data-cmd="del" data-tt="ttDel">🗑</button></div>
     <div class="hint"><span data-t="hint2d">Kéo máy để di chuyển · R / Shift+R xoay 90° · F quay đầu · Delete xóa · Ctrl+D nhân bản · mũi tên dịch 1 cm (Shift 10 cm) · Shift+kéo chọn vùng · lăn chuột phóng to · kéo nền để di chuyển · Alt khi kéo: bỏ bám lưới</span> <span id="zoomTxt" class="muted"></span></div>
   </div>
   <aside>
@@ -257,13 +257,14 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
 </dialog>
 <dialog id="dlgLine"><div class="dh"><span data-t="lsTitle">Thiết lập chuyền</span><button data-close>✕</button></div>
   <div class="db">
-    <div class="muted small" data-t="lsHelp">Nhập chiều dài chuyền bằng số máy chuẩn đặt nối nhau (mỗi máy chuẩn 107 cm). Chương trình tạo bàn giữa dài bằng số máy × 107 cm; hai hàng máy đặt hai bên bàn giữa khi dán layout.</div>
+    <div class="muted small" data-t="lsHelp">Nhập chiều dài chuyền bằng số máy chuẩn đặt nối nhau (mỗi máy chuẩn 107 cm). Chương trình tạo bàn giữa dài bằng số máy × 107 cm; hai hàng máy đặt hai bên bàn giữa khi dán layout. Mốc 0 m là đầu bàn giữa (chuyền nhánh cũng bắt đầu tại 0 m); khu đầu vào nằm phía trước, rộng bằng chuyền.</div>
     <div class="grid3" style="margin-top:8px">
       <label class="f" style="grid-column:span 3"><span data-t="lnName">Tên chuyền</span><input id="lsName"></label>
       <label class="f"><span data-t="lsUnits">Số máy chuẩn</span><input id="lsUnits" type="number" min="1" step="1"></label>
       <label class="f"><span data-t="lsUnit">Máy chuẩn (cm)</span><input id="lsUnit" type="number" min="10" step="1"></label>
       <label class="f"><span data-t="lsTable">Bàn giữa rộng (cm)</span><input id="lsTable" type="number" min="0" step="1"></label>
-      <label class="f"><span data-t="lsStart">Đầu chuyền (cm)</span><input id="lsStart" type="number" min="0" step="10"></label>
+      <label class="f"><span data-t="lsInL">Khu đầu vào dài (cm)</span><input id="lsStart" type="number" min="0" step="10"></label>
+      <label class="f"><span data-t="lsGap">Khu đầu vào cách chuyền (cm)</span><input id="lsGap" type="number" min="0" step="5"></label>
       <label class="f"><span data-t="lsEnd">Cuối chuyền (cm)</span><input id="lsEnd" type="number" min="0" step="10"></label>
       <label class="f"><span data-t="lsWidth">Chuyền rộng (cm)</span><input id="lsWidth" type="number" min="50" step="10"></label>
       <label class="f"><span data-t="lsHC">Số công nhân (HC)</span><input id="lsHC" type="number" min="0" step="1"></label>
@@ -275,7 +276,6 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
       <label class="f"><span data-t="lsTable">Bàn giữa rộng (cm)</span><input id="lsBTable" type="number" min="0" step="1"></label>
       <label class="f"><span data-t="lsBPos">Vị trí</span><select id="lsBPos"><option value="top" data-t="lsBTop">Phía trên chuyền chính</option><option value="bottom" data-t="lsBBottom">Phía dưới chuyền chính</option></select></label>
       <label class="f"><span data-t="lsBWalk">Lối đi giữa 2 chuyền (cm)</span><input id="lsBWalk" type="number" min="0" step="10"></label>
-      <label class="f"><span data-t="lsBOff">Lệch so với đầu chuyền chính (cm)</span><input id="lsBOff" type="number" min="0" step="10"></label>
       <label class="f"><span data-t="lsWidth">Chuyền rộng (cm)</span><input id="lsBWidth" type="number" min="50" step="10"></label>
     </div>
   </div>
@@ -344,6 +344,9 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 var LANG = 'vi';
 var I18N = {
   vi: {
+    lsInL: 'Khu đầu vào dài (cm)', lsGap: 'Khu đầu vào cách chuyền (cm)', zoneInput: 'Khu đầu vào',
+    lsCalc2: 'Chuyền dài {0} × {1} + {2} = {3} cm, tính từ 0 m = đầu bàn giữa · bàn giữa {4} × {5} cm · rộng {6} cm (để trống ô "Chuyền rộng" để tự tính) · khu đầu vào {7} cm phía trước, cách chuyền {8} cm, rộng bằng chuyền.',
+    bClose: '⇥⇤ Khép sát', ttClose: 'Khép sát (K): các máy đã chọn sát nhau theo hàng, không khe hở; cạnh quay về bàn giữa áp sát bàn giữa',
     bManTip: 'Hướng dẫn sử dụng',
     bArr: '👥 Theo CN sắp xếp trong file', bArrTip: 'Đặt người vận hành trên mặt bằng theo cột "Arrange. Optr / CN sắp xếp" của file layout: ô gộp nhiều công đoạn = các công đoạn đó do chung người làm; các công đoạn 0.5 người được ghép với nhau đến đủ 1 người',
     arrDone: 'Người vận hành theo CN sắp xếp trong file ({0} người): {1} máy làm chung người, {2} máy không có người riêng.', arrNone: 'File layout không có cột "Arrange. Optr / CN sắp xếp" (mở lại file layout Excel).',
@@ -404,7 +407,7 @@ var I18N = {
     erg_standW: 'Đứng: bề ngang vùng thao tác', ergh_standW: 'Thảm chống mỏi thường rộng 90 cm, chân đứng rộng bằng vai',
     erg_standGap: 'Đứng: mép bàn → giữa người', ergh_standGap: 'Người đứng cách mép bàn khoảng 25-30 cm',
     ocrCells: 'Đang đọc từng ô… {0}/{1}', opShared: 'Một người chạy {0} máy (người ngồi ở {1}).', opSplit: 'Đã tách: {0} máy, mỗi máy một người.', sumMulti: '{0} người chạy nhiều máy', runBy: 'Do người ở máy {0} vận hành', alsoRuns: 'Người này chạy thêm: {0}', bOpShare: '1 người cho các máy này', bOpSplit: 'Tách: mỗi máy 1 người', expErr: 'Không xuất được ảnh.', centerTable: 'Bàn giữa', bLineSetup: 'Thiết lập chuyền theo số máy…', lsTitle: 'Thiết lập chuyền',
-    lsHelp: 'Nhập chiều dài chuyền bằng số máy chuẩn đặt nối nhau (mỗi máy chuẩn 107 cm). Chương trình tạo bàn giữa dài bằng số máy × 107 cm; hai hàng máy đặt hai bên bàn giữa khi dán layout.',
+    lsHelp: 'Nhập chiều dài chuyền bằng số máy chuẩn đặt nối nhau (mỗi máy chuẩn 107 cm). Chương trình tạo bàn giữa dài bằng số máy × 107 cm; hai hàng máy đặt hai bên bàn giữa khi dán layout. Mốc 0 m là đầu bàn giữa (chuyền nhánh cũng bắt đầu tại 0 m); khu đầu vào nằm phía trước, rộng bằng chuyền.',
     lsUnits: 'Số máy chuẩn', lsUnit: 'Máy chuẩn (cm)', lsTable: 'Bàn giữa rộng (cm)', lsStart: 'Đầu chuyền (cm)', lsEnd: 'Cuối chuyền (cm)', lsWidth: 'Chuyền rộng (cm)',
     lsCalc: 'Dài chuyền = {0} + {1} × {2} + {3} = {4} cm · bàn giữa {5} × {6} cm · rộng {7} cm (để trống ô "Chuyền rộng" để tự tính: bàn giữa + hai bên máy, vùng người vận hành, lối đi).',
     opCardTitle: 'Người vận hành', opCardHelp: 'Một người làm nhiều máy: chọn các máy (Shift+bấm, máy có người bấm trước) rồi bấm 👤 hoặc phím W; máy ở xa được nối bằng mũi tên 2 đầu và khoảng cách đi lại. Bấm 👤 lần nữa để tách. Chế độ dưới đây: mỗi lần bấm vào máy là bật/tắt người của máy đó.',
@@ -419,7 +422,7 @@ var I18N = {
     bUndoTip: 'Hoàn tác (Ctrl+Z)', bRedoTip: 'Làm lại (Ctrl+Y)', bFit: 'Vừa màn hình', optFlow: 'Đường đi', optSnap: 'Bám lưới', optAisle: 'Lối đi sau lưng',
     bPng: 'Xuất ảnh', bPrint: 'In', b3Reset: 'Góc nhìn mặc định', b3Top: 'Nhìn từ trên', opt3People: 'Người vận hành', opt3Labels: 'Nhãn',
     hint3d: 'Kéo máy để dời máy · kéo nền: xoay · chuột phải/Shift: di chuyển · lăn chuột: phóng to · Ctrl+bấm: chọn thêm · R/F/W/S như mặt bằng 2D',
-    hint2d: 'Kéo máy để di chuyển · R / Shift+R xoay 90° · F quay đầu · Delete xóa · W bật/tắt người · S đứng/ngồi · Ctrl+D nhân bản · mũi tên dịch 1 cm (Shift 10 cm) · Shift+kéo chọn vùng · lăn chuột phóng to · kéo nền để di chuyển · giữ Alt khi kéo: bỏ bám lưới',
+    hint2d: 'Kéo máy để di chuyển · R / Shift+R xoay 90° · F quay đầu · Delete xóa · W bật/tắt người · S đứng/ngồi · K khép sát · Ctrl+D nhân bản · mũi tên dịch 1 cm (Shift 10 cm) · Shift+kéo chọn vùng · lăn chuột phóng to · kéo nền để di chuyển · giữ Alt khi kéo: bỏ bám lưới',
     lnTitle: 'Chuyền', lnName: 'Tên chuyền', lnLen: 'Dài (cm)', lnWid: 'Rộng (cm)', bErg: 'Công thái học…', lnUsed: 'Layout chiếm: {0} × {1} cm (tính cả vùng người vận hành)', lineNoName: 'Chuyền chưa đặt tên',
     selTitle: 'Đang chọn', sumTitle: 'Tổng hợp', issTitle: 'Kiểm tra', issNone: 'Không có lỗi',
     selNone: 'Bấm vào một máy để xem và sửa; các nút xoay hiện ngay cạnh máy. Shift+bấm để chọn nhiều máy. Đường viền xanh nét đứt phía trước máy là vùng người vận hành (ghế + chỗ ngồi), chấm đỏ là vị trí kim.',
@@ -465,6 +468,9 @@ var I18N = {
     ocrIgnored: 'bỏ qua', ocrLegend: 'Viền xanh lá: đọc đúng mã · cam: đã sửa theo thư viện · đỏ: không có trong thư viện · xanh dương: số công đoạn · xám: bỏ qua. Đưa chuột vào ô để xem chữ đọc được.'
   },
   en: {
+    lsInL: 'Input area length (cm)', lsGap: 'Input area gap to the line (cm)', zoneInput: 'Input area',
+    lsCalc2: 'Line length {0} × {1} + {2} = {3} cm from 0 m = start of the central table · central table {4} × {5} cm · width {6} cm (leave "Line width" empty to compute it) · input area {7} cm in front, {8} cm away, as wide as the line.',
+    bClose: '⇥⇤ Close up', ttClose: 'Close up (K): the selected machines touch each other along their row, no gap; the edge facing the central table touches it',
     bManTip: 'User guide',
     bArr: '👥 As arranged in the file', bArrTip: 'Set the operators on the plan from the column "Arrange. Optr / CN sắp xếp" of the layout file: a cell merged over several operations = done by the same people; operations of 0.5 person are joined until one full person',
     arrDone: 'Operators as arranged in the file ({0} people): {1} machines run by a shared operator, {2} machines without own operator.', arrNone: 'The layout file has no column "Arrange. Optr / CN sắp xếp" (open the layout Excel file again).',
@@ -525,7 +531,7 @@ var I18N = {
     erg_standW: 'Standing: work area width', ergh_standW: 'An anti-fatigue mat is usually 90 cm wide; feet shoulder-width apart',
     erg_standGap: 'Standing: table edge → body centre', ergh_standGap: 'A standing operator is about 25-30 cm from the table edge',
     ocrCells: 'Reading each box… {0}/{1}', opShared: 'One operator runs {0} machines (seated at {1}).', opSplit: 'Split: {0} machines, one operator each.', sumMulti: '{0} operators run several machines', runBy: 'Run by the operator of {0}', alsoRuns: 'This operator also runs: {0}', bOpShare: 'One operator for these machines', bOpSplit: 'Split: one operator each', expErr: 'Could not export the image.', centerTable: 'Central table', bLineSetup: 'Set up line by machine count…', lsTitle: 'Line set-up',
-    lsHelp: 'Enter the line length as a number of standard machines placed end to end (one standard machine = 107 cm). A central table of machines × 107 cm is created; the two machine rows are placed on both sides of it when you paste a layout.',
+    lsHelp: 'Enter the line length as a number of standard machines placed end to end (one standard machine = 107 cm). A central table of machines × 107 cm is created; the two machine rows are placed on both sides of it when you paste a layout. 0 m is the start of the central table (a branch line also starts at 0 m); the input area lies in front, as wide as the line.',
     lsUnits: 'Standard machines', lsUnit: 'Standard machine (cm)', lsTable: 'Central table width (cm)', lsStart: 'Line start (cm)', lsEnd: 'Line end (cm)', lsWidth: 'Line width (cm)',
     lsCalc: 'Line length = {0} + {1} × {2} + {3} = {4} cm · central table {5} × {6} cm · width {7} cm (leave "Line width" empty to compute it: table + machines, operator zones and aisles on both sides).',
     opCardTitle: 'Operators', opCardHelp: 'One person runs several machines: select them (Shift+click, the machine with the operator first) and press 👤 or key W; machines apart are linked by a double arrow with the walking distance. Press 👤 again to split. The mode below: each click on a machine turns its operator on/off.',
@@ -540,7 +546,7 @@ var I18N = {
     bUndoTip: 'Undo (Ctrl+Z)', bRedoTip: 'Redo (Ctrl+Y)', bFit: 'Fit to screen', optFlow: 'Flow', optSnap: 'Snap', optAisle: 'Aisle behind operators',
     bPng: 'Export image', bPrint: 'Print', b3Reset: 'Default view', b3Top: 'Top view', opt3People: 'Operators', opt3Labels: 'Labels',
     hint3d: 'Drag a machine to move it · drag the floor: orbit · right drag/Shift: pan · wheel: zoom · Ctrl+click: add to selection · R/F/W/S like 2D',
-    hint2d: 'Drag a machine to move · R / Shift+R rotate 90° · F turn around · Delete remove · W operator on/off · S standing/sitting · Ctrl+D duplicate · arrows move 1 cm (Shift 10 cm) · Shift+drag box select · wheel zoom · drag the floor to pan · hold Alt while dragging: no snap',
+    hint2d: 'Drag a machine to move · R / Shift+R rotate 90° · F turn around · Delete remove · W operator on/off · S standing/sitting · K close up · Ctrl+D duplicate · arrows move 1 cm (Shift 10 cm) · Shift+drag box select · wheel zoom · drag the floor to pan · hold Alt while dragging: no snap',
     lnTitle: 'Line', lnName: 'Line name', lnLen: 'Length (cm)', lnWid: 'Width (cm)', bErg: 'Ergonomics…', lnUsed: 'Layout uses: {0} × {1} cm (operator zones included)', lineNoName: 'Unnamed line',
     selTitle: 'Selection', sumTitle: 'Summary', issTitle: 'Checks', issNone: 'No problems',
     selNone: 'Click a machine to see and edit it; turn buttons appear next to it. Shift+click to select several. The dashed blue area in front of a machine is the operator zone (chair + seat space); the red dot is the needle.',
@@ -810,7 +816,7 @@ var ERG_DEF = {
   emptyPitch: 107,// width of an empty cell in the pasted grid
   snap: 5
 };
-var LINE_DEF = { units: 17, unit: 107, tableW: 30, start: 120, end: 30 };
+var LINE_DEF = { units: 17, unit: 107, tableW: 30, start: 90, gap: 30, end: 30 };   // start = length of the input area in front of the line
 var ST = { line: { name: '', length: 2400, width: 600, fixed: false }, erg: Object.assign({}, ERG_DEF), items: [], seq: 1 };
 var SEL = [];            // selected ids (not saved)
 var UNDO = [], REDO = [];
@@ -1024,7 +1030,9 @@ function buildFromPaste(p, opt) {
   });
   if (opt.addInput && mainSpan) {
     var hh = mainSpan.y1 - mainSpan.y0;
-    items.unshift({ id: uid(), kind: 'obj', name: 'Input', L: inputL, W: Math.round(hh), H: 75, x: mainSpan.x0 - 40 - inputL / 2, y: mainSpan.y0 + hh / 2, rot: 0, color: '#8fb3d9' });
+    var inp = { id: uid(), kind: 'obj', name: 'Input', L: inputL, W: Math.round(hh), H: 75, x: mainSpan.x0 - 40 - inputL / 2, y: mainSpan.y0 + hh / 2, rot: 0, color: '#8fb3d9' };
+    if (opt.centers && zoneById('input')) placeInput(inp, 'main');
+    items.unshift(inp);
   }
   return items;
 }
@@ -1036,28 +1044,47 @@ function lineAutoWidth(tableW) { var e = ST.erg; return Math.ceil(tableW + 2 * (
 /* floor areas: main line, optional branch line and the walkway between them */
 function lineZones() { return ST.line.zones || [{ id: 'main', x: 0, y: 0, L: ST.line.length, W: ST.line.width }]; }
 function zoneById(id) { return lineZones().filter(function (z) { return z.id === id; })[0] || null; }
-/* o = {name, units, unit, tableW, start, end, width, branch: null | {units, unit, tableW, start, end, width, pos: 'top'|'bottom', walk, offset}}
-   main line length = start + units x unit + end, central table units x unit long; a branch line is another line next to it, a walkway between */
+/* o = {name, units, unit, tableW, start, gap, end, width, hc, branch: null | {units, unit, tableW, end, width, pos: 'top'|'bottom', walk}}
+   0 m = left edge of the central table; line = units x unit + end; the input area (start cm long, same width as the line)
+   lies in front of it, gap cm away; a branch line starts at the same 0 m, next to the main line with a walkway between */
 function setupLine(o) {
-  var mL = Math.round(o.start + o.units * o.unit + o.end), mW = Math.round(o.width || lineAutoWidth(o.tableW)), br = o.branch, bL = 0, bW = 0, walk = 0;
-  if (br) { bL = Math.round(br.start + br.units * br.unit + br.end); bW = Math.round(br.width || lineAutoWidth(br.tableW)); walk = Math.round(br.walk); }
-  var mainY = br && br.pos === 'top' ? bW + walk : 0, brY = br ? (br.pos === 'top' ? 0 : mW + walk) : 0, brX = br ? Math.round(br.offset || 0) : 0;
+  var inL = Math.max(0, Math.round(o.start != null ? o.start : LINE_DEF.start)), gap = Math.max(0, Math.round(o.gap != null ? o.gap : LINE_DEF.gap));
+  var mL = Math.round(o.units * o.unit + o.end), mW = Math.round(o.width || lineAutoWidth(o.tableW)), br = o.branch, bL = 0, bW = 0, walk = 0;
+  if (br) { bL = Math.round(br.units * br.unit + br.end); bW = Math.round(br.width || lineAutoWidth(br.tableW)); walk = Math.round(br.walk); }
+  var mainY = br && br.pos === 'top' ? bW + walk : 0, brY = br ? (br.pos === 'top' ? 0 : mW + walk) : 0, inX = -(inL + gap);
   var zones = [{ id: 'main', x: 0, y: mainY, L: mL, W: mW }];
+  if (inL > 0) zones.push({ id: 'input', x: inX, y: mainY, L: inL, W: mW });
   if (br) {
-    var wx0 = Math.min(0, brX), wx1 = Math.max(mL, brX + bL);
-    zones.push({ id: 'walk', x: wx0, y: br.pos === 'top' ? bW : mW, L: wx1 - wx0, W: walk }, { id: 'branch', x: brX, y: brY, L: bL, W: bW });
+    var wx0 = inL > 0 ? inX : 0, wx1 = Math.max(mL, bL);
+    zones.push({ id: 'walk', x: wx0, y: br.pos === 'top' ? bW : mW, L: wx1 - wx0, W: walk }, { id: 'branch', x: 0, y: brY, L: bL, W: bW });
+    if (inL > 0) zones.push({ id: 'inputB', x: inX, y: brY, L: inL, W: bW });
   }
-  ST.line = { name: o.name || '', length: Math.max(mL, brX + bL), width: mW + (br ? walk + bW : 0), fixed: true, units: o.units, unit: o.unit, tableW: o.tableW, start: o.start, end: o.end, hc: o.hc || 0,
-    mainWidth: o.width || 0, zones: zones, branch: br || null };
+  ST.line = { name: o.name || '', length: Math.max(mL, bL), width: mW + (br ? walk + bW : 0), fixed: true, units: o.units, unit: o.unit, tableW: o.tableW, start: inL, gap: gap, end: o.end, hc: o.hc || 0,
+    mainWidth: o.width || 0, zones: zones, branch: br || null, v: 2 };
   function center(zid, x, y, L, W) {
     var c = centerOf(zid), dx = 0, dy = 0;
-    if (c) { dx = x - c.x; dy = y - c.y; ST.items.forEach(function (it) { if (it !== c && (it.zone || 'main') === zid) { it.x = n1(it.x + dx); it.y = n1(it.y + dy); } }); }
+    if (c) { dx = x - c.x; dy = y - c.y; ST.items.forEach(function (it) { if (it !== c && (it.zone || 'main') === zid && !isInputObj(it)) { it.x = n1(it.x + dx); it.y = n1(it.y + dy); } }); }
     else { c = { id: uid(), kind: 'obj', role: 'center', zone: zid === 'main' ? undefined : zid, name: zid === 'main' ? t('centerTable') : t('centerTableB'), H: 75, rot: 0, color: '#d9cdb0' }; ST.items.unshift(c); }
     c.L = L; c.W = W; c.x = n1(x); c.y = n1(y);
   }
-  center('main', o.start + o.units * o.unit / 2, mainY + mW / 2, o.units * o.unit, o.tableW);
-  if (br) center('branch', brX + br.start + br.units * br.unit / 2, brY + bW / 2, br.units * br.unit, br.tableW);
+  center('main', o.units * o.unit / 2, mainY + mW / 2, o.units * o.unit, o.tableW);
+  if (br) center('branch', br.units * br.unit / 2, brY + bW / 2, br.units * br.unit, br.tableW);
   else { var cb = centerOf('branch'); if (cb) ST.items = ST.items.filter(function (it) { return it !== cb; }); }
+  ST.items.filter(isInputObj).forEach(function (it) { placeInput(it, it.zone === 'branch' ? 'branch' : 'main'); });
+}
+function isInputObj(it) { return it.kind === 'obj' && it.role !== 'center' && /^input$/i.test(String(it.name || '').trim()); }
+/* the input table: in the middle of the input area of its line (main / branch) */
+function placeInput(it, line) {
+  var z = zoneById(line === 'branch' ? 'inputB' : 'input'); if (!z) return false;
+  it.L = Math.min(it.L || 60, Math.max(20, z.L - 20)); it.W = Math.min(it.W || 120, Math.max(20, z.W - 20));
+  it.x = n1(z.x + z.L / 2); it.y = n1(z.y + z.W / 2); it.rot = 0;
+  return true;
+}
+/* outer extent of all floor areas (the input area lies left of 0 m) */
+function lineExtent() {
+  var x0 = 0, y0 = 0, x1 = ST.line.length, y1 = ST.line.width;
+  lineZones().forEach(function (z) { x0 = Math.min(x0, z.x); y0 = Math.min(y0, z.y); x1 = Math.max(x1, z.x + z.L); y1 = Math.max(y1, z.y + z.W); });
+  return { x0: x0, y0: y0, x1: x1, y1: y1 };
 }
 /* ---------- shared operators: it.by = id of the machine whose operator also runs this one ---------- */
 function homeOf(it) { var h = it && it.by ? itemById(it.by) : null; return h && !h.noOp ? h : null; }
@@ -1081,9 +1108,9 @@ function opLinks() {
     var h = homeOf(it); if (!it.noOp || !h) return;
     var a = shapes(h), b = shapes(it), big = { cx: a.table.cx, cy: a.table.cy, hx: a.table.hx + 25, hy: a.table.hy + 25, a: a.table.a };
     var p1 = a.chair || a.front, p2 = b.front;
-    // c1/c2: points on the two tables for the curved arrow (a little behind the table centres); back = direction away from the operator
-    var c1 = rotPt(h, a.seatX || 0, -a.W * 0.15), c2 = rotPt(it, b.seatX || 0, -b.W * 0.15), ang = (h.rot || 0) * Math.PI / 180;
-    out.push({ home: h, sat: it, p1: p1, p2: p2, c1: c1, c2: c2, back: { x: Math.sin(ang), y: -Math.cos(ang) }, far: !(overlap(big, b.table) > 0), dist: Math.hypot(p2.x - p1.x, p2.y - p1.y) });
+    // c1/c2: the curved arrow runs behind the operator's back (outer end of the operator zone), away from the central table; back = that side
+    var c1 = rotPt(h, a.seatX || 0, a.W / 2 + (a.zd || 60) * 0.9), c2 = rotPt(it, b.seatX || 0, b.W / 2 + (b.zd || 60) * 0.9), ang = (h.rot || 0) * Math.PI / 180;
+    out.push({ home: h, sat: it, p1: p1, p2: p2, c1: c1, c2: c2, back: { x: -Math.sin(ang), y: Math.cos(ang) }, far: !(overlap(big, b.table) > 0), dist: Math.hypot(p2.x - p1.x, p2.y - p1.y) });
   });
   return out;
 }
@@ -1137,15 +1164,15 @@ function n1(v) { return Math.round(v * 10) / 10; }
 function planMarkup(o) {
   var P = o.P, s = o.s, L = ST.line.length, W = ST.line.width, e = ST.erg, h = [];
   var fs = o.fs || Math.max(5, Math.min(40, 12 / s)), sw = 1 / s;   // font size in cm, 1 px stroke in cm
-  var zs = lineZones(), multi = zs.length > 1;
-  h.push('<rect x="0" y="0" width="' + L + '" height="' + W + '" fill="' + (multi ? P.outFloor : P.floor) + '"/>');
+  var zs = lineZones(), multi = zs.length > 1, EX = lineExtent();
+  h.push('<rect x="' + EX.x0 + '" y="' + EX.y0 + '" width="' + (EX.x1 - EX.x0) + '" height="' + (EX.y1 - EX.y0) + '" fill="' + (multi ? P.outFloor : P.floor) + '"/>');
   if (multi) zs.forEach(function (z) { if (z.id !== 'walk') h.push('<rect x="' + z.x + '" y="' + z.y + '" width="' + z.L + '" height="' + z.W + '" fill="' + P.floor + '"/>'); });
   var step = 50 * s < 10 ? 100 : 50;
-  for (var x = 0; x <= L; x += step) h.push('<line x1="' + x + '" y1="0" x2="' + x + '" y2="' + W + '" stroke="' + (x % 100 ? P.grid : P.grid2) + '" stroke-width="' + sw + '"/>');
-  for (var y = 0; y <= W; y += step) h.push('<line x1="0" y1="' + y + '" x2="' + L + '" y2="' + y + '" stroke="' + (y % 100 ? P.grid : P.grid2) + '" stroke-width="' + sw + '"/>');
+  for (var x = Math.ceil(EX.x0 / step) * step; x <= EX.x1; x += step) h.push('<line x1="' + x + '" y1="' + EX.y0 + '" x2="' + x + '" y2="' + EX.y1 + '" stroke="' + (x % 100 ? P.grid : P.grid2) + '" stroke-width="' + sw + '"/>');
+  for (var y = 0; y <= W; y += step) h.push('<line x1="' + EX.x0 + '" y1="' + y + '" x2="' + EX.x1 + '" y2="' + y + '" stroke="' + (y % 100 ? P.grid : P.grid2) + '" stroke-width="' + sw + '"/>');
   var rs = Math.max(100, Math.ceil(60 / s / 100) * 100);
   for (x = 0; x <= L; x += rs) h.push('<text x="' + x + '" y="' + (-fs * 0.5) + '" font-size="' + fs * 0.85 + '" fill="' + P.muted + '" text-anchor="middle">' + (x / 100) + ' m</text>');
-  for (y = rs; y <= W; y += rs) h.push('<text x="' + (-fs * 0.4) + '" y="' + (y + fs * 0.3) + '" font-size="' + fs * 0.85 + '" fill="' + P.muted + '" text-anchor="end">' + (y / 100) + '</text>');
+  for (y = rs; y <= W; y += rs) h.push('<text x="' + (EX.x0 - fs * 0.4) + '" y="' + (y + fs * 0.3) + '" font-size="' + fs * 0.85 + '" fill="' + P.muted + '" text-anchor="end">' + (y / 100) + '</text>');
   if (!multi) h.push('<rect x="0" y="0" width="' + L + '" height="' + W + '" fill="none" stroke="' + P.edge + '" stroke-width="' + 2 * sw + '"/>');
   else zs.forEach(function (z) {
     if (z.id === 'walk') {   // walkway between the two lines: hatched, with its width
@@ -1154,7 +1181,7 @@ function planMarkup(o) {
       h.push('<text x="' + (z.x + z.L / 2) + '" y="' + (z.y + z.W / 2 + fs * 0.35) + '" font-size="' + fs * 0.9 + '" font-weight="700" fill="' + P.walkEdge + '" text-anchor="middle" stroke="' + P.floor + '" stroke-width="' + fs * 0.2 + '" paint-order="stroke">' + esc(t('walkLbl', [z.W])) + '</text>');
     } else {
       h.push('<rect x="' + z.x + '" y="' + z.y + '" width="' + z.L + '" height="' + z.W + '" fill="none" stroke="' + P.edge + '" stroke-width="' + 2 * sw + '"/>');
-      h.push('<text x="' + (z.x + fs * 0.4) + '" y="' + (z.y + fs * 1.1) + '" font-size="' + fs * 0.85 + '" font-weight="700" fill="' + P.muted + '">' + esc(t(z.id === 'branch' ? 'zoneBranch' : 'zoneMain')) + '</text>');
+      h.push('<text x="' + (z.x + fs * 0.4) + '" y="' + (z.y + fs * 1.1) + '" font-size="' + fs * 0.85 + '" font-weight="700" fill="' + P.muted + '">' + esc(t(z.id === 'branch' ? 'zoneBranch' : /^input/.test(z.id) ? 'zoneInput' : 'zoneMain')) + '</text>');
     }
   });
   var bad = issueIds('bad'), warn = issueIds('warn'), labels = [];
@@ -1277,7 +1304,7 @@ function toWorld(ev) { var r = svgEl().getBoundingClientRect(); return { x: V.x 
 function fitView() {
   var svg = svgEl(), w = svg.clientWidth, h = svg.clientHeight; if (!w) return;
   var b = bbox(ST.items) || { x0: 0, y0: 0, x1: 0, y1: 0 };
-  var x0 = Math.min(0, b.x0), y0 = Math.min(0, b.y0), x1 = Math.max(ST.line.length, b.x1), y1 = Math.max(ST.line.width, b.y1);
+  var EX = lineExtent(), x0 = Math.min(EX.x0, b.x0), y0 = Math.min(EX.y0, b.y0), x1 = Math.max(EX.x1, b.x1), y1 = Math.max(EX.y1, b.y1);
   var pad = 60;
   V.s = Math.min(w / (x1 - x0 + 2 * pad), h / (y1 - y0 + 2 * pad));
   V.x = x0 - pad - ((w / V.s) - (x1 - x0 + 2 * pad)) / 2; V.y = y0 - pad - ((h / V.s) - (y1 - y0 + 2 * pad)) / 2;
@@ -1417,6 +1444,36 @@ function packSel() {
   its.forEach(function (it) { var w = extentX(it); it.x = n1(acc + w / 2); acc += w + ST.erg.colGap; });
   changed();
 }
+/* close up the selection: machines of a row touch each other (no gap, from the left one), and the row nearest the
+   central table touches it with the edge facing it (rows further out move with it) */
+function tableExt(it) { var c = corners(shapes(it).table), xs = c.map(function (p) { return p.x; }), ys = c.map(function (p) { return p.y; }); return { x0: Math.min.apply(null, xs), x1: Math.max.apply(null, xs), y0: Math.min.apply(null, ys), y1: Math.max.apply(null, ys) }; }
+function closeSel() {
+  var its = selItems().filter(function (it) { return it.kind === 'mc' && !isLocked(it); }); if (!its.length) return;
+  var groups = {};
+  its.forEach(function (it) {
+    var ct = centerOf(it.zone === 'branch' ? 'branch' : 'main'), side = ct ? (it.y < ct.y ? 'top' : 'bot') : 'all', k = (it.zone || 'main') + '|' + side;
+    (groups[k] = groups[k] || { ct: ct, side: side, its: [] }).its.push(it);
+  });
+  Object.keys(groups).forEach(function (k) {
+    var g = groups[k], ct = g.ct, cTop = ct ? ct.y - ct.W / 2 : 0, cBot = ct ? ct.y + ct.W / 2 : 0;
+    var dist = function (e) { return g.side === 'top' ? cTop - e.y1 : g.side === 'bot' ? e.y0 - cBot : e.y0; };
+    var list = g.its.map(function (it) { return { it: it, e: tableExt(it) }; }).sort(function (a, b) { return dist(a.e) - dist(b.e); });
+    var rows = [];   // machines whose tables overlap in y form a row
+    list.forEach(function (m) {
+      var r = rows.filter(function (r) { var ov = Math.min(r.y1, m.e.y1) - Math.max(r.y0, m.e.y0); return ov > 0.3 * Math.min(r.y1 - r.y0, m.e.y1 - m.e.y0); })[0];
+      if (r) { r.ms.push(m); r.y0 = Math.min(r.y0, m.e.y0); r.y1 = Math.max(r.y1, m.e.y1); } else rows.push({ ms: [m], y0: m.e.y0, y1: m.e.y1 });
+    });
+    var dy = 0;
+    rows.forEach(function (r, ri) {
+      r.ms.sort(function (a, b) { return a.e.x0 - b.e.x0; });
+      var cur = r.ms[0].e.x0;
+      r.ms.forEach(function (m) { m.it.x = n1(m.it.x + cur - m.e.x0); cur += m.e.x1 - m.e.x0; });
+      if (ri === 0 && ct) dy = g.side === 'top' ? cTop - r.y1 : cBot - r.y0;   // the edge facing the central table touches it
+      if (dy) r.ms.forEach(function (m) { m.it.y = n1(m.it.y + dy); });
+    });
+  });
+  changed();
+}
 function addMachine(code) {
   code = normCode(code); if (!code) return;
   var d = dimOf(code), c = viewCenter();
@@ -1433,7 +1490,7 @@ function viewCenter() { var svg = svgEl(), w = svg.clientWidth || 800, h = svg.c
 /* ---------- export ---------- */
 function exportPng(cb) {
   var b = bbox(ST.items) || { x0: 0, y0: 0, x1: 0, y1: 0 };
-  var x0 = Math.min(0, b.x0) - 40, y0 = Math.min(0, b.y0) - 110, x1 = Math.max(ST.line.length, b.x1) + 40, y1 = Math.max(ST.line.width, b.y1) + 40;
+  var EX = lineExtent(), x0 = Math.min(EX.x0, b.x0) - 40, y0 = Math.min(EX.y0, b.y0) - 110, x1 = Math.max(EX.x1, b.x1) + 40, y1 = Math.max(EX.y1, b.y1) + 40;
   // printable: about 3 px per cm (a 20 m line gives ~6500 px), big labels (15 cm text, operation numbers ~26 cm)
   var px = Math.max(1.5, Math.min(3.5, 7000 / (x1 - x0))), w = Math.round((x1 - x0) * px), h = Math.round((y1 - y0) * px);
   var head = '<text x="' + (x0 + 40) + '" y="' + (y0 + 45) + '" font-size="34" font-weight="700" fill="#1d2330">' + esc([(ST.info || {}).style, ST.line.name || t('lineNoName'), ST.line.length + ' × ' + ST.line.width + ' cm'].filter(Boolean).join(' · ')) + '</text>' +
@@ -1729,9 +1786,9 @@ function view3dReset(top) {
   var cx = b ? (b.x0 + b.x1) / 2 : L / 2, cz = b ? (b.y0 + b.y1) / 2 : W / 2, span = Math.max(b ? b.x1 - b.x0 : L, b ? b.y1 - b.y0 : W, 300);
   V3.tgt.set(cx, 50, cz); V3.theta = top ? 0 : -0.5; V3.phi = top ? 0.02 : 0.9; V3.rad = span * 0.8 + 150;
   if (top) {   // fit the whole line (with its ruler) to the screen
-    var sx = Math.max(L, b ? b.x1 : 0) - Math.min(0, b ? b.x0 : 0) + 320, sz = Math.max(W, b ? b.y1 : 0) - Math.min(0, b ? b.y0 : 0) + 260;
+    var EX = lineExtent(), sx = Math.max(EX.x1, b ? b.x1 : 0) - Math.min(EX.x0, b ? b.x0 : 0) + 320, sz = Math.max(W, b ? b.y1 : 0) - Math.min(0, b ? b.y0 : 0) + 260;
     var vf = V3.cam.fov * Math.PI / 360, hf = Math.atan(Math.tan(vf) * V3.cam.aspect);
-    V3.tgt.set(L / 2, 0, W / 2); V3.rad = Math.max(sx / 2 / Math.tan(hf), sz / 2 / Math.tan(vf)) * 1.04 + 180;
+    V3.tgt.set((EX.x0 + EX.x1) / 2, 0, W / 2); V3.rad = Math.max(sx / 2 / Math.tan(hf), sz / 2 / Math.tan(vf)) * 1.04 + 180;
   }
   draw3d();
 }
@@ -1783,7 +1840,7 @@ function rebuild3d() {
   // shared operators: double arrow on the floor between the operator and the far machine
   // shared operator: curved arrow from the operator's machine to the other machine (distance label when apart)
   opLinks().forEach(function (l) {
-    var c1 = new THREE.Vector3(l.c1.x, H + 45, l.c1.y), c2 = new THREE.Vector3(l.c2.x, H + 45, l.c2.y), mid = c1.clone().add(c2).multiplyScalar(0.5), dl = c1.distanceTo(c2);
+    var c1 = new THREE.Vector3(l.c1.x, H + 85, l.c1.y), c2 = new THREE.Vector3(l.c2.x, H + 85, l.c2.y), mid = c1.clone().add(c2).multiplyScalar(0.5), dl = c1.distanceTo(c2);
     var ctl = mid.clone().add(new THREE.Vector3(l.back.x * Math.min(dl * 0.35, 120), Math.max(45, Math.min(dl * 0.45, 220)), l.back.y * Math.min(dl * 0.35, 120)));
     if (l.far && V3.labels) { var dsp = smallSprite((l.dist / 100).toFixed(1) + ' m', 90); dsp.position.copy(c1.clone().add(c2).multiplyScalar(0.25).add(ctl.clone().multiplyScalar(0.5))).add(new THREE.Vector3(0, 18, 0)); root.add(dsp); }
     var end = c2.clone().add(ctl.clone().sub(c2).normalize().multiplyScalar(20)), curve = new THREE.QuadraticBezierCurve3(c1, ctl, end);
@@ -3462,7 +3519,7 @@ function renderSel() {
     h += '<div><b>' + esc(t('selMany', [its.length])) + '</b></div>';
     h += '<div class="btns"><button data-cmd="rotL">⟲ 90°</button><button data-cmd="rotR">⟳ 90°</button><button data-cmd="flip">' + esc(t('bFlip')) + '</button><button data-cmd="op" title="W">👤 ' + esc(t(opGrouped(its) ? 'bOpSplit' : 'bOpShare')) + '</button></div>';
     h += '<div class="btns"><button data-cmd="grpR" title="' + esc(t('bGrpTip')) + '">' + esc(t('bGrp90')) + '</button><button data-cmd="grp180" title="' + esc(t('bGrpTip')) + '">' + esc(t('bGrp180')) + '</button></div>';
-    h += '<div class="btns"><button data-cmd="align" title="' + esc(t('bAlignTip')) + '">' + esc(t('bAlign')) + '</button><button data-cmd="pack" title="' + esc(t('bPackTip')) + '">' + esc(t('bPack')) + '</button><button data-cmd="dup">' + esc(t('bDup')) + '</button><button data-cmd="del" class="danger">' + esc(t('bDel')) + '</button></div>';
+    h += '<div class="btns"><button data-cmd="align" title="' + esc(t('bAlignTip')) + '">' + esc(t('bAlign')) + '</button><button data-cmd="pack" title="' + esc(t('bPackTip')) + '">' + esc(t('bPack')) + '</button><button data-cmd="close" title="' + esc(t('ttClose')) + '">' + esc(t('bClose')) + '</button><button data-cmd="dup">' + esc(t('bDup')) + '</button><button data-cmd="del" class="danger">' + esc(t('bDel')) + '</button></div>';
   }
   $('selBody').innerHTML = h;
 }
@@ -3501,7 +3558,7 @@ function toggleStand() {
 }
 function cmd(c) {
   ({ rotL: function () { rotateSel(-90); }, rotR: function () { rotateSel(90); }, flip: function () { rotateSel(180); }, dup: duplicateSel, del: deleteSel,
-    op: toggleOperator, stand: toggleStand, grpR: function () { rotateGroup(90); }, grp180: function () { rotateGroup(180); }, align: alignSel, pack: packSel }[c] || function () {})();
+    op: toggleOperator, stand: toggleStand, grpR: function () { rotateGroup(90); }, grp180: function () { rotateGroup(180); }, align: alignSel, pack: packSel, close: closeSel }[c] || function () {})();
   renderSel();
 }
 
@@ -3559,27 +3616,27 @@ function pasteGo() {
 function lineVals() {
   var L = ST.line;
   return { name: $('lsName').value.trim(), units: Math.max(1, Math.round(num($('lsUnits').value, L.units || LINE_DEF.units))), unit: Math.max(10, num($('lsUnit').value, LINE_DEF.unit)),
-    tableW: Math.max(0, num($('lsTable').value, LINE_DEF.tableW)), start: Math.max(0, num($('lsStart').value, LINE_DEF.start)), end: Math.max(0, num($('lsEnd').value, LINE_DEF.end)),
+    tableW: Math.max(0, num($('lsTable').value, LINE_DEF.tableW)), start: Math.max(0, num($('lsStart').value, LINE_DEF.start)), gap: Math.max(0, num($('lsGap').value, LINE_DEF.gap)), end: Math.max(0, num($('lsEnd').value, LINE_DEF.end)),
     width: num($('lsWidth').value, 0), hc: Math.max(0, Math.round(num($('lsHC').value, 0))),
     branch: !$('lsBr').checked ? null : { units: Math.max(1, Math.round(num($('lsBUnits').value, 6))), unit: Math.max(10, num($('lsUnit').value, LINE_DEF.unit)), tableW: Math.max(0, num($('lsBTable').value, LINE_DEF.tableW)),
-      start: 30, end: 30, pos: $('lsBPos').value, walk: Math.max(0, num($('lsBWalk').value, 100)), offset: Math.max(0, num($('lsBOff').value, 0)), width: num($('lsBWidth').value, 0) } };
+      end: 30, pos: $('lsBPos').value, walk: Math.max(0, num($('lsBWalk').value, 100)), width: num($('lsBWidth').value, 0) } };
 }
 function lineCalc() {
-  var o = lineVals(), L = o.start + o.units * o.unit + o.end, W = o.width || lineAutoWidth(o.tableW);
+  var o = lineVals(), L = o.units * o.unit + o.end, W = o.width || lineAutoWidth(o.tableW);
   $('lsWidth').placeholder = lineAutoWidth(o.tableW);
-  $('lsCalc').innerHTML = esc(t('lsCalc', [o.start, o.units, o.unit, o.end, Math.round(L), Math.round(o.units * o.unit), o.tableW, Math.round(W)])) +
+  $('lsCalc').innerHTML = esc(t('lsCalc2', [o.units, o.unit, o.end, Math.round(L), Math.round(o.units * o.unit), o.tableW, Math.round(W), o.start, o.gap])) +
     (o.branch ? '<br>' + esc(t('lsBCalc', [o.branch.units, Math.round(o.branch.units * o.branch.unit), o.branch.width || lineAutoWidth(o.branch.tableW), o.branch.walk, Math.round(W + o.branch.walk + (o.branch.width || lineAutoWidth(o.branch.tableW)))])) : '');
   $('lsBrBox').style.display = $('lsBr').checked ? '' : 'none'; $('lsBWidth').placeholder = lineAutoWidth(num($('lsBTable').value, 30));
 }
 function openLineSetup() {
   var L = ST.line, ct = centerTable();
   $('lsName').value = L.name || ''; $('lsUnits').value = L.units || LINE_DEF.units; $('lsUnit').value = L.unit || LINE_DEF.unit;
-  $('lsTable').value = ct ? ct.W : (L.tableW != null ? L.tableW : LINE_DEF.tableW); $('lsStart').value = L.start != null ? L.start : LINE_DEF.start; $('lsEnd').value = L.end != null ? L.end : LINE_DEF.end;
+  $('lsTable').value = ct ? ct.W : (L.tableW != null ? L.tableW : LINE_DEF.tableW); $('lsStart').value = L.v === 2 && L.start != null ? L.start : LINE_DEF.start; $('lsGap').value = L.gap != null ? L.gap : LINE_DEF.gap; $('lsEnd').value = L.end != null ? L.end : LINE_DEF.end;
   $('lsWidth').value = L.units ? (L.mainWidth || (L.zones ? zoneById('main').W : L.width)) : '';
   $('lsHC').value = L.hc || ''; $('lsHC').placeholder = (ST.info || {}).optr || ST.items.filter(function (i) { return i.kind === 'mc' && !i.noOp; }).length || '';
   var B = L.branch, cb = centerOf('branch');
   $('lsBr').checked = !!B; $('lsBUnits').value = B ? B.units : 6; $('lsBTable').value = cb ? cb.W : (B ? B.tableW : LINE_DEF.tableW); $('lsBPos').value = B ? B.pos : 'top';
-  $('lsBWalk').value = B ? B.walk : 100; $('lsBOff').value = B ? B.offset : (L.start != null ? L.start : LINE_DEF.start); $('lsBWidth').value = B && B.width ? B.width : '';
+  $('lsBWalk').value = B ? B.walk : 100; $('lsBWidth').value = B && B.width ? B.width : '';
   lineCalc(); $('dlgLine').showModal();
 }
 function applyLineSetup() { setupLine(lineVals()); $('dlgLine').close(); changed(); fitView(); if (TAB === '3d') view3dReset(false); }
@@ -3751,6 +3808,7 @@ function onKey(e) {
   else if (k === 'f' || k === 'F') rotateSel(180);
   else if (k === 'w' || k === 'W') toggleOperator();
   else if (k === 's' || k === 'S') toggleStand();
+  else if (k === 'k' || k === 'K') closeSel();
   else if (k === 'Delete' || k === 'Backspace') deleteSel();
   else if (k === 'ArrowLeft') nudgeSel(-st, 0); else if (k === 'ArrowRight') nudgeSel(st, 0);
   else if (k === 'ArrowUp') nudgeSel(0, -st); else if (k === 'ArrowDown') nudgeSel(0, st);
@@ -3798,7 +3856,7 @@ function startApp() {
   $('optAisle').checked = OPT.aisles; $('optAisle').onchange = function () { OPT.aisles = this.checked; render2d(); };
   $('bErg').onclick = openErg;
   $('bLineSetup').onclick = openLineSetup;
-  ['lsUnits', 'lsUnit', 'lsTable', 'lsStart', 'lsEnd', 'lsWidth'].forEach(function (id) { $(id).oninput = lineCalc; });
+  ['lsUnits', 'lsUnit', 'lsTable', 'lsStart', 'lsGap', 'lsEnd', 'lsWidth'].forEach(function (id) { $(id).oninput = lineCalc; });
   $('lsOk').onclick = applyLineSetup;
   $('selTools').addEventListener('pointerdown', function (e) { e.stopPropagation(); });
   $('selTools').addEventListener('click', function (e) { var b = e.target.closest('button[data-cmd]'); if (b) cmd(b.dataset.cmd); });
@@ -3815,7 +3873,7 @@ function startApp() {
   $('bXlOpen').onclick = function () { $('fileXl').value = ''; $('fileXl').click(); };
   $('fileXl').onchange = function () { if (this.files[0]) xlOpen(this.files[0]); };
   $('xlPick').onchange = xlUse; $('xlPickB').onchange = xlUse;
-  $('lsBr').onchange = lineCalc; ['lsBUnits', 'lsBTable', 'lsBWalk', 'lsBOff', 'lsBWidth', 'lsBPos'].forEach(function (id) { $(id).oninput = lineCalc; $(id).onchange = lineCalc; });
+  $('lsBr').onchange = lineCalc; ['lsBUnits', 'lsBTable', 'lsBWalk', 'lsBWidth', 'lsBPos'].forEach(function (id) { $(id).oninput = lineCalc; $(id).onchange = lineCalc; });
   $('bOpAll').onclick = function () { ST.items.forEach(function (i) { delete i.noOp; delete i.by; }); changed(); };
   ['bStandAll', 'bStandAll2', 'bStandAll3'].forEach(function (id) { $(id).onclick = function () { var st = standAll(); changed(); toast(t(st ? 'allStand' : 'allSit')); }; });
   $('bStandDef').onclick = function () { standDefault(); changed(); toast(t('standDefDone')); };

@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Layout Sim: User guide</title><link rel="icon" href="../icon.png"><link rel="stylesheet" href="manual.css"></head><body>
-<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>Layout Sim v2.3: User guide</b><a href="layout-sim.html" title="Tiếng Việt" onclick="try{localStorage.setItem('ie_site_lang','vi')}catch(e){}">VI</a><a href="../index.html">‹ Home</a></header>
+<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>Layout Sim v2.4: User guide</b><a href="layout-sim.html" title="Tiếng Việt" onclick="try{localStorage.setItem('ie_site_lang','vi')}catch(e){}">VI</a><a href="../index.html">‹ Home</a></header>
 <div class="wrap">
 <nav class="toc"><b>Contents</b>
 <a href="#intro">1. Introduction</a>
@@ -58,10 +58,12 @@
 <table><tr><th>Field</th><th>Meaning</th></tr>
 <tr><td>Số máy chuẩn, Máy chuẩn (cm)</td><td>Line length in standard machine units; default 1 unit = 107 cm.</td></tr>
 <tr><td>Bàn giữa rộng (cm)</td><td>Central table: units × 107 cm long, 30 cm wide by default.</td></tr>
-<tr><td>Đầu chuyền, Cuối chuyền (cm)</td><td>Free space at the start and the end of the line (input table, packing…).</td></tr>
+<tr><td>Khu đầu vào dài, Khu đầu vào cách chuyền (cm)</td><td>The input area (input table) lies <b>in front of</b> the line, as wide as the line; 90 cm long and 30 cm away by default. The layout's input table is placed in the middle of it.</td></tr>
+<tr><td>Cuối chuyền (cm)</td><td>Free space after the central table (packing…).</td></tr>
 <tr><td>Chuyền rộng (cm)</td><td>Empty = computed from the central table, machines, operator zones and aisles.</td></tr>
 <tr><td>Số công nhân (HC)</td><td>Headcount of the line used by the WIP simulation. Empty = workers from the layout file.</td></tr>
-<tr><td>Có chuyền nhánh</td><td>Branch line next to the main line (depends on the style): units, central table, position above/below, walkway between the lines (100 cm by default), offset from the start of the main line.</td></tr></table>
+<tr><td>Có chuyền nhánh</td><td>Branch line next to the main line (depends on the style): units, central table, position above/below, walkway between the lines (100 cm by default). Its central table starts at the same 0 m as the main line; it also has its own input area in front.</td></tr></table>
+<div class="note"><b>0 m</b> is the start (left edge) of the central table. The meter rulers of the 2D plan and the 3D view count from there.</div>
 <figure><a href="img/ls-linesetup.png"><img src="img/ls-linesetup.png" alt="Line set-up" loading="lazy"></a><figcaption>A line of 8 standard units with a branch line of 6 units and a 1 m walkway.</figcaption></figure>
 <p><span class="btn">Công thái học…</span> (ergonomics): sizes of the sitting/standing operator zone, chair, aisle behind the operator, gaps between machine rows.</p>
 </section>
@@ -84,6 +86,7 @@
 <li>Drag a machine to move it; drag the background to pan; mouse wheel to zoom. Shift+drag on the background selects several machines.</li>
 <li>Click a machine: floating buttons <span class="btn">⟲</span> <span class="btn">⟳</span> <span class="btn">⇅ 180°</span> <span class="btn">👤</span> <span class="btn">🧍</span> <span class="btn">🗑</span>. The <b>Đang chọn</b> (selection) card edits code, operation, position and angle.</li>
 <li>Box <b>Code / op.</b> + <span class="btn">+ Máy</span>: add a machine by code, or type an operation number to add that operation's machine (section 8). <span class="btn">+ Thêm</span>: input table, QC table, table, pillar, trolley, obstacle.</li>
+<li><b>Close up</b> (button <span class="btn">⇥⇤</span> on the floating buttons, <span class="btn">⇥⇤ Khép sát</span> in the selection card, or K): the selected machines are pushed together along each row with no gap (from the left machine); the edge facing the central table touches it; rows further out move with it. Select the whole line (Ctrl+A) and press K to close up everything.</li>
 <li><b>Bám lưới</b> (snap): machines snap to the grid while dragged (hold Alt to release). <b>Lối đi sau lưng</b>: shows the aisle behind the operators.</li>
 <li>Button <span class="btn">◨</span> (top right) hides/shows the right panel for a bigger plan.</li></ul>
 <p>The <b>Kiểm tra</b> card lists errors (red) and warnings (yellow): overlapping machines, operator zone blocked by another machine, aisle behind the operator blocked, machine outside the line or in the walkway, code without size. Click a line to select the machine.</p>
@@ -93,7 +96,7 @@
 <section id="operators"><h2>7. Operators</h2>
 <ul>
 <li>Every machine has one operator by default (chair or standing spot). Presses and irons stand by default.</li>
-<li><b>One person runs several machines</b>: select the machines (Shift+click, the machine with the operator first) and press <span class="btn">👤</span> or W. Neighbouring machines are joined by a curved arrow; far machines also show the walking distance. Press <span class="btn">👤</span> again to split.</li>
+<li><b>One person runs several machines</b>: select the machines (Shift+click, the machine with the operator first) and press <span class="btn">👤</span> or W. The purple curved arrow is drawn <b>behind the operator's back</b> (not over the central table); far machines also show the walking distance. Press <span class="btn">👤</span> again to split.</li>
 <li><span class="btn">👤 Bấm máy để bật/tắt người</span>: each click on a machine turns its operator on/off. <span class="btn">Tất cả có người</span>: operator on every machine.</li>
 <li><span class="btn">🧍↔🪑 Tất cả đứng / ngồi</span> and <span class="btn">Mặc định (ép, ủi đứng)</span>; per machine: 🧍 or S.</li></ul>
 <figure><a href="img/ls-share.png"><img src="img/ls-share.png" alt="One person, several machines" loading="lazy"></a><figcaption>One person runs several machines: purple arrows join the seat with the machines of that person.</figcaption></figure>
@@ -174,6 +177,8 @@
 <tr><td>F</td><td>Turn 180°</td></tr>
 <tr><td>W</td><td>Operator: on/off (one machine) or one person for the selected machines</td></tr>
 <tr><td>S</td><td>Standing / sitting</td></tr>
+<tr><td>K</td><td>Close up the selected machines</td></tr>
+<tr><td>Ctrl+A</td><td>Select all</td></tr>
 <tr><td>Delete</td><td>Delete</td></tr>
 <tr><td>Ctrl+D</td><td>Duplicate</td></tr>
 <tr><td>Arrows (Shift)</td><td>Move 1 cm (10 cm)</td></tr>

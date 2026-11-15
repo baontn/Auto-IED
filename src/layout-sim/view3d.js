@@ -278,9 +278,9 @@ function view3dReset(top) {
   var cx = b ? (b.x0 + b.x1) / 2 : L / 2, cz = b ? (b.y0 + b.y1) / 2 : W / 2, span = Math.max(b ? b.x1 - b.x0 : L, b ? b.y1 - b.y0 : W, 300);
   V3.tgt.set(cx, 50, cz); V3.theta = top ? 0 : -0.5; V3.phi = top ? 0.02 : 0.9; V3.rad = span * 0.8 + 150;
   if (top) {   // fit the whole line (with its ruler) to the screen
-    var sx = Math.max(L, b ? b.x1 : 0) - Math.min(0, b ? b.x0 : 0) + 320, sz = Math.max(W, b ? b.y1 : 0) - Math.min(0, b ? b.y0 : 0) + 260;
+    var EX = lineExtent(), sx = Math.max(EX.x1, b ? b.x1 : 0) - Math.min(EX.x0, b ? b.x0 : 0) + 320, sz = Math.max(W, b ? b.y1 : 0) - Math.min(0, b ? b.y0 : 0) + 260;
     var vf = V3.cam.fov * Math.PI / 360, hf = Math.atan(Math.tan(vf) * V3.cam.aspect);
-    V3.tgt.set(L / 2, 0, W / 2); V3.rad = Math.max(sx / 2 / Math.tan(hf), sz / 2 / Math.tan(vf)) * 1.04 + 180;
+    V3.tgt.set((EX.x0 + EX.x1) / 2, 0, W / 2); V3.rad = Math.max(sx / 2 / Math.tan(hf), sz / 2 / Math.tan(vf)) * 1.04 + 180;
   }
   draw3d();
 }
@@ -332,7 +332,7 @@ function rebuild3d() {
   // shared operators: double arrow on the floor between the operator and the far machine
   // shared operator: curved arrow from the operator's machine to the other machine (distance label when apart)
   opLinks().forEach(function (l) {
-    var c1 = new THREE.Vector3(l.c1.x, H + 45, l.c1.y), c2 = new THREE.Vector3(l.c2.x, H + 45, l.c2.y), mid = c1.clone().add(c2).multiplyScalar(0.5), dl = c1.distanceTo(c2);
+    var c1 = new THREE.Vector3(l.c1.x, H + 85, l.c1.y), c2 = new THREE.Vector3(l.c2.x, H + 85, l.c2.y), mid = c1.clone().add(c2).multiplyScalar(0.5), dl = c1.distanceTo(c2);
     var ctl = mid.clone().add(new THREE.Vector3(l.back.x * Math.min(dl * 0.35, 120), Math.max(45, Math.min(dl * 0.45, 220)), l.back.y * Math.min(dl * 0.35, 120)));
     if (l.far && V3.labels) { var dsp = smallSprite((l.dist / 100).toFixed(1) + ' m', 90); dsp.position.copy(c1.clone().add(c2).multiplyScalar(0.25).add(ctl.clone().multiplyScalar(0.5))).add(new THREE.Vector3(0, 18, 0)); root.add(dsp); }
     var end = c2.clone().add(ctl.clone().sub(c2).normalize().multiplyScalar(20)), curve = new THREE.QuadraticBezierCurve3(c1, ctl, end);
