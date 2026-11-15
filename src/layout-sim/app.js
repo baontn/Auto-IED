@@ -4,9 +4,9 @@ function $(id) { return document.getElementById(id); }
 function num(v, d) { var n = parseFloat(String(v).replace(',', '.')); return isFinite(n) ? n : d; }
 function toast(msg, bad) { var e = $('toast'); e.textContent = msg; e.className = 'toast show' + (bad ? ' bad' : ''); clearTimeout(e._t); e._t = setTimeout(function () { e.className = 'toast'; }, 3200); }
 
-function changed() { runChecks(); commit(); render2d(); renderSide(); if (TAB === '3d') rebuild3d(); wipSoon(); }
+function changed() { var nx = splitCrossLinks(); if (nx) toast(t('opCrossFix', [nx]), true); runChecks(); commit(); render2d(); renderSide(); if (TAB === '3d') rebuild3d(); wipSoon(); }
 function onSelChange() { renderSel(); placeSelTools(); if (TAB === '3d') rebuild3d(); }
-function renderAll() { runChecks(); render2d(); renderSide(); if (TAB === '3d') rebuild3d(); if (TAB === 'lib') renderLib(); }
+function renderAll() { splitCrossLinks(); runChecks(); render2d(); renderSide(); if (TAB === '3d') rebuild3d(); if (TAB === 'lib') renderLib(); }
 
 function setTab(tb) {
   TAB = tb;

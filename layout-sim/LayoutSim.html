@@ -27,6 +27,7 @@ input[type=checkbox]{padding:0}
 button.link{background:none;border:0;padding:0 2px;color:var(--accent);text-decoration:underline;cursor:pointer;font:inherit;font-weight:700}
 button.danger{color:var(--bad);border-color:var(--bad)}
 .lblsz{display:inline-flex;gap:4px;align-items:center;font-size:12.5px}.lblsz select{padding:2px 4px}
+input.effFile::placeholder{color:var(--info);font-weight:700;opacity:1}
 .chgtag{background:var(--badbg);color:var(--bad);border-color:var(--bad);font-weight:700}
 .rmop{padding:0 5px;font-size:11px;line-height:1.3;opacity:.55}.rmop:hover{opacity:1;background:var(--badbg);color:var(--bad)}
 header{background:var(--panel);border-bottom:1px solid var(--line);padding:7px 14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;flex:none}
@@ -217,6 +218,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
       <label class="f"><span data-t="smRate">Sản lượng đầu vào (sp/giờ)</span><input id="smRate" type="number" min="1" step="1" value="60" disabled></label>
       <label class="f"><span data-t="smWarn">Cảnh báo WIP từ (sp)</span><input id="smWarn" type="number" min="1" step="1" value="30"></label>
     </div>
+    <label class="ck" style="margin-top:8px"><input type="checkbox" id="smTef" checked><span data-t="smTef">Hiệu suất từng công đoạn theo "Target eff (M.tiêu Hiệu suất)" của file layout (công đoạn không có giá trị dùng hiệu suất chung)</span></label>
     <label class="ck" style="margin-top:8px"><input type="checkbox" id="smWarm" checked><span data-t="smWarm">Bỏ qua thời gian khởi động (chuyền chạy ổn định: mô phỏng trước một ca để hàng lấp đầy chuyền)</span></label>
     <div class="btns"><button id="smRun" class="primary" data-t="smRun">▶ Chạy mô phỏng</button><button id="smToPlan" data-t="smToPlan">Xem WIP trên mặt bằng</button><button id="smArr" data-t="bArr" data-tt="bArrTip">👥 Theo CN sắp xếp trong file</button></div>
     <div id="smSrc" class="small" style="margin-top:6px"></div>
@@ -351,6 +353,8 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 var LANG = 'vi';
 var I18N = {
   vi: {
+    smTef: 'Hiệu suất từng công đoạn theo "Target eff (M.tiêu Hiệu suất)" của file layout (công đoạn không có giá trị dùng hiệu suất chung)', simEffFile: 'Hiệu suất mục tiêu của công đoạn trong file layout; nhập số khác để sửa',
+    opCrossFix: 'Đã tách {0} máy khỏi người ở phía bên kia bàn giữa (một người không làm máy ở hai bên bàn giữa): máy đó có người riêng.',
     opRemoveAsk0: 'Công đoạn {0} không có máy trên mặt bằng. Bỏ công đoạn này khỏi trình tự và mô phỏng? Có thể khôi phục trong thẻ "Thay đổi so với file layout".',
     pasteSam: 'SAM đọc được cho {0}/{1} công đoạn của layout (bảng công đoạn trong file).', pasteSamMiss: 'Chưa có SAM: {0} (nhập ở trang Mô phỏng WIP).',
     opCross: 'Một người không làm máy ở hai bên bàn giữa (hoặc hai chuyền): chọn các máy cùng một phía.', arrExtra: 'Thêm {0} người vì các máy của cùng một nhóm nằm ở hai bên bàn giữa.',
@@ -483,6 +487,8 @@ var I18N = {
     ocrIgnored: 'bỏ qua', ocrLegend: 'Viền xanh lá: đọc đúng mã · cam: đã sửa theo thư viện · đỏ: không có trong thư viện · xanh dương: số công đoạn · xám: bỏ qua. Đưa chuột vào ô để xem chữ đọc được.'
   },
   en: {
+    smTef: 'Efficiency per operation from "Target eff (M.tiêu Hiệu suất)" of the layout file (operations without a value use the general efficiency)', simEffFile: 'Target efficiency of the operation in the layout file; type another value to change it',
+    opCrossFix: '{0} machines separated from a person on the other side of the central table (one person never works on both sides): they have their own operator now.',
     opRemoveAsk0: 'Operation {0} has no machine on the plan. Remove it from the sequence and the simulation? It can be restored in the card "Changes against the layout file".',
     pasteSam: 'SAM found for {0}/{1} operations of the layout (operation table in the file).', pasteSamMiss: 'No SAM yet: {0} (enter it on the WIP simulation page).',
     opCross: 'One person does not work on both sides of the central table (or on two lines): select machines on one side.', arrExtra: '{0} more people because machines of the same group stand on both sides of the central table.',
@@ -1116,6 +1122,13 @@ function opToggleOne(it) { if (it.noOp) { delete it.noOp; delete it.by; } else {
 /* one operator for all the given machines (the first one keeps the operator), or split them when they already share one */
 /* side of a machine: its line (main / branch) and its side of that line's central table; one person never crosses the table or the walkway */
 function sideKey(it) { var z = it.zone === 'branch' ? 'branch' : 'main', ct = centerOf(z); return z + (ct ? (it.y < ct.y ? '|T' : '|B') : ''); }
+/* a machine run by a person who sits on the other side of the central table (or on the other line), e.g. after a drag
+   or in a project saved before this rule: it gets its own operator back */
+function splitCrossLinks() {
+  var n = 0;
+  ST.items.forEach(function (it) { if (it.kind === 'mc' && it.noOp && it.by) { var h = itemById(it.by); if (h && sideKey(h) !== sideKey(it)) { delete it.noOp; delete it.by; n++; } } });
+  return n;
+}
 function opShare(list) {
   if (list.length < 2) { if (list[0]) opToggleOne(list[0]); return 'one'; }
   if (list.some(function (i) { return sideKey(i) !== sideKey(list[0]); })) return 'cross';
@@ -2469,16 +2482,17 @@ function xlOpsTables(ws, layoutOps) {
   if (!ws || !ws['!ref']) return out;
   var R = XLSX.utils.decode_range(ws['!ref']), r1 = Math.min(R.e.r, 1500), c1 = Math.min(R.e.c, 40);
   function v(r, c) { var x = ws[XLSX.utils.encode_cell({ r: r, c: c })]; return x && x.v != null ? String(x.w != null ? x.w : x.v).trim() : ''; }
-  function num(r, c) { var x = ws[XLSX.utils.encode_cell({ r: r, c: c })]; if (!x || x.v == null || x.v === '') return NaN; return typeof x.v === 'number' ? x.v : parseFloat(String(x.v).replace(',', '.')); }
+  function num(r, c) { var x = ws[XLSX.utils.encode_cell({ r: r, c: c })]; if (!x || x.v == null || x.v === '' || x.t === 'e') return NaN; return typeof x.v === 'number' ? x.v : parseFloat(String(x.v).replace(',', '.')); }
   var want = {}; (layoutOps || []).forEach(function (o) { want[String(o)] = 1; });
   for (var r = R.s.r; r <= r1; r++) {
-    var samC = -1, mcC = -1, optrC = -1, mcnC = -1, opHdr = false;
+    var samC = -1, mcC = -1, optrC = -1, mcnC = -1, effC = -1, opHdr = false;
     for (var c = 0; c <= c1; c++) {   // a header may take two rows ("Factory" / "SMV"); a "SAM:" label of the sheet header is not a column
       var h1 = v(r, c).toLowerCase(), h = (h1 + ' ' + v(r + 1, c).toLowerCase()).trim();
       if (samC < 0 && h1.indexOf(':') < 0 && (/^(sam|smv)(\s*\/\s*(sam|smv))?\b/.test(h1) || /sam\s*\/\s*smv|factory\s*smv/.test(h))) samC = c;
       if (mcC < 0 && /m\/c\s*type|machine\s*type|loại máy/.test(h)) mcC = c;
       if (optrC < 0 && /arrange\.?\s*optr/.test(h)) optrC = c;
-      if (mcnC < 0 && /no\.?\s*(of\s*)?m\/?c\b|số\s*máy|qty\s*(of\s*)?m\/?c|m\/c\s*qty/.test(h)) mcnC = c;
+      if (mcnC < 0 && /no\.?\s*(of\s*)?m\/?c\b|số\s*máy|qty\s*(of\s*)?m\/?c|m\/c\s*qty|arrange\.?\s*m\/?c/.test(h)) mcnC = c;
+      if (effC < 0 && h.indexOf(':') < 0 && /target\s*eff|m\.?\s*tiêu\s*hiệu\s*suất|hiệu\s*suất\s*mục\s*tiêu/.test(h)) effC = c;   // "Target eff (M.tiêu Hiệu suất)" per operation
       if (/^squ\b|op\.?\s*no|operation|công đoạn|op\s*code/.test(h1)) opHdr = true;
     }
     if (samC < 0 || !(opHdr || mcC >= 0)) continue;
@@ -2491,7 +2505,11 @@ function xlOpsTables(ws, layoutOps) {
     if (best < 0) continue;
     // "Arrange. Optr / CN sắp xếp": a cell merged over several operations = those operations done together by that many people
     var merges = ws['!merges'] || [], last = null, idx = 0;
-    var mergeAt = function (row) { for (var i = 0; i < merges.length; i++) { var m = merges[i]; if (m.s.c <= optrC && m.e.c >= optrC && m.s.r <= row && m.e.r >= row && m.e.r > m.s.r) return m; } return null; };
+    var mergeAt = function (row, col) { if (col == null) col = optrC; for (var i = 0; i < merges.length; i++) { var m = merges[i]; if (m.s.c <= col && m.e.c >= col && m.s.r <= row && m.e.r >= row && m.e.r > m.s.r) return m; } return null; };
+    var effAt = function (row) {   // target efficiency of the operation (a merged cell covers its operations), in %
+      if (effC < 0) return null; var mg = mergeAt(row, effC), e = num(mg ? mg.s.r : row, effC);
+      if (!isFinite(e) || e <= 0) return null; if (e <= 3) e *= 100; return Math.round(Math.min(300, e));
+    };
     for (rr = r + 1; rr <= Math.min(r1, r + 200); rr++) {
       if (/total|tổng/i.test(v(rr, 0)) || /^total|^subtotal/i.test(v(rr, samC - 1))) break;
       var op = num(rr, best), sam = num(rr, samC);
@@ -2509,7 +2527,7 @@ function xlOpsTables(ws, layoutOps) {
         else arr = num(rr, optrC);
         if (!isFinite(arr)) arr = mg ? 0 : null;
       }
-      out[k] = { sam: Math.round(sam * 10000) / 10000, mc: mcC >= 0 ? v(rr, mcC).split(/\s/)[0] : '', optr: arr, ar: arr, ag: ag, ai: idx++, mcn: mcnC >= 0 && isFinite(num(rr, mcnC)) ? num(rr, mcnC) : null };
+      out[k] = { sam: Math.round(sam * 10000) / 10000, mc: mcC >= 0 ? v(rr, mcC).split(/\s/)[0] : '', optr: arr, ar: arr, ag: ag, ai: idx++, mcn: mcnC >= 0 && isFinite(num(rr, mcnC)) ? num(rr, mcnC) : null, tef: effAt(rr) };
       last = k;
     }
     r += 2;
@@ -3080,7 +3098,9 @@ function simOperators(opsSet) {
 }
 /* static balance: share of each operator's time per operation (proportional to SAM), capacity in pieces / hour */
 /* efficiency of one operation: its own value (%, edited in the table) or the general one */
-function effOf(op, eff) { var o = (ST.ops || {})[op]; return o && o.eff > 0 ? o.eff / 100 : eff; }
+/* efficiency of an operation: the value edited in the table, else the target efficiency of the operation in the layout file ("Target eff"), else the general one */
+function useTef() { var c = document.getElementById('smTef'); return !c || c.checked; }
+function effOf(op, eff) { var o = (ST.ops || {})[op]; return o && o.eff > 0 ? o.eff / 100 : o && o.tef > 0 && useTef() ? o.tef / 100 : eff; }
 /* headcount of the line: line set-up, else the workers of the layout file, else 0 (= operators as on the plan) */
 function lineHC() { var h = parseFloat(ST.line.hc); if (h > 0) return Math.round(h); var f = parseFloat((ST.info || {}).optr); return f > 0 ? Math.round(f) : 0; }
 /* static balance: share of each operator's time per operation (proportional to SAM), capacity in pieces / hour.
@@ -3093,12 +3113,13 @@ function simBalance(eff) {
   function calc() {
     var share = {}, cnt = {};
     opers.forEach(function (p) {
-      var tot = p.ops.reduce(function (a, o) { return a + (samOf(o) || 0.0001); }, 0);
-      p.ops.forEach(function (o) { share[o] = (share[o] || 0) + (samOf(o) || 0.0001) / tot; cnt[o] = (cnt[o] || 0) + 1; });
+      // time of a shared operator split by the working time of each operation (SAM / efficiency)
+      var tm = function (o) { return (samOf(o) || 0.0001) / effOf(o, eff); }, tot = p.ops.reduce(function (a, o) { return a + tm(o); }, 0);
+      p.ops.forEach(function (o) { share[o] = (share[o] || 0) + tm(o) / tot; cnt[o] = (cnt[o] || 0) + 1; });
     });
     var rows = Object.keys(set).sort(function (a, b) { return simNum(a) - simNum(b); }).map(function (o) {
       var sam = samOf(o), sh = share[o] || 0, ef = effOf(o, eff);
-      return { op: o, sam: sam, eff: ef, effOwn: !!(((ST.ops || {})[o] || {}).eff > 0), mc: ((ST.ops || {})[o] || {}).mc || (st[o] && st[o][0] ? st[o][0].code : ''), stations: (st[o] || []).length, its: st[o] || [],
+      return { op: o, sam: sam, eff: ef, effOwn: !!(((ST.ops || {})[o] || {}).eff > 0), effFile: !(((ST.ops || {})[o] || {}).eff > 0) && ((ST.ops || {})[o] || {}).tef > 0 && useTef(), mc: ((ST.ops || {})[o] || {}).mc || (st[o] && st[o][0] ? st[o][0].code : ''), stations: (st[o] || []).length, its: st[o] || [],
         people: sh, nOper: cnt[o] || 0, adj: adj[o] || 0, cap: sam > 0 && sh > 0 ? sh * 60 * ef / sam : (sh > 0 ? Infinity : 0) };
     });
     return rows;
@@ -3176,7 +3197,7 @@ function simRun(p) {
   var rows = B.rows.map(function (r) {
     var n = node[r.op] || {};
     var endQ = r.op === join ? 0 : (push && starts.indexOf(r.op) >= 0 ? null : n.q);
-    return Object.assign({}, r, { util: r.people > 0 ? (n.busyT || 0) / (r.people * T) : null, wipEnd: endQ == null ? null : endQ * bundle, wipMax: (n.qMax || 0) * bundle, wipAvg: (n.qSum || 0) / T * bundle, done: (n.done || 0) * bundle,
+    return Object.assign({}, r, { util: r.people > 0 ? Math.min(1, (n.busyT || 0) / (r.people * T)) : null, wipEnd: endQ == null ? null : endQ * bundle, wipMax: (n.qMax || 0) * bundle, wipAvg: (n.qSum || 0) / T * bundle, done: (n.done || 0) * bundle,
       feedEnd: n.feed ? fbuf[r.op] * bundle : null, feedMax: n.feed ? (n.fMax || 0) * bundle : null, start: starts.indexOf(r.op) >= 0, join: r.op === join });
   });
   var people = opers.length, samTot = Object.keys(node).reduce(function (a, o) { return a + node[o].sam; }, 0);
@@ -3230,7 +3251,7 @@ function renderSim() {
       return '<tr' + cls + ' data-op="' + esc(x.op) + '"><td><button class="rmop" data-rmop="' + esc(x.op) + '" title="' + esc(t('simRmOp')) + '">✕</button> <b>' + esc(x.op) + '</b>' + (comb[x.op] ? ' <span class="tag t-info" title="' + esc(t('simComb', [comb[x.op].join(', ')])) + '">⇄ ' + esc(comb[x.op].join(', ')) + '</span>' : '') + (bn ? ' <span class="tag t-bad">' + esc(t('simBn')) + '</span>' : '') + '</td><td>' + esc(x.mc) + '</td>' +
         '<td class="n"><input style="width:84px" type="number" step="0.0001" min="0" data-sam="' + esc(x.op) + '" value="' + (x.sam || '') + '"></td><td class="n">' + x.stations + '</td><td class="n">' + x.people.toFixed(2) + (x.adj ? ' <span class="tag ' + (x.adj > 0 ? 't-info' : 't-warn') + '">' + (x.adj > 0 ? '+' : '') + x.adj + '</span>' : '') + '</td>' +
         (arr ? '<td class="n">' + (arr[x.op] ? arr[x.op].v + (arr[x.op].ops.length > 1 ? ' <span class="muted small" title="' + esc(t('simArrGrp', [arr[x.op].ops.join(', ')])) + '">⟨' + esc(arr[x.op].ops.join('·')) + '⟩</span>' : '') : '<span class="muted">—</span>') + '</td>' : '') +
-        '<td class="n"><input style="width:62px" type="number" step="1" min="5" max="150" data-eff="' + esc(x.op) + '" value="' + (x.effOwn ? Math.round(x.eff * 100) : '') + '" placeholder="' + Math.round(p.eff * 100) + '"></td>' +
+        '<td class="n"><input style="width:62px" type="number" step="1" min="5" max="150" data-eff="' + esc(x.op) + '" value="' + (x.effOwn ? Math.round(x.eff * 100) : '') + '" placeholder="' + Math.round((x.effFile ? x.eff : p.eff) * 100) + '"' + (x.effFile ? ' class="effFile" title="' + esc(t('simEffFile')) + '"' : '') + '></td>' +
         '<td class="n">' + (isFinite(x.cap) ? Math.round(x.cap) : '∞') + '</td><td><div class="bar"><i style="width:' + w + '%;background:' + (bn || (load && load > 100) ? 'var(--bad)' : 'var(--accent)') + '"></i>' + (takt ? '<b style="left:' + Math.min(100, Math.round(100 * (i.target || 0) / maxCap)) + '%"></b>' : '') +
         '<span class="barT">' + (isFinite(x.cap) ? Math.round(x.cap) + ' ' + esc(t('simPcsH')) : '∞') + (load != null ? ' · ' + esc(t('simLoadPct', [load])) : '') + '</span></div></td>' +
         (r ? '<td class="n">' + (rr && rr.util != null ? '<span class="' + (rr.util >= 0.95 ? 't-bad' : rr.util < 0.6 ? 't-warn' : '') + '">' + Math.round(rr.util * 100) + '%</span>' : '') + '</td><td class="n">' + (rr && rr.wipEnd == null ? '<span class="muted">∞</span>' : wip) + '</td><td class="n">' + (rr ? rr.wipMax + (rr.feedMax || 0) : '') + '</td>' : '') + '</tr>';
@@ -3261,6 +3282,7 @@ function renderSim() {
 function initSim() {
   $('smRun').onclick = function () { var p = simParams(); simRun(p); OPT.wip = true; $('optWip').checked = true; renderSim(); render2d(); toast(t('simDone', [Math.round(SIMR.outH)])); };
   ['smEff', 'smRate'].forEach(function (id) { $(id).addEventListener('input', function () { this.dataset.touched = '1'; }); });
+  $('smTef').onchange = function () { SIMR = null; renderSim(); wipSoon(); };
   $('smMode').onchange = function () { this.dataset.touched = '1'; $('smRate').disabled = this.value !== 'rate'; };
   $('smTable').addEventListener('change', function (e) {
     var op = e.target.dataset.sam || e.target.dataset.eff; if (!op) return;
@@ -3569,9 +3591,9 @@ function $(id) { return document.getElementById(id); }
 function num(v, d) { var n = parseFloat(String(v).replace(',', '.')); return isFinite(n) ? n : d; }
 function toast(msg, bad) { var e = $('toast'); e.textContent = msg; e.className = 'toast show' + (bad ? ' bad' : ''); clearTimeout(e._t); e._t = setTimeout(function () { e.className = 'toast'; }, 3200); }
 
-function changed() { runChecks(); commit(); render2d(); renderSide(); if (TAB === '3d') rebuild3d(); wipSoon(); }
+function changed() { var nx = splitCrossLinks(); if (nx) toast(t('opCrossFix', [nx]), true); runChecks(); commit(); render2d(); renderSide(); if (TAB === '3d') rebuild3d(); wipSoon(); }
 function onSelChange() { renderSel(); placeSelTools(); if (TAB === '3d') rebuild3d(); }
-function renderAll() { runChecks(); render2d(); renderSide(); if (TAB === '3d') rebuild3d(); if (TAB === 'lib') renderLib(); }
+function renderAll() { splitCrossLinks(); runChecks(); render2d(); renderSide(); if (TAB === '3d') rebuild3d(); if (TAB === 'lib') renderLib(); }
 
 function setTab(tb) {
   TAB = tb;

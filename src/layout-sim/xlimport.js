@@ -173,16 +173,17 @@ function xlOpsTables(ws, layoutOps) {
   if (!ws || !ws['!ref']) return out;
   var R = XLSX.utils.decode_range(ws['!ref']), r1 = Math.min(R.e.r, 1500), c1 = Math.min(R.e.c, 40);
   function v(r, c) { var x = ws[XLSX.utils.encode_cell({ r: r, c: c })]; return x && x.v != null ? String(x.w != null ? x.w : x.v).trim() : ''; }
-  function num(r, c) { var x = ws[XLSX.utils.encode_cell({ r: r, c: c })]; if (!x || x.v == null || x.v === '') return NaN; return typeof x.v === 'number' ? x.v : parseFloat(String(x.v).replace(',', '.')); }
+  function num(r, c) { var x = ws[XLSX.utils.encode_cell({ r: r, c: c })]; if (!x || x.v == null || x.v === '' || x.t === 'e') return NaN; return typeof x.v === 'number' ? x.v : parseFloat(String(x.v).replace(',', '.')); }
   var want = {}; (layoutOps || []).forEach(function (o) { want[String(o)] = 1; });
   for (var r = R.s.r; r <= r1; r++) {
-    var samC = -1, mcC = -1, optrC = -1, mcnC = -1, opHdr = false;
+    var samC = -1, mcC = -1, optrC = -1, mcnC = -1, effC = -1, opHdr = false;
     for (var c = 0; c <= c1; c++) {   // a header may take two rows ("Factory" / "SMV"); a "SAM:" label of the sheet header is not a column
       var h1 = v(r, c).toLowerCase(), h = (h1 + ' ' + v(r + 1, c).toLowerCase()).trim();
       if (samC < 0 && h1.indexOf(':') < 0 && (/^(sam|smv)(\s*\/\s*(sam|smv))?\b/.test(h1) || /sam\s*\/\s*smv|factory\s*smv/.test(h))) samC = c;
       if (mcC < 0 && /m\/c\s*type|machine\s*type|loại máy/.test(h)) mcC = c;
       if (optrC < 0 && /arrange\.?\s*optr/.test(h)) optrC = c;
-      if (mcnC < 0 && /no\.?\s*(of\s*)?m\/?c\b|số\s*máy|qty\s*(of\s*)?m\/?c|m\/c\s*qty/.test(h)) mcnC = c;
+      if (mcnC < 0 && /no\.?\s*(of\s*)?m\/?c\b|số\s*máy|qty\s*(of\s*)?m\/?c|m\/c\s*qty|arrange\.?\s*m\/?c/.test(h)) mcnC = c;
+      if (effC < 0 && h.indexOf(':') < 0 && /target\s*eff|m\.?\s*tiêu\s*hiệu\s*suất|hiệu\s*suất\s*mục\s*tiêu/.test(h)) effC = c;   // "Target eff (M.tiêu Hiệu suất)" per operation
       if (/^squ\b|op\.?\s*no|operation|công đoạn|op\s*code/.test(h1)) opHdr = true;
     }
     if (samC < 0 || !(opHdr || mcC >= 0)) continue;
@@ -195,7 +196,11 @@ function xlOpsTables(ws, layoutOps) {
     if (best < 0) continue;
     // "Arrange. Optr / CN sắp xếp": a cell merged over several operations = those operations done together by that many people
     var merges = ws['!merges'] || [], last = null, idx = 0;
-    var mergeAt = function (row) { for (var i = 0; i < merges.length; i++) { var m = merges[i]; if (m.s.c <= optrC && m.e.c >= optrC && m.s.r <= row && m.e.r >= row && m.e.r > m.s.r) return m; } return null; };
+    var mergeAt = function (row, col) { if (col == null) col = optrC; for (var i = 0; i < merges.length; i++) { var m = merges[i]; if (m.s.c <= col && m.e.c >= col && m.s.r <= row && m.e.r >= row && m.e.r > m.s.r) return m; } return null; };
+    var effAt = function (row) {   // target efficiency of the operation (a merged cell covers its operations), in %
+      if (effC < 0) return null; var mg = mergeAt(row, effC), e = num(mg ? mg.s.r : row, effC);
+      if (!isFinite(e) || e <= 0) return null; if (e <= 3) e *= 100; return Math.round(Math.min(300, e));
+    };
     for (rr = r + 1; rr <= Math.min(r1, r + 200); rr++) {
       if (/total|tổng/i.test(v(rr, 0)) || /^total|^subtotal/i.test(v(rr, samC - 1))) break;
       var op = num(rr, best), sam = num(rr, samC);
@@ -213,7 +218,7 @@ function xlOpsTables(ws, layoutOps) {
         else arr = num(rr, optrC);
         if (!isFinite(arr)) arr = mg ? 0 : null;
       }
-      out[k] = { sam: Math.round(sam * 10000) / 10000, mc: mcC >= 0 ? v(rr, mcC).split(/\s/)[0] : '', optr: arr, ar: arr, ag: ag, ai: idx++, mcn: mcnC >= 0 && isFinite(num(rr, mcnC)) ? num(rr, mcnC) : null };
+      out[k] = { sam: Math.round(sam * 10000) / 10000, mc: mcC >= 0 ? v(rr, mcC).split(/\s/)[0] : '', optr: arr, ar: arr, ag: ag, ai: idx++, mcn: mcnC >= 0 && isFinite(num(rr, mcnC)) ? num(rr, mcnC) : null, tef: effAt(rr) };
       last = k;
     }
     r += 2;

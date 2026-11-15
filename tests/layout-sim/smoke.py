@@ -101,10 +101,10 @@ def make_auto_xlsx(path):
     """an operation table (machine type, SAM, people arranged) and the work flow, but no layout drawn: for the automatic layout"""
     wb = Workbook(); ws = wb.active; ws.title = 'Initial layout'
     ws['A3'] = 'STYLE No /Mã hàng'; ws['E3'] = 'XYZ26-00003-1103XX'
-    for k, h in enumerate(['SQU', 'Op No.', 'Description', 'M/c Type', 'SAM/SMV', 'Calc.Optr', 'Arrange. Optr\nCN sắp xếp']): ws.cell(row=5, column=1 + k, value=h)
-    rows = [(31, '1SLA', 0.5, 1), (32, '3OLM', 0.4, 0.5), (33, '2CSM', 0.6, 0.5), (41, 'SFAM', 0.3, 0.5), (43, 'SFAM', 0.3, 0.5), (66, '4OLB', 0.9, 2), (67, '1SLA', 0.5, 1), (97, 'BT1M', 0.4, 1)]
-    for k, (o, c, sam, ar) in enumerate(rows):
-        for j, v in enumerate([o, o, 'op', c, sam, None, ar]): ws.cell(row=6 + k, column=1 + j, value=v)
+    for k, h in enumerate(['SQU', 'Op No.', 'Description', 'M/c Type', 'SAM/SMV', 'Calc.Optr', 'Arrange. Optr\nCN sắp xếp', 'Arrange. M/C\nThiết Bị', 'Target/optr', 'Target eff\n(M.tiêu Hiệu suất)']): ws.cell(row=5, column=1 + k, value=h)
+    rows = [(31, '1SLA', 0.5, 1, 1, 0.75), (32, '3OLM', 0.4, 0.5, 1, 0.6), (33, '2CSM', 0.6, 0.5, 1, 0.7), (41, 'SFAM', 0.3, 0.5, 1, 0.8), (43, 'SFAM', 0.3, 0.5, 1, 0.8), (66, '4OLB', 0.9, 2, 2, 0.9), (67, '1SLA', 0.5, 1, 1, 1.2), (97, 'BT1M', 0.4, 1, 1, '#DIV/0!')]
+    for k, (o, c, sam, ar, mcn, te) in enumerate(rows):
+        for j, v in enumerate([o, o, 'op', c, sam, None, ar, mcn, None, te]): ws.cell(row=6 + k, column=1 + j, value=v)
     ws.cell(row=6 + len(rows), column=1, value='Total Sew')
     ws['A20'] = 'Work Flow'; ws['B21'] = 'Cụm tim'; ws['C21'] = '31=>32=>33'; ws['B22'] = 'Cụm bát'; ws['C22'] = '41=>43'; ws['B23'] = 'Lắp ráp'; ws['C23'] = '66=>67=>97=>QC'
     wb.save(path)
@@ -381,9 +381,13 @@ async def main():
         r = await pg.evaluate("()=>[document.querySelectorAll('#xlPick option').length, document.getElementById('xlPick').value, PASTE.auto, PASTE.nMc, PASTE.rows.map(r=>r.zone+':'+r.side+':'+r.cells.map(c=>c.code+'/'+c.op).join(',')).join(' | ')]")
         check(r[0] == 1 and r[1] == 'a:0' and r[2] and r[3] == 9 and r[4] == 'branch:top:1SLA/31,SFAM/41,SFAM/43 | branch:bottom:3OLM/32,2CSM/33 | main:top:4OLB/66,4OLB/66 | main:bottom:1SLA/67,BT1M/97', 'automatic layout offered and built from the table + flow (66 = 2 people -> 2 machines; operations sharing people on one side; sub-assemblies on the branch) ' + str(r))
         check('SAM đọc được cho 8/8' in await pg.inner_text('#pastePrev'), 'preview tells how many operations of the layout have SAM')
+        r = await pg.evaluate("()=>['31','66','67','97'].map(o=>PASTE.ops[o].tef+'/'+PASTE.ops[o].mcn).join(' ')")
+        check(r == '75/1 90/2 120/1 null/1', '"Target eff" and "Arrange. M/C" of each operation read from the file ' + r)
         await pg.click('#pasteGo'); await pg.wait_for_timeout(300)
         r = await pg.evaluate("()=>ST.items.filter(i=>i.kind=='mc'&&i.noOp&&i.by).every(i=>sideKey(i)==sideKey(itemById(i.by)))")
         check(r, 'shared operators stay on one side of the central table')
+        r = await pg.evaluate("()=>{const s=ST.items.find(i=>i.kind=='mc'&&i.noOp&&i.by);const h=itemById(s.by),ct=centerOf(s.zone==='branch'?'branch':'main');const y0=s.y;s.y=2*ct.y-s.y;changed();const ok=!s.noOp&&!s.by;s.y=y0;opShare([h,s]);changed();return ok}")
+        check(r, 'a machine dragged to the other side of the central table gets its own operator')
         r = await pg.evaluate('''()=>{const m=ST.items.filter(i=>i.kind=='mc');const col=o=>flowColOf(m.find(i=>opsOf(i)[0]==o));
           return [m.length, m.filter(i=>i.zone=='branch').length, col('31')==col('33'), col('31')!=col('41'), col('66')==col('97'), ISSUES.filter(x=>/isOverlap|isSeat/.test(x.k)).length]}''')
         check(r == [9, 5, True, True, True, 0], 'automatic layout placed (5 on the branch, 4 on the main line), machines coloured by flow, no overlap ' + str(r))
@@ -395,6 +399,9 @@ async def main():
         await pg.select_option('#lblMc', '1')
         if SHOTS: await pg.evaluate('()=>{SEL=[];onSelChange();fitView()}'); await pg.screenshot(path=SHOTS + '/ls-auto.png')
         await pg.click('[data-tab="sim"]'); await pg.click('#smRun'); await pg.wait_for_timeout(400)
+        r = await pg.evaluate("()=>[effOf('31',0.8), effOf('97',0.8), document.querySelector('#smTable input[data-eff=\"31\"]').placeholder]")
+        await pg.uncheck('#smTef'); r2 = await pg.evaluate("()=>effOf('31',0.8)"); await pg.check('#smTef'); await pg.click('#smRun'); await pg.wait_for_timeout(300)
+        check(r == [0.75, 0.8, '75'] and r2 == 0.8, 'efficiency of each operation = file "Target eff" (general when missing or unticked) ' + str(r) + ' ' + str(r2))
         r = await pg.evaluate("()=>[document.querySelector('#smTable').innerText.includes('Mức bận'), SIMR.rows.every(x=>x.util==null||(x.util>=0&&x.util<=1.01)), document.querySelectorAll('#smRes .utils>div').length]")
         check(r[0] and r[1] and r[2] >= 6, 'WIP simulation shows utilisation per operation and per operator ' + str(r))
         await pg.click('[data-tab="plan"]')

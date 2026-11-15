@@ -2,6 +2,8 @@
 var LANG = 'vi';
 var I18N = {
   vi: {
+    smTef: 'Hiệu suất từng công đoạn theo "Target eff (M.tiêu Hiệu suất)" của file layout (công đoạn không có giá trị dùng hiệu suất chung)', simEffFile: 'Hiệu suất mục tiêu của công đoạn trong file layout; nhập số khác để sửa',
+    opCrossFix: 'Đã tách {0} máy khỏi người ở phía bên kia bàn giữa (một người không làm máy ở hai bên bàn giữa): máy đó có người riêng.',
     opRemoveAsk0: 'Công đoạn {0} không có máy trên mặt bằng. Bỏ công đoạn này khỏi trình tự và mô phỏng? Có thể khôi phục trong thẻ "Thay đổi so với file layout".',
     pasteSam: 'SAM đọc được cho {0}/{1} công đoạn của layout (bảng công đoạn trong file).', pasteSamMiss: 'Chưa có SAM: {0} (nhập ở trang Mô phỏng WIP).',
     opCross: 'Một người không làm máy ở hai bên bàn giữa (hoặc hai chuyền): chọn các máy cùng một phía.', arrExtra: 'Thêm {0} người vì các máy của cùng một nhóm nằm ở hai bên bàn giữa.',
@@ -134,6 +136,8 @@ var I18N = {
     ocrIgnored: 'bỏ qua', ocrLegend: 'Viền xanh lá: đọc đúng mã · cam: đã sửa theo thư viện · đỏ: không có trong thư viện · xanh dương: số công đoạn · xám: bỏ qua. Đưa chuột vào ô để xem chữ đọc được.'
   },
   en: {
+    smTef: 'Efficiency per operation from "Target eff (M.tiêu Hiệu suất)" of the layout file (operations without a value use the general efficiency)', simEffFile: 'Target efficiency of the operation in the layout file; type another value to change it',
+    opCrossFix: '{0} machines separated from a person on the other side of the central table (one person never works on both sides): they have their own operator now.',
     opRemoveAsk0: 'Operation {0} has no machine on the plan. Remove it from the sequence and the simulation? It can be restored in the card "Changes against the layout file".',
     pasteSam: 'SAM found for {0}/{1} operations of the layout (operation table in the file).', pasteSamMiss: 'No SAM yet: {0} (enter it on the WIP simulation page).',
     opCross: 'One person does not work on both sides of the central table (or on two lines): select machines on one side.', arrExtra: '{0} more people because machines of the same group stand on both sides of the central table.',
