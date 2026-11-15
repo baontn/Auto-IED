@@ -176,11 +176,12 @@ function xlOpsTables(ws, layoutOps) {
   function num(r, c) { var x = ws[XLSX.utils.encode_cell({ r: r, c: c })]; if (!x || x.v == null || x.v === '' || x.t === 'e') return NaN; return typeof x.v === 'number' ? x.v : parseFloat(String(x.v).replace(',', '.')); }
   var want = {}; (layoutOps || []).forEach(function (o) { want[String(o)] = 1; });
   for (var r = R.s.r; r <= r1; r++) {
-    var samC = -1, mcC = -1, optrC = -1, mcnC = -1, effC = -1, opHdr = false;
+    var samC = -1, mcC = -1, optrC = -1, mcnC = -1, effC = -1, descC = -1, opHdr = false;
     for (var c = 0; c <= c1; c++) {   // a header may take two rows ("Factory" / "SMV"); a "SAM:" label of the sheet header is not a column
       var h1 = v(r, c).toLowerCase(), h = (h1 + ' ' + v(r + 1, c).toLowerCase()).trim();
       if (samC < 0 && h1.indexOf(':') < 0 && (/^(sam|smv)(\s*\/\s*(sam|smv))?\b/.test(h1) || /sam\s*\/\s*smv|factory\s*smv/.test(h))) samC = c;
       if (mcC < 0 && /m\/c\s*type|machine\s*type|loại máy/.test(h)) mcC = c;
+      if (descC < 0 && /description|mô tả|operation\s*name|tên công đoạn|工序名称/.test(h)) descC = c;
       if (optrC < 0 && /arrange\.?\s*optr/.test(h)) optrC = c;
       if (mcnC < 0 && /no\.?\s*(of\s*)?m\/?c\b|số\s*máy|qty\s*(of\s*)?m\/?c|m\/c\s*qty|arrange\.?\s*m\/?c/.test(h)) mcnC = c;
       if (effC < 0 && h.indexOf(':') < 0 && /target\s*eff|m\.?\s*tiêu\s*hiệu\s*suất|hiệu\s*suất\s*mục\s*tiêu/.test(h)) effC = c;   // "Target eff (M.tiêu Hiệu suất)" per operation
@@ -218,7 +219,12 @@ function xlOpsTables(ws, layoutOps) {
         else arr = num(rr, optrC);
         if (!isFinite(arr)) arr = mg ? 0 : null;
       }
-      out[k] = { sam: Math.round(sam * 10000) / 10000, mc: mcC >= 0 ? v(rr, mcC).split(/\s/)[0] : '', optr: arr, ar: arr, ag: ag, ai: idx++, mcn: mcnC >= 0 && isFinite(num(rr, mcnC)) ? num(rr, mcnC) : null, tef: effAt(rr) };
+      // operation name: the description column; the next column without header usually holds the Vietnamese text
+      var cl = function (x) { return String(x || '').replace(/\s+/g, ' ').trim(); };
+      var d1 = descC >= 0 ? cl(v(rr, descC)) : '', d2 = descC >= 0 && descC + 1 < Math.min(samC, mcC >= 0 ? mcC : samC) ? cl(v(rr, descC + 1)) : '';
+      var isVi = function (x) { return /[ăâđêôơưạảấầẩẫậắằẳẵặẹẻẽếềểễệỉịọỏốồổỗộớờởỡợụủứừửữựỳỵỷỹáàãéèíìóòõúùý]/i.test(x) && !/[\u4e00-\u9fff]/.test(x); };
+      var vi = isVi(d2) ? d2 : isVi(d1) ? d1 : '', ot = vi === d2 ? d1 : vi === d1 ? d2 : d1;
+      out[k] = { nm: vi, nm2: ot || '', sam: Math.round(sam * 10000) / 10000, mc: mcC >= 0 ? v(rr, mcC).split(/\s/)[0] : '', optr: arr, ar: arr, ag: ag, ai: idx++, mcn: mcnC >= 0 && isFinite(num(rr, mcnC)) ? num(rr, mcnC) : null, tef: effAt(rr) };
       last = k;
     }
     r += 2;
@@ -354,6 +360,7 @@ function xlFillBranchPick() {
 /* SAM etc. of the chosen layout: its own tables first, then the operation tables of every other sheet (as the automatic layout sees them) */
 function xlOpsAll(own) {
   var out = Object.assign({}, own || {});
+  if (!XLI) return out;
   (XLI.auto || []).forEach(function (a) { Object.keys(a.ops).forEach(function (k) { if (!out[k] || !(out[k].sam > 0)) out[k] = out[k] ? Object.assign({}, a.ops[k], { ar: out[k].ar, ag: out[k].ag, ai: out[k].ai }) : a.ops[k]; }); });
   return out;
 }

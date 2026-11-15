@@ -2,6 +2,11 @@
 var LANG = 'vi';
 var I18N = {
   vi: {
+    simCapH: 'Năng lực (sp/giờ) · tải', simLoadTip: 'Tải = sản lượng cần (mục tiêu, không có thì công đoạn chậm nhất) / năng lực. Xanh < 90 %, vàng 90–100 %, đỏ > 100 % (không đủ năng lực).',
+    simNeed: 'Người cần', simNeedTip: 'Số người cần để đạt sản lượng mục tiêu = mục tiêu × SAM / (60 × hiệu suất). Đỏ: nhiều hơn số người đang có.',
+    simFileN: 'file: {0}', simTotal: 'Tổng / TB', simTotalN: '{0} công đoạn', simAvgW: 'TB theo SAM',
+    simOutSim: 'Ra {0} sp/giờ (mô phỏng)', simOutCap: 'Năng lực chuyền {0} sp/giờ', simVsTarget: 'mục tiêu {0}', simLbe: 'Cân bằng {0}%',
+    simLbeTip: 'Hiệu suất cân bằng chuyền = tổng thời gian làm việc (SAM / hiệu suất) / (số người × chu kỳ công đoạn chậm nhất). 100 % = mọi người đều bận như nút cổ chai.',
     smTef: 'Hiệu suất từng công đoạn theo "Target eff (M.tiêu Hiệu suất)" của file layout (công đoạn không có giá trị dùng hiệu suất chung)', simEffFile: 'Hiệu suất mục tiêu của công đoạn trong file layout; nhập số khác để sửa',
     opCrossFix: 'Đã tách {0} máy khỏi người ở phía bên kia bàn giữa (một người không làm máy ở hai bên bàn giữa): máy đó có người riêng.',
     opRemoveAsk0: 'Công đoạn {0} không có máy trên mặt bằng. Bỏ công đoạn này khỏi trình tự và mô phỏng? Có thể khôi phục trong thẻ "Thay đổi so với file layout".',
@@ -136,6 +141,11 @@ var I18N = {
     ocrIgnored: 'bỏ qua', ocrLegend: 'Viền xanh lá: đọc đúng mã · cam: đã sửa theo thư viện · đỏ: không có trong thư viện · xanh dương: số công đoạn · xám: bỏ qua. Đưa chuột vào ô để xem chữ đọc được.'
   },
   en: {
+    simCapH: 'Capacity (pcs/h) · load', simLoadTip: 'Load = output needed (target, else the slowest operation) / capacity. Green < 90 %, yellow 90–100 %, red > 100 % (not enough capacity).',
+    simNeed: 'People needed', simNeedTip: 'People needed for the target output = target × SAM / (60 × efficiency). Red: more than the people there.',
+    simFileN: 'file: {0}', simTotal: 'Total / avg', simTotalN: '{0} operations', simAvgW: 'avg by SAM',
+    simOutSim: 'Output {0} pcs/h (simulated)', simOutCap: 'Line capacity {0} pcs/h', simVsTarget: 'target {0}', simLbe: 'Balance {0}%',
+    simLbeTip: 'Line balance efficiency = total work time (SAM / efficiency) / (people × cycle time of the slowest operation). 100 % = everyone as busy as the bottleneck.',
     smTef: 'Efficiency per operation from "Target eff (M.tiêu Hiệu suất)" of the layout file (operations without a value use the general efficiency)', simEffFile: 'Target efficiency of the operation in the layout file; type another value to change it',
     opCrossFix: '{0} machines separated from a person on the other side of the central table (one person never works on both sides): they have their own operator now.',
     opRemoveAsk0: 'Operation {0} has no machine on the plan. Remove it from the sequence and the simulation? It can be restored in the card "Changes against the layout file".',

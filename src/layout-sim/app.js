@@ -144,11 +144,17 @@ function cmd(c) {
 /* ---------- paste dialog ---------- */
 var PASTE = null;
 function openPaste() {
+  PASTE = null; XLI = null; $('xlBox').style.display = 'none'; $('fileXl').value = '';
   $('pasteTxt').value = ''; $('pastePrev').innerHTML = ''; $('ocrStatus').textContent = ''; $('ocrView').innerHTML = '';
   $('pasteGo').disabled = true; $('pasteReplace').checked = true; $('pasteFit').checked = !ST.line.fixed;
   if (!$('dlgPaste').open) $('dlgPaste').showModal();
 }
-function pastePreview() { PASTE = parsePaste($('pasteTxt').value); renderPastePreview(); }
+function pastePreview() {
+  var prev = PASTE; PASTE = parsePaste($('pasteTxt').value);
+  // the text of a layout read from an Excel file was edited: keep what the file gave (SAM, sequence, style, people)
+  if (prev && prev.fromXl && typeof XLI !== 'undefined' && XLI) { PASTE.ops = prev.ops; PASTE.seq = prev.seq; PASTE.meta = prev.meta; PASTE.fromXl = false; }
+  renderPastePreview();
+}
 function renderPastePreview() {
   var br = !!centerOf('branch');
   if (br) {   // with a branch line: with 3+ rows the two rows on the branch side go to the branch line
@@ -185,6 +191,7 @@ function pasteGo() {
   var items = buildFromPaste(PASTE, { addInput: $('pasteInput').checked, x0: 60, y0: y0, centers: useCt ? { main: centerOf('main'), branch: centerOf('branch') } : null });
   if (replace) ST.items = cts.concat(items); else ST.items = ST.items.concat(items);
   if (PASTE.meta && (replace || !(ST.info || {}).style)) ST.info = Object.assign({}, ST.info, PASTE.meta);
+  if (typeof XLI !== 'undefined' && XLI && (PASTE.fromXl || PASTE.meta)) PASTE.ops = xlOpsAll(PASTE.ops);   // operations still without SAM: the operation tables of every sheet of the file
   if (PASTE.ops && Object.keys(PASTE.ops).length) ST.ops = Object.assign(replace ? {} : (ST.ops || {}), PASTE.ops);   // SAM per operation from the layout file
   if (PASTE.seq && PASTE.seq.length) ST.seqText = PASTE.seq.map(function (q) { return (q.name ? q.name + ': ' : '') + q.text; }).join('\n');
   else if (replace) ST.seqText = '';   // a new layout without sequence: the previous layout's sequence does not apply

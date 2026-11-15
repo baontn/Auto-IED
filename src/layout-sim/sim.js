@@ -182,25 +182,46 @@ function renderSim() {
   $('smSrc').innerHTML = esc(B.L.fromSeq ? t('simSrcSeq', [B.L.lines.length]) : t('simSrcDef')) + (B.L.added && B.L.added.length ? ' · ' + esc(t('simCombAdd', [B.L.added.join(', ')])) : '') + ((ST.opsOff || []).length ? ' · ' + esc(t('simOff', [ST.opsOff.map(function (x) { return x.op; }).join(', ')])) : '') + ' · ' + esc(B.hc ? t('simHC', [B.hc, B.onPlan]) : t('simOpers', [B.opers.length])) +
     (B.hc && B.hc !== B.onPlan ? ' · ' + esc(t(B.hc > B.onPlan ? 'simHCplus' : 'simHCminus', [B.rows.filter(function (x) { return x.adj; }).map(function (x) { return x.op + ' ' + (x.adj > 0 ? '+' : '') + x.adj; }).join(', ')])) : '') +
     (missing.length ? '<div class="t-warn tagline">⚠ ' + esc(t('simNoSam', [missing.join(', ')])) + '</div>' : '');
-  var maxCap = Math.max.apply(null, B.rows.map(function (x) { return isFinite(x.cap) ? x.cap : 0; }).concat([1]));
+  var maxCap = Math.max.apply(null, B.rows.map(function (x) { return isFinite(x.cap) ? x.cap : 0; }).concat([1, (+(ST.info || {}).target || 0) * 1.15]));
   var arr = null;   // people arranged in the layout file, per operation (with the operations sharing the cell)
   if (hasArr()) { arr = {}; arrGroups().forEach(function (g) { g.ops.forEach(function (o) { arr[o] = g; }); }); }
-  $('smTable').innerHTML = '<table><tr><th>' + esc(t('simOp')) + '</th><th>' + esc(t('simMc')) + '</th><th class="n">SAM</th><th class="n">' + esc(t('simSt')) + '</th><th class="n">' + esc(t('simPeople')) + '</th>' + (arr ? '<th class="n" title="' + esc(t('simArrTip')) + '">' + esc(t('simArr')) + '</th>' : '') + '<th class="n">' + esc(t('simEffCol')) + '</th><th class="n">' + esc(t('simCap')) + '</th><th style="width:24%">' + esc(t('simLoad')) + '</th>' +
-    (r ? '<th class="n" title="' + esc(t('simUtilTip')) + '">' + esc(t('simUtilCol')) + '</th><th class="n">' + esc(t('simWipEnd')) + '</th><th class="n">' + esc(t('simWipMax')) + '</th>' : '') + '</tr>' +
-    B.rows.map(function (x) {
-      var bn = B.bottleneck.indexOf(x.op) >= 0, rr = rowsBy[x.op], wip = rr ? (rr.wipEnd != null ? rr.wipEnd : 0) + (rr.feedEnd || 0) : 0;
-      var cls = bn ? ' class="bn"' : (rr && wip >= p.wipWarn ? ' class="wip"' : '');
-      var w = isFinite(x.cap) ? Math.round(100 * x.cap / maxCap) : 100;
-      // load = output needed (the target, else the slowest operation) / capacity of this operation
-      var need = i.target || B.capMin, load = isFinite(x.cap) && x.cap > 0 && need ? Math.round(100 * need / x.cap) : null;
-      return '<tr' + cls + ' data-op="' + esc(x.op) + '"><td><button class="rmop" data-rmop="' + esc(x.op) + '" title="' + esc(t('simRmOp')) + '">✕</button> <b>' + esc(x.op) + '</b>' + (comb[x.op] ? ' <span class="tag t-info" title="' + esc(t('simComb', [comb[x.op].join(', ')])) + '">⇄ ' + esc(comb[x.op].join(', ')) + '</span>' : '') + (bn ? ' <span class="tag t-bad">' + esc(t('simBn')) + '</span>' : '') + '</td><td>' + esc(x.mc) + '</td>' +
-        '<td class="n"><input style="width:84px" type="number" step="0.0001" min="0" data-sam="' + esc(x.op) + '" value="' + (x.sam || '') + '"></td><td class="n">' + x.stations + '</td><td class="n">' + x.people.toFixed(2) + (x.adj ? ' <span class="tag ' + (x.adj > 0 ? 't-info' : 't-warn') + '">' + (x.adj > 0 ? '+' : '') + x.adj + '</span>' : '') + '</td>' +
-        (arr ? '<td class="n">' + (arr[x.op] ? arr[x.op].v + (arr[x.op].ops.length > 1 ? ' <span class="muted small" title="' + esc(t('simArrGrp', [arr[x.op].ops.join(', ')])) + '">⟨' + esc(arr[x.op].ops.join('·')) + '⟩</span>' : '') : '<span class="muted">—</span>') + '</td>' : '') +
-        '<td class="n"><input style="width:62px" type="number" step="1" min="5" max="150" data-eff="' + esc(x.op) + '" value="' + (x.effOwn ? Math.round(x.eff * 100) : '') + '" placeholder="' + Math.round((x.effFile ? x.eff : p.eff) * 100) + '"' + (x.effFile ? ' class="effFile" title="' + esc(t('simEffFile')) + '"' : '') + '></td>' +
-        '<td class="n">' + (isFinite(x.cap) ? Math.round(x.cap) : '∞') + '</td><td><div class="bar"><i style="width:' + w + '%;background:' + (bn || (load && load > 100) ? 'var(--bad)' : 'var(--accent)') + '"></i>' + (takt ? '<b style="left:' + Math.min(100, Math.round(100 * (i.target || 0) / maxCap)) + '%"></b>' : '') +
-        '<span class="barT">' + (isFinite(x.cap) ? Math.round(x.cap) + ' ' + esc(t('simPcsH')) : '∞') + (load != null ? ' · ' + esc(t('simLoadPct', [load])) : '') + '</span></div></td>' +
-        (r ? '<td class="n">' + (rr && rr.util != null ? '<span class="' + (rr.util >= 0.95 ? 't-bad' : rr.util < 0.6 ? 't-warn' : '') + '">' + Math.round(rr.util * 100) + '%</span>' : '') + '</td><td class="n">' + (rr && rr.wipEnd == null ? '<span class="muted">∞</span>' : wip) + '</td><td class="n">' + (rr ? rr.wipMax + (rr.feedMax || 0) : '') + '</td>' : '') + '</tr>';
-    }).join('') + '</table>';
+  var nmOf = function (o) { var x = (ST.ops || {})[o] || {}; return LANG === 'en' ? x.nm2 || x.nm || '' : x.nm || x.nm2 || ''; };
+  var tgt = +i.target || 0, rowsH = B.rows.map(function (x) {
+    var bn = B.bottleneck.indexOf(x.op) >= 0, rr = rowsBy[x.op], wip = rr ? (rr.wipEnd != null ? rr.wipEnd : 0) + (rr.feedEnd || 0) : 0;
+    var cls = bn ? ' class="bn"' : (rr && wip >= p.wipWarn ? ' class="wip"' : '');
+    // load = output needed (the target, else the slowest operation) / capacity; people needed for the target = target x SAM / (60 x efficiency)
+    var need = tgt || B.capMin, load = isFinite(x.cap) && x.cap > 0 && need ? Math.round(100 * need / x.cap) : null;
+    var req = tgt && x.sam > 0 ? tgt * x.sam / (60 * x.eff) : null, w = isFinite(x.cap) ? Math.max(2, Math.round(100 * x.cap / maxCap)) : 100;
+    var lc = load == null ? 'var(--accent)' : load > 100 ? 'var(--bad)' : load >= 90 ? 'var(--warn)' : 'var(--ok)', nm = nmOf(x.op);
+    return '<tr' + cls + ' data-op="' + esc(x.op) + '"><td class="opc"><div><button class="rmop" data-rmop="' + esc(x.op) + '" title="' + esc(t('simRmOp')) + '">✕</button> <b>' + esc(x.op) + '</b>' +
+      (comb[x.op] ? ' <span class="tag t-info" title="' + esc(t('simComb', [comb[x.op].join(', ')])) + '">⇄ ' + esc(comb[x.op].join(', ')) + '</span>' : '') + (bn ? ' <span class="tag t-bad">' + esc(t('simBn')) + '</span>' : '') + '</div>' +
+      (nm ? '<div class="opn" title="' + esc(nm + ((ST.ops[x.op] || {}).nm2 && (ST.ops[x.op] || {}).nm2 !== nm ? '\n' + ST.ops[x.op].nm2 : '')) + '">' + esc(nm) + '</div>' : '') + '</td><td>' + esc(autoCode(x.mc) || x.mc) + '</td>' +
+      '<td class="n"><input style="width:78px" type="number" step="0.0001" min="0" data-sam="' + esc(x.op) + '" value="' + (x.sam || '') + '"></td><td class="n">' + x.stations + '</td>' +
+      '<td class="n"><b>' + x.people.toFixed(2) + '</b>' + (x.adj ? ' <span class="tag ' + (x.adj > 0 ? 't-info' : 't-warn') + '">' + (x.adj > 0 ? '+' : '') + x.adj + '</span>' : '') +
+      (arr && arr[x.op] ? '<div class="muted small" title="' + esc(t('simArrTip')) + (arr[x.op].ops.length > 1 ? ' · ' + esc(t('simArrGrp', [arr[x.op].ops.join(', ')])) : '') + '">' + esc(t('simFileN', [arr[x.op].v])) + (arr[x.op].ops.length > 1 ? ' ⟨' + esc(arr[x.op].ops.join('·')) + '⟩' : '') + '</div>' : '') + '</td>' +
+      (tgt ? '<td class="n">' + (req == null ? '' : '<span class="' + (req > x.people + 0.05 ? 't-bad' : '') + '">' + req.toFixed(2) + '</span>') + '</td>' : '') +
+      '<td class="n"><input style="width:58px" type="number" step="1" min="5" max="300" data-eff="' + esc(x.op) + '" value="' + (x.effOwn ? Math.round(x.eff * 100) : '') + '" placeholder="' + Math.round((x.effFile ? x.eff : p.eff) * 100) + '"' + (x.effFile ? ' class="effFile" title="' + esc(t('simEffFile')) + '"' : '') + '></td>' +
+      '<td><div class="capc"><div class="bar"><i style="width:' + w + '%;background:' + lc + '"></i>' + (tgt ? '<b style="left:' + Math.min(100, Math.round(100 * tgt / maxCap)) + '%" title="' + esc(t('simTarget')) + ' ' + tgt + '"></b>' : '') + '</div>' +
+      '<span class="capv">' + (isFinite(x.cap) ? Math.round(x.cap) : '∞') + '</span>' + (load != null ? '<span class="capl" style="color:' + lc + '" title="' + esc(t('simLoadTip')) + '">' + load + '%</span>' : '<span class="capl"></span>') + '</div></td>' +
+      (r ? '<td class="n">' + (rr && rr.util != null ? '<span class="' + (rr.util >= 0.95 ? 't-bad' : rr.util < 0.6 ? 't-warn' : '') + '">' + Math.round(rr.util * 100) + '%</span>' : '') + '</td><td class="n">' + (rr && rr.wipEnd == null ? '<span class="muted">∞</span>' : wip) + '</td><td class="n">' + (rr ? rr.wipMax + (rr.feedMax || 0) : '') + '</td>' : '') + '</tr>';
+  }).join('');
+  // totals: work content, machines, people, people needed, weighted efficiency, output and line balance, utilisation, WIP
+  var fr = B.rows.filter(function (x) { return x.sam > 0; }), sSam = fr.reduce(function (a, x) { return a + x.sam; }, 0), sT = fr.reduce(function (a, x) { return a + x.sam / x.eff; }, 0);
+  var sSt = B.rows.reduce(function (a, x) { return a + x.stations; }, 0), sPp = B.rows.reduce(function (a, x) { return a + x.people; }, 0);
+  var sReq = tgt ? fr.reduce(function (a, x) { return a + tgt * x.sam / (60 * x.eff); }, 0) : 0, avgEff = sT > 0 ? sSam / sT : 0;
+  var lbe = sPp > 0 && B.capMin > 0 ? sT * B.capMin / (60 * sPp) : 0;   // line balance: work content / (people x bottleneck cycle time)
+  var uW = r ? r.rows.reduce(function (a, x) { return a + (x.util != null ? x.util * x.people : 0); }, 0) / Math.max(0.0001, r.rows.reduce(function (a, x) { return a + (x.util != null ? x.people : 0); }, 0)) : null;
+  var wE = r ? r.rows.reduce(function (a, x) { return a + (x.wipEnd || 0) + (x.feedEnd || 0); }, 0) : 0, wM = r ? Math.max.apply(null, r.rows.map(function (x) { return (x.wipMax || 0) + (x.feedMax || 0); }).concat([0])) : 0;
+  var outV = r ? Math.round(r.outH) : Math.round(B.capMin);
+  var foot = '<tfoot><tr><td><b>' + esc(t('simTotal')) + '</b><div class="muted small">' + esc(t('simTotalN', [B.rows.length])) + '</div></td><td></td><td class="n"><b>' + (Math.round(sSam * 1000) / 1000) + '</b></td><td class="n"><b>' + sSt + '</b></td>' +
+    '<td class="n"><b>' + (Math.round(sPp * 10) / 10) + '</b>' + (B.hc ? '<div class="muted small">HC ' + B.hc + '</div>' : '') + (arr ? '<div class="muted small">' + esc(t('simFileN', [Math.round(arrGroups().reduce(function (a, g) { return a + g.v; }, 0) * 10) / 10])) + '</div>' : '') + '</td>' +
+    (tgt ? '<td class="n"><b class="' + (sReq > sPp + 0.05 ? 't-bad' : '') + '">' + sReq.toFixed(1) + '</b></td>' : '') +
+    '<td class="n"><b>' + Math.round(avgEff * 100) + '%</b><div class="muted small">' + esc(t('simAvgW')) + '</div></td>' +
+    '<td><div class="capt"><span class="tot">' + esc(t(r ? 'simOutSim' : 'simOutCap', [outV])) + (tgt ? ' · ' + esc(t('simVsTarget', [tgt])) : '') + '</span><span class="capl" title="' + esc(t('simLbeTip')) + '">' + esc(t('simLbe', [Math.round(lbe * 100)])) + '</span></div></td>' +
+    (r ? '<td class="n"><b>' + Math.round(uW * 100) + '%</b></td><td class="n"><b>' + wE + '</b></td><td class="n"><b>' + wM + '</b></td>' : '') + '</tr></tfoot>';
+  $('smTable').innerHTML = '<table><thead><tr><th>' + esc(t('simOp')) + '</th><th>' + esc(t('simMc')) + '</th><th class="n">SAM</th><th class="n">' + esc(t('simSt')) + '</th><th class="n">' + esc(t('simPeople')) + '</th>' +
+    (tgt ? '<th class="n" title="' + esc(t('simNeedTip')) + '">' + esc(t('simNeed')) + '</th>' : '') + '<th class="n">' + esc(t('simEffCol')) + '</th><th style="min-width:230px">' + esc(t('simCapH')) + '</th>' +
+    (r ? '<th class="n" title="' + esc(t('simUtilTip')) + '">' + esc(t('simUtilCol')) + '</th><th class="n">' + esc(t('simWipEnd')) + '</th><th class="n">' + esc(t('simWipMax')) + '</th>' : '') + '</tr></thead><tbody>' + rowsH + '</tbody>' + foot + '</table>';
   if (!r) { $('smRes').innerHTML = '<div class="muted">' + esc(t('simPress')) + '</div>'; return; }
   var hot = r.rows.map(function (x) { return { op: x.op, w: (x.wipEnd || 0) + (x.feedEnd || 0) }; }).filter(function (x) { return x.w >= p.wipWarn; }).sort(function (a, b) { return b.w - a.w; });
   var byOp = {}; r.opers.forEach(function (o) { o.ops.forEach(function (op) { (byOp[op] = byOp[op] || []).push(o.util); }); });

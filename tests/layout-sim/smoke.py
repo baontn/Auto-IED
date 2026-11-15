@@ -297,7 +297,7 @@ async def main():
         check('45' in await pg.inner_text('#smRes'), 'simulation tab shows the bottleneck')
         # efficiency per operation (table input), numbers on the capacity bars, headcount of the line
         await pg.fill('#smTable input[data-eff="45"]', '100'); await pg.press('#smTable input[data-eff="45"]', 'Tab'); await pg.wait_for_timeout(300)
-        r = await pg.evaluate("()=>[ST.ops['45'].eff, Math.round(simBalance(0.8).capMin), document.querySelectorAll('#smTable .barT').length]")
+        r = await pg.evaluate("()=>[ST.ops['45'].eff, Math.round(simBalance(0.8).capMin), document.querySelectorAll('#smTable .capv').length]")
         check(r[0] == 100 and r[1] > 30 and r[2] > 5, 'own efficiency of 45 = 100%%: bottleneck moves (%s pcs/h), bars show numbers' % r[1])
         n0 = await pg.evaluate("()=>simBalance(0.8).opers.length")
         await pg.evaluate("()=>{ST.line.hc=%d;commit()}" % (n0 + 3))
@@ -404,6 +404,8 @@ async def main():
         check(r == [0.75, 0.8, '75'] and r2 == 0.8, 'efficiency of each operation = file "Target eff" (general when missing or unticked) ' + str(r) + ' ' + str(r2))
         r = await pg.evaluate("()=>[document.querySelector('#smTable').innerText.includes('Mức bận'), SIMR.rows.every(x=>x.util==null||(x.util>=0&&x.util<=1.01)), document.querySelectorAll('#smRes .utils>div').length]")
         check(r[0] and r[1] and r[2] >= 6, 'WIP simulation shows utilisation per operation and per operator ' + str(r))
+        r = await pg.evaluate("()=>[document.querySelector('#smTable tr[data-op=\"31\"] .opn')?.textContent, document.querySelector('#smTable tfoot').innerText.replace(/\\s+/g,' ')]")
+        check(r[0] == 'op' and 'Tổng / TB' in r[1] and ' 3.9 9 7 ' in r[1] and 'Cân bằng' in r[1], 'operation names and a totals row (SAM, machines, people, efficiency, output, balance) ' + str(r))
         await pg.click('[data-tab="plan"]')
         # projects: style field, save (download fallback + recent list in the browser), new project, reopen from recent
         await pg.fill('#lnStyle', 'ABC26-00001-1101(XX)'); await pg.dispatch_event('#lnStyle', 'change')
