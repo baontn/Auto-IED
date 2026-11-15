@@ -72,11 +72,12 @@ label.f.row input{width:80px}
 .grid6{display:grid;grid-template-columns:repeat(6,minmax(110px,1fr));gap:8px;margin-top:8px}
 @media (max-width:900px){.grid6{grid-template-columns:1fr 1fr}}
 
-.utils{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:4px 14px;margin-top:6px;font-size:12.5px}.utils>div{display:grid;grid-template-columns:96px 1fr;gap:6px;align-items:center}
+.utils{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:4px 14px;margin-top:6px;font-size:12.5px}.utils>div{display:grid;grid-template-columns:96px 1fr 40px;gap:6px;align-items:center}
 .barT{position:absolute;left:6px;top:-1px;font-size:11px;font-weight:700;line-height:20px;color:var(--text);text-shadow:0 0 3px var(--panel),0 0 3px var(--panel);white-space:nowrap}
 .bar{position:relative;height:18px;background:var(--line);border-radius:5px;min-width:80px}.bar i{position:absolute;left:0;top:0;bottom:0;border-radius:5px}.bar b{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--warn)}
 tr.bn td{background:var(--badbg)}tr.wip td{background:var(--warnbg)}tr[data-op]{cursor:pointer}
-.capc{display:grid;grid-template-columns:1fr 44px 46px;gap:6px;align-items:center}.capc .bar{height:14px}.capv{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}.capl{text-align:right;font-size:12px;font-weight:700}
+.capc{min-width:80px}.mbar{position:relative;height:4px;background:var(--line);border-radius:2px;margin:3px 0 0 auto;width:80px}.mbar i{position:absolute;left:0;top:0;bottom:0;border-radius:2px}.mbar u{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--text);opacity:.6}
+.chipl{display:inline-block;min-width:44px;padding:1px 6px;border-radius:9px;font-size:12px;font-weight:700;text-align:center}.chipl.lo{background:var(--okbg);color:var(--ok)}.chipl.lw{background:var(--warnbg);color:var(--warn)}.chipl.lb{background:var(--badbg);color:var(--bad)}
 .capt{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;justify-content:space-between}.capt .tot{font-weight:700}.capt .capl{white-space:nowrap}
 #smTable tfoot td{border-top:2px solid var(--text);background:var(--sel);position:sticky;bottom:0}
 #smTable td.opc{max-width:260px}.opn{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:250px}
@@ -281,6 +282,10 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
       <label class="f"><span data-t="lsEnd">Cuối chuyền (cm)</span><input id="lsEnd" type="number" min="0" step="10"></label>
       <label class="f"><span data-t="lsWidth">Chuyền rộng (cm)</span><input id="lsWidth" type="number" min="50" step="10"></label>
       <label class="f"><span data-t="lsHC">Số công nhân (HC)</span><input id="lsHC" type="number" min="0" step="1"></label>
+      <label class="ck" style="grid-column:span 3"><input type="checkbox" id="lsFin" checked><b data-t="lsFin">Khu hoàn thiện (1 bàn QC đứng dọc + 2 bàn PCK nằm ngang đối diện nhau) và khu thùng (thùng vàng, đỏ, xanh) ở cuối chuyền chính</b></label>
+      <label class="f"><span data-t="lsFinL">Bàn QC / PCK dài (cm)</span><input id="lsFinL" type="number" min="40" step="5"></label>
+      <label class="f"><span data-t="lsFinW">Bàn QC / PCK rộng (cm)</span><input id="lsFinW" type="number" min="30" step="5"></label>
+      <label class="f"><span data-t="lsBoxW">Thùng rộng (cm)</span><input id="lsBoxW" type="number" min="30" step="5"></label>
     </div>
     <div class="calc" id="lsCalc"></div>
     <label class="ck" style="margin-top:10px"><input type="checkbox" id="lsBr"><b data-t="lsBr">Có chuyền nhánh (chuyền phụ bên cạnh, tùy mã hàng)</b></label>

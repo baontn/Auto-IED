@@ -201,8 +201,9 @@ function renderSim() {
       (arr && arr[x.op] ? '<div class="muted small" title="' + esc(t('simArrTip')) + (arr[x.op].ops.length > 1 ? ' · ' + esc(t('simArrGrp', [arr[x.op].ops.join(', ')])) : '') + '">' + esc(t('simFileN', [arr[x.op].v])) + (arr[x.op].ops.length > 1 ? ' ⟨' + esc(arr[x.op].ops.join('·')) + '⟩' : '') + '</div>' : '') + '</td>' +
       (tgt ? '<td class="n">' + (req == null ? '' : '<span class="' + (req > x.people + 0.05 ? 't-bad' : '') + '">' + req.toFixed(2) + '</span>') + '</td>' : '') +
       '<td class="n"><input style="width:58px" type="number" step="1" min="5" max="300" data-eff="' + esc(x.op) + '" value="' + (x.effOwn ? Math.round(x.eff * 100) : '') + '" placeholder="' + Math.round((x.effFile ? x.eff : p.eff) * 100) + '"' + (x.effFile ? ' class="effFile" title="' + esc(t('simEffFile')) + '"' : '') + '></td>' +
-      '<td><div class="capc"><div class="bar"><i style="width:' + w + '%;background:' + lc + '"></i>' + (tgt ? '<b style="left:' + Math.min(100, Math.round(100 * tgt / maxCap)) + '%" title="' + esc(t('simTarget')) + ' ' + tgt + '"></b>' : '') + '</div>' +
-      '<span class="capv">' + (isFinite(x.cap) ? Math.round(x.cap) : '∞') + '</span>' + (load != null ? '<span class="capl" style="color:' + lc + '" title="' + esc(t('simLoadTip')) + '">' + load + '%</span>' : '<span class="capl"></span>') + '</div></td>' +
+      // capacity: the number, a thin bar under it (scale = the fastest operation, tick = target); load: coloured chip
+      '<td class="n capc"><b>' + (isFinite(x.cap) ? Math.round(x.cap) : '∞') + '</b><div class="mbar"><i style="width:' + w + '%;background:' + lc + '"></i>' + (tgt ? '<u style="left:' + Math.min(100, Math.round(100 * tgt / maxCap)) + '%"></u>' : '') + '</div></td>' +
+      '<td class="n">' + (load != null ? '<span class="chipl ' + (load > 100 ? 'lb' : load >= 90 ? 'lw' : 'lo') + '" title="' + esc(t('simLoadTip')) + '">' + load + '%</span>' : '') + '</td>' +
       (r ? '<td class="n">' + (rr && rr.util != null ? '<span class="' + (rr.util >= 0.95 ? 't-bad' : rr.util < 0.6 ? 't-warn' : '') + '">' + Math.round(rr.util * 100) + '%</span>' : '') + '</td><td class="n">' + (rr && rr.wipEnd == null ? '<span class="muted">∞</span>' : wip) + '</td><td class="n">' + (rr ? rr.wipMax + (rr.feedMax || 0) : '') + '</td>' : '') + '</tr>';
   }).join('');
   // totals: work content, machines, people, people needed, weighted efficiency, output and line balance, utilisation, WIP
@@ -217,10 +218,11 @@ function renderSim() {
     '<td class="n"><b>' + (Math.round(sPp * 10) / 10) + '</b>' + (B.hc ? '<div class="muted small">HC ' + B.hc + '</div>' : '') + (arr ? '<div class="muted small">' + esc(t('simFileN', [Math.round(arrGroups().reduce(function (a, g) { return a + g.v; }, 0) * 10) / 10])) + '</div>' : '') + '</td>' +
     (tgt ? '<td class="n"><b class="' + (sReq > sPp + 0.05 ? 't-bad' : '') + '">' + sReq.toFixed(1) + '</b></td>' : '') +
     '<td class="n"><b>' + Math.round(avgEff * 100) + '%</b><div class="muted small">' + esc(t('simAvgW')) + '</div></td>' +
-    '<td><div class="capt"><span class="tot">' + esc(t(r ? 'simOutSim' : 'simOutCap', [outV])) + (tgt ? ' · ' + esc(t('simVsTarget', [tgt])) : '') + '</span><span class="capl" title="' + esc(t('simLbeTip')) + '">' + esc(t('simLbe', [Math.round(lbe * 100)])) + '</span></div></td>' +
+    '<td class="n"><b>' + outV + '</b><div class="muted small">' + esc(t(r ? 'simOutSimS' : 'simOutCapS')) + (tgt ? ' · ' + esc(t('simVsTarget', [tgt])) : '') + '</div></td>' +
+    '<td class="n" title="' + esc(t('simLbeTip')) + '"><b>' + Math.round(lbe * 100) + '%</b><div class="muted small">' + esc(t('simLbeS')) + '</div></td>' +
     (r ? '<td class="n"><b>' + Math.round(uW * 100) + '%</b></td><td class="n"><b>' + wE + '</b></td><td class="n"><b>' + wM + '</b></td>' : '') + '</tr></tfoot>';
   $('smTable').innerHTML = '<table><thead><tr><th>' + esc(t('simOp')) + '</th><th>' + esc(t('simMc')) + '</th><th class="n">SAM</th><th class="n">' + esc(t('simSt')) + '</th><th class="n">' + esc(t('simPeople')) + '</th>' +
-    (tgt ? '<th class="n" title="' + esc(t('simNeedTip')) + '">' + esc(t('simNeed')) + '</th>' : '') + '<th class="n">' + esc(t('simEffCol')) + '</th><th style="min-width:230px">' + esc(t('simCapH')) + '</th>' +
+    (tgt ? '<th class="n" title="' + esc(t('simNeedTip')) + '">' + esc(t('simNeed')) + '</th>' : '') + '<th class="n">' + esc(t('simEffCol')) + '</th><th class="n" title="' + esc(t('simCapTip')) + '">' + esc(t('simCapH')) + '</th><th class="n" title="' + esc(t('simLoadTip')) + '">' + esc(t('simLoadH')) + '</th>' +
     (r ? '<th class="n" title="' + esc(t('simUtilTip')) + '">' + esc(t('simUtilCol')) + '</th><th class="n">' + esc(t('simWipEnd')) + '</th><th class="n">' + esc(t('simWipMax')) + '</th>' : '') + '</tr></thead><tbody>' + rowsH + '</tbody>' + foot + '</table>';
   if (!r) { $('smRes').innerHTML = '<div class="muted">' + esc(t('simPress')) + '</div>'; return; }
   var hot = r.rows.map(function (x) { return { op: x.op, w: (x.wipEnd || 0) + (x.feedEnd || 0) }; }).filter(function (x) { return x.w >= p.wipWarn; }).sort(function (a, b) { return b.w - a.w; });
@@ -242,7 +244,7 @@ function renderSim() {
     '<ul class="sug">' + sug.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ul>' +
     '<details open><summary>' + esc(t('simUtil')) + '</summary><div class="utils">' + r.opers.slice().sort(function (a, b) { return b.util - a.util; }).map(function (o) {
       var u = Math.round(o.util * 100), col = u >= 95 ? 'var(--bad)' : u < 60 ? 'var(--warn)' : 'var(--ok)';
-      return '<div title="' + esc(t('simUtilOne', [label(o.it), o.ops.join(', '), u])) + '"><span>' + esc(o.ops.join('+')) + ' <i class="muted">' + esc(o.it ? o.it.code : '') + '</i></span><div class="bar"><i style="width:' + Math.min(100, u) + '%;background:' + col + '"></i><span class="barT">' + u + '%</span></div></div>';
+      return '<div title="' + esc(t('simUtilOne', [label(o.it), o.ops.join(', '), u])) + '"><span>' + esc(o.ops.join('+')) + ' <i class="muted">' + esc(o.it ? o.it.code : '') + '</i></span><div class="mbar" style="width:100%;margin:0"><i style="width:' + Math.min(100, u) + '%;background:' + col + '"></i></div><b style="text-align:right;color:' + col + '">' + u + '%</b></div>';
     }).join('') + '</div></details>';
 }
 function initSim() {

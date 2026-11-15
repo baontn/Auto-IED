@@ -72,11 +72,12 @@ label.f.row input{width:80px}
 .grid6{display:grid;grid-template-columns:repeat(6,minmax(110px,1fr));gap:8px;margin-top:8px}
 @media (max-width:900px){.grid6{grid-template-columns:1fr 1fr}}
 
-.utils{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:4px 14px;margin-top:6px;font-size:12.5px}.utils>div{display:grid;grid-template-columns:96px 1fr;gap:6px;align-items:center}
+.utils{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:4px 14px;margin-top:6px;font-size:12.5px}.utils>div{display:grid;grid-template-columns:96px 1fr 40px;gap:6px;align-items:center}
 .barT{position:absolute;left:6px;top:-1px;font-size:11px;font-weight:700;line-height:20px;color:var(--text);text-shadow:0 0 3px var(--panel),0 0 3px var(--panel);white-space:nowrap}
 .bar{position:relative;height:18px;background:var(--line);border-radius:5px;min-width:80px}.bar i{position:absolute;left:0;top:0;bottom:0;border-radius:5px}.bar b{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--warn)}
 tr.bn td{background:var(--badbg)}tr.wip td{background:var(--warnbg)}tr[data-op]{cursor:pointer}
-.capc{display:grid;grid-template-columns:1fr 44px 46px;gap:6px;align-items:center}.capc .bar{height:14px}.capv{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}.capl{text-align:right;font-size:12px;font-weight:700}
+.capc{min-width:80px}.mbar{position:relative;height:4px;background:var(--line);border-radius:2px;margin:3px 0 0 auto;width:80px}.mbar i{position:absolute;left:0;top:0;bottom:0;border-radius:2px}.mbar u{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--text);opacity:.6}
+.chipl{display:inline-block;min-width:44px;padding:1px 6px;border-radius:9px;font-size:12px;font-weight:700;text-align:center}.chipl.lo{background:var(--okbg);color:var(--ok)}.chipl.lw{background:var(--warnbg);color:var(--warn)}.chipl.lb{background:var(--badbg);color:var(--bad)}
 .capt{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;justify-content:space-between}.capt .tot{font-weight:700}.capt .capl{white-space:nowrap}
 #smTable tfoot td{border-top:2px solid var(--text);background:var(--sel);position:sticky;bottom:0}
 #smTable td.opc{max-width:260px}.opn{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:250px}
@@ -281,6 +282,10 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
       <label class="f"><span data-t="lsEnd">Cuối chuyền (cm)</span><input id="lsEnd" type="number" min="0" step="10"></label>
       <label class="f"><span data-t="lsWidth">Chuyền rộng (cm)</span><input id="lsWidth" type="number" min="50" step="10"></label>
       <label class="f"><span data-t="lsHC">Số công nhân (HC)</span><input id="lsHC" type="number" min="0" step="1"></label>
+      <label class="ck" style="grid-column:span 3"><input type="checkbox" id="lsFin" checked><b data-t="lsFin">Khu hoàn thiện (1 bàn QC đứng dọc + 2 bàn PCK nằm ngang đối diện nhau) và khu thùng (thùng vàng, đỏ, xanh) ở cuối chuyền chính</b></label>
+      <label class="f"><span data-t="lsFinL">Bàn QC / PCK dài (cm)</span><input id="lsFinL" type="number" min="40" step="5"></label>
+      <label class="f"><span data-t="lsFinW">Bàn QC / PCK rộng (cm)</span><input id="lsFinW" type="number" min="30" step="5"></label>
+      <label class="f"><span data-t="lsBoxW">Thùng rộng (cm)</span><input id="lsBoxW" type="number" min="30" step="5"></label>
     </div>
     <div class="calc" id="lsCalc"></div>
     <label class="ck" style="margin-top:10px"><input type="checkbox" id="lsBr"><b data-t="lsBr">Có chuyền nhánh (chuyền phụ bên cạnh, tùy mã hàng)</b></label>
@@ -357,9 +362,13 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 var LANG = 'vi';
 var I18N = {
   vi: {
+    lsFin: 'Khu hoàn thiện (1 bàn QC đứng dọc + 2 bàn PCK nằm ngang đối diện nhau) và khu thùng (thùng vàng, đỏ, xanh) ở cuối chuyền chính', lsFinL: 'Bàn QC / PCK dài (cm)', lsFinW: 'Bàn QC / PCK rộng (cm)', lsBoxW: 'Thùng rộng (cm)',
+    zoneFinish: 'Khu hoàn thiện', zoneBoxes: 'Khu thùng', boxY: 'Thùng vàng', boxR: 'Thùng đỏ', boxG: 'Thùng xanh',
+    simLoadH: 'Tải', simCapTip: 'Số sản phẩm công đoạn làm được trong 1 giờ = số người × 60 × hiệu suất / SAM. Vạch nhỏ dưới số: so với công đoạn nhanh nhất; vạch đứng = sản lượng mục tiêu.',
+    simOutSimS: 'sp/giờ ra chuyền (mô phỏng)', simOutCapS: 'sp/giờ (công đoạn chậm nhất)', simLbeS: 'cân bằng chuyền',
     xlAutoBtn: '⚙ Tự tạo layout', xlAutoTip: 'Tự tạo layout từ bảng công đoạn (loại máy, số máy, CN sắp xếp) và trình tự của sheet đang chọn',
     turnR: 'Máy xoay ngang trong file, người ngồi bên phải', turnL: 'Máy xoay ngang trong file, người ngồi bên trái',
-    simCapH: 'Năng lực (sp/giờ) · tải', simLoadTip: 'Tải = sản lượng cần (mục tiêu, không có thì công đoạn chậm nhất) / năng lực. Xanh < 90 %, vàng 90–100 %, đỏ > 100 % (không đủ năng lực).',
+    simCapH: 'Năng lực (sp/giờ)', simLoadTip: 'Tải = sản lượng cần (mục tiêu, không có thì công đoạn chậm nhất) / năng lực. Xanh < 90 %, vàng 90–100 %, đỏ > 100 % (không đủ năng lực).',
     simNeed: 'Người cần', simNeedTip: 'Số người cần để đạt sản lượng mục tiêu = mục tiêu × SAM / (60 × hiệu suất). Đỏ: nhiều hơn số người đang có.',
     simFileN: 'file: {0}', simTotal: 'Tổng / TB', simTotalN: '{0} công đoạn', simAvgW: 'TB theo SAM',
     simOutSim: 'Ra {0} sp/giờ (mô phỏng)', simOutCap: 'Năng lực chuyền {0} sp/giờ', simVsTarget: 'mục tiêu {0}', simLbe: 'Cân bằng {0}%',
@@ -498,9 +507,13 @@ var I18N = {
     ocrIgnored: 'bỏ qua', ocrLegend: 'Viền xanh lá: đọc đúng mã · cam: đã sửa theo thư viện · đỏ: không có trong thư viện · xanh dương: số công đoạn · xám: bỏ qua. Đưa chuột vào ô để xem chữ đọc được.'
   },
   en: {
+    lsFin: 'Finishing area (1 upright QC table + 2 packing tables lying face to face) and box area (yellow, red, green boxes) at the end of the main line', lsFinL: 'QC / packing table length (cm)', lsFinW: 'QC / packing table width (cm)', lsBoxW: 'Box width (cm)',
+    zoneFinish: 'Finishing area', zoneBoxes: 'Box area', boxY: 'Yellow box', boxR: 'Red box', boxG: 'Green box',
+    simLoadH: 'Load', simCapTip: 'Pieces the operation makes per hour = people × 60 × efficiency / SAM. Thin bar: compared with the fastest operation; tick = target output.',
+    simOutSimS: 'pcs/h out of the line (simulated)', simOutCapS: 'pcs/h (slowest operation)', simLbeS: 'line balance',
     xlAutoBtn: '⚙ Automatic layout', xlAutoTip: 'Build the layout from the operation table (machine type, machines, people arranged) and the sequence of the chosen sheet',
     turnR: 'Machine turned in the file, operator on its right', turnL: 'Machine turned in the file, operator on its left',
-    simCapH: 'Capacity (pcs/h) · load', simLoadTip: 'Load = output needed (target, else the slowest operation) / capacity. Green < 90 %, yellow 90–100 %, red > 100 % (not enough capacity).',
+    simCapH: 'Capacity (pcs/h)', simLoadTip: 'Load = output needed (target, else the slowest operation) / capacity. Green < 90 %, yellow 90–100 %, red > 100 % (not enough capacity).',
     simNeed: 'People needed', simNeedTip: 'People needed for the target output = target × SAM / (60 × efficiency). Red: more than the people there.',
     simFileN: 'file: {0}', simTotal: 'Total / avg', simTotalN: '{0} operations', simAvgW: 'avg by SAM',
     simOutSim: 'Output {0} pcs/h (simulated)', simOutCap: 'Line capacity {0} pcs/h', simVsTarget: 'target {0}', simLbe: 'Balance {0}%',
@@ -863,7 +876,7 @@ var ERG_DEF = {
   emptyPitch: 107,// width of an empty cell in the pasted grid
   snap: 5
 };
-var LINE_DEF = { units: 17, unit: 107, tableW: 30, start: 90, gap: 30, end: 30 };   // start = length of the input area in front of the line
+var LINE_DEF = { units: 17, unit: 107, tableW: 30, start: 90, gap: 30, end: 30, finTL: 175, finTW: 75, boxW: 70 };   // start = length of the input area in front of the line
 var ST = { line: { name: '', length: 2400, width: 600, fixed: false }, erg: Object.assign({}, ERG_DEF), items: [], seq: 1 };
 var SEL = [];            // selected ids (not saved)
 var UNDO = [], REDO = [];
@@ -1109,6 +1122,13 @@ function setupLine(o) {
   if (br) { bL = Math.round(br.units * br.unit + br.end); bW = Math.round(br.width || lineAutoWidth(br.tableW)); walk = Math.round(br.walk); }
   var mainY = br && br.pos === 'top' ? bW + walk : 0, brY = br ? (br.pos === 'top' ? 0 : mW + walk) : 0, inX = -(inL + gap);
   var zones = [{ id: 'main', x: 0, y: mainY, L: mL, W: mW }];
+  // finishing area (1 QC table + 2 packing tables) and box area (3 boxes) after the main line, as wide as it
+  var fin = o.finish !== false, tL = Math.max(40, +o.finTL || LINE_DEF.finTL), tW = Math.max(30, +o.finTW || LINE_DEF.finTW), bxW = Math.max(30, +o.boxW || LINE_DEF.boxW);
+  var oldF = zoneById('finish'), oldB = zoneById('boxes');
+  if (fin) {
+    var fL = Math.round(tW + tL + 80), fx = mL + gap;
+    zones.push({ id: 'finish', x: fx, y: mainY, L: fL, W: mW }, { id: 'boxes', x: fx + fL + gap, y: mainY, L: Math.round(bxW + 40), W: mW });
+  }
   if (inL > 0) zones.push({ id: 'input', x: inX, y: mainY, L: inL, W: mW });
   if (br) {
     var wx0 = inL > 0 ? inX : 0, wx1 = Math.max(mL, bL);
@@ -1116,10 +1136,11 @@ function setupLine(o) {
     if (inL > 0) zones.push({ id: 'inputB', x: inX, y: brY, L: inL, W: bW });
   }
   ST.line = { name: o.name || '', length: Math.max(mL, bL), width: mW + (br ? walk + bW : 0), fixed: true, units: o.units, unit: o.unit, tableW: o.tableW, start: inL, gap: gap, end: o.end, hc: o.hc || 0,
+    finish: fin, finTL: tL, finTW: tW, boxW: bxW,
     mainWidth: o.width || 0, zones: zones, branch: br || null, v: 2 };
   function center(zid, x, y, L, W) {
     var c = centerOf(zid), dx = 0, dy = 0;
-    if (c) { dx = x - c.x; dy = y - c.y; ST.items.forEach(function (it) { if (it !== c && (it.zone || 'main') === zid && !isInputObj(it)) { it.x = n1(it.x + dx); it.y = n1(it.y + dy); } }); }
+    if (c) { dx = x - c.x; dy = y - c.y; ST.items.forEach(function (it) { if (it !== c && (it.zone || 'main') === zid && !isInputObj(it) && !isFinishObj(it)) { it.x = n1(it.x + dx); it.y = n1(it.y + dy); } }); }
     else { c = { id: uid(), kind: 'obj', role: 'center', zone: zid === 'main' ? undefined : zid, name: zid === 'main' ? t('centerTable') : t('centerTableB'), H: 75, rot: 0, color: '#d9cdb0' }; ST.items.unshift(c); }
     c.L = L; c.W = W; c.x = n1(x); c.y = n1(y);
   }
@@ -1127,6 +1148,31 @@ function setupLine(o) {
   if (br) center('branch', br.units * br.unit / 2, brY + bW / 2, br.units * br.unit, br.tableW);
   else { var cb = centerOf('branch'); if (cb) ST.items = ST.items.filter(function (it) { return it !== cb; }); }
   ST.items.filter(isInputObj).forEach(function (it) { placeInput(it, it.zone === 'branch' ? 'branch' : 'main'); });
+  placeFinish(oldF, oldB);
+}
+function isFinishObj(it) { return it.zone === 'finish' || it.zone === 'boxes'; }
+/* tables of the finishing area and the boxes: created once, then moved with their area (the arrangement made by the user is kept) */
+function placeFinish(oldF, oldB) {
+  var F = zoneById('finish'), Bz = zoneById('boxes'), L = ST.line;
+  if (!F) { ST.items = ST.items.filter(function (it) { return !isFinishObj(it); }); return; }
+  [[oldF, F, 'finish'], [oldB, Bz, 'boxes']].forEach(function (p) {
+    if (!p[0]) return;
+    var dx = p[1].x - p[0].x, dy = p[1].y - p[0].y;
+    ST.items.forEach(function (it) { if (it.zone === p[2]) { it.x = n1(it.x + dx); it.y = n1(it.y + dy); } });
+  });
+  var cy = F.y + F.W / 2, tL = L.finTL, tW = L.finTW;
+  if (!ST.items.some(function (it) { return it.zone === 'finish'; })) {
+    var px = F.x + 20 + tW + 40 + tL / 2;
+    ST.items.push({ id: uid(), kind: 'obj', zone: 'finish', name: 'QC', L: tL, W: tW, H: 75, x: n1(F.x + 20 + tW / 2), y: n1(cy), rot: 90, color: '#9fd3a8' },   // QC table upright
+      { id: uid(), kind: 'obj', zone: 'finish', name: 'PCK 1', L: tL, W: tW, H: 75, x: n1(px), y: n1(cy - tW / 2), rot: 0, color: '#f2cf8d' },   // two packing tables face to face
+      { id: uid(), kind: 'obj', zone: 'finish', name: 'PCK 2', L: tL, W: tW, H: 75, x: n1(px), y: n1(cy + tW / 2), rot: 0, color: '#f2cf8d' });
+  }
+  if (!ST.items.some(function (it) { return it.zone === 'boxes'; })) {
+    var bw = L.boxW;
+    [['boxY', '#f2c230'], ['boxR', '#e04848'], ['boxG', '#3fae6a']].forEach(function (b, k) {
+      ST.items.push({ id: uid(), kind: 'obj', zone: 'boxes', name: t(b[0]), L: bw, W: bw, H: 60, x: n1(Bz.x + Bz.L / 2), y: n1(cy + (k - 1) * (bw + 20)), rot: 0, color: b[1] });
+    });
+  }
 }
 function isInputObj(it) { return it.kind === 'obj' && it.role !== 'center' && /^input$/i.test(String(it.name || '').trim()); }
 /* the input table: in the middle of the input area of its line (main / branch) */
@@ -1249,7 +1295,7 @@ function planMarkup(o) {
       h.push('<text x="' + (z.x + z.L / 2) + '" y="' + (z.y + z.W / 2 + fs * 0.35) + '" font-size="' + fs * 0.9 + '" font-weight="700" fill="' + P.walkEdge + '" text-anchor="middle" stroke="' + P.floor + '" stroke-width="' + fs * 0.2 + '" paint-order="stroke">' + esc(t('walkLbl', [z.W])) + '</text>');
     } else {
       h.push('<rect x="' + z.x + '" y="' + z.y + '" width="' + z.L + '" height="' + z.W + '" fill="none" stroke="' + P.edge + '" stroke-width="' + 2 * sw + '"/>');
-      h.push('<text x="' + (z.x + fs * 0.4) + '" y="' + (z.y + fs * 1.1) + '" font-size="' + fs * 0.85 + '" font-weight="700" fill="' + P.muted + '">' + esc(t(z.id === 'branch' ? 'zoneBranch' : /^input/.test(z.id) ? 'zoneInput' : 'zoneMain')) + '</text>');
+      h.push('<text x="' + (z.x + fs * 0.4) + '" y="' + (z.y + fs * 1.1) + '" font-size="' + fs * 0.85 + '" font-weight="700" fill="' + P.muted + '">' + esc(t(z.id === 'branch' ? 'zoneBranch' : /^input/.test(z.id) ? 'zoneInput' : z.id === 'finish' ? 'zoneFinish' : z.id === 'boxes' ? 'zoneBoxes' : 'zoneMain')) + '</text>');
     }
   });
   var bad = issueIds('bad'), warn = issueIds('warn'), labels = [];
@@ -2889,7 +2935,7 @@ function stationsOf(op) {
   var key = String(op).trim().replace(/^0+(?=\d)/, '').toUpperCase(), out = [];
   ST.items.forEach(function (it) {
     if (it.kind === 'mc') { if (opsOf(it).some(function (o) { return o.toUpperCase() === key; })) { var s = shapes(it); out.push({ it: it, p: s.chair || s.front }); } }
-    else if (it.name && it.name.trim().toUpperCase().indexOf(key) === 0 && /[A-Z]/.test(key)) out.push({ it: it, p: { x: it.x, y: it.y } });
+    else if (it.name && /[A-Z]/.test(key) && (it.name.trim().toUpperCase().indexOf(key) === 0 || (/^PA?CK/.test(key) && /^PA?CK/i.test(it.name.trim())))) out.push({ it: it, p: { x: it.x, y: it.y } });
   });
   return out;
 }
@@ -3329,8 +3375,9 @@ function renderSim() {
       (arr && arr[x.op] ? '<div class="muted small" title="' + esc(t('simArrTip')) + (arr[x.op].ops.length > 1 ? ' · ' + esc(t('simArrGrp', [arr[x.op].ops.join(', ')])) : '') + '">' + esc(t('simFileN', [arr[x.op].v])) + (arr[x.op].ops.length > 1 ? ' ⟨' + esc(arr[x.op].ops.join('·')) + '⟩' : '') + '</div>' : '') + '</td>' +
       (tgt ? '<td class="n">' + (req == null ? '' : '<span class="' + (req > x.people + 0.05 ? 't-bad' : '') + '">' + req.toFixed(2) + '</span>') + '</td>' : '') +
       '<td class="n"><input style="width:58px" type="number" step="1" min="5" max="300" data-eff="' + esc(x.op) + '" value="' + (x.effOwn ? Math.round(x.eff * 100) : '') + '" placeholder="' + Math.round((x.effFile ? x.eff : p.eff) * 100) + '"' + (x.effFile ? ' class="effFile" title="' + esc(t('simEffFile')) + '"' : '') + '></td>' +
-      '<td><div class="capc"><div class="bar"><i style="width:' + w + '%;background:' + lc + '"></i>' + (tgt ? '<b style="left:' + Math.min(100, Math.round(100 * tgt / maxCap)) + '%" title="' + esc(t('simTarget')) + ' ' + tgt + '"></b>' : '') + '</div>' +
-      '<span class="capv">' + (isFinite(x.cap) ? Math.round(x.cap) : '∞') + '</span>' + (load != null ? '<span class="capl" style="color:' + lc + '" title="' + esc(t('simLoadTip')) + '">' + load + '%</span>' : '<span class="capl"></span>') + '</div></td>' +
+      // capacity: the number, a thin bar under it (scale = the fastest operation, tick = target); load: coloured chip
+      '<td class="n capc"><b>' + (isFinite(x.cap) ? Math.round(x.cap) : '∞') + '</b><div class="mbar"><i style="width:' + w + '%;background:' + lc + '"></i>' + (tgt ? '<u style="left:' + Math.min(100, Math.round(100 * tgt / maxCap)) + '%"></u>' : '') + '</div></td>' +
+      '<td class="n">' + (load != null ? '<span class="chipl ' + (load > 100 ? 'lb' : load >= 90 ? 'lw' : 'lo') + '" title="' + esc(t('simLoadTip')) + '">' + load + '%</span>' : '') + '</td>' +
       (r ? '<td class="n">' + (rr && rr.util != null ? '<span class="' + (rr.util >= 0.95 ? 't-bad' : rr.util < 0.6 ? 't-warn' : '') + '">' + Math.round(rr.util * 100) + '%</span>' : '') + '</td><td class="n">' + (rr && rr.wipEnd == null ? '<span class="muted">∞</span>' : wip) + '</td><td class="n">' + (rr ? rr.wipMax + (rr.feedMax || 0) : '') + '</td>' : '') + '</tr>';
   }).join('');
   // totals: work content, machines, people, people needed, weighted efficiency, output and line balance, utilisation, WIP
@@ -3345,10 +3392,11 @@ function renderSim() {
     '<td class="n"><b>' + (Math.round(sPp * 10) / 10) + '</b>' + (B.hc ? '<div class="muted small">HC ' + B.hc + '</div>' : '') + (arr ? '<div class="muted small">' + esc(t('simFileN', [Math.round(arrGroups().reduce(function (a, g) { return a + g.v; }, 0) * 10) / 10])) + '</div>' : '') + '</td>' +
     (tgt ? '<td class="n"><b class="' + (sReq > sPp + 0.05 ? 't-bad' : '') + '">' + sReq.toFixed(1) + '</b></td>' : '') +
     '<td class="n"><b>' + Math.round(avgEff * 100) + '%</b><div class="muted small">' + esc(t('simAvgW')) + '</div></td>' +
-    '<td><div class="capt"><span class="tot">' + esc(t(r ? 'simOutSim' : 'simOutCap', [outV])) + (tgt ? ' · ' + esc(t('simVsTarget', [tgt])) : '') + '</span><span class="capl" title="' + esc(t('simLbeTip')) + '">' + esc(t('simLbe', [Math.round(lbe * 100)])) + '</span></div></td>' +
+    '<td class="n"><b>' + outV + '</b><div class="muted small">' + esc(t(r ? 'simOutSimS' : 'simOutCapS')) + (tgt ? ' · ' + esc(t('simVsTarget', [tgt])) : '') + '</div></td>' +
+    '<td class="n" title="' + esc(t('simLbeTip')) + '"><b>' + Math.round(lbe * 100) + '%</b><div class="muted small">' + esc(t('simLbeS')) + '</div></td>' +
     (r ? '<td class="n"><b>' + Math.round(uW * 100) + '%</b></td><td class="n"><b>' + wE + '</b></td><td class="n"><b>' + wM + '</b></td>' : '') + '</tr></tfoot>';
   $('smTable').innerHTML = '<table><thead><tr><th>' + esc(t('simOp')) + '</th><th>' + esc(t('simMc')) + '</th><th class="n">SAM</th><th class="n">' + esc(t('simSt')) + '</th><th class="n">' + esc(t('simPeople')) + '</th>' +
-    (tgt ? '<th class="n" title="' + esc(t('simNeedTip')) + '">' + esc(t('simNeed')) + '</th>' : '') + '<th class="n">' + esc(t('simEffCol')) + '</th><th style="min-width:230px">' + esc(t('simCapH')) + '</th>' +
+    (tgt ? '<th class="n" title="' + esc(t('simNeedTip')) + '">' + esc(t('simNeed')) + '</th>' : '') + '<th class="n">' + esc(t('simEffCol')) + '</th><th class="n" title="' + esc(t('simCapTip')) + '">' + esc(t('simCapH')) + '</th><th class="n" title="' + esc(t('simLoadTip')) + '">' + esc(t('simLoadH')) + '</th>' +
     (r ? '<th class="n" title="' + esc(t('simUtilTip')) + '">' + esc(t('simUtilCol')) + '</th><th class="n">' + esc(t('simWipEnd')) + '</th><th class="n">' + esc(t('simWipMax')) + '</th>' : '') + '</tr></thead><tbody>' + rowsH + '</tbody>' + foot + '</table>';
   if (!r) { $('smRes').innerHTML = '<div class="muted">' + esc(t('simPress')) + '</div>'; return; }
   var hot = r.rows.map(function (x) { return { op: x.op, w: (x.wipEnd || 0) + (x.feedEnd || 0) }; }).filter(function (x) { return x.w >= p.wipWarn; }).sort(function (a, b) { return b.w - a.w; });
@@ -3370,7 +3418,7 @@ function renderSim() {
     '<ul class="sug">' + sug.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ul>' +
     '<details open><summary>' + esc(t('simUtil')) + '</summary><div class="utils">' + r.opers.slice().sort(function (a, b) { return b.util - a.util; }).map(function (o) {
       var u = Math.round(o.util * 100), col = u >= 95 ? 'var(--bad)' : u < 60 ? 'var(--warn)' : 'var(--ok)';
-      return '<div title="' + esc(t('simUtilOne', [label(o.it), o.ops.join(', '), u])) + '"><span>' + esc(o.ops.join('+')) + ' <i class="muted">' + esc(o.it ? o.it.code : '') + '</i></span><div class="bar"><i style="width:' + Math.min(100, u) + '%;background:' + col + '"></i><span class="barT">' + u + '%</span></div></div>';
+      return '<div title="' + esc(t('simUtilOne', [label(o.it), o.ops.join(', '), u])) + '"><span>' + esc(o.ops.join('+')) + ' <i class="muted">' + esc(o.it ? o.it.code : '') + '</i></span><div class="mbar" style="width:100%;margin:0"><i style="width:' + Math.min(100, u) + '%;background:' + col + '"></i></div><b style="text-align:right;color:' + col + '">' + u + '%</b></div>';
     }).join('') + '</div></details>';
 }
 function initSim() {
@@ -3866,17 +3914,17 @@ function pasteGo() {
   if (!PASTE || !PASTE.nMc) return;
   document.querySelectorAll('#pastePrev select[data-row]').forEach(function (s) { var r = PASTE.rows[+s.dataset.row]; r.side = s.value; if (!PASTE.fromXl) return; r.cells.forEach(function (c) { if (!c.sideFixed) c.side = s.value; }); });
   document.querySelectorAll('#pastePrev select[data-zone]').forEach(function (s) { PASTE.rows[+s.dataset.zone].zone = s.value; });
-  var replace = $('pasteReplace').checked, y0 = 60, cts = ST.items.filter(function (i) { return i.role === 'center'; });
+  var replace = $('pasteReplace').checked, y0 = 60, cts = ST.items.filter(function (i) { return i.role === 'center'; }), keep = ST.items.filter(function (i) { return i.role !== 'center' && isFinishObj(i); });
   if (!replace) { var b = bbox(ST.items); if (b) y0 = Math.round(b.y1 + 60); }
   var useCt = cts.length && (replace || ST.items.length === cts.length);
   var items = buildFromPaste(PASTE, { addInput: $('pasteInput').checked, x0: 60, y0: y0, centers: useCt ? { main: centerOf('main'), branch: centerOf('branch') } : null });
-  if (replace) ST.items = cts.concat(items); else ST.items = ST.items.concat(items);
+  if (replace) ST.items = cts.concat(items, keep); else ST.items = ST.items.concat(items);
   if (PASTE.meta && (replace || !(ST.info || {}).style)) ST.info = Object.assign({}, ST.info, PASTE.meta);
   if (typeof XLI !== 'undefined' && XLI && (PASTE.fromXl || PASTE.meta)) PASTE.ops = xlOpsAll(PASTE.ops);   // operations still without SAM: the operation tables of every sheet of the file
   if (PASTE.ops && Object.keys(PASTE.ops).length) ST.ops = Object.assign(replace ? {} : (ST.ops || {}), PASTE.ops);   // SAM per operation from the layout file
   if (PASTE.seq && PASTE.seq.length) ST.seqText = PASTE.seq.map(function (q) { return (q.name ? q.name + ': ' : '') + q.text; }).join('\n');
   else if (replace) ST.seqText = '';   // a new layout without sequence: the previous layout's sequence does not apply
-  if ($('pasteFit').checked) { var bb = bbox(ST.items); ST.line.length = Math.ceil((bb.x1 + 60) / 10) * 10; ST.line.width = Math.ceil((bb.y1 + 60) / 10) * 10; }
+  if ($('pasteFit').checked) { var bb = bbox(ST.items.filter(function (i) { return !isFinishObj(i); })); ST.line.length = Math.ceil((bb.x1 + 60) / 10) * 10; ST.line.width = Math.ceil((bb.y1 + 60) / 10) * 10; }
   var arrRes = PASTE.ops && Object.keys(PASTE.ops).some(function (k) { return PASTE.ops[k].ar != null; }) ? applyArrangement() : null;   // people as arranged in the file
   if (replace) setBase([(PASTE.meta || {}).file, (PASTE.meta || {}).sheet].filter(Boolean).join(' / ') || t('chgBasePaste')); else addToBase(items);   // reference for "Thay đổi so với file layout"
   SEL = items.map(function (i) { return i.id; });
@@ -3890,6 +3938,7 @@ function lineVals() {
   return { name: $('lsName').value.trim(), units: Math.max(1, Math.round(num($('lsUnits').value, L.units || LINE_DEF.units))), unit: Math.max(10, num($('lsUnit').value, LINE_DEF.unit)),
     tableW: Math.max(0, num($('lsTable').value, LINE_DEF.tableW)), start: Math.max(0, num($('lsStart').value, LINE_DEF.start)), gap: Math.max(0, num($('lsGap').value, LINE_DEF.gap)), end: Math.max(0, num($('lsEnd').value, LINE_DEF.end)),
     width: num($('lsWidth').value, 0), hc: Math.max(0, Math.round(num($('lsHC').value, 0))),
+    finish: $('lsFin').checked, finTL: Math.max(40, num($('lsFinL').value, LINE_DEF.finTL)), finTW: Math.max(30, num($('lsFinW').value, LINE_DEF.finTW)), boxW: Math.max(30, num($('lsBoxW').value, LINE_DEF.boxW)),
     branch: !$('lsBr').checked ? null : { units: Math.max(1, Math.round(num($('lsBUnits').value, 6))), unit: Math.max(10, num($('lsUnit').value, LINE_DEF.unit)), tableW: Math.max(0, num($('lsBTable').value, LINE_DEF.tableW)),
       end: 30, pos: $('lsBPos').value, walk: Math.max(0, num($('lsBWalk').value, 100)), width: num($('lsBWidth').value, 0) } };
 }
@@ -3905,6 +3954,7 @@ function openLineSetup() {
   $('lsName').value = L.name || ''; $('lsUnits').value = L.units || LINE_DEF.units; $('lsUnit').value = L.unit || LINE_DEF.unit;
   $('lsTable').value = ct ? ct.W : (L.tableW != null ? L.tableW : LINE_DEF.tableW); $('lsStart').value = L.v === 2 && L.start != null ? L.start : LINE_DEF.start; $('lsGap').value = L.gap != null ? L.gap : LINE_DEF.gap; $('lsEnd').value = L.end != null ? L.end : LINE_DEF.end;
   $('lsWidth').value = L.units ? (L.mainWidth || (L.zones ? zoneById('main').W : L.width)) : '';
+  $('lsFin').checked = L.finish !== false; $('lsFinL').value = L.finTL || LINE_DEF.finTL; $('lsFinW').value = L.finTW || LINE_DEF.finTW; $('lsBoxW').value = L.boxW || LINE_DEF.boxW;
   $('lsHC').value = L.hc || ''; $('lsHC').placeholder = (ST.info || {}).optr || ST.items.filter(function (i) { return i.kind === 'mc' && !i.noOp; }).length || '';
   var B = L.branch, cb = centerOf('branch');
   $('lsBr').checked = !!B; $('lsBUnits').value = B ? B.units : 6; $('lsBTable').value = cb ? cb.W : (B ? B.tableW : LINE_DEF.tableW); $('lsBPos').value = B ? B.pos : 'top';

@@ -48,7 +48,7 @@ function stationsOf(op) {
   var key = String(op).trim().replace(/^0+(?=\d)/, '').toUpperCase(), out = [];
   ST.items.forEach(function (it) {
     if (it.kind === 'mc') { if (opsOf(it).some(function (o) { return o.toUpperCase() === key; })) { var s = shapes(it); out.push({ it: it, p: s.chair || s.front }); } }
-    else if (it.name && it.name.trim().toUpperCase().indexOf(key) === 0 && /[A-Z]/.test(key)) out.push({ it: it, p: { x: it.x, y: it.y } });
+    else if (it.name && /[A-Z]/.test(key) && (it.name.trim().toUpperCase().indexOf(key) === 0 || (/^PA?CK/.test(key) && /^PA?CK/i.test(it.name.trim())))) out.push({ it: it, p: { x: it.x, y: it.y } });
   });
   return out;
 }

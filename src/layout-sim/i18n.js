@@ -2,9 +2,13 @@
 var LANG = 'vi';
 var I18N = {
   vi: {
+    lsFin: 'Khu hoàn thiện (1 bàn QC đứng dọc + 2 bàn PCK nằm ngang đối diện nhau) và khu thùng (thùng vàng, đỏ, xanh) ở cuối chuyền chính', lsFinL: 'Bàn QC / PCK dài (cm)', lsFinW: 'Bàn QC / PCK rộng (cm)', lsBoxW: 'Thùng rộng (cm)',
+    zoneFinish: 'Khu hoàn thiện', zoneBoxes: 'Khu thùng', boxY: 'Thùng vàng', boxR: 'Thùng đỏ', boxG: 'Thùng xanh',
+    simLoadH: 'Tải', simCapTip: 'Số sản phẩm công đoạn làm được trong 1 giờ = số người × 60 × hiệu suất / SAM. Vạch nhỏ dưới số: so với công đoạn nhanh nhất; vạch đứng = sản lượng mục tiêu.',
+    simOutSimS: 'sp/giờ ra chuyền (mô phỏng)', simOutCapS: 'sp/giờ (công đoạn chậm nhất)', simLbeS: 'cân bằng chuyền',
     xlAutoBtn: '⚙ Tự tạo layout', xlAutoTip: 'Tự tạo layout từ bảng công đoạn (loại máy, số máy, CN sắp xếp) và trình tự của sheet đang chọn',
     turnR: 'Máy xoay ngang trong file, người ngồi bên phải', turnL: 'Máy xoay ngang trong file, người ngồi bên trái',
-    simCapH: 'Năng lực (sp/giờ) · tải', simLoadTip: 'Tải = sản lượng cần (mục tiêu, không có thì công đoạn chậm nhất) / năng lực. Xanh < 90 %, vàng 90–100 %, đỏ > 100 % (không đủ năng lực).',
+    simCapH: 'Năng lực (sp/giờ)', simLoadTip: 'Tải = sản lượng cần (mục tiêu, không có thì công đoạn chậm nhất) / năng lực. Xanh < 90 %, vàng 90–100 %, đỏ > 100 % (không đủ năng lực).',
     simNeed: 'Người cần', simNeedTip: 'Số người cần để đạt sản lượng mục tiêu = mục tiêu × SAM / (60 × hiệu suất). Đỏ: nhiều hơn số người đang có.',
     simFileN: 'file: {0}', simTotal: 'Tổng / TB', simTotalN: '{0} công đoạn', simAvgW: 'TB theo SAM',
     simOutSim: 'Ra {0} sp/giờ (mô phỏng)', simOutCap: 'Năng lực chuyền {0} sp/giờ', simVsTarget: 'mục tiêu {0}', simLbe: 'Cân bằng {0}%',
@@ -143,9 +147,13 @@ var I18N = {
     ocrIgnored: 'bỏ qua', ocrLegend: 'Viền xanh lá: đọc đúng mã · cam: đã sửa theo thư viện · đỏ: không có trong thư viện · xanh dương: số công đoạn · xám: bỏ qua. Đưa chuột vào ô để xem chữ đọc được.'
   },
   en: {
+    lsFin: 'Finishing area (1 upright QC table + 2 packing tables lying face to face) and box area (yellow, red, green boxes) at the end of the main line', lsFinL: 'QC / packing table length (cm)', lsFinW: 'QC / packing table width (cm)', lsBoxW: 'Box width (cm)',
+    zoneFinish: 'Finishing area', zoneBoxes: 'Box area', boxY: 'Yellow box', boxR: 'Red box', boxG: 'Green box',
+    simLoadH: 'Load', simCapTip: 'Pieces the operation makes per hour = people × 60 × efficiency / SAM. Thin bar: compared with the fastest operation; tick = target output.',
+    simOutSimS: 'pcs/h out of the line (simulated)', simOutCapS: 'pcs/h (slowest operation)', simLbeS: 'line balance',
     xlAutoBtn: '⚙ Automatic layout', xlAutoTip: 'Build the layout from the operation table (machine type, machines, people arranged) and the sequence of the chosen sheet',
     turnR: 'Machine turned in the file, operator on its right', turnL: 'Machine turned in the file, operator on its left',
-    simCapH: 'Capacity (pcs/h) · load', simLoadTip: 'Load = output needed (target, else the slowest operation) / capacity. Green < 90 %, yellow 90–100 %, red > 100 % (not enough capacity).',
+    simCapH: 'Capacity (pcs/h)', simLoadTip: 'Load = output needed (target, else the slowest operation) / capacity. Green < 90 %, yellow 90–100 %, red > 100 % (not enough capacity).',
     simNeed: 'People needed', simNeedTip: 'People needed for the target output = target × SAM / (60 × efficiency). Red: more than the people there.',
     simFileN: 'file: {0}', simTotal: 'Total / avg', simTotalN: '{0} operations', simAvgW: 'avg by SAM',
     simOutSim: 'Output {0} pcs/h (simulated)', simOutCap: 'Line capacity {0} pcs/h', simVsTarget: 'target {0}', simLbe: 'Balance {0}%',

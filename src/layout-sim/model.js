@@ -14,7 +14,7 @@ var ERG_DEF = {
   emptyPitch: 107,// width of an empty cell in the pasted grid
   snap: 5
 };
-var LINE_DEF = { units: 17, unit: 107, tableW: 30, start: 90, gap: 30, end: 30 };   // start = length of the input area in front of the line
+var LINE_DEF = { units: 17, unit: 107, tableW: 30, start: 90, gap: 30, end: 30, finTL: 175, finTW: 75, boxW: 70 };   // start = length of the input area in front of the line
 var ST = { line: { name: '', length: 2400, width: 600, fixed: false }, erg: Object.assign({}, ERG_DEF), items: [], seq: 1 };
 var SEL = [];            // selected ids (not saved)
 var UNDO = [], REDO = [];
@@ -260,6 +260,13 @@ function setupLine(o) {
   if (br) { bL = Math.round(br.units * br.unit + br.end); bW = Math.round(br.width || lineAutoWidth(br.tableW)); walk = Math.round(br.walk); }
   var mainY = br && br.pos === 'top' ? bW + walk : 0, brY = br ? (br.pos === 'top' ? 0 : mW + walk) : 0, inX = -(inL + gap);
   var zones = [{ id: 'main', x: 0, y: mainY, L: mL, W: mW }];
+  // finishing area (1 QC table + 2 packing tables) and box area (3 boxes) after the main line, as wide as it
+  var fin = o.finish !== false, tL = Math.max(40, +o.finTL || LINE_DEF.finTL), tW = Math.max(30, +o.finTW || LINE_DEF.finTW), bxW = Math.max(30, +o.boxW || LINE_DEF.boxW);
+  var oldF = zoneById('finish'), oldB = zoneById('boxes');
+  if (fin) {
+    var fL = Math.round(tW + tL + 80), fx = mL + gap;
+    zones.push({ id: 'finish', x: fx, y: mainY, L: fL, W: mW }, { id: 'boxes', x: fx + fL + gap, y: mainY, L: Math.round(bxW + 40), W: mW });
+  }
   if (inL > 0) zones.push({ id: 'input', x: inX, y: mainY, L: inL, W: mW });
   if (br) {
     var wx0 = inL > 0 ? inX : 0, wx1 = Math.max(mL, bL);
@@ -267,10 +274,11 @@ function setupLine(o) {
     if (inL > 0) zones.push({ id: 'inputB', x: inX, y: brY, L: inL, W: bW });
   }
   ST.line = { name: o.name || '', length: Math.max(mL, bL), width: mW + (br ? walk + bW : 0), fixed: true, units: o.units, unit: o.unit, tableW: o.tableW, start: inL, gap: gap, end: o.end, hc: o.hc || 0,
+    finish: fin, finTL: tL, finTW: tW, boxW: bxW,
     mainWidth: o.width || 0, zones: zones, branch: br || null, v: 2 };
   function center(zid, x, y, L, W) {
     var c = centerOf(zid), dx = 0, dy = 0;
-    if (c) { dx = x - c.x; dy = y - c.y; ST.items.forEach(function (it) { if (it !== c && (it.zone || 'main') === zid && !isInputObj(it)) { it.x = n1(it.x + dx); it.y = n1(it.y + dy); } }); }
+    if (c) { dx = x - c.x; dy = y - c.y; ST.items.forEach(function (it) { if (it !== c && (it.zone || 'main') === zid && !isInputObj(it) && !isFinishObj(it)) { it.x = n1(it.x + dx); it.y = n1(it.y + dy); } }); }
     else { c = { id: uid(), kind: 'obj', role: 'center', zone: zid === 'main' ? undefined : zid, name: zid === 'main' ? t('centerTable') : t('centerTableB'), H: 75, rot: 0, color: '#d9cdb0' }; ST.items.unshift(c); }
     c.L = L; c.W = W; c.x = n1(x); c.y = n1(y);
   }
@@ -278,6 +286,31 @@ function setupLine(o) {
   if (br) center('branch', br.units * br.unit / 2, brY + bW / 2, br.units * br.unit, br.tableW);
   else { var cb = centerOf('branch'); if (cb) ST.items = ST.items.filter(function (it) { return it !== cb; }); }
   ST.items.filter(isInputObj).forEach(function (it) { placeInput(it, it.zone === 'branch' ? 'branch' : 'main'); });
+  placeFinish(oldF, oldB);
+}
+function isFinishObj(it) { return it.zone === 'finish' || it.zone === 'boxes'; }
+/* tables of the finishing area and the boxes: created once, then moved with their area (the arrangement made by the user is kept) */
+function placeFinish(oldF, oldB) {
+  var F = zoneById('finish'), Bz = zoneById('boxes'), L = ST.line;
+  if (!F) { ST.items = ST.items.filter(function (it) { return !isFinishObj(it); }); return; }
+  [[oldF, F, 'finish'], [oldB, Bz, 'boxes']].forEach(function (p) {
+    if (!p[0]) return;
+    var dx = p[1].x - p[0].x, dy = p[1].y - p[0].y;
+    ST.items.forEach(function (it) { if (it.zone === p[2]) { it.x = n1(it.x + dx); it.y = n1(it.y + dy); } });
+  });
+  var cy = F.y + F.W / 2, tL = L.finTL, tW = L.finTW;
+  if (!ST.items.some(function (it) { return it.zone === 'finish'; })) {
+    var px = F.x + 20 + tW + 40 + tL / 2;
+    ST.items.push({ id: uid(), kind: 'obj', zone: 'finish', name: 'QC', L: tL, W: tW, H: 75, x: n1(F.x + 20 + tW / 2), y: n1(cy), rot: 90, color: '#9fd3a8' },   // QC table upright
+      { id: uid(), kind: 'obj', zone: 'finish', name: 'PCK 1', L: tL, W: tW, H: 75, x: n1(px), y: n1(cy - tW / 2), rot: 0, color: '#f2cf8d' },   // two packing tables face to face
+      { id: uid(), kind: 'obj', zone: 'finish', name: 'PCK 2', L: tL, W: tW, H: 75, x: n1(px), y: n1(cy + tW / 2), rot: 0, color: '#f2cf8d' });
+  }
+  if (!ST.items.some(function (it) { return it.zone === 'boxes'; })) {
+    var bw = L.boxW;
+    [['boxY', '#f2c230'], ['boxR', '#e04848'], ['boxG', '#3fae6a']].forEach(function (b, k) {
+      ST.items.push({ id: uid(), kind: 'obj', zone: 'boxes', name: t(b[0]), L: bw, W: bw, H: 60, x: n1(Bz.x + Bz.L / 2), y: n1(cy + (k - 1) * (bw + 20)), rot: 0, color: b[1] });
+    });
+  }
 }
 function isInputObj(it) { return it.kind === 'obj' && it.role !== 'center' && /^input$/i.test(String(it.name || '').trim()); }
 /* the input table: in the middle of the input area of its line (main / branch) */
