@@ -18,7 +18,7 @@ function n1(v) { return Math.round(v * 10) / 10; }
 /* returns the inner SVG markup. o = {s: px per cm, P: palette, exp: true for export (no selection)} */
 function planMarkup(o) {
   var P = o.P, s = o.s, L = ST.line.length, W = ST.line.width, e = ST.erg, h = [];
-  var fs = Math.max(5, Math.min(40, 12 / s)), sw = 1 / s;   // font size in cm, 1 px stroke in cm
+  var fs = o.fs || Math.max(5, Math.min(40, 12 / s)), sw = 1 / s;   // font size in cm, 1 px stroke in cm
   h.push('<rect x="0" y="0" width="' + L + '" height="' + W + '" fill="' + P.floor + '"/>');
   var step = 50 * s < 10 ? 100 : 50;
   for (var x = 0; x <= L; x += step) h.push('<line x1="' + x + '" y1="0" x2="' + x + '" y2="' + W + '" stroke="' + (x % 100 ? P.grid : P.grid2) + '" stroke-width="' + sw + '"/>');
@@ -60,24 +60,20 @@ function planMarkup(o) {
   });
   // one operator for several machines: thin link when next to each other, double arrow (walking distance) when apart
   opLinks().forEach(function (l) {
-    var col = '#7c3aed', a = l.p1, b = l.p2;
-    if (!l.far) {   // next to each other: curved arrow from the operator's machine over to the other machine
-      var c1 = l.c1, c2 = l.c2, mx0 = (c1.x + c2.x) / 2, my0 = (c1.y + c2.y) / 2, ddx = c2.x - c1.x, ddy = c2.y - c1.y, dl = Math.hypot(ddx, ddy) || 1;
-      var nx = -ddy / dl, ny = ddx / dl; if (nx * l.back.x + ny * l.back.y < 0) { nx = -nx; ny = -ny; }   // bulge to the machines' back side
-      var bulge = Math.max(25, dl * 0.45), cx0 = mx0 + nx * bulge, cy0 = my0 + ny * bulge;
-      var tx = c2.x - cx0, ty = c2.y - cy0, tl = Math.hypot(tx, ty) || 1, ux0 = tx / tl, uy0 = ty / tl, hs0 = 13 * sw, hw0 = hs0 * 0.6;
-      var ex = c2.x - ux0 * hs0 * 0.9, ey = c2.y - uy0 * hs0 * 0.9;
-      h.push('<path d="M' + n1(c1.x) + ' ' + n1(c1.y) + ' Q' + n1(cx0) + ' ' + n1(cy0) + ' ' + n1(ex) + ' ' + n1(ey) + '" fill="none" stroke="' + col + '" stroke-width="' + 3.5 * sw + '" stroke-linecap="round" pointer-events="none"/>' +
-        '<polygon points="' + n1(c2.x) + ',' + n1(c2.y) + ' ' + n1(c2.x - ux0 * hs0 - uy0 * hw0) + ',' + n1(c2.y - uy0 * hs0 + ux0 * hw0) + ' ' + n1(c2.x - ux0 * hs0 + uy0 * hw0) + ',' + n1(c2.y - uy0 * hs0 - ux0 * hw0) + '" fill="' + col + '" pointer-events="none"/>');
-      return;
+    // same curved arrow for neighbours and for machines apart (head on the machine run by the shared operator); distance shown when apart
+    var col = '#7c3aed', c1 = l.c1, c2 = l.c2, mx0 = (c1.x + c2.x) / 2, my0 = (c1.y + c2.y) / 2, ddx = c2.x - c1.x, ddy = c2.y - c1.y, dl = Math.hypot(ddx, ddy) || 1;
+    var nx = -ddy / dl, ny = ddx / dl; if (nx * l.back.x + ny * l.back.y < 0) { nx = -nx; ny = -ny; }   // bulge to the machines' back side
+    var bulge = Math.max(25, Math.min(dl * 0.45, 140)), cx0 = mx0 + nx * bulge, cy0 = my0 + ny * bulge;
+    var tx = c2.x - cx0, ty = c2.y - cy0, tl = Math.hypot(tx, ty) || 1, ux0 = tx / tl, uy0 = ty / tl, hs0 = Math.max(13 * sw, fs * 0.9), hw0 = hs0 * 0.6;
+    var ex = c2.x - ux0 * hs0 * 0.9, ey = c2.y - uy0 * hs0 * 0.9;
+    h.push('<path d="M' + n1(c1.x) + ' ' + n1(c1.y) + ' Q' + n1(cx0) + ' ' + n1(cy0) + ' ' + n1(ex) + ' ' + n1(ey) + '" fill="none" stroke="' + col + '" stroke-width="' + Math.max(3.5 * sw, fs * 0.22) + '" stroke-linecap="round" pointer-events="none"/>' +
+      '<polygon points="' + n1(c2.x) + ',' + n1(c2.y) + ' ' + n1(c2.x - ux0 * hs0 - uy0 * hw0) + ',' + n1(c2.y - uy0 * hs0 + ux0 * hw0) + ' ' + n1(c2.x - ux0 * hs0 + uy0 * hw0) + ',' + n1(c2.y - uy0 * hs0 - ux0 * hw0) + '" fill="' + col + '" pointer-events="none"/>');
+    if (l.far) {
+      var f = fs * 0.85, ax = (mx0 + cx0) / 2, ay = (my0 + cy0) / 2;   // label on the curve
+      h.push('<text x="' + n1(ax) + '" y="' + n1(ay + f * 0.35) + '" font-size="' + f + '" font-weight="700" fill="' + col + '" stroke="rgba(255,255,255,.9)" stroke-width="' + f * 0.22 + '" paint-order="stroke" text-anchor="middle" pointer-events="none">' + (l.dist / 100).toFixed(1) + ' m</text>');
     }
-    var dx = b.x - a.x, dy = b.y - a.y, L0 = Math.hypot(dx, dy) || 1, ux = dx / L0, uy = dy / L0, hs = Math.min(L0 / 3, 12 * sw), hw = hs * 0.55;
-    function head(p, sx) { var bx = p.x - sx * ux * hs, by = p.y - sx * uy * hs; return '<polygon points="' + n1(p.x) + ',' + n1(p.y) + ' ' + n1(bx - uy * hw) + ',' + n1(by + ux * hw) + ' ' + n1(bx + uy * hw) + ',' + n1(by - ux * hw) + '" fill="' + col + '" pointer-events="none"/>'; }
-    h.push('<line x1="' + n1(a.x + ux * hs) + '" y1="' + n1(a.y + uy * hs) + '" x2="' + n1(b.x - ux * hs) + '" y2="' + n1(b.y - uy * hs) + '" stroke="' + col + '" stroke-width="' + 3 * sw + '" pointer-events="none"/>' + head(a, -1) + head(b, 1));
-    var mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2, f = fs * 0.85;
-    h.push('<text x="' + n1(mx) + '" y="' + n1(my - f * 0.3) + '" font-size="' + f + '" font-weight="700" fill="' + col + '" stroke="rgba(255,255,255,.85)" stroke-width="' + f * 0.2 + '" paint-order="stroke" text-anchor="middle" pointer-events="none">' + (l.dist / 100).toFixed(1) + ' m</text>');
   });
-  if (OPT.flow) {
+  if (OPT.flow && !o.exp) {   // the flow line is for IE on screen, not for the mechanics' print
     var fp = flowPath();
     if (fp.pts.length > 1) {
       h.push('<polyline points="' + fp.pts.map(function (p) { return n1(p.x) + ',' + n1(p.y); }).join(' ') + '" fill="none" stroke="' + P.flow + '" stroke-opacity=".75" stroke-width="' + 2 * sw + '" stroke-dasharray="' + 6 * sw + ' ' + 4 * sw + '" pointer-events="none"/>');
@@ -94,7 +90,7 @@ function planMarkup(o) {
       return;
     }
     // machine code on the table; the operation number (big) on the operator's seat, or on the table when the station has no operator
-    var fc = fs * 0.85, fo = fs * 1.7, op = String(it.op || '');
+    var fc = fs * 1.05, fo = fs * 1.7, op = String(it.op || '');
     if (S.chair) {
       h.push('<text x="' + n1(it.x) + '" y="' + n1(it.y + fc * 0.35) + '" font-size="' + fc + '" stroke-width="' + fc * 0.18 + halo + '>' + esc(it.code) + '</text>');
       if (op) h.push('<text x="' + n1(S.chair.x) + '" y="' + n1(S.chair.y + fo * 0.36) + '" font-size="' + fo + '" stroke-width="' + fo * 0.16 + halo.replace('#14181f', '#0b3d91') + '>' + esc(op) + '</text>');
@@ -297,11 +293,12 @@ function viewCenter() { var svg = svgEl(), w = svg.clientWidth || 800, h = svg.c
 function exportPng(cb) {
   var b = bbox(ST.items) || { x0: 0, y0: 0, x1: 0, y1: 0 };
   var x0 = Math.min(0, b.x0) - 40, y0 = Math.min(0, b.y0) - 110, x1 = Math.max(ST.line.length, b.x1) + 40, y1 = Math.max(ST.line.width, b.y1) + 40;
-  var px = Math.min(2, 6000 / (x1 - x0)), w = Math.round((x1 - x0) * px), h = Math.round((y1 - y0) * px);
-  var head = '<text x="' + (x0 + 40) + '" y="' + (y0 + 40) + '" font-size="28" font-weight="700" fill="#1d2330">' + esc((ST.line.name || t('lineNoName')) + ' · ' + ST.line.length + ' × ' + ST.line.width + ' cm') + '</text>' +
-    '<text x="' + (x0 + 40) + '" y="' + (y0 + 72) + '" font-size="18" fill="#6b7280">' + esc(t('expSub', [ST.items.filter(function (i) { return i.kind === 'mc'; }).length, new Date().toLocaleString()])) + '</text>';
+  // printable: about 3 px per cm (a 20 m line gives ~6500 px), big labels (15 cm text, operation numbers ~26 cm)
+  var px = Math.max(1.5, Math.min(3.5, 7000 / (x1 - x0))), w = Math.round((x1 - x0) * px), h = Math.round((y1 - y0) * px);
+  var head = '<text x="' + (x0 + 40) + '" y="' + (y0 + 45) + '" font-size="34" font-weight="700" fill="#1d2330">' + esc((ST.line.name || t('lineNoName')) + ' · ' + ST.line.length + ' × ' + ST.line.width + ' cm') + '</text>' +
+    '<text x="' + (x0 + 40) + '" y="' + (y0 + 82) + '" font-size="20" fill="#6b7280">' + esc(t('expSub', [ST.items.filter(function (i) { return i.kind === 'mc'; }).length, new Date().toLocaleString()])) + '</text>';
   var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '" viewBox="' + x0 + ' ' + y0 + ' ' + (x1 - x0) + ' ' + (y1 - y0) + '" font-family="Segoe UI,Roboto,Arial,sans-serif">' +
-    '<rect x="' + x0 + '" y="' + y0 + '" width="' + (x1 - x0) + '" height="' + (y1 - y0) + '" fill="#fff"/>' + head + planMarkup({ s: Math.max(px, 0.6), P: pal(true), exp: true }) + '</svg>';
+    '<rect x="' + x0 + '" y="' + y0 + '" width="' + (x1 - x0) + '" height="' + (y1 - y0) + '" fill="#fff"/>' + head + planMarkup({ s: 1.2, fs: 15, P: pal(true), exp: true }) + '</svg>';
   var img = new Image();
   img.onload = function () {
     var c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(img, 0, 0);

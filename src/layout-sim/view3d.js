@@ -169,27 +169,24 @@ function buildObject(it) {
   else { partTable(g, it.L, it.W, H, { pedal: false, noDrawer: true }); B(g, it.L - 2, 2, it.W - 2, m, 0, H + 1, 0); }
   return g;
 }
-/* big operation number above the operator (like the 2D seat label) */
-function opSprite(op) {
-  var cv = document.createElement('canvas'); cv.width = 160; cv.height = 128; var x = cv.getContext('2d');
-  x.fillStyle = '#ffd36b'; x.strokeStyle = '#0b3d91'; x.lineWidth = 6; x.beginPath(); if (x.roundRect) x.roundRect(6, 6, 148, 116, 30); else x.rect(6, 6, 148, 116); x.fill(); x.stroke();
-  x.fillStyle = '#0b3d91'; x.textAlign = 'center'; x.font = 'bold ' + (String(op).length > 3 ? 54 : 78) + 'px Segoe UI, Arial'; x.fillText(op, 80, String(op).length > 3 ? 82 : 92);
-  var s = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), depthTest: false })); s.scale.set(40, 32, 1); s.renderOrder = 11; return s;
+/* one label per machine, the same size everywhere: big operation number on top, machine code under it */
+function machineLabel(code, op) {
+  var cv = document.createElement('canvas'); cv.width = 320; cv.height = op ? 300 : 120; var x = cv.getContext('2d'), y0 = 0;
+  x.textAlign = 'center';
+  if (op) {
+    x.fillStyle = '#ffd36b'; x.strokeStyle = '#0b3d91'; x.lineWidth = 8; x.beginPath(); if (x.roundRect) x.roundRect(30, 6, 260, 170, 34); else x.rect(30, 6, 260, 170); x.fill(); x.stroke();
+    x.fillStyle = '#0b3d91'; x.font = 'bold ' + (String(op).length > 3 ? 92 : 138) + 'px Segoe UI, Arial'; x.fillText(op, 160, String(op).length > 3 ? 122 : 138); y0 = 180;
+  }
+  x.fillStyle = 'rgba(20,24,31,.9)'; x.beginPath(); if (x.roundRect) x.roundRect(6, y0 + 4, 308, 108, 22); else x.rect(6, y0 + 4, 308, 108); x.fill();
+  x.fillStyle = '#fff'; x.font = 'bold 86px Segoe UI, Arial'; x.fillText(code, 160, y0 + 88);
+  var tx = new THREE.CanvasTexture(cv); tx.anisotropy = 4;
+  var s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tx, depthTest: false })); s.scale.set(80, 80 * cv.height / cv.width, 1); s.renderOrder = 11; return s;
 }
 function smallSprite(txt, w) {
   var cv = document.createElement('canvas'); cv.width = 256; cv.height = 64; var x = cv.getContext('2d');
   x.fillStyle = 'rgba(255,255,255,.88)'; x.beginPath(); if (x.roundRect) x.roundRect(4, 6, 248, 52, 12); else x.rect(4, 6, 248, 52); x.fill();
   x.fillStyle = '#1d2330'; x.textAlign = 'center'; x.font = 'bold 38px Segoe UI, Arial'; x.fillText(txt, 128, 46);
   var s = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), depthTest: false })); s.scale.set(w || 56, (w || 56) / 4, 1); s.renderOrder = 9; return s;
-}
-function textSprite(t1, t2) {
-  var cv = document.createElement('canvas'); cv.width = 256; cv.height = 128; var x = cv.getContext('2d');
-  x.fillStyle = 'rgba(20,24,31,.78)'; x.beginPath(); if (x.roundRect) x.roundRect(8, 14, 240, 100, 18); else x.rect(8, 14, 240, 100); x.fill();
-  x.textAlign = 'center';
-  if (t2) { x.font = 'bold 60px Segoe UI, Arial'; x.fillStyle = '#ffd36b'; x.fillText(t2, 128, 66); x.font = '600 32px Segoe UI, Arial'; x.fillStyle = '#fff'; x.fillText(t1, 128, 104); }
-  else { x.font = 'bold 50px Segoe UI, Arial'; x.fillStyle = '#fff'; x.fillText(t1, 128, 82); }
-  var tx = new THREE.CanvasTexture(cv), s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tx, depthTest: false }));
-  s.scale.set(48, 24, 1); s.renderOrder = 10; return s;
 }
 function rectLoop(L, W, col, y) {
   var g = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-L / 2, y, -W / 2), new THREE.Vector3(L / 2, y, -W / 2), new THREE.Vector3(L / 2, y, W / 2), new THREE.Vector3(-L / 2, y, W / 2)]);
@@ -273,7 +270,13 @@ function draw3d() {
 function view3dReset(top) {
   var L = ST.line.length, W = ST.line.width, b = bbox(ST.items);
   var cx = b ? (b.x0 + b.x1) / 2 : L / 2, cz = b ? (b.y0 + b.y1) / 2 : W / 2, span = Math.max(b ? b.x1 - b.x0 : L, b ? b.y1 - b.y0 : W, 300);
-  V3.tgt.set(cx, 50, cz); V3.theta = top ? 0 : -0.5; V3.phi = top ? 0.02 : 0.9; V3.rad = span * (top ? 1.2 : 0.8) + 150; draw3d();
+  V3.tgt.set(cx, 50, cz); V3.theta = top ? 0 : -0.5; V3.phi = top ? 0.02 : 0.9; V3.rad = span * 0.8 + 150;
+  if (top) {   // fit the whole line (with its ruler) to the screen
+    var sx = Math.max(L, b ? b.x1 : 0) - Math.min(0, b ? b.x0 : 0) + 320, sz = Math.max(W, b ? b.y1 : 0) - Math.min(0, b ? b.y0 : 0) + 260;
+    var vf = V3.cam.fov * Math.PI / 360, hf = Math.atan(Math.tan(vf) * V3.cam.aspect);
+    V3.tgt.set(L / 2, 0, W / 2); V3.rad = Math.max(sx / 2 / Math.tan(hf), sz / 2 / Math.tan(vf)) * 1.04 + 180;
+  }
+  draw3d();
 }
 function rebuild3d() {
   if (!V3.ok) return;
@@ -290,12 +293,12 @@ function rebuild3d() {
   var edge = rectLoop(L, W, '#e0a100', 0.5); edge.position.set(L / 2, 0, W / 2); root.add(edge);
   if (V3.ruler) {   // metre marks along the front and left edges, total length and width
     var stp = L > 3000 ? 200 : 100, tk = [];
-    for (x = 0; x <= L + 0.1; x += stp) { tk.push(new THREE.Vector3(x, 0.5, W), new THREE.Vector3(x, 0.5, W + 18)); var lb = smallSprite((x / 100) + ' m', 40); lb.position.set(x, 4, W + 40); root.add(lb); }
-    for (y = 0; y <= W + 0.1; y += 100) { tk.push(new THREE.Vector3(0, 0.5, y), new THREE.Vector3(-18, 0.5, y)); var lb2 = smallSprite((y / 100) + ' m', 40); lb2.position.set(-50, 4, y); root.add(lb2); }
+    for (x = 0; x <= L + 0.1; x += stp) { tk.push(new THREE.Vector3(x, 0.5, W), new THREE.Vector3(x, 0.5, W + 18)); var lb = smallSprite((x / 100) + ' m', 70); lb.position.set(x, 4, W + 50); root.add(lb); }
+    for (y = 0; y <= W + 0.1; y += 100) { tk.push(new THREE.Vector3(0, 0.5, y), new THREE.Vector3(-18, 0.5, y)); var lb2 = smallSprite((y / 100) + ' m', 70); lb2.position.set(-70, 4, y); root.add(lb2); }
     tk.push(new THREE.Vector3(0, 0.5, -45), new THREE.Vector3(L, 0.5, -45), new THREE.Vector3(L + 45, 0.5, 0), new THREE.Vector3(L + 45, 0.5, W));
     root.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(tk), new THREE.LineBasicMaterial({ color: '#5b6474' })));
-    var lt = smallSprite((L / 100).toFixed(2) + ' m', 90); lt.position.set(L / 2, 8, -70); root.add(lt);
-    var wt = smallSprite((W / 100).toFixed(2) + ' m', 70); wt.position.set(L + 95, 8, W / 2); root.add(wt);
+    var lt = smallSprite((L / 100).toFixed(2) + ' m', 160); lt.position.set(L / 2, 8, -85); root.add(lt);
+    var wt = smallSprite((W / 100).toFixed(2) + ' m', 130); wt.position.set(L + 130, 8, W / 2); root.add(wt);
   }
   var bad = issueIds('bad'), warn = issueIds('warn');
   ST.items.forEach(function (it) {
@@ -305,12 +308,12 @@ function rebuild3d() {
       g = buildMachine(fam, d.L, d.W, H, S.seatX);
       if (!it.noOp) { if (S.stand) buildStanding(g, S.seatX, d.W, e, V3.people); else buildChair(g, S.seatX, d.W / 2 + e.chairGap + e.chairD / 2, e, V3.people); }
       if (V3.labels) {   // like 2D: machine code above the machine, big operation number above the operator (on the machine when nobody sits there)
-        var sp = it.noOp ? textSprite(it.code, it.op || '') : smallSprite(it.code, 44); sp.position.set(0, H + (it.noOp ? 85 : 62), -d.W * 0.1); g.add(sp);
-        if (!it.noOp && it.op) { var os = opSprite(it.op), oz = d.W / 2 + (S.stand ? e.standGap : e.chairGap + e.chairD / 2); os.position.set(S.seatX, (S.stand ? 148 : e.seatH + 72) + (V3.people ? 34 : 10), oz); g.add(os); }
+        var lbl = machineLabel(it.code, it.op || ''), lz = it.noOp ? 0 : d.W / 2 + (S.stand ? e.standGap : e.chairGap + e.chairD / 2) * 0.5;
+        lbl.position.set(it.noOp ? 0 : S.seatX, (V3.people && !it.noOp ? (S.stand ? 148 : e.seatH + 72) : H + 30) + 75, lz); g.add(lbl);
       }
     } else {
       g = buildObject(it);
-      if (V3.labels && it.name) { var sp2 = textSprite(it.name, ''); sp2.position.set(0, (it.H || 75) + 40, 0); g.add(sp2); }
+      if (V3.labels && it.name) { var sp2 = machineLabel(it.name, ''); sp2.position.set(0, (it.H || 75) + 45, 0); g.add(sp2); }
     }
     var sel = SEL.indexOf(it.id) >= 0;
     if (sel || bad[it.id] || warn[it.id]) g.add(rectLoop(d.L + 6, d.W + 6, sel ? '#1f6feb' : bad[it.id] ? '#e5484d' : '#e0a100', 1));
@@ -318,18 +321,15 @@ function rebuild3d() {
     g.userData.id = it.id; root.add(g);
   });
   // shared operators: double arrow on the floor between the operator and the far machine
+  // shared operator: curved arrow from the operator's machine to the other machine (distance label when apart)
   opLinks().forEach(function (l) {
-    if (!l.far) {
-      var c1 = new THREE.Vector3(l.c1.x, H + 45, l.c1.y), c2 = new THREE.Vector3(l.c2.x, H + 45, l.c2.y), mid = c1.clone().add(c2).multiplyScalar(0.5), dl = c1.distanceTo(c2);
-      var ctl = mid.clone().add(new THREE.Vector3(l.back.x * dl * 0.35, Math.max(45, dl * 0.45), l.back.y * dl * 0.35));
-      var end = c2.clone().add(ctl.clone().sub(c2).normalize().multiplyScalar(12)), curve = new THREE.QuadraticBezierCurve3(c1, ctl, end);
-      var tube = new THREE.Mesh(new THREE.TubeGeometry(curve, 28, 2.2, 8, false), M.arc); tube.userData.own = true; root.add(tube);
-      var dir = c2.clone().sub(end).normalize(), cone = new THREE.Mesh(new THREE.ConeGeometry(6, 14, 16), M.arc); cone.userData.own = true;
-      cone.position.copy(end.clone().add(dir.clone().multiplyScalar(5))); cone.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir); root.add(cone);
-      return;
-    }
-    var a = new THREE.Vector3(l.p1.x, 4, l.p1.y), b = new THREE.Vector3(l.p2.x, 4, l.p2.y), mid = a.clone().add(b).multiplyScalar(0.5), half = a.distanceTo(b) / 2;
-    [[b, a], [a, b]].forEach(function (pr) { var dir = pr[0].clone().sub(mid).normalize(); root.add(new THREE.ArrowHelper(dir, mid, half, 0x7c3aed, Math.min(30, half * 0.4), 18)); });
+    var c1 = new THREE.Vector3(l.c1.x, H + 45, l.c1.y), c2 = new THREE.Vector3(l.c2.x, H + 45, l.c2.y), mid = c1.clone().add(c2).multiplyScalar(0.5), dl = c1.distanceTo(c2);
+    var ctl = mid.clone().add(new THREE.Vector3(l.back.x * Math.min(dl * 0.35, 120), Math.max(45, Math.min(dl * 0.45, 220)), l.back.y * Math.min(dl * 0.35, 120)));
+    if (l.far && V3.labels) { var dsp = smallSprite((l.dist / 100).toFixed(1) + ' m', 90); dsp.position.copy(c1.clone().add(c2).multiplyScalar(0.25).add(ctl.clone().multiplyScalar(0.5))).add(new THREE.Vector3(0, 18, 0)); root.add(dsp); }
+    var end = c2.clone().add(ctl.clone().sub(c2).normalize().multiplyScalar(20)), curve = new THREE.QuadraticBezierCurve3(c1, ctl, end);
+    var tube = new THREE.Mesh(new THREE.TubeGeometry(curve, 32, 4, 8, false), M.arc); tube.userData.own = true; root.add(tube);
+    var dir = c2.clone().sub(end).normalize(), cone = new THREE.Mesh(new THREE.ConeGeometry(11, 24, 16), M.arc); cone.userData.own = true;
+    cone.position.copy(end.clone().add(dir.clone().multiplyScalar(9))); cone.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir); root.add(cone);
   });
   var s = V3.sun, m = Math.max(L, W) * 0.75 + 300;
   s.position.set(L / 2 - 600, 1800, W / 2 + 900); s.target.position.set(L / 2, 0, W / 2);
@@ -352,4 +352,12 @@ function screenOf3d(x, h, z) {
   var v = new THREE.Vector3(x, h, z).project(V3.cam), r = V3.ren.domElement.getBoundingClientRect();
   return { x: (v.x + 1) / 2 * r.width, y: (1 - v.y) / 2 * r.height, r: r, ok: v.z < 1 };
 }
-function png3d() { draw3d(); return V3.ren.domElement.toDataURL('image/png'); }
+/* high resolution picture of the current 3D view (about 6000 px wide) */
+function png3d() {
+  var r = V3.ren, pr = r.getPixelRatio(), sz = r.getSize(new THREE.Vector2()), k = Math.max(1, Math.min(6, 6000 / sz.x));
+  var maxRb = r.capabilities && r.capabilities.maxRenderbufferSize || 8192; k = Math.min(k, maxRb / sz.x, maxRb / sz.y);
+  r.setPixelRatio(k); r.setSize(sz.x, sz.y, false); draw3d();
+  var url = r.domElement.toDataURL('image/png');
+  r.setPixelRatio(pr); r.setSize(sz.x, sz.y, false); draw3d();
+  return url;
+}
