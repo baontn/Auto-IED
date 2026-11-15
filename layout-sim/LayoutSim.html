@@ -351,6 +351,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 var LANG = 'vi';
 var I18N = {
   vi: {
+    opRemoveAsk0: 'Công đoạn {0} không có máy trên mặt bằng. Bỏ công đoạn này khỏi trình tự và mô phỏng? Có thể khôi phục trong thẻ "Thay đổi so với file layout".',
     pasteSam: 'SAM đọc được cho {0}/{1} công đoạn của layout (bảng công đoạn trong file).', pasteSamMiss: 'Chưa có SAM: {0} (nhập ở trang Mô phỏng WIP).',
     opCross: 'Một người không làm máy ở hai bên bàn giữa (hoặc hai chuyền): chọn các máy cùng một phía.', arrExtra: 'Thêm {0} người vì các máy của cùng một nhóm nằm ở hai bên bàn giữa.',
     lblMc: 'Chữ mã máy', lblOp: 'Chữ số công đoạn', lblTip: 'Cỡ chữ của nhãn trên mặt bằng 2D, 3D và ảnh xuất',
@@ -482,6 +483,7 @@ var I18N = {
     ocrIgnored: 'bỏ qua', ocrLegend: 'Viền xanh lá: đọc đúng mã · cam: đã sửa theo thư viện · đỏ: không có trong thư viện · xanh dương: số công đoạn · xám: bỏ qua. Đưa chuột vào ô để xem chữ đọc được.'
   },
   en: {
+    opRemoveAsk0: 'Operation {0} has no machine on the plan. Remove it from the sequence and the simulation? It can be restored in the card "Changes against the layout file".',
     pasteSam: 'SAM found for {0}/{1} operations of the layout (operation table in the file).', pasteSamMiss: 'No SAM yet: {0} (enter it on the WIP simulation page).',
     opCross: 'One person does not work on both sides of the central table (or on two lines): select machines on one side.', arrExtra: '{0} more people because machines of the same group stand on both sides of the central table.',
     lblMc: 'Machine code text', lblOp: 'Operation number text', lblTip: 'Label text size on the 2D plan, in 3D and in the exported image',
@@ -3356,6 +3358,12 @@ function baseChanges() {
   return out.sort(function (x, y) { return simNum(x.op) - simNum(y.op) || (x.op < y.op ? -1 : x.op > y.op ? 1 : 0) || (x.code < y.code ? -1 : 1); });
 }
 function chgText(c) { return t('chgLine', [c.op || t('chgNoOp'), c.code, c.from, c.to, (c.to > c.from ? '+' : '') + (c.to - c.from)]); }
+/* an operation known without machines: in the sequence or in the operation table */
+function opKnown(op) {
+  var k = normOp(op); if (!k) return false;
+  if (Object.keys(ST.ops || {}).some(function (o) { return normOp(o) === k; })) return true;
+  return seqParse(ST.seqText).lines.some(function (l) { return l.ops.some(function (o) { return normOp(o) === k; }); });
+}
 function opIsOff(op) { var k = normOp(op); return (ST.opsOff || []).some(function (x) { return normOp(x.op) === k; }); }
 
 /* ---------- machine of an operation ---------- */
@@ -3432,8 +3440,10 @@ function removeOpPlan(op) {
 }
 function removeOp(op, ask) {
   var r = removeOpPlan(op);
-  if (!r.del.length && !r.rel.length) { toast(t('opNone', [r.op]), true); return false; }
-  if (ask && !confirm(t('opRemoveAsk', [r.op, r.del.length, r.rel.length]))) return false;
+  if (!r.del.length && !r.rel.length) {   // no machine on the plan (e.g. an operation of the sequence / table without SAM): only taken out of the sequence and the simulation
+    if (!opKnown(r.op)) { toast(t('opNone', [r.op]), true); return false; }
+    if (ask && !confirm(t('opRemoveAsk0', [r.op]))) return false;
+  } else if (ask && !confirm(t('opRemoveAsk', [r.op, r.del.length, r.rel.length]))) return false;
   var rec = { op: r.op, at: new Date().toISOString(), items: r.del.map(function (it) { return JSON.parse(JSON.stringify(it)); }), rel: r.rel.map(function (it) { return { id: it.id, op: it.op }; }) };
   ST.items = ST.items.filter(function (it) { return r.del.indexOf(it) < 0; });
   r.rel.forEach(function (it) { it.op = opsOf(it).filter(function (o) { return o.toUpperCase() !== r.op; }).join('/'); });
@@ -3511,7 +3521,7 @@ function opDlgPrev() {
   $('odPrev').innerHTML = h;
   $('odCodeRow').style.display = k && !m ? '' : 'none';
   $('odAdd').disabled = !k || (!m && !normCode($('odCode').value));
-  $('odDel').disabled = !r || (!r.del.length && !r.rel.length);
+  $('odDel').disabled = !r || (!r.del.length && !r.rel.length && !opKnown(k));
 }
 function initChanges() {
   $('chgBody').addEventListener('click', chgClick);
