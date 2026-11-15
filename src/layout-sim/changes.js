@@ -19,6 +19,12 @@ function baseChanges() {
   return out.sort(function (x, y) { return simNum(x.op) - simNum(y.op) || (x.op < y.op ? -1 : x.op > y.op ? 1 : 0) || (x.code < y.code ? -1 : 1); });
 }
 function chgText(c) { return t('chgLine', [c.op || t('chgNoOp'), c.code, c.from, c.to, (c.to > c.from ? '+' : '') + (c.to - c.from)]); }
+/* an operation known without machines: in the sequence or in the operation table */
+function opKnown(op) {
+  var k = normOp(op); if (!k) return false;
+  if (Object.keys(ST.ops || {}).some(function (o) { return normOp(o) === k; })) return true;
+  return seqParse(ST.seqText).lines.some(function (l) { return l.ops.some(function (o) { return normOp(o) === k; }); });
+}
 function opIsOff(op) { var k = normOp(op); return (ST.opsOff || []).some(function (x) { return normOp(x.op) === k; }); }
 
 /* ---------- machine of an operation ---------- */
@@ -95,8 +101,10 @@ function removeOpPlan(op) {
 }
 function removeOp(op, ask) {
   var r = removeOpPlan(op);
-  if (!r.del.length && !r.rel.length) { toast(t('opNone', [r.op]), true); return false; }
-  if (ask && !confirm(t('opRemoveAsk', [r.op, r.del.length, r.rel.length]))) return false;
+  if (!r.del.length && !r.rel.length) {   // no machine on the plan (e.g. an operation of the sequence / table without SAM): only taken out of the sequence and the simulation
+    if (!opKnown(r.op)) { toast(t('opNone', [r.op]), true); return false; }
+    if (ask && !confirm(t('opRemoveAsk0', [r.op]))) return false;
+  } else if (ask && !confirm(t('opRemoveAsk', [r.op, r.del.length, r.rel.length]))) return false;
   var rec = { op: r.op, at: new Date().toISOString(), items: r.del.map(function (it) { return JSON.parse(JSON.stringify(it)); }), rel: r.rel.map(function (it) { return { id: it.id, op: it.op }; }) };
   ST.items = ST.items.filter(function (it) { return r.del.indexOf(it) < 0; });
   r.rel.forEach(function (it) { it.op = opsOf(it).filter(function (o) { return o.toUpperCase() !== r.op; }).join('/'); });
@@ -174,7 +182,7 @@ function opDlgPrev() {
   $('odPrev').innerHTML = h;
   $('odCodeRow').style.display = k && !m ? '' : 'none';
   $('odAdd').disabled = !k || (!m && !normCode($('odCode').value));
-  $('odDel').disabled = !r || (!r.del.length && !r.rel.length);
+  $('odDel').disabled = !r || (!r.del.length && !r.rel.length && !opKnown(k));
 }
 function initChanges() {
   $('chgBody').addEventListener('click', chgClick);

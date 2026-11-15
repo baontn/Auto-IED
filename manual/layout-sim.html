@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Layout Sim: Hướng dẫn sử dụng</title><link rel="icon" href="../icon.png"><link rel="stylesheet" href="manual.css"></head><body>
-<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>Layout Sim v2.5: Hướng dẫn sử dụng</b><a href="layout-sim.en.html" title="English" onclick="try{localStorage.setItem('ie_site_lang','en')}catch(e){}">EN</a><a href="../index.html">‹ Trang chủ</a></header>
+<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>Layout Sim v2.7: Hướng dẫn sử dụng</b><a href="layout-sim.en.html" title="English" onclick="try{localStorage.setItem('ie_site_lang','en')}catch(e){}">EN</a><a href="../index.html">‹ Trang chủ</a></header>
 <div class="wrap">
 <nav class="toc"><b>Nội dung</b>
 <a href="#gioi-thieu">1. Giới thiệu</a>
@@ -63,7 +63,8 @@
 <tr><td>Cuối chuyền (cm)</td><td>Khoảng trống sau bàn giữa (đóng gói…).</td></tr>
 <tr><td>Chuyền rộng (cm)</td><td>Để trống = tự tính theo bàn giữa, máy, vùng người vận hành và lối đi.</td></tr>
 <tr><td>Số công nhân (HC)</td><td>Số người của chuyền dùng cho mô phỏng WIP. Để trống = lấy số công nhân trong file layout.</td></tr>
-<tr><td>Có chuyền nhánh</td><td>Chuyền phụ bên cạnh (tùy mã hàng): số máy, bàn giữa, vị trí trên/dưới, lối đi giữa 2 chuyền (mặc định 100 cm). Bàn giữa của chuyền nhánh bắt đầu cùng mốc 0 m với chuyền chính; chuyền nhánh cũng có khu đầu vào riêng phía trước.</td></tr></table>
+<tr><td>Có chuyền nhánh</td><td>Chuyền phụ bên cạnh (tùy mã hàng): số máy, bàn giữa, vị trí trên/dưới, lối đi giữa 2 chuyền (mặc định 100 cm). Bàn giữa của chuyền nhánh bắt đầu cùng mốc 0 m với chuyền chính; chuyền nhánh cũng có khu đầu vào riêng phía trước.</td></tr>
+<tr><td>Khu hoàn thiện và khu thùng</td><td>Chỉ ở cuối chuyền chính, cách chuyền 30 cm, rộng bằng chuyền (bỏ tích để không dùng). <b>Khu hoàn thiện</b>: 1 bàn QC đứng dọc và 2 bàn PCK nằm ngang, áp sát bàn QC và áp sát nhau (người đóng gói đối diện nhau); mặc định 175 × 75 cm. <b>Khu thùng</b>: 3 dải thùng vàng, đỏ, xanh đứng dọc, rộng 70 cm, dài bằng bề rộng chuyền, sát nhau và sát bàn PCK. Các bàn kéo / xoay được; khi thiết lập lại chuyền, cả khu di chuyển theo và giữ cách sắp xếp đã chỉnh. Trình tự <code>QC</code>, <code>PACKING</code> tính đường đi tới các bàn này.</td></tr></table>
 <div class="note"><b>Mốc 0 m</b> là đầu bàn giữa (cạnh trái). Thước mét trên mặt bằng 2D và 3D tính từ đó.</div>
 <figure><a href="img/ls-linesetup.png"><img src="img/ls-linesetup.png" alt="Thiết lập chuyền" loading="lazy"></a><figcaption>Thiết lập chuyền 8 máy chuẩn và một chuyền nhánh 6 máy, lối đi 1 m.</figcaption></figure>
 <p>Nút <span class="btn">Công thái học…</span>: kích thước vùng người ngồi/đứng, ghế, lối đi sau lưng, khoảng cách giữa các hàng máy.</p>
@@ -72,15 +73,20 @@
 <section id="dua-layout"><h2>5. Đưa layout vào mặt bằng</h2>
 <p>Bấm <span class="btn">📋 Dán layout</span>. Có ba cách:</p>
 <ol>
-<li><b>Mở file layout Excel</b> (cách chính xác nhất): bấm <span class="btn">📂 Mở file layout Excel (đọc chính xác các hình)…</span>, chọn file <code>.xlsx</code>/<code>.xlsm</code>. Chương trình đọc các hình mã máy + số công đoạn, hoặc layout ghi trong ô (một hàng mã máy, số công đoạn ở hàng trên/dưới), trên mọi sheet. Chọn layout trong danh sách (sheet, số hàng, số máy). Nếu có chuyền nhánh, chọn layout thứ hai cho chuyền nhánh.</li>
+<li><b>Mở file layout Excel</b> (cách chính xác nhất): bấm <span class="btn">📂 Mở file layout Excel (đọc chính xác các hình)…</span>, chọn file <code>.xlsx</code>/<code>.xlsm</code>. Chương trình đọc các hình mã máy + số công đoạn, hoặc layout ghi trong ô (một hàng mã máy, số công đoạn ở hàng trên/dưới), trên mọi sheet. Chọn layout trong danh sách (sheet, số hàng, số máy). Nếu có chuyền nhánh, chọn layout thứ hai cho chuyền nhánh.
+<ul><li>Đọc cả kiểu một hình ghi cả công đoạn và mã máy: <code>31- 1SLM</code>, <code>35/41- 1CSM</code>, <code>116-GFIS</code>. Hình dài “Băng chuyền đôi…” / “Bàn giữa” được hiểu là bàn giữa: hàng phía trên làm từ phía trên, hàng phía dưới làm từ phía dưới.</li>
+<li><b>Máy xoay ngang</b>: hình đứng (cao hơn rộng) là máy xoay 90°; người ngồi phía có hình ghế bên cạnh (không có ghế: bên phải ở hàng trên, bên trái ở hàng dưới). Hình xem trước vẽ hình đứng với chữ dọc và chấm vàng ở chỗ người ngồi; trong bảng xem trước ↻ = người bên phải, ↺ = bên trái.</li>
+<li>Sửa bảng chữ dưới hình xem trước thì chương trình đọc lại theo chữ (không còn thông tin xoay máy); chỉ sửa khi mã / số công đoạn đọc sai.</li></ul></li>
 <li><b>Dán vùng Excel</b>: sao chép vùng layout trong Excel, dán (Ctrl+V) vào ô văn bản.</li>
 <li><b>Dán ảnh</b>: dán ảnh chụp layout; chương trình nhận dạng chữ ngay trên máy (không cần mạng). Kiểm tra lại các mã đọc được.</li></ol>
+<p>Bảng xem trước ghi <b>SAM đọc được cho x/y công đoạn</b> của layout; SAM lấy từ bảng công đoạn của sheet layout, rồi từ bảng công đoạn của các sheet khác trong file (như chế độ tự tạo layout). Công đoạn chưa có SAM được liệt kê để nhập ở trang Mô phỏng WIP.</p>
 <p>Cùng lúc chương trình đọc từ file: <b>mã hàng</b> (ô B3, D3, D4, B11, tên sheet/file, giống IE Báo cáo máy), số công nhân, SAM, phiên bản OBD, sản lượng mục tiêu, hiệu suất, <b>bảng công đoạn</b> (SAM, loại máy, cột <b>Arrange. Optr / CN sắp xếp</b>) và trình tự <code>31=&gt;32=&gt;…</code>.</p>
 <figure><a href="img/ls-paste.png"><img src="img/ls-paste.png" alt="Dán layout" loading="lazy"></a><figcaption>Xem trước: các hàng máy, phía người ngồi (trên/dưới) và chuyền (chính/nhánh) của từng hàng; mã chưa có trong thư viện được cảnh báo. Bấm <span class="btn">Đưa vào mặt bằng</span>.</figcaption></figure>
 <h3 id="tu-tao">5.1 Tự tạo layout (file chưa có sơ đồ máy)</h3>
 <p>Khi file Excel có <b>bảng công đoạn</b> (cột M/c Type, SAM, CN sắp xếp) và <b>trình tự</b> (<code>Work Flow: 31=&gt;32=&gt;…</code>) nhưng chưa vẽ sơ đồ máy, danh sách layout có thêm dòng <b>⚙ Tự tạo layout từ bảng công đoạn · sheet …</b> (cũng có ở file đã có layout, để so sánh). Chương trình:</p>
 <ul><li>lấy loại máy của từng công đoạn từ cột <b>M/c Type</b>;</li>
-<li>số máy của công đoạn: theo cột số máy nếu có, nếu không theo <b>CN sắp xếp</b> (ô gộp chia theo SAM), làm tròn như quy tắc costing (phần lẻ ≤ 0,20 làm tròn xuống, còn lại làm tròn lên), ít nhất 1 máy;</li>
+<li>bấm <span class="btn">⚙ Tự tạo layout</span> cạnh danh sách layout (hoặc chọn dòng ⚙ trong danh sách);</li>
+<li>số máy của công đoạn: theo cột <b>Arrange. M/C (Thiết Bị)</b> (hoặc cột số máy) nếu có, nếu không theo <b>CN sắp xếp</b> (ô gộp chia theo SAM), làm tròn như quy tắc costing (phần lẻ ≤ 0,20 làm tròn xuống, còn lại làm tròn lên), ít nhất 1 máy;</li>
 <li>xếp máy theo trình tự từng cụm, lần lượt hai bên bàn giữa (so le) để hàng đi tới; có chuyền nhánh thì các cụm phụ đặt ở chuyền nhánh, cụm lắp ráp ở chuyền chính; công đoạn trong bảng nhưng không có trong trình tự được chèn vào cụm lắp ráp theo số;</li>
 <li>đặt người vận hành theo CN sắp xếp (mục 7.1).</li></ul>
 <figure><a href="img/ls-auto.png"><img src="img/ls-auto.png" alt="Tự tạo layout" loading="lazy"></a><figcaption>Layout tự tạo từ bảng công đoạn và trình tự 3 cụm: cụm tim và cụm bát ở chuyền nhánh, cụm lắp ráp ở chuyền chính; mỗi cụm một màu.</figcaption></figure>
@@ -96,6 +102,7 @@
 <li>Bấm vào máy: hiện thanh nút nổi <span class="btn">⟲</span> <span class="btn">⟳</span> <span class="btn">⇅ 180°</span> <span class="btn">👤</span> <span class="btn">🧍</span> <span class="btn">🗑</span>. Thẻ <b>Đang chọn</b> bên phải cho sửa mã máy, công đoạn, tọa độ, góc xoay.</li>
 <li>Ô <b>Mã máy / CĐ</b> + <span class="btn">+ Máy</span>: thêm máy theo mã, hoặc gõ số công đoạn để thêm đúng máy của công đoạn đó (mục 8). <span class="btn">+ Thêm</span>: bàn đầu vào, bàn QC, bàn, cột, xe đẩy, vật cản.</li>
 <li><b>Khép sát</b> (nút <span class="btn">⇥⇤</span> trên thanh nút nổi, nút <span class="btn">⇥⇤ Khép sát</span> trong thẻ Đang chọn, hoặc phím K): các máy đã chọn được đẩy sát nhau theo từng hàng, không còn khe hở (tính từ máy bên trái); cạnh máy quay về bàn giữa áp sát bàn giữa; hàng máy phía ngoài di chuyển theo. Chọn cả chuyền (Ctrl+A) rồi bấm K để khép sát toàn bộ.</li>
+<li><b>Chữ mã máy</b>, <b>Chữ số công đoạn</b> (thanh công cụ 2D và 3D): cỡ chữ nhãn từ 60 % đến 250 %, áp dụng cho mặt bằng 2D, 3D và ảnh xuất; ghi nhớ trên trình duyệt.</li>
 <li><b>Bám lưới</b>: máy bám theo lưới khi kéo (giữ Alt để bỏ). <b>Lối đi sau lưng</b>: hiện vùng lối đi sau người vận hành.</li>
 <li>Nút <span class="btn">◨</span> (góc phải trên) ẩn/hiện cột bên phải để có thêm chỗ cho mặt bằng.</li></ul>
 <p>Thẻ <b>Kiểm tra</b> liệt kê lỗi (đỏ) và cảnh báo (vàng): máy chồng nhau, vùng người vận hành bị máy khác chắn, lối đi sau lưng bị chắn, máy ra ngoài chuyền hoặc nằm trên lối đi, mã máy chưa có kích thước. Bấm một dòng để chọn máy đó.</p>
@@ -105,7 +112,7 @@
 <section id="nguoi"><h2>7. Người vận hành</h2>
 <ul>
 <li>Mỗi máy mặc định có một người vận hành (ghế hoặc chỗ đứng). Bàn ép, bàn ủi mặc định đứng.</li>
-<li><b>Một người làm nhiều máy</b>: chọn các máy (Shift+bấm, máy có người bấm trước) rồi bấm <span class="btn">👤</span> hoặc phím W. Mũi tên cong màu tím vẽ <b>phía sau lưng người vận hành</b> (không đè lên bàn giữa); máy ở xa có thêm khoảng cách đi lại. Bấm <span class="btn">👤</span> lần nữa để tách.</li>
+<li><b>Một người làm nhiều máy</b>: chọn các máy (Shift+bấm, máy có người bấm trước) rồi bấm <span class="btn">👤</span> hoặc phím W. <b>Một người chỉ làm các máy ở cùng một phía của bàn giữa</b> (không đi vòng qua bàn giữa, không sang chuyền khác): chọn máy ở hai phía thì chương trình báo và không ghép; máy bị kéo sang phía bên kia (hoặc dự án cũ) được trả lại người riêng. Mũi tên cong màu tím vẽ <b>phía sau lưng người vận hành</b> (không đè lên bàn giữa); máy ở xa có thêm khoảng cách đi lại. Bấm <span class="btn">👤</span> lần nữa để tách.</li>
 <li><span class="btn">👤 Bấm máy để bật/tắt người</span>: mỗi lần bấm vào máy là bật/tắt người của máy đó. <span class="btn">Tất cả có người</span>: trả người cho mọi máy.</li>
 <li><span class="btn">🧍↔🪑 Tất cả đứng / ngồi</span> và <span class="btn">Mặc định (ép, ủi đứng)</span>; từng máy: nút 🧍 hoặc phím S.</li></ul>
 <figure><a href="img/ls-share.png"><img src="img/ls-share.png" alt="Một người nhiều máy" loading="lazy"></a><figcaption>Một người chạy nhiều máy: mũi tên tím nối chỗ ngồi với các máy người đó phụ trách.</figcaption></figure>
@@ -117,7 +124,7 @@
 <tr><td>1.5, 2, 3 … người</td><td>Làm tròn lên số người; số máy ít hơn số người thì người thêm là người hỗ trợ trong mô phỏng.</td></tr>
 <tr><td>0 người</td><td>Máy không có người riêng (do người khác làm).</td></tr>
 <tr><td>Dòng không có số công đoạn nhưng có số người (máy thêm của công đoạn phía trên)</td><td>Cộng vào công đoạn phía trên.</td></tr></table>
-<p>Thông báo sau khi đặt layout cho biết tổng số người theo file, số máy làm chung người. Nếu đã sửa người vận hành bằng tay và muốn làm lại theo file: bấm <span class="btn">👥 Theo CN sắp xếp trong file</span> (thẻ Người vận hành hoặc trang Mô phỏng WIP).</p>
+<p>Người làm chung chỉ được ghép với các máy <b>cùng một phía bàn giữa</b>: nếu máy của một nhóm nằm ở hai phía, mỗi phía có ít nhất một người (thông báo ghi số người thêm). Layout tự tạo luôn đặt các công đoạn chung người ở cùng một phía. Thông báo sau khi đặt layout cho biết tổng số người theo file, số máy làm chung người. Nếu đã sửa người vận hành bằng tay và muốn làm lại theo file: bấm <span class="btn">👥 Theo CN sắp xếp trong file</span> (thẻ Người vận hành hoặc trang Mô phỏng WIP).</p>
 <figure><a href="img/ls-arrange.png"><img src="img/ls-arrange.png" alt="CN sắp xếp" loading="lazy"></a><figcaption>Trang Mô phỏng WIP: cột <b>CN sắp xếp (file)</b> cạnh <b>Số người</b> trên mặt bằng; ⟨31·32⟩ = ô gộp, hai công đoạn chung người.</figcaption></figure>
 </section>
 
@@ -126,7 +133,7 @@
 <ul>
 <li>Chương trình tìm loại máy của công đoạn trong layout (ví dụ 45 → 2CSM) và cho biết số máy đang có. Nhập <b>Số máy thêm</b>, bấm <span class="btn">+ Thêm máy</span>: máy mới được đặt vào chỗ trống gần máy cùng công đoạn (không còn chỗ thì đặt dưới mặt bằng, kéo vào vị trí).</li>
 <li>Công đoạn không có trên mặt bằng và trong file: nhập mã máy để thêm.</li>
-<li><span class="btn">🗑 Bỏ công đoạn</span>: xóa các máy của công đoạn; máy ghép (ví dụ “37/42”) chỉ bỏ số công đoạn đó và giữ công đoạn còn lại. Công đoạn cũng được bỏ khỏi trình tự và mô phỏng. Cũng có thể bấm ✕ ở đầu dòng công đoạn trong bảng mô phỏng.</li></ul>
+<li><span class="btn">🗑 Bỏ công đoạn</span>: xóa các máy của công đoạn; máy ghép (ví dụ “37/42”) chỉ bỏ số công đoạn đó và giữ công đoạn còn lại. Công đoạn cũng được bỏ khỏi trình tự và mô phỏng. Cũng có thể bấm ✕ ở đầu dòng công đoạn trong bảng mô phỏng. Công đoạn không có máy trên mặt bằng (chỉ có trong trình tự / bảng công đoạn, SAM 0) cũng bỏ được: chỉ ra khỏi trình tự và mô phỏng.</li></ul>
 <figure><a href="img/ls-opdlg.png"><img src="img/ls-opdlg.png" alt="Thêm máy theo công đoạn" loading="lazy"></a><figcaption>Thêm 2 máy cho công đoạn 45: chương trình đã tìm ra máy 2CSM.</figcaption></figure>
 </section>
 
@@ -153,12 +160,19 @@
 <p>Tab <b>⏱ Mô phỏng WIP</b>:</p>
 <ul>
 <li><b>SAM</b> từng công đoạn đọc từ bảng công đoạn trong file layout; sửa được trong bảng.</li>
-<li><b>Hiệu suất (%)</b>: hiệu suất chung (lấy từ file nếu có); cột <b>Hiệu suất (%)</b> trong bảng cho từng công đoạn (để trống = hiệu suất chung).</li>
+<li><b>Hiệu suất (%)</b>: mỗi công đoạn lấy <b>Target eff (M.tiêu Hiệu suất)</b> của bảng công đoạn trong file (ô gộp áp dụng cho các công đoạn trong ô; số màu xanh trong cột Hiệu suất); nhập số khác để sửa. Bỏ tích “Hiệu suất từng công đoạn theo Target eff…” thì dùng hiệu suất chung cho mọi công đoạn. Công đoạn không có giá trị (hoặc #DIV/0!) dùng hiệu suất chung (lấy từ đầu file nếu có).</li>
 <li><b>Đầu vào</b>: luôn có hàng, hoặc theo sản lượng đầu vào (sp/giờ, mặc định = mục tiêu trong file). <b>Bó hàng</b>: số sản phẩm mỗi bó. <b>Bỏ qua thời gian khởi động</b>: chuyền đã chạy ổn định.</li>
-<li><b>Số người</b>: theo người vận hành trên mặt bằng (một người nhiều máy chia thời gian theo SAM). Nếu chuyền có <b>HC</b> (Thiết lập chuyền, hoặc số công nhân trong file) khác số người trên mặt bằng: người thêm hỗ trợ công đoạn chậm nhất (+1), thiếu người thì bớt ở công đoạn dư năng lực nhất (−1).</li>
+<li><b>Số người</b>: theo người vận hành trên mặt bằng (một người nhiều máy chia thời gian theo SAM / hiệu suất); dòng nhỏ “file: …” = CN sắp xếp trong file. Nếu chuyền có <b>HC</b> (Thiết lập chuyền, hoặc số công nhân trong file) khác số người trên mặt bằng: người thêm hỗ trợ công đoạn chậm nhất (+1), thiếu người thì bớt ở công đoạn dư năng lực nhất (−1).</li>
 <li>Công đoạn ghép trên một máy (“37/42”) do một người làm, đánh dấu ⇄ trong bảng.</li>
 <li>Không có trình tự: hàng đi từ công đoạn nhỏ nhất đến lớn nhất.</li></ul>
-<p>Bấm <span class="btn">▶ Chạy mô phỏng</span>: sản lượng mô phỏng, <b>mức bận</b> (trung bình, thấp nhất, cao nhất; cột <b>Mức bận</b> từng công đoạn; danh sách mức bận từng người vận hành: đỏ ≥ 95 % quá tải, vàng &lt; 60 % ít việc), năng lực công đoạn chậm nhất (nút cổ chai), hiệu suất chuyền, tổng WIP, WIP cuối ca và WIP lớn nhất từng công đoạn, gợi ý (nút cổ chai, WIP dồn, công đoạn ít việc). Thanh năng lực ghi số sp/giờ và mức tải; trên 100 % là không đủ năng lực.</p>
+<p>Bấm <span class="btn">▶ Chạy mô phỏng</span>: sản lượng mô phỏng, <b>mức bận</b> (trung bình, thấp nhất, cao nhất; cột <b>Mức bận</b> từng công đoạn; danh sách mức bận từng người vận hành: đỏ ≥ 95 % quá tải, vàng &lt; 60 % ít việc), năng lực công đoạn chậm nhất (nút cổ chai), hiệu suất chuyền, tổng WIP, WIP cuối ca và WIP lớn nhất từng công đoạn, gợi ý (nút cổ chai, WIP dồn, công đoạn ít việc).</p>
+<table><tr><th>Cột của bảng cân bằng</th><th>Ý nghĩa</th></tr>
+<tr><td>Công đoạn</td><td>Số công đoạn, tên công đoạn (cột Description / Mô tả của file), nhãn nút cổ chai, máy ghép ⇄.</td></tr>
+<tr><td>Người cần</td><td>Số người cần để đạt mục tiêu = mục tiêu × SAM / (60 × hiệu suất); đỏ khi nhiều hơn số người đang có.</td></tr>
+<tr><td>Năng lực (sp/giờ)</td><td>Số sản phẩm công đoạn làm được trong 1 giờ = số người × 60 × hiệu suất / SAM; vạch nhỏ dưới số so với công đoạn nhanh nhất, vạch đứng = mục tiêu.</td></tr>
+<tr><td>Tải</td><td>Sản lượng cần (mục tiêu, không có thì công đoạn chậm nhất) / năng lực: xanh &lt; 90 %, vàng 90–100 %, đỏ &gt; 100 % (không đủ năng lực).</td></tr>
+<tr><td>Mức bận, WIP</td><td>Sau khi chạy mô phỏng: thời gian bận / thời gian có mặt; WIP cuối ca và lớn nhất.</td></tr>
+<tr><td>Dòng Tổng / TB</td><td>Tổng SAM, tổng máy, tổng người (HC, CN sắp xếp trong file), tổng người cần, hiệu suất trung bình theo SAM, sản lượng ra chuyền và mục tiêu, <b>cân bằng chuyền</b> = tổng thời gian làm việc / (số người × chu kỳ công đoạn chậm nhất), mức bận trung bình, tổng WIP.</td></tr></table>
 <figure><a href="img/ls-sim.png"><img src="img/ls-sim.png" alt="Mô phỏng WIP" loading="lazy"></a><figcaption>Kết quả mô phỏng và bảng cân bằng chuyền theo công đoạn; dòng đỏ = nút cổ chai, dòng vàng = WIP vượt mức cảnh báo.</figcaption></figure>
 <div class="ok">Nút <span class="btn">⏱ Mô phỏng WIP</span> trên thanh công cụ <b>Mặt bằng 2D</b> chạy mô phỏng ngay trên mặt bằng: thanh kết quả (sản lượng và chênh lệch so với lần trước, nút cổ chai, hiệu suất, WIP) và nhãn WIP trên từng máy. Khi thanh đang mở, mỗi lần sửa mặt bằng (thêm máy, đổi người…) mô phỏng tự chạy lại. Bấm số công đoạn trên thanh để chọn máy đó; <span class="btn">Chi tiết</span> mở trang Mô phỏng WIP.</div>
 </section>

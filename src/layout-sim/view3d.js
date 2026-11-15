@@ -186,7 +186,7 @@ function machineLabel(code, op) {
   var tw = x.measureText(code).width; if (tw > 288) { fz = Math.max(30, Math.floor(fz * 288 / tw)); x.font = 'bold ' + fz + 'px Segoe UI, Arial'; }   // long names (Bàn giữa…) fit in the box
   x.fillText(code, 160, y0 + 58 + fz * 0.35);
   var tx = new THREE.CanvasTexture(cv); tx.anisotropy = 4;
-  var s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tx, depthTest: false })); s.scale.set(80, 80 * cv.height / cv.width, 1); s.renderOrder = 11; return s;
+  var s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tx, depthTest: false })); var k = op ? (LBL.mc + 2 * LBL.op) / 3 : LBL.mc; s.scale.set(80 * k, 80 * k * cv.height / cv.width, 1); s.renderOrder = 11; return s;
 }
 function smallSprite(txt, w) {
   var cv = document.createElement('canvas'); cv.width = 256; cv.height = 64; var x = cv.getContext('2d');
@@ -322,7 +322,7 @@ function rebuild3d() {
       }
     } else {
       g = buildObject(it);
-      if (V3.labels && it.name) { var sp2 = machineLabel(it.name, ''); sp2.position.set(0, (it.H || 75) + 45, 0); g.add(sp2); }
+      if (V3.labels && it.name && it.zone !== 'boxes') { var sp2 = machineLabel(it.name, ''); sp2.position.set(0, (it.H || 75) + 45, 0); g.add(sp2); }
     }
     var sel = SEL.indexOf(it.id) >= 0;
     if (sel || bad[it.id] || warn[it.id]) g.add(rectLoop(d.L + 6, d.W + 6, sel ? '#1f6feb' : bad[it.id] ? '#e5484d' : '#e0a100', 1));

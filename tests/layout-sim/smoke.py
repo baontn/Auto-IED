@@ -43,7 +43,7 @@ def make_lib(path):
         for _ in range(q): s.append([n, b, m])
     wb.save(path)
 
-def make_layout_xlsx(path):
+def make_layout_xlsx(path, combined=False):
     """a minimal .xlsx whose sheet holds a layout drawn with shapes (as the IE layouts are), synthetic data"""
     E = 9525
     def sp(i, txt, x, y, w=86, h=50):
@@ -53,6 +53,16 @@ def make_layout_xlsx(path):
     shapes, i = [], 2
     def add(t, x, y, w=86, h=50):
         nonlocal i; shapes.append(sp(i, t, x, y, w, h)); i += 1
+    def chair(x, y, w=30, h=60):   # a picture next to a machine box (the operator's chair)
+        nonlocal i
+        shapes.append(('<xdr:twoCellAnchor><xdr:from><xdr:col>0</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>0</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from><xdr:to><xdr:col>1</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>1</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:to>'
+                       '<xdr:pic><xdr:nvPicPr><xdr:cNvPr id="%d" name="P%d"/><xdr:cNvPicPr/></xdr:nvPicPr><xdr:blipFill/><xdr:spPr><a:xfrm><a:off x="%d" y="%d"/><a:ext cx="%d" cy="%d"/></a:xfrm></xdr:spPr></xdr:pic><xdr:clientData/></xdr:twoCellAnchor>') % (i, i, x * E, y * E, w * E, h * E)); i += 1
+    if combined:   # one box per machine "31- 1SLA" (vertical boxes), a conveyor between the two rows, a manual table box
+        for k, tx in enumerate(['31- 1SLA', '32 -3OLM', '33/34- 2CSM', '35-BT1M']): add(tx, 3000 + k * 100, 3000, 46, 110)
+        for k in range(3): chair(3048 + k * 100, 3050)   # chairs on the right of the first three (the fourth has none: right, as usual above the conveyor)
+        add('MNHD', 3420, 3060, 90, 50)
+        add('Băng chuyền đôi 30cm', 3000, 3115, 600, 22)
+        for k, tx in enumerate(['36- 1SLA', '37- 3OLM', '97- BT1M']): add(tx, 3040 + k * 100, 3140, 46, 110); chair(3006 + k * 100, 3150)
     # branch rows: numbers above codes, then codes above numbers
     for k, (c, o) in enumerate([('SFAM', '41'), ('SFAM', '43'), ('2CSM', '45'), ('1SLA', '47')]): add(o, 100 + k * 86, 1000); add(c, 100 + k * 86, 1050)
     for k, (c, o) in enumerate([('3OLM', '52'), ('3OLM', '53'), ('4OLB', '55')]): add(c, 100 + k * 86, 1100); add(o, 100 + k * 86, 1150)
@@ -101,10 +111,10 @@ def make_auto_xlsx(path):
     """an operation table (machine type, SAM, people arranged) and the work flow, but no layout drawn: for the automatic layout"""
     wb = Workbook(); ws = wb.active; ws.title = 'Initial layout'
     ws['A3'] = 'STYLE No /Mã hàng'; ws['E3'] = 'XYZ26-00003-1103XX'
-    for k, h in enumerate(['SQU', 'Op No.', 'Description', 'M/c Type', 'SAM/SMV', 'Calc.Optr', 'Arrange. Optr\nCN sắp xếp']): ws.cell(row=5, column=1 + k, value=h)
-    rows = [(31, '1SLA', 0.5, 1), (32, '3OLM', 0.4, 0.5), (33, '2CSM', 0.6, 0.5), (41, 'SFAM', 0.3, 0.5), (43, 'SFAM', 0.3, 0.5), (66, '4OLB', 0.9, 2), (67, '1SLA', 0.5, 1), (97, 'BT1M', 0.4, 1)]
-    for k, (o, c, sam, ar) in enumerate(rows):
-        for j, v in enumerate([o, o, 'op', c, sam, None, ar]): ws.cell(row=6 + k, column=1 + j, value=v)
+    for k, h in enumerate(['SQU', 'Op No.', 'Description', 'M/c Type', 'SAM/SMV', 'Calc.Optr', 'Arrange. Optr\nCN sắp xếp', 'Arrange. M/C\nThiết Bị', 'Target/optr', 'Target eff\n(M.tiêu Hiệu suất)']): ws.cell(row=5, column=1 + k, value=h)
+    rows = [(31, '1SLA', 0.5, 1, 1, 0.75), (32, '3OLM', 0.4, 0.5, 1, 0.6), (33, '2CSM', 0.6, 0.5, 1, 0.7), (41, 'SFAM', 0.3, 0.5, 1, 0.8), (43, 'SFAM', 0.3, 0.5, 1, 0.8), (66, '4OLB', 0.9, 2, 2, 0.9), (67, '1SLA', 0.5, 1, 1, 1.2), (97, 'BT1M', 0.4, 1, 1, '#DIV/0!')]
+    for k, (o, c, sam, ar, mcn, te) in enumerate(rows):
+        for j, v in enumerate([o, o, 'op', c, sam, None, ar, mcn, None, te]): ws.cell(row=6 + k, column=1 + j, value=v)
     ws.cell(row=6 + len(rows), column=1, value='Total Sew')
     ws['A20'] = 'Work Flow'; ws['B21'] = 'Cụm tim'; ws['C21'] = '31=>32=>33'; ws['B22'] = 'Cụm bát'; ws['C22'] = '41=>43'; ws['B23'] = 'Lắp ráp'; ws['C23'] = '66=>67=>97=>QC'
     wb.save(path)
@@ -136,6 +146,10 @@ async def main():
         await pg.fill('#lsName', 'Line D3'); await pg.fill('#lsUnits', '17'); await pg.dispatch_event('#lsUnits', 'input'); await pg.click('#lsOk')
         r = await pg.evaluate('()=>{const c=centerTable(),i=zoneById("input"),m=zoneById("main");return [c.L,c.W,ST.line.length,c.x-c.L/2,i.x,i.L,i.x+i.L,i.W==m.W]}')
         check(r == [1819, 30, 1849, 0, -120, 90, -30, True], 'central table 17 x 107 cm from 0 m, width 30; line 1819+30; input area 90 cm, 30 cm in front, as wide as the line ' + str(r))
+        r = await pg.evaluate('''()=>{const f=zoneById("finish"),b=zoneById("boxes"),m=zoneById("main");const it=ST.items.filter(i=>isFinishObj(i));const q=it.find(i=>i.name=="QC"),p=it.filter(i=>/^PCK/.test(i.name)),bx=it.filter(i=>i.zone=="boxes");
+          return [f.x==m.x+m.L+30, f.W==m.W && b.W==m.W, q.rot, q.L+"x"+q.W, p.map(i=>i.rot).join(), Math.abs(p[0].y-p[1].y)==75, bx.map(i=>i.color).join(), bx.every(i=>i.L==70), ISSUES.length,
+          Math.round(p[0].x-p[0].L/2-(q.x+q.W/2)), Math.round(bx[0].x-bx[0].L/2-(p[0].x+p[0].L/2)), Math.round(bx[1].x-bx[0].x), Math.round(bx[2].x-bx[1].x), bx.every(i=>i.W==m.W&&i.y==m.y+m.W/2), b.L==210]}''')
+        check(r == [True, True, 90, '175x75', '0,0', True, '#f2c230,#e04848,#3fae6a', True, 0, 0, 0, 70, 70, True, True], 'finishing area (QC upright, 2 PCK face to face, touching QC) and box area: yellow, red, green strips 70 cm wide, as long as the line is wide, side by side after the PCK tables ' + str(r))
         check(await pg.is_visible('#libBanner'), 'banner without library')
         await pg.set_input_files('#fileLib', lib); await pg.wait_for_timeout(800)
         check(await pg.evaluate('()=>[Object.keys(LIB.codes).length, LIB.models.length]') == [len(CODES), len(MODELS)], 'library read')
@@ -150,7 +164,7 @@ async def main():
         await pg.click('#bPaste'); await pg.fill('#pasteTxt', PASTE); await pg.dispatch_event('#pasteTxt', 'input')
         if SHOTS: await pg.locator('#dlgPaste').screenshot(path=SHOTS + '/ls-paste.png')
         await pg.check('#pasteFit'); await pg.click('#pasteGo'); await pg.wait_for_timeout(300)
-        check(await pg.evaluate("()=>[ST.items.filter(i=>i.kind=='mc').length, ST.items.filter(i=>i.kind=='obj').length, ISSUES.length]") == [27, 2, 0], 'paste: 27 machines + input + central table, no issue')
+        check(await pg.evaluate("()=>[ST.items.filter(i=>i.kind=='mc').length, ST.items.filter(i=>i.kind=='obj').length, ISSUES.length]") == [27, 8, 0], 'paste: 27 machines + input + central table + finishing tables and boxes, no issue')
         check(await pg.evaluate("()=>{const c=centerTable();const t=ST.items.filter(i=>i.kind=='mc'&&i.rot==180);return t.every(i=>Math.abs(i.y+dimOf(i.code).W/2-(c.y-c.W/2))<0.2)}"), 'first row backs against the central table')
         check((await pg.evaluate("()=>ST.items.filter(i=>i.rot==180).map(i=>i.code+':'+i.op).join(' ')")).startswith('3OLM:31 1SLA:32 2CSM:33'), 'numbers above the row -> operator above')
         await pg.evaluate("()=>{SEL=[];fitView()}")
@@ -181,7 +195,11 @@ async def main():
         await pg.keyboard.press('Escape'); check(not await pg.evaluate('()=>OPMODE'), 'Esc leaves operator mode')
         # one operator for several machines: Shift+click two machines far apart, press W -> double arrow with distance; again -> split
         await pg.evaluate('()=>{SEL=[];onSelChange();fitView()}')
-        a, b2 = await pg.evaluate("()=>{const m=ST.items.filter(i=>i.kind=='mc');return [m.find(i=>i.op=='31').id, m.find(i=>i.op=='97'&&i.rot==0).id]}")
+        a, b2, c3 = await pg.evaluate("()=>{const m=ST.items.filter(i=>i.kind=='mc');const a=m.find(i=>i.op=='31');const same=m.filter(i=>i!==a&&sideKey(i)==sideKey(a)).sort((x,y)=>Math.abs(y.x-a.x)-Math.abs(x.x-a.x));const other=m.find(i=>sideKey(i)!=sideKey(a));return [a.id, same[0].id, other.id]}")
+        # across the central table: refused
+        await pg.evaluate("([a,c])=>{SEL=[a,c];toggleOperator()}", [a, c3])
+        check(await pg.evaluate("(c)=>!itemById(c).noOp", c3) and 'hai bên bàn giữa' in await pg.inner_text('#toast'), 'one operator cannot work on both sides of the central table')
+        await pg.evaluate('()=>{SEL=[];onSelChange();render2d()}')
         for k2, i in enumerate([a, b2]):
             bb = await pg.locator('[data-id="%s"] rect' % i).last.bounding_box()
             if k2: await pg.keyboard.down('Shift')
@@ -189,7 +207,7 @@ async def main():
             if k2: await pg.keyboard.up('Shift')
         await pg.keyboard.press('w')
         r = await pg.evaluate("([a,b])=>{const l=opLinks();return [!itemById(a).noOp, itemById(b).noOp, itemById(b).by===a, l.length, l[0]&&l[0].far, Math.round(l[0]?l[0].dist:0)]}", [a, b2])
-        check(r[:5] == [True, True, True, 1, True] and r[5] > 1000, 'one operator for 2 far machines, linked with a double arrow (%d cm)' % r[5])
+        check(r[:5] == [True, True, True, 1, True] and r[5] > 500, 'one operator for 2 far machines on the same side, linked with a double arrow (%d cm)' % r[5])
         check('26' in await pg.inner_text('#sumBody'), 'summary counts 26 operators')
         if SHOTS: await pg.screenshot(path=SHOTS + '/ls-share.png')
         await pg.keyboard.press('w'); check(await pg.evaluate("([a,b])=>!itemById(a).noOp&&!itemById(b).noOp&&!opLinks().length", [a, b2]), 'W again splits them')
@@ -223,7 +241,7 @@ async def main():
         fp = os.path.join(tmp, 'Line_D3.layout.json'); open(fp, 'w').write(await pg.evaluate('()=>fileJson()'))
         await pg.evaluate('()=>{ST.items=[];ST.line.name="";changed()}')
         await pg.set_input_files('#fileOpen', fp); await pg.wait_for_timeout(300)
-        check(await pg.evaluate('()=>ST.items.length') == 29 and await pg.input_value('#lnName') == 'Line D3', 'save/open round trip')
+        check(await pg.evaluate('()=>ST.items.length') == 35 and await pg.input_value('#lnName') == 'Line D3', 'save/open round trip')
         async with pg.expect_download() as dl: await pg.click('#bPng')
         d = await dl.value; pth = os.path.join(tmp, 'x.png'); await d.save_as(pth); check(os.path.getsize(pth) > 20000, 'PNG export')
         await pg.click('[data-tab="lib"]')
@@ -265,7 +283,7 @@ async def main():
         z = await pg.evaluate("()=>lineZones().map(z=>z.id+':'+z.y+':'+z.W)")
         zw = await pg.evaluate("()=>{const w=zoneById('walk');return w.y+':'+w.W}")
         cx = await pg.evaluate("()=>[centerOf('main').x-centerOf('main').L/2, centerOf('branch').x-centerOf('branch').L/2]")
-        check(zw.endswith(':100') and z[3].startswith('branch:0') and cx == [0, 0] and any(x.startswith('inputB:') for x in z), 'branch line above, 1 m walkway, both central tables start at 0 m, input areas ' + str(z))
+        check(zw.endswith(':100') and any(x.startswith('branch:0') for x in z) and cx == [0, 0] and any(x.startswith('inputB:') for x in z), 'branch line above, 1 m walkway, both central tables start at 0 m, input areas ' + str(z))
         await pg.click('#bPaste'); await pg.set_input_files('#fileXl', xl); await pg.wait_for_timeout(600)
         r = await pg.evaluate("()=>[PASTE.nMc, PASTE.rows.length, PASTE.rows.map(r=>r.zone).join(','), (PASTE.seq||[]).length, PASTE.rows[0].cells.map(c=>c.code+':'+c.op).join(' ')]")
         check(r[:4] == [15, 4, 'branch,branch,main,main', 4] and r[4] == 'SFAM:41 SFAM:43 2CSM:45 1SLA:47', 'Excel shapes: 15 machines, 4 rows (2 branch + 2 main), 4 sequence lines ' + str(r))
@@ -293,7 +311,7 @@ async def main():
         check('45' in await pg.inner_text('#smRes'), 'simulation tab shows the bottleneck')
         # efficiency per operation (table input), numbers on the capacity bars, headcount of the line
         await pg.fill('#smTable input[data-eff="45"]', '100'); await pg.press('#smTable input[data-eff="45"]', 'Tab'); await pg.wait_for_timeout(300)
-        r = await pg.evaluate("()=>[ST.ops['45'].eff, Math.round(simBalance(0.8).capMin), document.querySelectorAll('#smTable .barT').length]")
+        r = await pg.evaluate("()=>[ST.ops['45'].eff, Math.round(simBalance(0.8).capMin), document.querySelectorAll('#smTable .capc').length]")
         check(r[0] == 100 and r[1] > 30 and r[2] > 5, 'own efficiency of 45 = 100%%: bottleneck moves (%s pcs/h), bars show numbers' % r[1])
         n0 = await pg.evaluate("()=>simBalance(0.8).opers.length")
         await pg.evaluate("()=>{ST.line.hc=%d;commit()}" % (n0 + 3))
@@ -334,6 +352,15 @@ async def main():
         check(await pg.evaluate("()=>[ST.items.filter(i=>i.kind=='mc'&&opsOf(i).join()=='45').length,(ST.opsOff||[]).length]") == [3, 0], 'operation 45 restored with its machines')
         r = await pg.evaluate("()=>{removeOp('69');return [ST.items.some(i=>i.op=='67'), ST.items.some(i=>/69/.test(i.op||''))]}")
         check(r == [True, False], 'removing 69 keeps the combined machine as 67')
+        # an operation of the sequence without machine and without SAM can be removed too (from the simulation table)
+        await pg.evaluate("()=>{ST.seqText=ST.seqText.replace('97','99=>97');changed()}")
+        await pg.click('[data-tab="sim"]'); await pg.wait_for_timeout(200)
+        pg.once('dialog', lambda d: asyncio.ensure_future(d.accept()))
+        await pg.click('#smTable [data-rmop="99"]'); await pg.wait_for_timeout(300)
+        r = await pg.evaluate("()=>[simLines().lines.some(l=>l.ops.indexOf('99')>=0), (ST.opsOff||[]).some(x=>x.op=='99'), !!document.querySelector('#smTable [data-rmop=\"99\"]')]")
+        check(r == [False, True, False], 'operation without machine / SAM removed from the simulation ' + str(r))
+        await pg.evaluate("()=>{restoreOp('99',true);ST.seqText=ST.seqText.replace('99=>','');changed()}")
+        await pg.click('[data-tab="plan"]')
         check(await pg.get_attribute('#bHome', 'href') == '../index.html', 'button back to the IE Tools home page')
         if SHOTS: await pg.evaluate('()=>{SEL=[];onSelChange();fitView()}'); await pg.screenshot(path=SHOTS + '/ls-changes.png')
         await pg.click('#wipBar [data-wip="close"]')
@@ -362,19 +389,50 @@ async def main():
         check('⟨31·32⟩' in await pg.inner_text('#smTable'), 'simulation table shows the arranged people of the file')
         if SHOTS: await pg.screenshot(path=SHOTS + '/ls-arrange.png')
         await pg.click('[data-tab="plan"]')
-        # automatic layout: operation table + work flow, no layout drawn
+        # one box per machine ("31- 1SLA"), rows above / below a conveyor
+        cb = os.path.join(tmp, 'combined.xlsx'); make_layout_xlsx(cb, combined=True)
+        await pg.evaluate("()=>{openPaste()}"); await pg.set_input_files('#fileXl', cb); await pg.wait_for_timeout(700)
+        r = await pg.evaluate("()=>{const o=[...document.querySelectorAll('#xlPick option')].map(o=>o.value+' '+o.textContent);const i=o.findIndex(x=>/8 máy|8 machines/.test(x));return [o, i]}")
+        if r[1] >= 0: await pg.select_option('#xlPick', index=r[1]); await pg.wait_for_timeout(200)
+        r = await pg.evaluate("()=>PASTE.rows.map(r=>r.side+':'+r.cells.map(c=>c.code+'/'+c.op+(c.dir?'@'+c.dir:'')).join(',')).join(' | ')")
+        check(r == 'top:1SLA/31@right,3OLM/32@right,2CSM/33/34@right,BT1M/35@right,MNHD/ | bottom:1SLA/36@left,3OLM/37@left,BT1M/97@left', 'boxes "31- 1SLA" read (operation + machine in one box), sides from the conveyor, upright boxes = turned machines, operator side from the chair ' + r)
+        await pg.click('#pasteGo'); await pg.wait_for_timeout(300)
+        r = await pg.evaluate("()=>{const m=ST.items.filter(i=>i.kind=='mc'&&i.op);const ct=centerTable();return [m.filter(i=>i.rot==270).length, m.filter(i=>i.rot==90).length, ISSUES.filter(x=>/isOverlap|isSeat|isAisle/.test(x.k)).length, m.filter(i=>i.rot%180).every(i=>Math.abs(Math.abs(i.y-ct.y)-ct.W/2-dimOf(i.code).L/2)<1)]}")
+        check(r == [4, 3, 0, True], 'turned machines placed as drawn (4 operators on the right above, 3 on the left below), touching the central table, no conflict ' + str(r))
+        await pg.keyboard.press('Control+z'); await pg.wait_for_timeout(100)
+        await pg.evaluate("()=>{openPaste()}")
+        await pg.evaluate("()=>document.getElementById('dlgPaste').close()")
+                # automatic layout: operation table + work flow, no layout drawn
         ax = os.path.join(tmp, 'auto.xlsx'); make_auto_xlsx(ax)
         await pg.evaluate("()=>{openPaste()}"); await pg.set_input_files('#fileXl', ax); await pg.wait_for_timeout(700)
         r = await pg.evaluate("()=>[document.querySelectorAll('#xlPick option').length, document.getElementById('xlPick').value, PASTE.auto, PASTE.nMc, PASTE.rows.map(r=>r.zone+':'+r.side+':'+r.cells.map(c=>c.code+'/'+c.op).join(',')).join(' | ')]")
-        check(r[0] == 1 and r[1] == 'a:0' and r[2] and r[3] == 9 and r[4] == 'branch:top:1SLA/31,SFAM/41,SFAM/43 | branch:bottom:3OLM/32,2CSM/33 | main:top:4OLB/66,1SLA/67 | main:bottom:4OLB/66,BT1M/97', 'automatic layout offered and built from the table + flow (66 = 2 people -> 2 machines; sub-assemblies on the branch) ' + str(r))
+        check(r[0] == 1 and r[1] == 'a:0' and r[2] and r[3] == 9 and r[4] == 'branch:top:1SLA/31,SFAM/41,SFAM/43 | branch:bottom:3OLM/32,2CSM/33 | main:top:4OLB/66,4OLB/66 | main:bottom:1SLA/67,BT1M/97', 'automatic layout offered and built from the table + flow (66 = 2 people -> 2 machines; operations sharing people on one side; sub-assemblies on the branch) ' + str(r))
+        check('SAM đọc được cho 8/8' in await pg.inner_text('#pastePrev'), 'preview tells how many operations of the layout have SAM')
+        r = await pg.evaluate("()=>['31','66','67','97'].map(o=>PASTE.ops[o].tef+'/'+PASTE.ops[o].mcn).join(' ')")
+        check(r == '75/1 90/2 120/1 null/1', '"Target eff" and "Arrange. M/C" of each operation read from the file ' + r)
         await pg.click('#pasteGo'); await pg.wait_for_timeout(300)
+        r = await pg.evaluate("()=>ST.items.filter(i=>i.kind=='mc'&&i.noOp&&i.by).every(i=>sideKey(i)==sideKey(itemById(i.by)))")
+        check(r, 'shared operators stay on one side of the central table')
+        r = await pg.evaluate("()=>{const s=ST.items.find(i=>i.kind=='mc'&&i.noOp&&i.by);const h=itemById(s.by),ct=centerOf(s.zone==='branch'?'branch':'main');const y0=s.y;s.y=2*ct.y-s.y;changed();const ok=!s.noOp&&!s.by;s.y=y0;opShare([h,s]);changed();return ok}")
+        check(r, 'a machine dragged to the other side of the central table gets its own operator')
         r = await pg.evaluate('''()=>{const m=ST.items.filter(i=>i.kind=='mc');const col=o=>flowColOf(m.find(i=>opsOf(i)[0]==o));
           return [m.length, m.filter(i=>i.zone=='branch').length, col('31')==col('33'), col('31')!=col('41'), col('66')==col('97'), ISSUES.filter(x=>/isOverlap|isSeat/.test(x.k)).length]}''')
         check(r == [9, 5, True, True, True, 0], 'automatic layout placed (5 on the branch, 4 on the main line), machines coloured by flow, no overlap ' + str(r))
+        f0 = await pg.evaluate("()=>parseFloat(document.querySelector('#plan text[font-size][stroke-width]:not([fill])')?.getAttribute('font-size')||0)")
+        fa = await pg.evaluate("()=>{const t=[...document.querySelectorAll('#plan text')].find(e=>e.textContent=='4OLB');return parseFloat(t.getAttribute('font-size'))}")
+        await pg.select_option('#lblMc', '1.5'); await pg.wait_for_timeout(100)
+        fb = await pg.evaluate("()=>{const t=[...document.querySelectorAll('#plan text')].find(e=>e.textContent=='4OLB');return parseFloat(t.getAttribute('font-size'))}")
+        check(abs(fb / fa - 1.5) < 0.01 and await pg.evaluate("()=>document.getElementById('lblMc3').value") == '1.5', 'machine-code label size adjustable (x1.5, 3D toolbar in step)')
+        await pg.select_option('#lblMc', '1')
         if SHOTS: await pg.evaluate('()=>{SEL=[];onSelChange();fitView()}'); await pg.screenshot(path=SHOTS + '/ls-auto.png')
         await pg.click('[data-tab="sim"]'); await pg.click('#smRun'); await pg.wait_for_timeout(400)
+        r = await pg.evaluate("()=>[effOf('31',0.8), effOf('97',0.8), document.querySelector('#smTable input[data-eff=\"31\"]').placeholder]")
+        await pg.uncheck('#smTef'); r2 = await pg.evaluate("()=>effOf('31',0.8)"); await pg.check('#smTef'); await pg.click('#smRun'); await pg.wait_for_timeout(300)
+        check(r == [0.75, 0.8, '75'] and r2 == 0.8, 'efficiency of each operation = file "Target eff" (general when missing or unticked) ' + str(r) + ' ' + str(r2))
         r = await pg.evaluate("()=>[document.querySelector('#smTable').innerText.includes('Mức bận'), SIMR.rows.every(x=>x.util==null||(x.util>=0&&x.util<=1.01)), document.querySelectorAll('#smRes .utils>div').length]")
         check(r[0] and r[1] and r[2] >= 6, 'WIP simulation shows utilisation per operation and per operator ' + str(r))
+        r = await pg.evaluate("()=>[document.querySelector('#smTable tr[data-op=\"31\"] .opn')?.textContent, document.querySelector('#smTable tfoot').innerText.replace(/\\s+/g,' ')]")
+        check(r[0] == 'op' and 'Tổng / TB' in r[1] and ' 3.9 9 7 ' in r[1] and 'cân bằng' in r[1], 'operation names and a totals row (SAM, machines, people, efficiency, output, balance) ' + str(r))
         await pg.click('[data-tab="plan"]')
         # projects: style field, save (download fallback + recent list in the browser), new project, reopen from recent
         await pg.fill('#lnStyle', 'ABC26-00001-1101(XX)'); await pg.dispatch_event('#lnStyle', 'change')

@@ -37,7 +37,7 @@ function xlShapes(xml) {
   function xf(el) { var p = xlKid(el, 'spPr') || xlKid(el, 'grpSpPr'); return p ? xlKid(p, 'xfrm') : null; }
   function num(el, a) { return el ? +el.getAttribute(a) || 0 : 0; }
   function walk(el, T) {
-    xlKids(el, 'sp').concat(xlKids(el, 'cxnSp')).forEach(function (sp) {
+    xlKids(el, 'sp').concat(xlKids(el, 'cxnSp'), xlKids(el, 'pic')).forEach(function (sp) {
       var x = xf(sp); if (!x) return;
       var o = xlKid(x, 'off'), e = xlKid(x, 'ext'), rot = num(x, 'rot');
       var p0 = T(num(o, 'x'), num(o, 'y')), p1 = T(num(o, 'x') + num(e, 'cx'), num(o, 'y') + num(e, 'cy'));
@@ -66,17 +66,23 @@ function xlIsCode(cl) {
   return !codeList().length && /^[A-Z]{4}$/.test(cl);
 }
 var OPS_RE = /^\d{1,3}[a-z]?(\s*[\/+,&]\s*\d{1,3}[a-z]?)*$/i;
+/* one box with both: "31- 1SLM", "35/41- 1CSM", "51 -1ZZM", "116-GFIS" (operation, dash, machine code) */
+var OPCODE_RE = /^(\d{1,3}[a-z]?(?:\s*[\/+,&]\s*\d{1,3}[a-z]?)*)\s*[-–—:.]\s*([A-Za-z0-9]{3,5})$/;
+/* the central table / conveyor drawn as a long box ("Băng chuyền đôi 30cm", "Bàn giữa") */
+var BELT_RE = /băng\s*chuyền|bang\s*chuyen|conveyor|bàn\s*giữa|ban\s*giua|central\s*table|center\s*table/i;
 /* machine boxes paired with the operation box touching them, grouped into layouts (blocks separated by empty space) and rows */
 function xlLayouts(shapes) {
-  var codes = [], nums = [];
+  var codes = [], nums = [], belts = [], st = [], pics = [];
   shapes.forEach(function (s) {
+    if (s.kind === 'pic') { s.cx = (s.x0 + s.x1) / 2; s.cy = (s.y0 + s.y1) / 2; s.w = s.x1 - s.x0; s.h = s.y1 - s.y0; pics.push(s); return; }
     if (s.kind !== 'sp' || !s.text) return;
-    var t0 = s.text.trim(), cl = t0.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    var t0 = s.text.trim(), cl = t0.toUpperCase().replace(/[^A-Z0-9]/g, ''), mm = t0.match(OPCODE_RE);
     s.cx = (s.x0 + s.x1) / 2; s.cy = (s.y0 + s.y1) / 2; s.w = s.x1 - s.x0; s.h = s.y1 - s.y0;
-    if (OPS_RE.test(t0)) { s.op = t0.replace(/\s+/g, ''); nums.push(s); }
+    if (BELT_RE.test(t0) && s.w > 3 * s.h) belts.push(s);
+    else if (OPS_RE.test(t0)) { s.op = t0.replace(/\s+/g, ''); nums.push(s); }
+    else if (mm && xlIsCode(mm[2].toUpperCase())) st.push({ code: mm[2].toUpperCase(), op: mm[1].replace(/\s+/g, ''), side: null, cx: s.cx, x0: s.x0, x1: s.x1, w: s.w, cy: s.cy, y0: s.y0, y1: s.y1, h: s.h, one: true });
     else if (cl.length === 4 && t0.replace(/\s/g, '').length <= 5 && xlIsCode(cl)) { s.code = cl; codes.push(s); }
   });
-  var st = [];
   codes.forEach(function (c) {
     var best = null, bd = Infinity;
     nums.forEach(function (n) {
@@ -92,6 +98,23 @@ function xlLayouts(shapes) {
   });
   if (!st.length) return [];
   var medW = median(st.map(function (s) { return s.w; })), medH = median(st.map(function (s) { return s.h; }));
+  // boxes holding operation + machine: the operator side from the chair picture next to the box; a tall box = machine turned 90°
+  var gap = function (s, c) { var dx = Math.max(s.x0 - c.cx, 0, c.cx - s.x1), dy = Math.max(s.y0 - c.cy, 0, c.cy - s.y1); return Math.hypot(dx, dy); };
+  var ones = st.filter(function (s) { return s.one; });
+  pics.forEach(function (c) {   // each chair belongs to the box nearest to it
+    var bs = null, bd = Infinity;
+    ones.forEach(function (s) { var sh = Math.min(s.w, s.h); if (Math.min(c.w, c.h) < 0.5 * sh || c.w * c.h > 1.5 * s.w * s.h) return; var d = gap(s, c); if (d < bd && d < 0.7 * Math.max(s.w, s.h)) { bd = d; bs = s; } });   // chairs, not the small thread / cone icons
+    if (bs) (bs.chairs = bs.chairs || []).push(c);
+  });
+  st.forEach(function (s) {
+    if (!s.one) return;
+    var best = (s.chairs || []).sort(function (a, b) { return gap(s, a) - gap(s, b); })[0];
+    if (best) {
+      var nx = (best.cx - s.cx) / (s.w / 2), ny = (best.cy - s.cy) / (s.h / 2);
+      s.dir = Math.abs(nx) > Math.abs(ny) ? (nx > 0 ? 'right' : 'left') : (ny > 0 ? 'bottom' : 'top');
+    }
+    s.tall = s.h > 1.6 * s.w;
+  });
   // blocks: stations connected when close in both directions
   var par = st.map(function (s, i) { return i; });
   function f(i) { while (par[i] !== i) { par[i] = par[par[i]]; i = par[i]; } return i; }
@@ -105,12 +128,22 @@ function xlLayouts(shapes) {
     g.sort(function (a, b) { return a.cy - b.cy; });
     var rows = [];
     g.forEach(function (s) { var r = rows[rows.length - 1]; if (r && Math.abs(s.cy - r.cy) < medH * 0.5) { r.items.push(s); r.cy = (r.cy * (r.items.length - 1) + s.cy) / r.items.length; } else rows.push({ cy: s.cy, items: [s] }); });
-    var x0 = Math.min.apply(null, g.map(function (s) { return s.x0; })), k = 107 / (median(g.map(function (s) { return s.w; })) || 1);
+    // drawing scale: a machine box is one standard machine (107 cm) long; boxes drawn upright (turned machines) are measured on their long side
+    var oneBox = g.filter(function (s) { return s.one; }).length > g.length / 2;
+    var x0 = Math.min.apply(null, g.map(function (s) { return s.x0; })), k = 107 / (median(g.map(function (s) { return oneBox ? Math.max(s.w, s.h) : s.w; })) || 1);
+    var gx0 = Math.min.apply(null, g.map(function (s) { return s.x0; })), gx1 = Math.max.apply(null, g.map(function (s) { return s.x1; }));
+    var belt = belts.filter(function (b) { return Math.min(b.x1, gx1) - Math.max(b.x0, gx0) > 0.3 * (gx1 - gx0); }).sort(function (a, b) { return Math.abs(a.cy - rows[0].cy) - Math.abs(b.cy - rows[0].cy); })[0];
+    var midY = belt ? belt.cy : (rows[0].cy + rows[rows.length - 1].cy) / 2;
     var prow = rows.map(function (r) {
       r.items.sort(function (a, b) { return a.cx - b.cx; });
       var up = r.items.filter(function (s) { return s.side === 'top'; }).length, dn = r.items.filter(function (s) { return s.side === 'bottom'; }).length;
-      var side = up || dn ? (up >= dn ? 'top' : 'bottom') : null;
-      return { cy: r.cy, side: side, sideFound: !!side, cells: r.items.map(function (s, ci) { return { col: ci, code: s.code, op: s.op, side: s.side || side || 'top', x: (s.cx - x0) * k }; }) };
+      var side = up || dn ? (up >= dn ? 'top' : 'bottom') : rows.length > 1 || belt ? (r.cy < midY ? 'top' : 'bottom') : null;
+      var rs = side || 'top';
+      return { cy: r.cy, side: side, sideFound: !!(up || dn), cells: r.items.map(function (s, ci) {
+        // a tall box without chair: the machine is turned, the operator on the right above the conveyor, on the left below it (as drawn usually)
+        var dir = s.dir || (s.tall ? (rs === 'top' ? 'right' : 'left') : null);
+        return { col: ci, code: s.code, op: s.op, side: dir === 'top' || dir === 'bottom' ? dir : (s.side || rs), dir: dir === 'left' || dir === 'right' ? dir : null, x: (s.cx - x0) * k };
+      }) };
     });
     return { rows: prow, n: g.length, x0: x0, y0: Math.min.apply(null, g.map(function (s) { return s.y0; })), x1: Math.max.apply(null, g.map(function (s) { return s.x1; })), y1: Math.max.apply(null, g.map(function (s) { return s.y1; })), stations: g };
   });
@@ -173,16 +206,18 @@ function xlOpsTables(ws, layoutOps) {
   if (!ws || !ws['!ref']) return out;
   var R = XLSX.utils.decode_range(ws['!ref']), r1 = Math.min(R.e.r, 1500), c1 = Math.min(R.e.c, 40);
   function v(r, c) { var x = ws[XLSX.utils.encode_cell({ r: r, c: c })]; return x && x.v != null ? String(x.w != null ? x.w : x.v).trim() : ''; }
-  function num(r, c) { var x = ws[XLSX.utils.encode_cell({ r: r, c: c })]; if (!x || x.v == null || x.v === '') return NaN; return typeof x.v === 'number' ? x.v : parseFloat(String(x.v).replace(',', '.')); }
+  function num(r, c) { var x = ws[XLSX.utils.encode_cell({ r: r, c: c })]; if (!x || x.v == null || x.v === '' || x.t === 'e') return NaN; return typeof x.v === 'number' ? x.v : parseFloat(String(x.v).replace(',', '.')); }
   var want = {}; (layoutOps || []).forEach(function (o) { want[String(o)] = 1; });
   for (var r = R.s.r; r <= r1; r++) {
-    var samC = -1, mcC = -1, optrC = -1, mcnC = -1, opHdr = false;
+    var samC = -1, mcC = -1, optrC = -1, mcnC = -1, effC = -1, descC = -1, opHdr = false;
     for (var c = 0; c <= c1; c++) {   // a header may take two rows ("Factory" / "SMV"); a "SAM:" label of the sheet header is not a column
       var h1 = v(r, c).toLowerCase(), h = (h1 + ' ' + v(r + 1, c).toLowerCase()).trim();
       if (samC < 0 && h1.indexOf(':') < 0 && (/^(sam|smv)(\s*\/\s*(sam|smv))?\b/.test(h1) || /sam\s*\/\s*smv|factory\s*smv/.test(h))) samC = c;
       if (mcC < 0 && /m\/c\s*type|machine\s*type|loại máy/.test(h)) mcC = c;
+      if (descC < 0 && /description|mô tả|operation\s*name|tên công đoạn|工序名称/.test(h)) descC = c;
       if (optrC < 0 && /arrange\.?\s*optr/.test(h)) optrC = c;
-      if (mcnC < 0 && /no\.?\s*(of\s*)?m\/?c\b|số\s*máy|qty\s*(of\s*)?m\/?c|m\/c\s*qty/.test(h)) mcnC = c;
+      if (mcnC < 0 && /no\.?\s*(of\s*)?m\/?c\b|số\s*máy|qty\s*(of\s*)?m\/?c|m\/c\s*qty|arrange\.?\s*m\/?c/.test(h)) mcnC = c;
+      if (effC < 0 && h.indexOf(':') < 0 && /target\s*eff|m\.?\s*tiêu\s*hiệu\s*suất|hiệu\s*suất\s*mục\s*tiêu/.test(h)) effC = c;   // "Target eff (M.tiêu Hiệu suất)" per operation
       if (/^squ\b|op\.?\s*no|operation|công đoạn|op\s*code/.test(h1)) opHdr = true;
     }
     if (samC < 0 || !(opHdr || mcC >= 0)) continue;
@@ -195,7 +230,11 @@ function xlOpsTables(ws, layoutOps) {
     if (best < 0) continue;
     // "Arrange. Optr / CN sắp xếp": a cell merged over several operations = those operations done together by that many people
     var merges = ws['!merges'] || [], last = null, idx = 0;
-    var mergeAt = function (row) { for (var i = 0; i < merges.length; i++) { var m = merges[i]; if (m.s.c <= optrC && m.e.c >= optrC && m.s.r <= row && m.e.r >= row && m.e.r > m.s.r) return m; } return null; };
+    var mergeAt = function (row, col) { if (col == null) col = optrC; for (var i = 0; i < merges.length; i++) { var m = merges[i]; if (m.s.c <= col && m.e.c >= col && m.s.r <= row && m.e.r >= row && m.e.r > m.s.r) return m; } return null; };
+    var effAt = function (row) {   // target efficiency of the operation (a merged cell covers its operations), in %
+      if (effC < 0) return null; var mg = mergeAt(row, effC), e = num(mg ? mg.s.r : row, effC);
+      if (!isFinite(e) || e <= 0) return null; if (e <= 3) e *= 100; return Math.round(Math.min(300, e));
+    };
     for (rr = r + 1; rr <= Math.min(r1, r + 200); rr++) {
       if (/total|tổng/i.test(v(rr, 0)) || /^total|^subtotal/i.test(v(rr, samC - 1))) break;
       var op = num(rr, best), sam = num(rr, samC);
@@ -213,7 +252,12 @@ function xlOpsTables(ws, layoutOps) {
         else arr = num(rr, optrC);
         if (!isFinite(arr)) arr = mg ? 0 : null;
       }
-      out[k] = { sam: Math.round(sam * 10000) / 10000, mc: mcC >= 0 ? v(rr, mcC).split(/\s/)[0] : '', optr: arr, ar: arr, ag: ag, ai: idx++, mcn: mcnC >= 0 && isFinite(num(rr, mcnC)) ? num(rr, mcnC) : null };
+      // operation name: the description column; the next column without header usually holds the Vietnamese text
+      var cl = function (x) { return String(x || '').replace(/\s+/g, ' ').trim(); };
+      var d1 = descC >= 0 ? cl(v(rr, descC)) : '', d2 = descC >= 0 && descC + 1 < Math.min(samC, mcC >= 0 ? mcC : samC) ? cl(v(rr, descC + 1)) : '';
+      var isVi = function (x) { return /[ăâđêôơưạảấầẩẫậắằẳẵặẹẻẽếềểễệỉịọỏốồổỗộớờởỡợụủứừửữựỳỵỷỹáàãéèíìóòõúùý]/i.test(x) && !/[\u4e00-\u9fff]/.test(x); };
+      var vi = isVi(d2) ? d2 : isVi(d1) ? d1 : '', ot = vi === d2 ? d1 : vi === d1 ? d2 : d1;
+      out[k] = { nm: vi, nm2: ot || '', sam: Math.round(sam * 10000) / 10000, mc: mcC >= 0 ? v(rr, mcC).split(/\s/)[0] : '', optr: arr, ar: arr, ag: ag, ai: idx++, mcn: mcnC >= 0 && isFinite(num(rr, mcnC)) ? num(rr, mcnC) : null, tef: effAt(rr) };
       last = k;
     }
     r += 2;
@@ -299,7 +343,7 @@ function xlOpen(f) {
       XLI.sheets.forEach(function (s) { s.info = xlSheetInfo(wb && wb.Sheets[s.name], s.name, f.name); });
       // SAM table: the layout's own sheet first, other sheets fill the missing operations; sequences typed in cells too
       if (wb) XLI.sheets.forEach(function (s) {
-        var ops = []; s.layouts.forEach(function (l) { (l.cells ? parsePaste(l.tsv).rows : l.rows).forEach(function (r) { r.cells.forEach(function (c) { String(c.op || '').split(/[\/+,&]/).forEach(function (o) { if (o.trim()) ops.push(o.trim()); }); }); }); });
+        var ops = []; s.layouts.forEach(function (l) { (l.cells ? parsePaste(l.tsv).rows : l.rows).forEach(function (r) { r.cells.forEach(function (c) { String(c.op || '').split(/[\/+,&]/).forEach(function (o) { o = o.trim().replace(/^0+(?=\d)/, ''); if (o) ops.push(o); }); }); }); });
         s.ops = xlOpsTables(wb.Sheets[s.name], ops);
         wb.SheetNames.forEach(function (sn) { if (sn === s.name) return; var o2 = xlOpsTables(wb.Sheets[sn], ops); Object.keys(o2).forEach(function (k) { if (!s.ops[k] && ops.indexOf(k) >= 0) s.ops[k] = o2[k]; }); });
         var seen = {}; s.seqs.forEach(function (q) { seen[q.text.replace(/\s/g, '')] = 1; });
@@ -327,6 +371,7 @@ function xlOpen(f) {
         return '<option value="a:' + k + '">' + esc('⚙ ' + t('xlAutoOpt', [a.name + (a.hidden ? ' (' + t('xlHidden') + ')' : ''), r.nOps, r.nMc, r.nLines])) + '</option>';
       }).join('');
       document.getElementById('xlBox').style.display = '';
+      document.getElementById('xlAutoBtn').style.display = XLI.auto.length ? '' : 'none';
       xlFillBranchPick();
       // the visible sheet with the most machines first
       var bi = 0, bn = -1; [].forEach.call(sel.options, function (o, k) { var p = o.value.split(':'); if (p[0] === 'a') { if (bn < 0 && !XLI.auto[+p[1]].hidden) { bn = 0; bi = k; } return; } var s = XLI.sheets[+p[0]]; if (!s.hidden && s.layouts[+p[1]].n > bn) { bn = s.layouts[+p[1]].n; bi = k; } });
@@ -346,6 +391,13 @@ function xlFillBranchPick() {
   if (!on) { sel.value = ''; return; }
   sel.innerHTML = '<option value="">' + esc(t('xlBranchNone')) + '</option>' + [].filter.call(document.getElementById('xlPick').options, function (o) { return !/^a:/.test(o.value); }).map(function (o) { return o.outerHTML; }).join('');
 }
+/* SAM etc. of the chosen layout: its own tables first, then the operation tables of every other sheet (as the automatic layout sees them) */
+function xlOpsAll(own) {
+  var out = Object.assign({}, own || {});
+  if (!XLI) return out;
+  (XLI.auto || []).forEach(function (a) { Object.keys(a.ops).forEach(function (k) { if (!out[k] || !(out[k].sam > 0)) out[k] = out[k] ? Object.assign({}, a.ops[k], { ar: out[k].ar, ag: out[k].ag, ai: out[k].ai }) : a.ops[k]; }); });
+  return out;
+}
 function xlUse() {
   if (/^a:/.test(document.getElementById('xlPick').value)) { document.getElementById('xlPickB').value = ''; xlAuto(+document.getElementById('xlPick').value.slice(2)); return; }
   var pb = document.getElementById('xlPickB').value;
@@ -354,7 +406,7 @@ function xlUse() {
     var main = xlRows(s1.layouts[+p1[1]]).map(function (r) { r.zone = 'main'; return r; }), br = xlRows(s2.layouts[+p2[1]]).map(function (r) { r.zone = 'branch'; return r; });
     var rows = ((ST.line.branch || {}).pos === 'bottom' ? main.concat(br) : br.concat(main));
     PASTE = { rows: rows, nCols: 0, nMc: rows.reduce(function (a, r) { return a + r.cells.length; }, 0), fromXl: true, seq: s1.seqs.length ? s1.seqs : s2.seqs,
-      meta: { style: s1.info.style, file: XLI.name, sheet: s1.name, optr: s1.info.optr, sam: s1.info.sam, obd: s1.info.obd, target: s1.info.target, eff: s1.info.eff }, ops: Object.assign({}, s2.ops, s1.ops) };
+      meta: { style: s1.info.style, file: XLI.name, sheet: s1.name, optr: s1.info.optr, sam: s1.info.sam, obd: s1.info.obd, target: s1.info.target, eff: s1.info.eff }, ops: xlOpsAll(Object.assign({}, s2.ops, s1.ops)) };
     var stb = document.getElementById('ocrStatus'); stb.className = 'small'; stb.textContent = t('xlTwo', [PASTE.nMc]);
     document.getElementById('ocrView').innerHTML = '';
     renderPastePreview(); return;
@@ -364,14 +416,14 @@ function xlUse() {
   var st0 = document.getElementById('ocrStatus'); st0.className = 'small';
   if (lay.cells) {   // a layout written in cells: the same reader as a paste from Excel
     document.getElementById('pasteTxt').value = lay.tsv;
-    PASTE = parsePaste(lay.tsv); PASTE.seq = sh.seqs; PASTE.meta = meta; PASTE.ops = sh.ops;
+    PASTE = parsePaste(lay.tsv); PASTE.seq = sh.seqs; PASTE.meta = meta; PASTE.ops = xlOpsAll(sh.ops);
     st0.textContent = t('xlRead', [XLI.name, sh.name, PASTE.nMc, sh.seqs.length]) + ' ' + t('xlCells', [lay.ref]) + '.' + (sh.info.style ? ' ' + t('xlStyle', [sh.info.style, sh.info.optr || '?', sh.info.sam || '?', sh.info.obd || '?']) : '');
     document.getElementById('ocrView').innerHTML = '';
     renderPastePreview(); return;
   }
   var rows = lay.rows.map(function (r) { return { side: r.side || 'top', sideFound: r.sideFound, cells: r.cells.map(function (c) { return Object.assign({}, c); }) }; });
   PASTE = { rows: rows, nCols: Math.max.apply(null, rows.map(function (r) { return r.cells.length; })), nMc: lay.n, fromXl: true, seq: sh.seqs,
-    meta: meta, ops: sh.ops };
+    meta: meta, ops: xlOpsAll(sh.ops) };
   // the table text for reference (editing it switches back to the text grid)
   var lines = []; rows.forEach(function (r, i) { if (i) lines.push(''); var ops = r.cells.map(function (c) { return c.op; }).join('\t'), cs = r.cells.map(function (c) { return c.code; }).join('\t'); if (r.side === 'top') lines.push(ops, cs); else lines.push(cs, ops); });
   document.getElementById('pasteTxt').value = lines.join('\n') + '\n';
@@ -382,9 +434,14 @@ function xlUse() {
 function xlPreviewSvg(lay) {
   var w = lay.x1 - lay.x0, h = lay.y1 - lay.y0, svg = '';
   lay.stations.forEach(function (s) {
-    var col = FAM_COL[famOf(s.code)] || '#ccc';
+    var col = FAM_COL[famOf(s.code)] || '#ccc', x = s.cx - lay.x0, y = s.cy - lay.y0, up = s.h > 1.3 * s.w;
+    var fs = Math.max(7, Math.min(up ? s.w * 0.36 : s.h * 0.3, (up ? s.h : s.w) / Math.max(4, (s.code + ' ' + (s.op || '')).length * 0.62)));
     svg += '<rect x="' + (s.x0 - lay.x0) + '" y="' + (s.y0 - lay.y0) + '" width="' + s.w + '" height="' + s.h + '" fill="' + col + '" fill-opacity=".6" stroke="#333" stroke-width="1"/>' +
-      '<text x="' + (s.cx - lay.x0) + '" y="' + (s.cy - lay.y0 + 4) + '" font-size="' + Math.max(9, s.h * 0.22) + '" text-anchor="middle" font-weight="700">' + esc(s.code) + (s.op ? ' ' + esc(s.op) : '') + '</text>';
+      '<text x="' + x + '" y="' + y + '" dy=".35em" font-size="' + fs.toFixed(1) + '" text-anchor="middle" font-weight="700"' + (up ? ' transform="rotate(-90 ' + x + ' ' + y + ')"' : '') + '>' + esc((s.op ? s.op + ' ' : '') + s.code) + '</text>';
+    // the operator's place found in the drawing (chair / operation box side)
+    var d = s.dir || (s.side === 'top' ? 'top' : s.side === 'bottom' ? 'bottom' : null), r = Math.max(4, Math.min(s.w, s.h) * 0.22);
+    if (d) { var px = d === 'left' ? s.x0 - lay.x0 - r * 1.4 : d === 'right' ? s.x1 - lay.x0 + r * 1.4 : x, py = d === 'top' ? s.y0 - lay.y0 - r * 1.4 : d === 'bottom' ? s.y1 - lay.y0 + r * 1.4 : y;
+      svg += '<circle cx="' + px.toFixed(1) + '" cy="' + py.toFixed(1) + '" r="' + r.toFixed(1) + '" fill="#f2c230" stroke="#555" stroke-width="1"/>'; }
   });
   document.getElementById('ocrView').innerHTML = '<div class="ocrwrap"><svg viewBox="-5 -5 ' + (w + 10) + ' ' + (h + 10) + '" style="position:static;height:auto;width:100%">' + svg + '</svg></div>';
 }
@@ -416,14 +473,17 @@ function autoRows(ops, seqs, branchOn) {
     var A = lines.filter(function (l) { return l.asm; })[0] || lines[lines.length - 1];
     rest.forEach(function (o) { var k = 0; while (k < A.ops.length && !(simNum(A.ops[k]) > simNum(o))) k++; A.ops.splice(k, 0, o); });
   }
-  var useBr = branchOn && lines.length > 1, zones = {}, nMc = 0, nOps = 0;
+  var useBr = branchOn && lines.length > 1, zones = {}, nMc = 0, nOps = 0, unitOf = {}, unitSide = {};
+  arrUnits(ops).forEach(function (u, ui) { u.ops.forEach(function (o) { unitOf[o] = ui; }); });   // operations done by the same people: one side of the table
   lines.forEach(function (l) {
     var zid = useBr && !l.asm ? 'branch' : 'main';
     var Z = zones[zid] || (zones[zid] = { cur: { top: 0, bottom: 0 }, rows: { top: [], bottom: [] } });
     l.ops.forEach(function (o) {
       var code = autoCode(ops[o].mc), n = autoCount(ops, o), L = dimOf(code).L; nOps++;
+      var uk = unitOf[o] != null ? zid + ':' + unitOf[o] : null;
       for (var i = 0; i < n; i++) {
-        var side = Z.cur.top <= Z.cur.bottom ? 'top' : 'bottom';
+        var side = uk && unitSide[uk] ? unitSide[uk] : Z.cur.top <= Z.cur.bottom ? 'top' : 'bottom';
+        if (uk) unitSide[uk] = side;
         Z.rows[side].push({ code: code, op: o, x: Z.cur[side] + L / 2, side: side }); Z.cur[side] += L; nMc++;
       }
     });

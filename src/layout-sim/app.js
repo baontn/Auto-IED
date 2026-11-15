@@ -4,9 +4,9 @@ function $(id) { return document.getElementById(id); }
 function num(v, d) { var n = parseFloat(String(v).replace(',', '.')); return isFinite(n) ? n : d; }
 function toast(msg, bad) { var e = $('toast'); e.textContent = msg; e.className = 'toast show' + (bad ? ' bad' : ''); clearTimeout(e._t); e._t = setTimeout(function () { e.className = 'toast'; }, 3200); }
 
-function changed() { runChecks(); commit(); render2d(); renderSide(); if (TAB === '3d') rebuild3d(); wipSoon(); }
+function changed() { var nx = splitCrossLinks(); if (nx) toast(t('opCrossFix', [nx]), true); runChecks(); commit(); render2d(); renderSide(); if (TAB === '3d') rebuild3d(); wipSoon(); }
 function onSelChange() { renderSel(); placeSelTools(); if (TAB === '3d') rebuild3d(); }
-function renderAll() { runChecks(); render2d(); renderSide(); if (TAB === '3d') rebuild3d(); if (TAB === 'lib') renderLib(); }
+function renderAll() { splitCrossLinks(); runChecks(); render2d(); renderSide(); if (TAB === '3d') rebuild3d(); if (TAB === 'lib') renderLib(); }
 
 function setTab(tb) {
   TAB = tb;
@@ -144,11 +144,17 @@ function cmd(c) {
 /* ---------- paste dialog ---------- */
 var PASTE = null;
 function openPaste() {
+  PASTE = null; XLI = null; $('xlBox').style.display = 'none'; $('fileXl').value = '';
   $('pasteTxt').value = ''; $('pastePrev').innerHTML = ''; $('ocrStatus').textContent = ''; $('ocrView').innerHTML = '';
   $('pasteGo').disabled = true; $('pasteReplace').checked = true; $('pasteFit').checked = !ST.line.fixed;
   if (!$('dlgPaste').open) $('dlgPaste').showModal();
 }
-function pastePreview() { PASTE = parsePaste($('pasteTxt').value); renderPastePreview(); }
+function pastePreview() {
+  var prev = PASTE; PASTE = parsePaste($('pasteTxt').value);
+  // the text of a layout read from an Excel file was edited: keep what the file gave (SAM, sequence, style, people)
+  if (prev && prev.fromXl && typeof XLI !== 'undefined' && XLI) { PASTE.ops = prev.ops; PASTE.seq = prev.seq; PASTE.meta = prev.meta; PASTE.fromXl = false; }
+  renderPastePreview();
+}
 function renderPastePreview() {
   var br = !!centerOf('branch');
   if (br) {   // with a branch line: with 3+ rows the two rows on the branch side go to the branch line
@@ -161,11 +167,16 @@ function renderPastePreview() {
   else {
     h += '<div>' + esc(t('pasteFound', [PASTE.rows.length, PASTE.nMc])) + '</div><table class="mini"><tr><th>#</th><th>' + esc(t('pasteRowMc')) + '</th><th>' + esc(t('pasteSide')) + '</th>' + (br ? '<th>' + esc(t('pasteZone')) + '</th>' : '') + '</tr>';
     PASTE.rows.forEach(function (r, i) {
-      h += '<tr><td>' + (i + 1) + '</td><td class="small">' + r.cells.map(function (c) { return esc(c.code) + (c.op ? '<sub>' + esc(c.op) + '</sub>' : ''); }).join(' ') + '</td><td><select data-row="' + i + '"><option value="top"' + (r.side === 'top' ? ' selected' : '') + '>' + esc(t('sideTop')) + '</option><option value="bottom"' + (r.side === 'bottom' ? ' selected' : '') + '>' + esc(t('sideBottom')) + '</option></select>' + (r.sideFound ? '' : ' <span class="muted small">' + esc(t('sideGuess')) + '</span>') + '</td>' +
+      h += '<tr><td>' + (i + 1) + '</td><td class="small">' + r.cells.map(function (c) { return esc(c.code) + (c.op ? '<sub>' + esc(c.op) + '</sub>' : '') + (c.dir ? '<span title="' + esc(t(c.dir === 'right' ? 'turnR' : 'turnL')) + '">' + (c.dir === 'right' ? '↻' : '↺') + '</span>' : ''); }).join(' ') + '</td><td><select data-row="' + i + '"><option value="top"' + (r.side === 'top' ? ' selected' : '') + '>' + esc(t('sideTop')) + '</option><option value="bottom"' + (r.side === 'bottom' ? ' selected' : '') + '>' + esc(t('sideBottom')) + '</option></select>' + (r.sideFound ? '' : ' <span class="muted small">' + esc(t('sideGuess')) + '</span>') + '</td>' +
         (br ? '<td><select data-zone="' + i + '"><option value="main"' + (r.zone !== 'branch' ? ' selected' : '') + '>' + esc(t('zoneMain')) + '</option><option value="branch"' + (r.zone === 'branch' ? ' selected' : '') + '>' + esc(t('zoneBranch')) + '</option></select></td>' : '') + '</tr>';
     });
     h += '</table>';
     var u = Object.keys(unk); if (u.length) h += '<div class="t-warn tagline">⚠ ' + esc(t('pasteUnknown', [u.join(', '), DEF_DIM.L + '×' + DEF_DIM.W])) + '</div>';
+    if (PASTE.ops) {   // SAM found for the operations of the layout
+      var lo = {}; PASTE.rows.forEach(function (r) { r.cells.forEach(function (c) { String(c.op || '').split(/[\/+,&]/).forEach(function (o) { o = o.trim().replace(/^0+(?=\d)/, ''); if (/^\d/.test(o)) lo[o] = 1; }); }); });
+      var lk = Object.keys(lo), miss = lk.filter(function (o) { return !(PASTE.ops[o] && PASTE.ops[o].sam > 0); });
+      if (lk.length) h += '<div class="tagline ' + (miss.length ? 't-warn' : 't-ok') + '">' + esc(t('pasteSam', [lk.length - miss.length, lk.length])) + (miss.length ? ' ' + esc(t('pasteSamMiss', [miss.join(', ')])) : '') + '</div>';
+    }
     if (PASTE.seq && PASTE.seq.length) h += '<div class="tagline t-info">' + esc(t('xlSeqFound')) + '<br>' + PASTE.seq.map(function (q) { return esc((q.name ? q.name + ': ' : '') + q.text); }).join('<br>') + '</div>';
   }
   $('pastePrev').innerHTML = h; $('pasteGo').disabled = !PASTE.nMc;
@@ -174,21 +185,22 @@ function pasteGo() {
   if (!PASTE || !PASTE.nMc) return;
   document.querySelectorAll('#pastePrev select[data-row]').forEach(function (s) { var r = PASTE.rows[+s.dataset.row]; r.side = s.value; if (!PASTE.fromXl) return; r.cells.forEach(function (c) { if (!c.sideFixed) c.side = s.value; }); });
   document.querySelectorAll('#pastePrev select[data-zone]').forEach(function (s) { PASTE.rows[+s.dataset.zone].zone = s.value; });
-  var replace = $('pasteReplace').checked, y0 = 60, cts = ST.items.filter(function (i) { return i.role === 'center'; });
+  var replace = $('pasteReplace').checked, y0 = 60, cts = ST.items.filter(function (i) { return i.role === 'center'; }), keep = ST.items.filter(function (i) { return i.role !== 'center' && isFinishObj(i); });
   if (!replace) { var b = bbox(ST.items); if (b) y0 = Math.round(b.y1 + 60); }
   var useCt = cts.length && (replace || ST.items.length === cts.length);
   var items = buildFromPaste(PASTE, { addInput: $('pasteInput').checked, x0: 60, y0: y0, centers: useCt ? { main: centerOf('main'), branch: centerOf('branch') } : null });
-  if (replace) ST.items = cts.concat(items); else ST.items = ST.items.concat(items);
+  if (replace) ST.items = cts.concat(items, keep); else ST.items = ST.items.concat(items);
   if (PASTE.meta && (replace || !(ST.info || {}).style)) ST.info = Object.assign({}, ST.info, PASTE.meta);
+  if (typeof XLI !== 'undefined' && XLI && (PASTE.fromXl || PASTE.meta)) PASTE.ops = xlOpsAll(PASTE.ops);   // operations still without SAM: the operation tables of every sheet of the file
   if (PASTE.ops && Object.keys(PASTE.ops).length) ST.ops = Object.assign(replace ? {} : (ST.ops || {}), PASTE.ops);   // SAM per operation from the layout file
   if (PASTE.seq && PASTE.seq.length) ST.seqText = PASTE.seq.map(function (q) { return (q.name ? q.name + ': ' : '') + q.text; }).join('\n');
   else if (replace) ST.seqText = '';   // a new layout without sequence: the previous layout's sequence does not apply
-  if ($('pasteFit').checked) { var bb = bbox(ST.items); ST.line.length = Math.ceil((bb.x1 + 60) / 10) * 10; ST.line.width = Math.ceil((bb.y1 + 60) / 10) * 10; }
+  if ($('pasteFit').checked) { var bb = bbox(ST.items.filter(function (i) { return !isFinishObj(i); })); ST.line.length = Math.ceil((bb.x1 + 60) / 10) * 10; ST.line.width = Math.ceil((bb.y1 + 60) / 10) * 10; }
   var arrRes = PASTE.ops && Object.keys(PASTE.ops).some(function (k) { return PASTE.ops[k].ar != null; }) ? applyArrangement() : null;   // people as arranged in the file
   if (replace) setBase([(PASTE.meta || {}).file, (PASTE.meta || {}).sheet].filter(Boolean).join(' / ') || t('chgBasePaste')); else addToBase(items);   // reference for "Thay đổi so với file layout"
   SEL = items.map(function (i) { return i.id; });
   $('dlgPaste').close(); changed(); fitView(); if (TAB === '3d') view3dReset(false);
-  toast(t('pasteDone', [items.filter(function (i) { return i.kind === 'mc'; }).length]) + (arrRes ? ' ' + t('arrDone', [arrRes.total, arrRes.shared, arrRes.none]) : ''));
+  toast(t('pasteDone', [items.filter(function (i) { return i.kind === 'mc'; }).length]) + (arrRes ? ' ' + t('arrDone', [arrRes.total, arrRes.shared, arrRes.none]) + (arrRes.extra ? ' ' + t('arrExtra', [arrRes.extra]) : '') : ''));
 }
 
 /* ---------- line set-up (standard machine units + central table) ---------- */
@@ -197,6 +209,7 @@ function lineVals() {
   return { name: $('lsName').value.trim(), units: Math.max(1, Math.round(num($('lsUnits').value, L.units || LINE_DEF.units))), unit: Math.max(10, num($('lsUnit').value, LINE_DEF.unit)),
     tableW: Math.max(0, num($('lsTable').value, LINE_DEF.tableW)), start: Math.max(0, num($('lsStart').value, LINE_DEF.start)), gap: Math.max(0, num($('lsGap').value, LINE_DEF.gap)), end: Math.max(0, num($('lsEnd').value, LINE_DEF.end)),
     width: num($('lsWidth').value, 0), hc: Math.max(0, Math.round(num($('lsHC').value, 0))),
+    finish: $('lsFin').checked, finTL: Math.max(40, num($('lsFinL').value, LINE_DEF.finTL)), finTW: Math.max(30, num($('lsFinW').value, LINE_DEF.finTW)), boxW: Math.max(30, num($('lsBoxW').value, LINE_DEF.boxW)),
     branch: !$('lsBr').checked ? null : { units: Math.max(1, Math.round(num($('lsBUnits').value, 6))), unit: Math.max(10, num($('lsUnit').value, LINE_DEF.unit)), tableW: Math.max(0, num($('lsBTable').value, LINE_DEF.tableW)),
       end: 30, pos: $('lsBPos').value, walk: Math.max(0, num($('lsBWalk').value, 100)), width: num($('lsBWidth').value, 0) } };
 }
@@ -212,6 +225,7 @@ function openLineSetup() {
   $('lsName').value = L.name || ''; $('lsUnits').value = L.units || LINE_DEF.units; $('lsUnit').value = L.unit || LINE_DEF.unit;
   $('lsTable').value = ct ? ct.W : (L.tableW != null ? L.tableW : LINE_DEF.tableW); $('lsStart').value = L.v === 2 && L.start != null ? L.start : LINE_DEF.start; $('lsGap').value = L.gap != null ? L.gap : LINE_DEF.gap; $('lsEnd').value = L.end != null ? L.end : LINE_DEF.end;
   $('lsWidth').value = L.units ? (L.mainWidth || (L.zones ? zoneById('main').W : L.width)) : '';
+  $('lsFin').checked = L.finish !== false; $('lsFinL').value = L.finTL || LINE_DEF.finTL; $('lsFinW').value = L.finTW || LINE_DEF.finTW; $('lsBoxW').value = L.boxW || LINE_DEF.boxW;
   $('lsHC').value = L.hc || ''; $('lsHC').placeholder = (ST.info || {}).optr || ST.items.filter(function (i) { return i.kind === 'mc' && !i.noOp; }).length || '';
   var B = L.branch, cb = centerOf('branch');
   $('lsBr').checked = !!B; $('lsBUnits').value = B ? B.units : 6; $('lsBTable').value = cb ? cb.W : (B ? B.tableW : LINE_DEF.tableW); $('lsBPos').value = B ? B.pos : 'top';
@@ -452,6 +466,11 @@ function startApp() {
   $('bXlOpen').onclick = function () { $('fileXl').value = ''; $('fileXl').click(); };
   $('fileXl').onchange = function () { if (this.files[0]) xlOpen(this.files[0]); };
   $('xlPick').onchange = xlUse; $('xlPickB').onchange = xlUse;
+  $('xlAutoBtn').onclick = function () {   // the automatic layout of the sheet chosen (or the first one)
+    var cur = $('xlPick').value.split(':'), sh = cur[0] !== 'a' && XLI.sheets[+cur[0]] ? XLI.sheets[+cur[0]].name : null, k = 0;
+    XLI.auto.forEach(function (a, i) { if (a.name === sh) k = i; });
+    $('xlPick').value = 'a:' + k; xlUse();
+  };
   $('lsBr').onchange = lineCalc; ['lsBUnits', 'lsBTable', 'lsBWalk', 'lsBWidth', 'lsBPos'].forEach(function (id) { $(id).oninput = lineCalc; $(id).onchange = lineCalc; });
   $('bOpAll').onclick = function () { ST.items.forEach(function (i) { delete i.noOp; delete i.by; }); changed(); };
   ['bStandAll', 'bStandAll2', 'bStandAll3'].forEach(function (id) { $(id).onclick = function () { var st = standAll(); changed(); toast(t(st ? 'allStand' : 'allSit')); }; });
@@ -488,9 +507,19 @@ function startApp() {
   runChecks(); renderSide();
   requestAnimationFrame(function () { fitView(); firstRun(); });
   initSim(); initChanges();
+  // label text sizes (2D toolbar and 3D toolbar stay in step)
+  var szs = [0.6, 0.8, 1, 1.25, 1.5, 2, 2.5];
+  [['lblMc', 'mc'], ['lblOp', 'op'], ['lblMc3', 'mc'], ['lblOp3', 'op']].forEach(function (p) {
+    var el = $(p[0]); el.innerHTML = szs.map(function (v) { return '<option value="' + v + '"' + (v === LBL[p[1]] ? ' selected' : '') + '>' + Math.round(v * 100) + '%</option>'; }).join('');
+    el.onchange = function () {
+      LBL[p[1]] = +this.value; ['lblMc', 'lblMc3'].forEach(function (id) { $(id).value = LBL.mc; }); ['lblOp', 'lblOp3'].forEach(function (id) { $(id).value = LBL.op; });
+      try { localStorage.setItem('ls_lblsz', JSON.stringify(LBL)); } catch (e) {}
+      render2d(); if (TAB === '3d') rebuild3d();
+    };
+  });
   ['bArr', 'smArr'].forEach(function (id) { $(id).onclick = function () {
     var r = applyArrangement(); if (!r) { toast(t('arrNone'), true); return; }
-    SIMR = null; changed(); if (TAB === 'sim') renderSim(); toast(t('arrDone', [r.total, r.shared, r.none]));
+    SIMR = null; changed(); if (TAB === 'sim') renderSim(); toast(t('arrDone', [r.total, r.shared, r.none]) + (r.extra ? ' ' + t('arrExtra', [r.extra]) : ''));
   }; });
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () { render2d(); if (TAB === '3d') rebuild3d(); });
 }

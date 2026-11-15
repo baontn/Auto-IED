@@ -26,6 +26,8 @@ input[type=checkbox]{padding:0}
 .wipbar{background:var(--panel);border-bottom:1px solid var(--line);padding:6px 14px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;flex:none;font-size:13px}
 button.link{background:none;border:0;padding:0 2px;color:var(--accent);text-decoration:underline;cursor:pointer;font:inherit;font-weight:700}
 button.danger{color:var(--bad);border-color:var(--bad)}
+.lblsz{display:inline-flex;gap:4px;align-items:center;font-size:12.5px}.lblsz select{padding:2px 4px}
+input.effFile::placeholder{color:var(--info);font-weight:700;opacity:1}
 .chgtag{background:var(--badbg);color:var(--bad);border-color:var(--bad);font-weight:700}
 .rmop{padding:0 5px;font-size:11px;line-height:1.3;opacity:.55}.rmop:hover{opacity:1;background:var(--badbg);color:var(--bad)}
 header{background:var(--panel);border-bottom:1px solid var(--line);padding:7px 14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;flex:none}
@@ -70,10 +72,15 @@ label.f.row input{width:80px}
 .grid6{display:grid;grid-template-columns:repeat(6,minmax(110px,1fr));gap:8px;margin-top:8px}
 @media (max-width:900px){.grid6{grid-template-columns:1fr 1fr}}
 
-.utils{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:4px 14px;margin-top:6px;font-size:12.5px}.utils>div{display:grid;grid-template-columns:96px 1fr;gap:6px;align-items:center}
+.utils{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:4px 14px;margin-top:6px;font-size:12.5px}.utils>div{display:grid;grid-template-columns:96px 1fr 40px;gap:6px;align-items:center}
 .barT{position:absolute;left:6px;top:-1px;font-size:11px;font-weight:700;line-height:20px;color:var(--text);text-shadow:0 0 3px var(--panel),0 0 3px var(--panel);white-space:nowrap}
 .bar{position:relative;height:18px;background:var(--line);border-radius:5px;min-width:80px}.bar i{position:absolute;left:0;top:0;bottom:0;border-radius:5px}.bar b{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--warn)}
 tr.bn td{background:var(--badbg)}tr.wip td{background:var(--warnbg)}tr[data-op]{cursor:pointer}
+.capc{min-width:80px}.mbar{position:relative;height:4px;background:var(--line);border-radius:2px;margin:3px 0 0 auto;width:80px}.mbar i{position:absolute;left:0;top:0;bottom:0;border-radius:2px}.mbar u{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--text);opacity:.6}
+.chipl{display:inline-block;min-width:44px;padding:1px 6px;border-radius:9px;font-size:12px;font-weight:700;text-align:center}.chipl.lo{background:var(--okbg);color:var(--ok)}.chipl.lw{background:var(--warnbg);color:var(--warn)}.chipl.lb{background:var(--badbg);color:var(--bad)}
+.capt{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;justify-content:space-between}.capt .tot{font-weight:700}.capt .capl{white-space:nowrap}
+#smTable tfoot td{border-top:2px solid var(--text);background:var(--sel);position:sticky;bottom:0}
+#smTable td.opc{max-width:260px}.opn{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:250px}
 .kpis{display:flex;flex-wrap:wrap;gap:8px}.kpis div{background:var(--sel);border-radius:10px;padding:8px 12px;min-width:120px}.kpis span{display:block;font-size:12px;color:var(--muted)}.kpis b{font-size:22px}.kpis i{font-style:normal;font-size:12px;color:var(--muted);margin-left:4px}
 ul.sug{margin:8px 0 0 18px;padding:0}ul.sug li{margin-bottom:3px}
 #paneProj .card{margin-bottom:12px;max-width:1100px}
@@ -141,6 +148,8 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
       <label><input type="checkbox" id="optWip"><span data-t="optWip">WIP</span></label>
       <label><input type="checkbox" id="optAisle"><span data-t="optAisle">Lối đi sau lưng</span></label>
       <span class="sep"></span>
+      <label class="lblsz" data-tt="lblTip"><span data-t="lblMc">Chữ mã máy</span><select id="lblMc"></select></label>
+      <label class="lblsz" data-tt="lblTip"><span data-t="lblOp">Chữ số công đoạn</span><select id="lblOp"></select></label>
       <button id="bWip2d" data-t="bWip2d" data-tt="bWip2dTip">⏱ Mô phỏng WIP</button>
       <button id="chgTag" class="chgtag" style="display:none"></button>
       <span class="sep"></span>
@@ -152,6 +161,8 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
       <label><input type="checkbox" id="opt3People"><span data-t="opt3People">Người vận hành</span></label>
       <label><input type="checkbox" id="opt3Labels"><span data-t="opt3Labels">Nhãn</span></label>
       <label><input type="checkbox" id="opt3Ruler"><span data-t="opt3Ruler">Thước (m)</span></label>
+      <label class="lblsz" data-tt="lblTip"><span data-t="lblMc">Chữ mã máy</span><select id="lblMc3"></select></label>
+      <label class="lblsz" data-tt="lblTip"><span data-t="lblOp">Chữ số công đoạn</span><select id="lblOp3"></select></label>
       <button id="bStandAll3" data-t="bStandAll">🧍↔🪑 Tất cả đứng / ngồi</button>
       <span class="sep"></span><button id="bPng3" onclick="exportImage()" data-t="bPng">Xuất ảnh</button>
       <span class="muted small" data-t="hint3d">Kéo chuột trái: xoay · chuột phải/Shift: di chuyển · lăn chuột: phóng to · bấm vào máy để chọn</span>
@@ -212,6 +223,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
       <label class="f"><span data-t="smRate">Sản lượng đầu vào (sp/giờ)</span><input id="smRate" type="number" min="1" step="1" value="60" disabled></label>
       <label class="f"><span data-t="smWarn">Cảnh báo WIP từ (sp)</span><input id="smWarn" type="number" min="1" step="1" value="30"></label>
     </div>
+    <label class="ck" style="margin-top:8px"><input type="checkbox" id="smTef" checked><span data-t="smTef">Hiệu suất từng công đoạn theo "Target eff (M.tiêu Hiệu suất)" của file layout (công đoạn không có giá trị dùng hiệu suất chung)</span></label>
     <label class="ck" style="margin-top:8px"><input type="checkbox" id="smWarm" checked><span data-t="smWarm">Bỏ qua thời gian khởi động (chuyền chạy ổn định: mô phỏng trước một ca để hàng lấp đầy chuyền)</span></label>
     <div class="btns"><button id="smRun" class="primary" data-t="smRun">▶ Chạy mô phỏng</button><button id="smToPlan" data-t="smToPlan">Xem WIP trên mặt bằng</button><button id="smArr" data-t="bArr" data-tt="bArrTip">👥 Theo CN sắp xếp trong file</button></div>
     <div id="smSrc" class="small" style="margin-top:6px"></div>
@@ -242,7 +254,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
   <div class="db">
     <div class="muted small" data-t="pasteHelp">Trong Excel, chọn vùng layout (các hình hoặc các ô có mã máy và số công đoạn), Ctrl+C, rồi Ctrl+V vào cửa sổ này. Hình (shape) hoặc ảnh chụp màn hình được đọc bằng nhận dạng chữ (OCR) ngay trên máy. Hàng số nằm phía nào của hàng mã máy thì người vận hành ngồi phía đó (có thể đổi từng hàng).</div>
     <div class="btns" style="margin-top:6px"><button id="bXlOpen" class="primary" data-t="bXlOpen">📂 Mở file layout Excel (đọc chính xác các hình)…</button><span class="muted small" data-t="xlHelp">Đọc trực tiếp các hình mã máy / công đoạn và trình tự "=>" trong file .xlsx/.xlsm, không cần nhận dạng chữ.</span></div>
-    <div id="xlBox" style="display:none" class="btns"><select id="xlPick" style="flex:1"></select><span id="xlBranch" style="display:none;flex:1"><span class="small" data-t="xlBranchLbl">Chuyền nhánh:</span> <select id="xlPickB" style="max-width:100%"></select></span></div>
+    <div id="xlBox" style="display:none" class="btns"><select id="xlPick" style="flex:1"></select><button id="xlAutoBtn" style="display:none" data-t="xlAutoBtn" data-tt="xlAutoTip">⚙ Tự tạo layout</button><span id="xlBranch" style="display:none;flex:1"><span class="small" data-t="xlBranchLbl">Chuyền nhánh:</span> <select id="xlPickB" style="max-width:100%"></select></span></div>
     <div id="ocrDrop" class="drop"><span data-t="ocrDropTxt">Ctrl+V để dán ảnh / hình, hoặc kéo thả file ảnh vào đây</span> <button id="bOcrFile" data-t="bOcrFile">Chọn file ảnh…</button></div>
     <div id="pasteLib" class="banner" style="display:none"><span data-t="pasteLibNeed">Chưa có thư viện máy trên trình duyệt này: chọn file Excel thư viện để đọc đúng mã và kích thước.</span><button id="bLib3" class="primary" data-t="bLib">Chọn file Excel thư viện…</button></div>
     <div id="ocrStatus" class="small"></div><div id="ocrView"></div>
@@ -270,6 +282,10 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
       <label class="f"><span data-t="lsEnd">Cuối chuyền (cm)</span><input id="lsEnd" type="number" min="0" step="10"></label>
       <label class="f"><span data-t="lsWidth">Chuyền rộng (cm)</span><input id="lsWidth" type="number" min="50" step="10"></label>
       <label class="f"><span data-t="lsHC">Số công nhân (HC)</span><input id="lsHC" type="number" min="0" step="1"></label>
+      <label class="ck" style="grid-column:span 3"><input type="checkbox" id="lsFin" checked><b data-t="lsFin">Khu hoàn thiện (1 bàn QC đứng dọc + 2 bàn PCK nằm ngang đối diện nhau) và khu thùng (thùng vàng, đỏ, xanh) ở cuối chuyền chính</b></label>
+      <label class="f"><span data-t="lsFinL">Bàn QC / PCK dài (cm)</span><input id="lsFinL" type="number" min="40" step="5"></label>
+      <label class="f"><span data-t="lsFinW">Bàn QC / PCK rộng (cm)</span><input id="lsFinW" type="number" min="30" step="5"></label>
+      <label class="f"><span data-t="lsBoxW">Thùng rộng (cm)</span><input id="lsBoxW" type="number" min="30" step="5"></label>
     </div>
     <div class="calc" id="lsCalc"></div>
     <label class="ck" style="margin-top:10px"><input type="checkbox" id="lsBr"><b data-t="lsBr">Có chuyền nhánh (chuyền phụ bên cạnh, tùy mã hàng)</b></label>

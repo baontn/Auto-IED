@@ -43,7 +43,9 @@ function simOperators(opsSet) {
 }
 /* static balance: share of each operator's time per operation (proportional to SAM), capacity in pieces / hour */
 /* efficiency of one operation: its own value (%, edited in the table) or the general one */
-function effOf(op, eff) { var o = (ST.ops || {})[op]; return o && o.eff > 0 ? o.eff / 100 : eff; }
+/* efficiency of an operation: the value edited in the table, else the target efficiency of the operation in the layout file ("Target eff"), else the general one */
+function useTef() { var c = document.getElementById('smTef'); return !c || c.checked; }
+function effOf(op, eff) { var o = (ST.ops || {})[op]; return o && o.eff > 0 ? o.eff / 100 : o && o.tef > 0 && useTef() ? o.tef / 100 : eff; }
 /* headcount of the line: line set-up, else the workers of the layout file, else 0 (= operators as on the plan) */
 function lineHC() { var h = parseFloat(ST.line.hc); if (h > 0) return Math.round(h); var f = parseFloat((ST.info || {}).optr); return f > 0 ? Math.round(f) : 0; }
 /* static balance: share of each operator's time per operation (proportional to SAM), capacity in pieces / hour.
@@ -56,12 +58,13 @@ function simBalance(eff) {
   function calc() {
     var share = {}, cnt = {};
     opers.forEach(function (p) {
-      var tot = p.ops.reduce(function (a, o) { return a + (samOf(o) || 0.0001); }, 0);
-      p.ops.forEach(function (o) { share[o] = (share[o] || 0) + (samOf(o) || 0.0001) / tot; cnt[o] = (cnt[o] || 0) + 1; });
+      // time of a shared operator split by the working time of each operation (SAM / efficiency)
+      var tm = function (o) { return (samOf(o) || 0.0001) / effOf(o, eff); }, tot = p.ops.reduce(function (a, o) { return a + tm(o); }, 0);
+      p.ops.forEach(function (o) { share[o] = (share[o] || 0) + tm(o) / tot; cnt[o] = (cnt[o] || 0) + 1; });
     });
     var rows = Object.keys(set).sort(function (a, b) { return simNum(a) - simNum(b); }).map(function (o) {
       var sam = samOf(o), sh = share[o] || 0, ef = effOf(o, eff);
-      return { op: o, sam: sam, eff: ef, effOwn: !!(((ST.ops || {})[o] || {}).eff > 0), mc: ((ST.ops || {})[o] || {}).mc || (st[o] && st[o][0] ? st[o][0].code : ''), stations: (st[o] || []).length, its: st[o] || [],
+      return { op: o, sam: sam, eff: ef, effOwn: !!(((ST.ops || {})[o] || {}).eff > 0), effFile: !(((ST.ops || {})[o] || {}).eff > 0) && ((ST.ops || {})[o] || {}).tef > 0 && useTef(), mc: ((ST.ops || {})[o] || {}).mc || (st[o] && st[o][0] ? st[o][0].code : ''), stations: (st[o] || []).length, its: st[o] || [],
         people: sh, nOper: cnt[o] || 0, adj: adj[o] || 0, cap: sam > 0 && sh > 0 ? sh * 60 * ef / sam : (sh > 0 ? Infinity : 0) };
     });
     return rows;
@@ -139,7 +142,7 @@ function simRun(p) {
   var rows = B.rows.map(function (r) {
     var n = node[r.op] || {};
     var endQ = r.op === join ? 0 : (push && starts.indexOf(r.op) >= 0 ? null : n.q);
-    return Object.assign({}, r, { util: r.people > 0 ? (n.busyT || 0) / (r.people * T) : null, wipEnd: endQ == null ? null : endQ * bundle, wipMax: (n.qMax || 0) * bundle, wipAvg: (n.qSum || 0) / T * bundle, done: (n.done || 0) * bundle,
+    return Object.assign({}, r, { util: r.people > 0 ? Math.min(1, (n.busyT || 0) / (r.people * T)) : null, wipEnd: endQ == null ? null : endQ * bundle, wipMax: (n.qMax || 0) * bundle, wipAvg: (n.qSum || 0) / T * bundle, done: (n.done || 0) * bundle,
       feedEnd: n.feed ? fbuf[r.op] * bundle : null, feedMax: n.feed ? (n.fMax || 0) * bundle : null, start: starts.indexOf(r.op) >= 0, join: r.op === join });
   });
   var people = opers.length, samTot = Object.keys(node).reduce(function (a, o) { return a + node[o].sam; }, 0);
@@ -179,25 +182,48 @@ function renderSim() {
   $('smSrc').innerHTML = esc(B.L.fromSeq ? t('simSrcSeq', [B.L.lines.length]) : t('simSrcDef')) + (B.L.added && B.L.added.length ? ' · ' + esc(t('simCombAdd', [B.L.added.join(', ')])) : '') + ((ST.opsOff || []).length ? ' · ' + esc(t('simOff', [ST.opsOff.map(function (x) { return x.op; }).join(', ')])) : '') + ' · ' + esc(B.hc ? t('simHC', [B.hc, B.onPlan]) : t('simOpers', [B.opers.length])) +
     (B.hc && B.hc !== B.onPlan ? ' · ' + esc(t(B.hc > B.onPlan ? 'simHCplus' : 'simHCminus', [B.rows.filter(function (x) { return x.adj; }).map(function (x) { return x.op + ' ' + (x.adj > 0 ? '+' : '') + x.adj; }).join(', ')])) : '') +
     (missing.length ? '<div class="t-warn tagline">⚠ ' + esc(t('simNoSam', [missing.join(', ')])) + '</div>' : '');
-  var maxCap = Math.max.apply(null, B.rows.map(function (x) { return isFinite(x.cap) ? x.cap : 0; }).concat([1]));
+  var maxCap = Math.max.apply(null, B.rows.map(function (x) { return isFinite(x.cap) ? x.cap : 0; }).concat([1, (+(ST.info || {}).target || 0) * 1.15]));
   var arr = null;   // people arranged in the layout file, per operation (with the operations sharing the cell)
   if (hasArr()) { arr = {}; arrGroups().forEach(function (g) { g.ops.forEach(function (o) { arr[o] = g; }); }); }
-  $('smTable').innerHTML = '<table><tr><th>' + esc(t('simOp')) + '</th><th>' + esc(t('simMc')) + '</th><th class="n">SAM</th><th class="n">' + esc(t('simSt')) + '</th><th class="n">' + esc(t('simPeople')) + '</th>' + (arr ? '<th class="n" title="' + esc(t('simArrTip')) + '">' + esc(t('simArr')) + '</th>' : '') + '<th class="n">' + esc(t('simEffCol')) + '</th><th class="n">' + esc(t('simCap')) + '</th><th style="width:24%">' + esc(t('simLoad')) + '</th>' +
-    (r ? '<th class="n" title="' + esc(t('simUtilTip')) + '">' + esc(t('simUtilCol')) + '</th><th class="n">' + esc(t('simWipEnd')) + '</th><th class="n">' + esc(t('simWipMax')) + '</th>' : '') + '</tr>' +
-    B.rows.map(function (x) {
-      var bn = B.bottleneck.indexOf(x.op) >= 0, rr = rowsBy[x.op], wip = rr ? (rr.wipEnd != null ? rr.wipEnd : 0) + (rr.feedEnd || 0) : 0;
-      var cls = bn ? ' class="bn"' : (rr && wip >= p.wipWarn ? ' class="wip"' : '');
-      var w = isFinite(x.cap) ? Math.round(100 * x.cap / maxCap) : 100;
-      // load = output needed (the target, else the slowest operation) / capacity of this operation
-      var need = i.target || B.capMin, load = isFinite(x.cap) && x.cap > 0 && need ? Math.round(100 * need / x.cap) : null;
-      return '<tr' + cls + ' data-op="' + esc(x.op) + '"><td><button class="rmop" data-rmop="' + esc(x.op) + '" title="' + esc(t('simRmOp')) + '">✕</button> <b>' + esc(x.op) + '</b>' + (comb[x.op] ? ' <span class="tag t-info" title="' + esc(t('simComb', [comb[x.op].join(', ')])) + '">⇄ ' + esc(comb[x.op].join(', ')) + '</span>' : '') + (bn ? ' <span class="tag t-bad">' + esc(t('simBn')) + '</span>' : '') + '</td><td>' + esc(x.mc) + '</td>' +
-        '<td class="n"><input style="width:84px" type="number" step="0.0001" min="0" data-sam="' + esc(x.op) + '" value="' + (x.sam || '') + '"></td><td class="n">' + x.stations + '</td><td class="n">' + x.people.toFixed(2) + (x.adj ? ' <span class="tag ' + (x.adj > 0 ? 't-info' : 't-warn') + '">' + (x.adj > 0 ? '+' : '') + x.adj + '</span>' : '') + '</td>' +
-        (arr ? '<td class="n">' + (arr[x.op] ? arr[x.op].v + (arr[x.op].ops.length > 1 ? ' <span class="muted small" title="' + esc(t('simArrGrp', [arr[x.op].ops.join(', ')])) + '">⟨' + esc(arr[x.op].ops.join('·')) + '⟩</span>' : '') : '<span class="muted">—</span>') + '</td>' : '') +
-        '<td class="n"><input style="width:62px" type="number" step="1" min="5" max="150" data-eff="' + esc(x.op) + '" value="' + (x.effOwn ? Math.round(x.eff * 100) : '') + '" placeholder="' + Math.round(p.eff * 100) + '"></td>' +
-        '<td class="n">' + (isFinite(x.cap) ? Math.round(x.cap) : '∞') + '</td><td><div class="bar"><i style="width:' + w + '%;background:' + (bn || (load && load > 100) ? 'var(--bad)' : 'var(--accent)') + '"></i>' + (takt ? '<b style="left:' + Math.min(100, Math.round(100 * (i.target || 0) / maxCap)) + '%"></b>' : '') +
-        '<span class="barT">' + (isFinite(x.cap) ? Math.round(x.cap) + ' ' + esc(t('simPcsH')) : '∞') + (load != null ? ' · ' + esc(t('simLoadPct', [load])) : '') + '</span></div></td>' +
-        (r ? '<td class="n">' + (rr && rr.util != null ? '<span class="' + (rr.util >= 0.95 ? 't-bad' : rr.util < 0.6 ? 't-warn' : '') + '">' + Math.round(rr.util * 100) + '%</span>' : '') + '</td><td class="n">' + (rr && rr.wipEnd == null ? '<span class="muted">∞</span>' : wip) + '</td><td class="n">' + (rr ? rr.wipMax + (rr.feedMax || 0) : '') + '</td>' : '') + '</tr>';
-    }).join('') + '</table>';
+  var nmOf = function (o) { var x = (ST.ops || {})[o] || {}; return LANG === 'en' ? x.nm2 || x.nm || '' : x.nm || x.nm2 || ''; };
+  var tgt = +i.target || 0, rowsH = B.rows.map(function (x) {
+    var bn = B.bottleneck.indexOf(x.op) >= 0, rr = rowsBy[x.op], wip = rr ? (rr.wipEnd != null ? rr.wipEnd : 0) + (rr.feedEnd || 0) : 0;
+    var cls = bn ? ' class="bn"' : (rr && wip >= p.wipWarn ? ' class="wip"' : '');
+    // load = output needed (the target, else the slowest operation) / capacity; people needed for the target = target x SAM / (60 x efficiency)
+    var need = tgt || B.capMin, load = isFinite(x.cap) && x.cap > 0 && need ? Math.round(100 * need / x.cap) : null;
+    var req = tgt && x.sam > 0 ? tgt * x.sam / (60 * x.eff) : null, w = isFinite(x.cap) ? Math.max(2, Math.round(100 * x.cap / maxCap)) : 100;
+    var lc = load == null ? 'var(--accent)' : load > 100 ? 'var(--bad)' : load >= 90 ? 'var(--warn)' : 'var(--ok)', nm = nmOf(x.op);
+    return '<tr' + cls + ' data-op="' + esc(x.op) + '"><td class="opc"><div><button class="rmop" data-rmop="' + esc(x.op) + '" title="' + esc(t('simRmOp')) + '">✕</button> <b>' + esc(x.op) + '</b>' +
+      (comb[x.op] ? ' <span class="tag t-info" title="' + esc(t('simComb', [comb[x.op].join(', ')])) + '">⇄ ' + esc(comb[x.op].join(', ')) + '</span>' : '') + (bn ? ' <span class="tag t-bad">' + esc(t('simBn')) + '</span>' : '') + '</div>' +
+      (nm ? '<div class="opn" title="' + esc(nm + ((ST.ops[x.op] || {}).nm2 && (ST.ops[x.op] || {}).nm2 !== nm ? '\n' + ST.ops[x.op].nm2 : '')) + '">' + esc(nm) + '</div>' : '') + '</td><td>' + esc(autoCode(x.mc) || x.mc) + '</td>' +
+      '<td class="n"><input style="width:78px" type="number" step="0.0001" min="0" data-sam="' + esc(x.op) + '" value="' + (x.sam || '') + '"></td><td class="n">' + x.stations + '</td>' +
+      '<td class="n"><b>' + x.people.toFixed(2) + '</b>' + (x.adj ? ' <span class="tag ' + (x.adj > 0 ? 't-info' : 't-warn') + '">' + (x.adj > 0 ? '+' : '') + x.adj + '</span>' : '') +
+      (arr && arr[x.op] ? '<div class="muted small" title="' + esc(t('simArrTip')) + (arr[x.op].ops.length > 1 ? ' · ' + esc(t('simArrGrp', [arr[x.op].ops.join(', ')])) : '') + '">' + esc(t('simFileN', [arr[x.op].v])) + (arr[x.op].ops.length > 1 ? ' ⟨' + esc(arr[x.op].ops.join('·')) + '⟩' : '') + '</div>' : '') + '</td>' +
+      (tgt ? '<td class="n">' + (req == null ? '' : '<span class="' + (req > x.people + 0.05 ? 't-bad' : '') + '">' + req.toFixed(2) + '</span>') + '</td>' : '') +
+      '<td class="n"><input style="width:58px" type="number" step="1" min="5" max="300" data-eff="' + esc(x.op) + '" value="' + (x.effOwn ? Math.round(x.eff * 100) : '') + '" placeholder="' + Math.round((x.effFile ? x.eff : p.eff) * 100) + '"' + (x.effFile ? ' class="effFile" title="' + esc(t('simEffFile')) + '"' : '') + '></td>' +
+      // capacity: the number, a thin bar under it (scale = the fastest operation, tick = target); load: coloured chip
+      '<td class="n capc"><b>' + (isFinite(x.cap) ? Math.round(x.cap) : '∞') + '</b><div class="mbar"><i style="width:' + w + '%;background:' + lc + '"></i>' + (tgt ? '<u style="left:' + Math.min(100, Math.round(100 * tgt / maxCap)) + '%"></u>' : '') + '</div></td>' +
+      '<td class="n">' + (load != null ? '<span class="chipl ' + (load > 100 ? 'lb' : load >= 90 ? 'lw' : 'lo') + '" title="' + esc(t('simLoadTip')) + '">' + load + '%</span>' : '') + '</td>' +
+      (r ? '<td class="n">' + (rr && rr.util != null ? '<span class="' + (rr.util >= 0.95 ? 't-bad' : rr.util < 0.6 ? 't-warn' : '') + '">' + Math.round(rr.util * 100) + '%</span>' : '') + '</td><td class="n">' + (rr && rr.wipEnd == null ? '<span class="muted">∞</span>' : wip) + '</td><td class="n">' + (rr ? rr.wipMax + (rr.feedMax || 0) : '') + '</td>' : '') + '</tr>';
+  }).join('');
+  // totals: work content, machines, people, people needed, weighted efficiency, output and line balance, utilisation, WIP
+  var fr = B.rows.filter(function (x) { return x.sam > 0; }), sSam = fr.reduce(function (a, x) { return a + x.sam; }, 0), sT = fr.reduce(function (a, x) { return a + x.sam / x.eff; }, 0);
+  var sSt = B.rows.reduce(function (a, x) { return a + x.stations; }, 0), sPp = B.rows.reduce(function (a, x) { return a + x.people; }, 0);
+  var sReq = tgt ? fr.reduce(function (a, x) { return a + tgt * x.sam / (60 * x.eff); }, 0) : 0, avgEff = sT > 0 ? sSam / sT : 0;
+  var lbe = sPp > 0 && B.capMin > 0 ? sT * B.capMin / (60 * sPp) : 0;   // line balance: work content / (people x bottleneck cycle time)
+  var uW = r ? r.rows.reduce(function (a, x) { return a + (x.util != null ? x.util * x.people : 0); }, 0) / Math.max(0.0001, r.rows.reduce(function (a, x) { return a + (x.util != null ? x.people : 0); }, 0)) : null;
+  var wE = r ? r.rows.reduce(function (a, x) { return a + (x.wipEnd || 0) + (x.feedEnd || 0); }, 0) : 0, wM = r ? Math.max.apply(null, r.rows.map(function (x) { return (x.wipMax || 0) + (x.feedMax || 0); }).concat([0])) : 0;
+  var outV = r ? Math.round(r.outH) : Math.round(B.capMin);
+  var foot = '<tfoot><tr><td><b>' + esc(t('simTotal')) + '</b><div class="muted small">' + esc(t('simTotalN', [B.rows.length])) + '</div></td><td></td><td class="n"><b>' + (Math.round(sSam * 1000) / 1000) + '</b></td><td class="n"><b>' + sSt + '</b></td>' +
+    '<td class="n"><b>' + (Math.round(sPp * 10) / 10) + '</b>' + (B.hc ? '<div class="muted small">HC ' + B.hc + '</div>' : '') + (arr ? '<div class="muted small">' + esc(t('simFileN', [Math.round(arrGroups().reduce(function (a, g) { return a + g.v; }, 0) * 10) / 10])) + '</div>' : '') + '</td>' +
+    (tgt ? '<td class="n"><b class="' + (sReq > sPp + 0.05 ? 't-bad' : '') + '">' + sReq.toFixed(1) + '</b></td>' : '') +
+    '<td class="n"><b>' + Math.round(avgEff * 100) + '%</b><div class="muted small">' + esc(t('simAvgW')) + '</div></td>' +
+    '<td class="n"><b>' + outV + '</b><div class="muted small">' + esc(t(r ? 'simOutSimS' : 'simOutCapS')) + (tgt ? ' · ' + esc(t('simVsTarget', [tgt])) : '') + '</div></td>' +
+    '<td class="n" title="' + esc(t('simLbeTip')) + '"><b>' + Math.round(lbe * 100) + '%</b><div class="muted small">' + esc(t('simLbeS')) + '</div></td>' +
+    (r ? '<td class="n"><b>' + Math.round(uW * 100) + '%</b></td><td class="n"><b>' + wE + '</b></td><td class="n"><b>' + wM + '</b></td>' : '') + '</tr></tfoot>';
+  $('smTable').innerHTML = '<table><thead><tr><th>' + esc(t('simOp')) + '</th><th>' + esc(t('simMc')) + '</th><th class="n">SAM</th><th class="n">' + esc(t('simSt')) + '</th><th class="n">' + esc(t('simPeople')) + '</th>' +
+    (tgt ? '<th class="n" title="' + esc(t('simNeedTip')) + '">' + esc(t('simNeed')) + '</th>' : '') + '<th class="n">' + esc(t('simEffCol')) + '</th><th class="n" title="' + esc(t('simCapTip')) + '">' + esc(t('simCapH')) + '</th><th class="n" title="' + esc(t('simLoadTip')) + '">' + esc(t('simLoadH')) + '</th>' +
+    (r ? '<th class="n" title="' + esc(t('simUtilTip')) + '">' + esc(t('simUtilCol')) + '</th><th class="n">' + esc(t('simWipEnd')) + '</th><th class="n">' + esc(t('simWipMax')) + '</th>' : '') + '</tr></thead><tbody>' + rowsH + '</tbody>' + foot + '</table>';
   if (!r) { $('smRes').innerHTML = '<div class="muted">' + esc(t('simPress')) + '</div>'; return; }
   var hot = r.rows.map(function (x) { return { op: x.op, w: (x.wipEnd || 0) + (x.feedEnd || 0) }; }).filter(function (x) { return x.w >= p.wipWarn; }).sort(function (a, b) { return b.w - a.w; });
   var byOp = {}; r.opers.forEach(function (o) { o.ops.forEach(function (op) { (byOp[op] = byOp[op] || []).push(o.util); }); });
@@ -218,12 +244,13 @@ function renderSim() {
     '<ul class="sug">' + sug.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ul>' +
     '<details open><summary>' + esc(t('simUtil')) + '</summary><div class="utils">' + r.opers.slice().sort(function (a, b) { return b.util - a.util; }).map(function (o) {
       var u = Math.round(o.util * 100), col = u >= 95 ? 'var(--bad)' : u < 60 ? 'var(--warn)' : 'var(--ok)';
-      return '<div title="' + esc(t('simUtilOne', [label(o.it), o.ops.join(', '), u])) + '"><span>' + esc(o.ops.join('+')) + ' <i class="muted">' + esc(o.it ? o.it.code : '') + '</i></span><div class="bar"><i style="width:' + Math.min(100, u) + '%;background:' + col + '"></i><span class="barT">' + u + '%</span></div></div>';
+      return '<div title="' + esc(t('simUtilOne', [label(o.it), o.ops.join(', '), u])) + '"><span>' + esc(o.ops.join('+')) + ' <i class="muted">' + esc(o.it ? o.it.code : '') + '</i></span><div class="mbar" style="width:100%;margin:0"><i style="width:' + Math.min(100, u) + '%;background:' + col + '"></i></div><b style="text-align:right;color:' + col + '">' + u + '%</b></div>';
     }).join('') + '</div></details>';
 }
 function initSim() {
   $('smRun').onclick = function () { var p = simParams(); simRun(p); OPT.wip = true; $('optWip').checked = true; renderSim(); render2d(); toast(t('simDone', [Math.round(SIMR.outH)])); };
   ['smEff', 'smRate'].forEach(function (id) { $(id).addEventListener('input', function () { this.dataset.touched = '1'; }); });
+  $('smTef').onchange = function () { SIMR = null; renderSim(); wipSoon(); };
   $('smMode').onchange = function () { this.dataset.touched = '1'; $('smRate').disabled = this.value !== 'rate'; };
   $('smTable').addEventListener('change', function (e) {
     var op = e.target.dataset.sam || e.target.dataset.eff; if (!op) return;
@@ -243,8 +270,8 @@ function initSim() {
 
 /* ---------- people arranged in the layout file ("Arrange. Optr / CN sắp xếp") ---------- */
 /* groups of operations: a merged cell = one group; value = people for the whole group */
-function arrGroups() {
-  var g = {}, ops = ST.ops || {};
+function arrGroups(opsTable) {
+  var g = {}, ops = opsTable || ST.ops || {};
   Object.keys(ops).forEach(function (op) {
     var o = ops[op]; if (o.ar == null || !isFinite(o.ar)) return;
     var k = o.ag || op; g[k] = g[k] || { key: k, ops: [], v: o.ar, ai: o.ai != null ? o.ai : 1e6 };
@@ -255,9 +282,9 @@ function arrGroups() {
 function hasArr() { return arrGroups().length > 0; }
 /* operator units: a group with 1 person or more = its own people (rounded up); groups of less than one person
    (0.5 …) are joined in table order until one full person (the IE's "0.5 + 0.5" arrangement) */
-function arrUnits() {
+function arrUnits(opsTable) {
   var out = [], pool = null;
-  arrGroups().forEach(function (g) {
+  arrGroups(opsTable).forEach(function (g) {
     var v = Math.round(g.v * 1000) / 1000;
     if (v <= 0) { out.push({ ops: g.ops.slice(), p: 0, v: 0 }); return; }
     if (v >= 1) { out.push({ ops: g.ops.slice(), p: Math.ceil(v - 1e-6), v: v }); return; }
@@ -270,7 +297,7 @@ function arrUnits() {
    are run by the same person (neighbouring machines together); a unit with 0 people has no own operator */
 function applyArrangement() {
   var units = arrUnits(); if (!units.length) return null;
-  var done = {}, shared = 0, none = 0;
+  var done = {}, shared = 0, none = 0, extra = 0;
   function mcsOf(ops) {
     return ST.items.filter(function (it) { return it.kind === 'mc' && !done[it.id] && ops.indexOf(opsOf(it)[0]) >= 0; })
       .sort(function (a, b) { return (a.zone === 'branch' ? 0 : 1) - (b.zone === 'branch' ? 0 : 1) || Math.round(a.y / 60) - Math.round(b.y / 60) || a.x - b.x; });
@@ -280,12 +307,22 @@ function applyArrangement() {
     var M = mcsOf(u.ops); M.forEach(function (it) { done[it.id] = 1; });
     if (!M.length) return;
     if (u.p === 0) { M.forEach(function (it) { it.noOp = true; }); none += M.length; return; }
-    if (M.length <= u.p) return;
-    var k = u.p, at = 0;
-    for (var i = 0; i < k; i++) {
-      var n = Math.round((M.length - at) / (k - i)), chunk = M.slice(at, at + n); at += n;
-      if (chunk.length > 1) { opShare(chunk); shared += chunk.length - 1; }
-    }
+    // a person works on one side of the central table only: the people of the unit are shared out per side (at least one per side)
+    var sides = {}, keys = [];
+    M.forEach(function (it) { var k = sideKey(it); if (!sides[k]) { sides[k] = []; keys.push(k); } sides[k].push(it); });
+    keys.sort(function (a, b) { return sides[b].length - sides[a].length; });
+    var ppl = {}, left = u.p;
+    keys.forEach(function (k) { ppl[k] = 1; left--; });
+    if (left < 0) extra += -left;
+    while (left > 0) { var bk = keys.slice().sort(function (a, b) { return sides[b].length / ppl[b] - sides[a].length / ppl[a]; })[0]; ppl[bk]++; left--; }
+    keys.forEach(function (k) {
+      var S = sides[k], p = Math.min(ppl[k], S.length), at = 0;
+      if (S.length <= p) return;
+      for (var i = 0; i < p; i++) {
+        var n = Math.round((S.length - at) / (p - i)), chunk = S.slice(at, at + n); at += n;
+        if (chunk.length > 1 && opShare(chunk) === 'share') shared += chunk.length - 1;
+      }
+    });
   });
-  return { units: units.length, shared: shared, none: none, people: units.reduce(function (a, u) { return a + u.p; }, 0), total: Math.round(units.reduce(function (a, u) { return a + u.v; }, 0) * 100) / 100 };
+  return { units: units.length, shared: shared, none: none, extra: extra, people: units.reduce(function (a, u) { return a + u.p; }, 0), total: Math.round(units.reduce(function (a, u) { return a + u.v; }, 0) * 100) / 100 };
 }

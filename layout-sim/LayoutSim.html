@@ -26,6 +26,8 @@ input[type=checkbox]{padding:0}
 .wipbar{background:var(--panel);border-bottom:1px solid var(--line);padding:6px 14px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;flex:none;font-size:13px}
 button.link{background:none;border:0;padding:0 2px;color:var(--accent);text-decoration:underline;cursor:pointer;font:inherit;font-weight:700}
 button.danger{color:var(--bad);border-color:var(--bad)}
+.lblsz{display:inline-flex;gap:4px;align-items:center;font-size:12.5px}.lblsz select{padding:2px 4px}
+input.effFile::placeholder{color:var(--info);font-weight:700;opacity:1}
 .chgtag{background:var(--badbg);color:var(--bad);border-color:var(--bad);font-weight:700}
 .rmop{padding:0 5px;font-size:11px;line-height:1.3;opacity:.55}.rmop:hover{opacity:1;background:var(--badbg);color:var(--bad)}
 header{background:var(--panel);border-bottom:1px solid var(--line);padding:7px 14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;flex:none}
@@ -70,10 +72,15 @@ label.f.row input{width:80px}
 .grid6{display:grid;grid-template-columns:repeat(6,minmax(110px,1fr));gap:8px;margin-top:8px}
 @media (max-width:900px){.grid6{grid-template-columns:1fr 1fr}}
 
-.utils{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:4px 14px;margin-top:6px;font-size:12.5px}.utils>div{display:grid;grid-template-columns:96px 1fr;gap:6px;align-items:center}
+.utils{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:4px 14px;margin-top:6px;font-size:12.5px}.utils>div{display:grid;grid-template-columns:96px 1fr 40px;gap:6px;align-items:center}
 .barT{position:absolute;left:6px;top:-1px;font-size:11px;font-weight:700;line-height:20px;color:var(--text);text-shadow:0 0 3px var(--panel),0 0 3px var(--panel);white-space:nowrap}
 .bar{position:relative;height:18px;background:var(--line);border-radius:5px;min-width:80px}.bar i{position:absolute;left:0;top:0;bottom:0;border-radius:5px}.bar b{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--warn)}
 tr.bn td{background:var(--badbg)}tr.wip td{background:var(--warnbg)}tr[data-op]{cursor:pointer}
+.capc{min-width:80px}.mbar{position:relative;height:4px;background:var(--line);border-radius:2px;margin:3px 0 0 auto;width:80px}.mbar i{position:absolute;left:0;top:0;bottom:0;border-radius:2px}.mbar u{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--text);opacity:.6}
+.chipl{display:inline-block;min-width:44px;padding:1px 6px;border-radius:9px;font-size:12px;font-weight:700;text-align:center}.chipl.lo{background:var(--okbg);color:var(--ok)}.chipl.lw{background:var(--warnbg);color:var(--warn)}.chipl.lb{background:var(--badbg);color:var(--bad)}
+.capt{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;justify-content:space-between}.capt .tot{font-weight:700}.capt .capl{white-space:nowrap}
+#smTable tfoot td{border-top:2px solid var(--text);background:var(--sel);position:sticky;bottom:0}
+#smTable td.opc{max-width:260px}.opn{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:250px}
 .kpis{display:flex;flex-wrap:wrap;gap:8px}.kpis div{background:var(--sel);border-radius:10px;padding:8px 12px;min-width:120px}.kpis span{display:block;font-size:12px;color:var(--muted)}.kpis b{font-size:22px}.kpis i{font-style:normal;font-size:12px;color:var(--muted);margin-left:4px}
 ul.sug{margin:8px 0 0 18px;padding:0}ul.sug li{margin-bottom:3px}
 #paneProj .card{margin-bottom:12px;max-width:1100px}
@@ -114,7 +121,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
 <body>
 <header>
   <a id="bHome" class="homebtn" href="../index.html" data-t="bHome" data-tt="bHomeTip">← IE Tools</a>
-  <h1 data-t="appTitle">Mô phỏng bố trí chuyền</h1><span class="tag t-info">v2.5</span>
+  <h1 data-t="appTitle">Mô phỏng bố trí chuyền</h1><span class="tag t-info">v2.7</span>
   <nav class="tabs"><button data-tab="proj" data-t="tabProj">🏠 Dự án</button><button data-tab="plan" class="on" data-t="tabPlan">Mặt bằng 2D</button><button data-tab="3d" data-t="tab3d">3D</button><button data-tab="sim" data-t="tabSim">⏱ Mô phỏng WIP</button><button data-tab="lib" data-t="tabLib">Thư viện máy</button></nav>
   <div class="hr">
     <button id="bNew" data-t="bNew">Mới</button><button id="bOpen" data-t="bOpen">Mở…</button><button id="bSave" class="primary" data-t="bSave" data-tt="bSaveTip">Lưu</button>
@@ -141,6 +148,8 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
       <label><input type="checkbox" id="optWip"><span data-t="optWip">WIP</span></label>
       <label><input type="checkbox" id="optAisle"><span data-t="optAisle">Lối đi sau lưng</span></label>
       <span class="sep"></span>
+      <label class="lblsz" data-tt="lblTip"><span data-t="lblMc">Chữ mã máy</span><select id="lblMc"></select></label>
+      <label class="lblsz" data-tt="lblTip"><span data-t="lblOp">Chữ số công đoạn</span><select id="lblOp"></select></label>
       <button id="bWip2d" data-t="bWip2d" data-tt="bWip2dTip">⏱ Mô phỏng WIP</button>
       <button id="chgTag" class="chgtag" style="display:none"></button>
       <span class="sep"></span>
@@ -152,6 +161,8 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
       <label><input type="checkbox" id="opt3People"><span data-t="opt3People">Người vận hành</span></label>
       <label><input type="checkbox" id="opt3Labels"><span data-t="opt3Labels">Nhãn</span></label>
       <label><input type="checkbox" id="opt3Ruler"><span data-t="opt3Ruler">Thước (m)</span></label>
+      <label class="lblsz" data-tt="lblTip"><span data-t="lblMc">Chữ mã máy</span><select id="lblMc3"></select></label>
+      <label class="lblsz" data-tt="lblTip"><span data-t="lblOp">Chữ số công đoạn</span><select id="lblOp3"></select></label>
       <button id="bStandAll3" data-t="bStandAll">🧍↔🪑 Tất cả đứng / ngồi</button>
       <span class="sep"></span><button id="bPng3" onclick="exportImage()" data-t="bPng">Xuất ảnh</button>
       <span class="muted small" data-t="hint3d">Kéo chuột trái: xoay · chuột phải/Shift: di chuyển · lăn chuột: phóng to · bấm vào máy để chọn</span>
@@ -212,6 +223,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
       <label class="f"><span data-t="smRate">Sản lượng đầu vào (sp/giờ)</span><input id="smRate" type="number" min="1" step="1" value="60" disabled></label>
       <label class="f"><span data-t="smWarn">Cảnh báo WIP từ (sp)</span><input id="smWarn" type="number" min="1" step="1" value="30"></label>
     </div>
+    <label class="ck" style="margin-top:8px"><input type="checkbox" id="smTef" checked><span data-t="smTef">Hiệu suất từng công đoạn theo "Target eff (M.tiêu Hiệu suất)" của file layout (công đoạn không có giá trị dùng hiệu suất chung)</span></label>
     <label class="ck" style="margin-top:8px"><input type="checkbox" id="smWarm" checked><span data-t="smWarm">Bỏ qua thời gian khởi động (chuyền chạy ổn định: mô phỏng trước một ca để hàng lấp đầy chuyền)</span></label>
     <div class="btns"><button id="smRun" class="primary" data-t="smRun">▶ Chạy mô phỏng</button><button id="smToPlan" data-t="smToPlan">Xem WIP trên mặt bằng</button><button id="smArr" data-t="bArr" data-tt="bArrTip">👥 Theo CN sắp xếp trong file</button></div>
     <div id="smSrc" class="small" style="margin-top:6px"></div>
@@ -242,7 +254,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
   <div class="db">
     <div class="muted small" data-t="pasteHelp">Trong Excel, chọn vùng layout (các hình hoặc các ô có mã máy và số công đoạn), Ctrl+C, rồi Ctrl+V vào cửa sổ này. Hình (shape) hoặc ảnh chụp màn hình được đọc bằng nhận dạng chữ (OCR) ngay trên máy. Hàng số nằm phía nào của hàng mã máy thì người vận hành ngồi phía đó (có thể đổi từng hàng).</div>
     <div class="btns" style="margin-top:6px"><button id="bXlOpen" class="primary" data-t="bXlOpen">📂 Mở file layout Excel (đọc chính xác các hình)…</button><span class="muted small" data-t="xlHelp">Đọc trực tiếp các hình mã máy / công đoạn và trình tự "=>" trong file .xlsx/.xlsm, không cần nhận dạng chữ.</span></div>
-    <div id="xlBox" style="display:none" class="btns"><select id="xlPick" style="flex:1"></select><span id="xlBranch" style="display:none;flex:1"><span class="small" data-t="xlBranchLbl">Chuyền nhánh:</span> <select id="xlPickB" style="max-width:100%"></select></span></div>
+    <div id="xlBox" style="display:none" class="btns"><select id="xlPick" style="flex:1"></select><button id="xlAutoBtn" style="display:none" data-t="xlAutoBtn" data-tt="xlAutoTip">⚙ Tự tạo layout</button><span id="xlBranch" style="display:none;flex:1"><span class="small" data-t="xlBranchLbl">Chuyền nhánh:</span> <select id="xlPickB" style="max-width:100%"></select></span></div>
     <div id="ocrDrop" class="drop"><span data-t="ocrDropTxt">Ctrl+V để dán ảnh / hình, hoặc kéo thả file ảnh vào đây</span> <button id="bOcrFile" data-t="bOcrFile">Chọn file ảnh…</button></div>
     <div id="pasteLib" class="banner" style="display:none"><span data-t="pasteLibNeed">Chưa có thư viện máy trên trình duyệt này: chọn file Excel thư viện để đọc đúng mã và kích thước.</span><button id="bLib3" class="primary" data-t="bLib">Chọn file Excel thư viện…</button></div>
     <div id="ocrStatus" class="small"></div><div id="ocrView"></div>
@@ -270,6 +282,10 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
       <label class="f"><span data-t="lsEnd">Cuối chuyền (cm)</span><input id="lsEnd" type="number" min="0" step="10"></label>
       <label class="f"><span data-t="lsWidth">Chuyền rộng (cm)</span><input id="lsWidth" type="number" min="50" step="10"></label>
       <label class="f"><span data-t="lsHC">Số công nhân (HC)</span><input id="lsHC" type="number" min="0" step="1"></label>
+      <label class="ck" style="grid-column:span 3"><input type="checkbox" id="lsFin" checked><b data-t="lsFin">Khu hoàn thiện (1 bàn QC đứng dọc + 2 bàn PCK nằm ngang đối diện nhau) và khu thùng (thùng vàng, đỏ, xanh) ở cuối chuyền chính</b></label>
+      <label class="f"><span data-t="lsFinL">Bàn QC / PCK dài (cm)</span><input id="lsFinL" type="number" min="40" step="5"></label>
+      <label class="f"><span data-t="lsFinW">Bàn QC / PCK rộng (cm)</span><input id="lsFinW" type="number" min="30" step="5"></label>
+      <label class="f"><span data-t="lsBoxW">Thùng rộng (cm)</span><input id="lsBoxW" type="number" min="30" step="5"></label>
     </div>
     <div class="calc" id="lsCalc"></div>
     <label class="ck" style="margin-top:10px"><input type="checkbox" id="lsBr"><b data-t="lsBr">Có chuyền nhánh (chuyền phụ bên cạnh, tùy mã hàng)</b></label>
@@ -346,6 +362,23 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 var LANG = 'vi';
 var I18N = {
   vi: {
+    lsFin: 'Khu hoàn thiện (1 bàn QC đứng dọc + 2 bàn PCK nằm ngang đối diện nhau) và khu thùng (thùng vàng, đỏ, xanh) ở cuối chuyền chính', lsFinL: 'Bàn QC / PCK dài (cm)', lsFinW: 'Bàn QC / PCK rộng (cm)', lsBoxW: 'Thùng rộng (cm)',
+    zoneFinish: 'Khu hoàn thiện', zoneBoxes: 'Khu thùng', boxY: 'Thùng vàng', boxR: 'Thùng đỏ', boxG: 'Thùng xanh',
+    simLoadH: 'Tải', simCapTip: 'Số sản phẩm công đoạn làm được trong 1 giờ = số người × 60 × hiệu suất / SAM. Vạch nhỏ dưới số: so với công đoạn nhanh nhất; vạch đứng = sản lượng mục tiêu.',
+    simOutSimS: 'sp/giờ ra chuyền (mô phỏng)', simOutCapS: 'sp/giờ (công đoạn chậm nhất)', simLbeS: 'cân bằng chuyền',
+    xlAutoBtn: '⚙ Tự tạo layout', xlAutoTip: 'Tự tạo layout từ bảng công đoạn (loại máy, số máy, CN sắp xếp) và trình tự của sheet đang chọn',
+    turnR: 'Máy xoay ngang trong file, người ngồi bên phải', turnL: 'Máy xoay ngang trong file, người ngồi bên trái',
+    simCapH: 'Năng lực (sp/giờ)', simLoadTip: 'Tải = sản lượng cần (mục tiêu, không có thì công đoạn chậm nhất) / năng lực. Xanh < 90 %, vàng 90–100 %, đỏ > 100 % (không đủ năng lực).',
+    simNeed: 'Người cần', simNeedTip: 'Số người cần để đạt sản lượng mục tiêu = mục tiêu × SAM / (60 × hiệu suất). Đỏ: nhiều hơn số người đang có.',
+    simFileN: 'file: {0}', simTotal: 'Tổng / TB', simTotalN: '{0} công đoạn', simAvgW: 'TB theo SAM',
+    simOutSim: 'Ra {0} sp/giờ (mô phỏng)', simOutCap: 'Năng lực chuyền {0} sp/giờ', simVsTarget: 'mục tiêu {0}', simLbe: 'Cân bằng {0}%',
+    simLbeTip: 'Hiệu suất cân bằng chuyền = tổng thời gian làm việc (SAM / hiệu suất) / (số người × chu kỳ công đoạn chậm nhất). 100 % = mọi người đều bận như nút cổ chai.',
+    smTef: 'Hiệu suất từng công đoạn theo "Target eff (M.tiêu Hiệu suất)" của file layout (công đoạn không có giá trị dùng hiệu suất chung)', simEffFile: 'Hiệu suất mục tiêu của công đoạn trong file layout; nhập số khác để sửa',
+    opCrossFix: 'Đã tách {0} máy khỏi người ở phía bên kia bàn giữa (một người không làm máy ở hai bên bàn giữa): máy đó có người riêng.',
+    opRemoveAsk0: 'Công đoạn {0} không có máy trên mặt bằng. Bỏ công đoạn này khỏi trình tự và mô phỏng? Có thể khôi phục trong thẻ "Thay đổi so với file layout".',
+    pasteSam: 'SAM đọc được cho {0}/{1} công đoạn của layout (bảng công đoạn trong file).', pasteSamMiss: 'Chưa có SAM: {0} (nhập ở trang Mô phỏng WIP).',
+    opCross: 'Một người không làm máy ở hai bên bàn giữa (hoặc hai chuyền): chọn các máy cùng một phía.', arrExtra: 'Thêm {0} người vì các máy của cùng một nhóm nằm ở hai bên bàn giữa.',
+    lblMc: 'Chữ mã máy', lblOp: 'Chữ số công đoạn', lblTip: 'Cỡ chữ của nhãn trên mặt bằng 2D, 3D và ảnh xuất',
     xlAutoOpt: 'Tự tạo layout từ bảng công đoạn · sheet {0}: {1} công đoạn, {2} máy, trình tự {3} cụm',
     xlAutoRead: 'Tự tạo layout: {0} · sheet "{1}": {2} công đoạn, {3} máy (số máy theo cột số máy, nếu không có thì theo CN sắp xếp), xếp theo trình tự {4} cụm, hai bên bàn giữa so le để hàng đi tới. Kiểm tra rồi bấm "Đưa vào mặt bằng"; sau đó chỉnh lại trên mặt bằng.',
     simUtilCol: 'Mức bận', simUtilTip: 'Thời gian người vận hành làm công đoạn / thời gian có mặt (theo số người của công đoạn). Đỏ ≥ 95 %: quá tải; vàng < 60 %: ít việc.', simUtilAvg: 'Mức bận trung bình',
@@ -474,6 +507,23 @@ var I18N = {
     ocrIgnored: 'bỏ qua', ocrLegend: 'Viền xanh lá: đọc đúng mã · cam: đã sửa theo thư viện · đỏ: không có trong thư viện · xanh dương: số công đoạn · xám: bỏ qua. Đưa chuột vào ô để xem chữ đọc được.'
   },
   en: {
+    lsFin: 'Finishing area (1 upright QC table + 2 packing tables lying face to face) and box area (yellow, red, green boxes) at the end of the main line', lsFinL: 'QC / packing table length (cm)', lsFinW: 'QC / packing table width (cm)', lsBoxW: 'Box width (cm)',
+    zoneFinish: 'Finishing area', zoneBoxes: 'Box area', boxY: 'Yellow box', boxR: 'Red box', boxG: 'Green box',
+    simLoadH: 'Load', simCapTip: 'Pieces the operation makes per hour = people × 60 × efficiency / SAM. Thin bar: compared with the fastest operation; tick = target output.',
+    simOutSimS: 'pcs/h out of the line (simulated)', simOutCapS: 'pcs/h (slowest operation)', simLbeS: 'line balance',
+    xlAutoBtn: '⚙ Automatic layout', xlAutoTip: 'Build the layout from the operation table (machine type, machines, people arranged) and the sequence of the chosen sheet',
+    turnR: 'Machine turned in the file, operator on its right', turnL: 'Machine turned in the file, operator on its left',
+    simCapH: 'Capacity (pcs/h)', simLoadTip: 'Load = output needed (target, else the slowest operation) / capacity. Green < 90 %, yellow 90–100 %, red > 100 % (not enough capacity).',
+    simNeed: 'People needed', simNeedTip: 'People needed for the target output = target × SAM / (60 × efficiency). Red: more than the people there.',
+    simFileN: 'file: {0}', simTotal: 'Total / avg', simTotalN: '{0} operations', simAvgW: 'avg by SAM',
+    simOutSim: 'Output {0} pcs/h (simulated)', simOutCap: 'Line capacity {0} pcs/h', simVsTarget: 'target {0}', simLbe: 'Balance {0}%',
+    simLbeTip: 'Line balance efficiency = total work time (SAM / efficiency) / (people × cycle time of the slowest operation). 100 % = everyone as busy as the bottleneck.',
+    smTef: 'Efficiency per operation from "Target eff (M.tiêu Hiệu suất)" of the layout file (operations without a value use the general efficiency)', simEffFile: 'Target efficiency of the operation in the layout file; type another value to change it',
+    opCrossFix: '{0} machines separated from a person on the other side of the central table (one person never works on both sides): they have their own operator now.',
+    opRemoveAsk0: 'Operation {0} has no machine on the plan. Remove it from the sequence and the simulation? It can be restored in the card "Changes against the layout file".',
+    pasteSam: 'SAM found for {0}/{1} operations of the layout (operation table in the file).', pasteSamMiss: 'No SAM yet: {0} (enter it on the WIP simulation page).',
+    opCross: 'One person does not work on both sides of the central table (or on two lines): select machines on one side.', arrExtra: '{0} more people because machines of the same group stand on both sides of the central table.',
+    lblMc: 'Machine code text', lblOp: 'Operation number text', lblTip: 'Label text size on the 2D plan, in 3D and in the exported image',
     xlAutoOpt: 'Automatic layout from the operation table · sheet {0}: {1} operations, {2} machines, sequence {3} groups',
     xlAutoRead: 'Automatic layout: {0} · sheet "{1}": {2} operations, {3} machines (machine-count column, else the people arranged), placed along the sequence ({4} groups), alternately on both sides of the central table so the work moves forward. Check and press "Place on the plan", then adjust on the plan.',
     simUtilCol: 'Utilisation', simUtilTip: 'Time the operators work on the operation / time present (for the people of the operation). Red ≥ 95 %: overloaded; yellow < 60 %: little work.', simUtilAvg: 'Average utilisation',
@@ -826,7 +876,7 @@ var ERG_DEF = {
   emptyPitch: 107,// width of an empty cell in the pasted grid
   snap: 5
 };
-var LINE_DEF = { units: 17, unit: 107, tableW: 30, start: 90, gap: 30, end: 30 };   // start = length of the input area in front of the line
+var LINE_DEF = { units: 17, unit: 107, tableW: 30, start: 90, gap: 30, end: 30, finTL: 175, finTW: 75, boxW: 70 };   // start = length of the input area in front of the line
 var ST = { line: { name: '', length: 2400, width: 600, fixed: false }, erg: Object.assign({}, ERG_DEF), items: [], seq: 1 };
 var SEL = [];            // selected ids (not saved)
 var UNDO = [], REDO = [];
@@ -868,7 +918,7 @@ function shapes(it) {
     if (it.noOp) return r;                    // station without its own operator (one worker runs two machines)
     r.zone = obb(it, sx, d.W / 2 + zd / 2, zw / 2, zd / 2);
     r.chair = rotPt(it, sx, d.W / 2 + (st ? e.standGap : e.chairGap + e.chairD / 2));   // operator position (seat centre or standing spot)
-    r.aisle = e.aisle > 0 ? obb(it, sx, d.W / 2 + zd + e.aisle / 2, zw / 2, e.aisle / 2) : null;
+    r.aisle = e.aisle > 0 && (it.rot || 0) % 180 === 0 ? obb(it, sx, d.W / 2 + zd + e.aisle / 2, zw / 2, e.aisle / 2) : null;   // a machine turned across the row: the operator sits between machines, no aisle behind
   }
   return r;
 }
@@ -1004,15 +1054,24 @@ function buildFromPaste(p, opt) {
   // real machine lengths: never overlap inside a row
   p.rows.forEach(function (r) {
     r.cells.sort(function (a, b) { return a.rx - b.rx; });
-    for (var i = 1; i < r.cells.length; i++) { var pa = r.cells[i - 1], cu = r.cells[i], mn = pa.rx + dimOf(pa.code).L / 2 + e.colGap + dimOf(cu.code).L / 2; if (cu.rx < mn - 0.5) cu.rx = mn; }
+    // a turned machine (operator on its left / right) takes its width plus the operator's place along the row
+    var zd = function (c) { return STAND_FAMS[famOf(c.code)] ? e.standDepth : e.opDepth; };
+    var lo = function (c) { var d = dimOf(c.code); return c.dir ? d.W / 2 + (c.dir === 'left' ? zd(c) : 0) : d.L / 2; };
+    var hi = function (c) { var d = dimOf(c.code); return c.dir ? d.W / 2 + (c.dir === 'right' ? zd(c) : 0) : d.L / 2; };
+    for (var i = 1; i < r.cells.length; i++) { var pa = r.cells[i - 1], cu = r.cells[i], mn = pa.rx + hi(pa) + e.colGap + lo(cu); if (cu.rx < mn - 0.5) cu.rx = mn; }
   });
   var inputL = 60, zones = {}, order = [];
   p.rows.forEach(function (r) { var z = r.zone || 'main'; if (!zones[z]) { zones[z] = []; order.push(z); } zones[z].push(r); });
   var yCursor = opt.y0, mainSpan = null;
   order.forEach(function (zid) {
     var rows = zones[zid], ct = opt.centers && opt.centers[zid], x0, ys = [];
-    function place(r, yOf, zoneId) {
+    function place(r, yOf, zoneId, yOfT) {
       r.cells.forEach(function (x) {
+        if (x.dir) {   // turned 90°: its length across the row, the operator beside it (right: 270°, left: 90°)
+          var D = dimOf(x.code).L, yt = yOfT(D);
+          items.push({ id: uid(), kind: 'mc', code: x.code, op: x.op, x: n1(x0 + x.rx), y: n1(yt), rot: x.dir === 'right' ? 270 : 90, zone: zoneId === 'main' ? undefined : zoneId });
+          ys.push(yt - D / 2, yt + D / 2); return;
+        }
         var W = dimOf(x.code).W, top = (x.side || r.side) === 'top', yy = yOf(W, top);
         items.push({ id: uid(), kind: 'mc', code: x.code, op: x.op, x: n1(x0 + x.rx), y: n1(yy), rot: top ? 180 : 0, zone: zoneId === 'main' ? undefined : zoneId });
         ys.push(yy - W / 2 - (top ? e.opDepth : 0), yy + W / 2 + (top ? 0 : e.opDepth));
@@ -1020,16 +1079,16 @@ function buildFromPaste(p, opt) {
     }
     function band(r, y) {   // a row without a table: operators on their side, machines lined up on the operator side
       var Wmax = 0, anyTop = false, anyBot = false;
-      r.cells.forEach(function (x) { Wmax = Math.max(Wmax, dimOf(x.code).W); if ((x.side || r.side) === 'top') anyTop = true; else anyBot = true; });
+      r.cells.forEach(function (x) { Wmax = Math.max(Wmax, x.dir ? dimOf(x.code).L : dimOf(x.code).W); if ((x.side || r.side) === 'top') anyTop = true; else anyBot = true; });
       var tt = y + (anyTop ? e.opDepth : 0);
-      place(r, function (W, top) { return top ? tt + W / 2 : tt + Wmax - W / 2; }, zid);
+      place(r, function (W, top) { return top ? tt + W / 2 : tt + Wmax - W / 2; }, zid, function (D) { return tt + D / 2; });
       return tt + Wmax + (anyBot ? e.opDepth : 0) + e.rowGap;
     }
     if (ct) {
       x0 = ct.x - ct.L / 2;
       var tTop = ct.y - ct.W / 2, tBot = ct.y + ct.W / 2;
-      if (rows[0]) place(rows[0], function (W, top) { return top ? tTop - W / 2 : tTop - e.opDepth - W / 2; }, zid);
-      if (rows[1]) place(rows[1], function (W, top) { return top ? tBot + e.opDepth + W / 2 : tBot + W / 2; }, zid);
+      if (rows[0]) place(rows[0], function (W, top) { return top ? tTop - W / 2 : tTop - e.opDepth - W / 2; }, zid, function (D) { return tTop - D / 2; });
+      if (rows[1]) place(rows[1], function (W, top) { return top ? tBot + e.opDepth + W / 2 : tBot + W / 2; }, zid, function (D) { return tBot + D / 2; });
       var yy = (ys.length ? Math.max.apply(null, ys) : tBot) + e.rowGap;
       rows.slice(2).forEach(function (r) { yy = band(r, yy); });
     } else {
@@ -1063,6 +1122,13 @@ function setupLine(o) {
   if (br) { bL = Math.round(br.units * br.unit + br.end); bW = Math.round(br.width || lineAutoWidth(br.tableW)); walk = Math.round(br.walk); }
   var mainY = br && br.pos === 'top' ? bW + walk : 0, brY = br ? (br.pos === 'top' ? 0 : mW + walk) : 0, inX = -(inL + gap);
   var zones = [{ id: 'main', x: 0, y: mainY, L: mL, W: mW }];
+  // finishing area (1 QC table + 2 packing tables) and box area (3 boxes) after the main line, as wide as it
+  var fin = o.finish !== false, tL = Math.max(40, +o.finTL || LINE_DEF.finTL), tW = Math.max(30, +o.finTW || LINE_DEF.finTW), bxW = Math.max(30, +o.boxW || LINE_DEF.boxW);
+  var oldF = zoneById('finish'), oldB = zoneById('boxes');
+  if (fin) {
+    var fL = Math.round(20 + tW + tL), fx = mL + gap;   // QC, packing tables and boxes side by side, touching
+    zones.push({ id: 'finish', x: fx, y: mainY, L: fL, W: mW }, { id: 'boxes', x: fx + fL, y: mainY, L: Math.round(3 * bxW), W: mW });   // 3 box strips across the line width
+  }
   if (inL > 0) zones.push({ id: 'input', x: inX, y: mainY, L: inL, W: mW });
   if (br) {
     var wx0 = inL > 0 ? inX : 0, wx1 = Math.max(mL, bL);
@@ -1070,10 +1136,11 @@ function setupLine(o) {
     if (inL > 0) zones.push({ id: 'inputB', x: inX, y: brY, L: inL, W: bW });
   }
   ST.line = { name: o.name || '', length: Math.max(mL, bL), width: mW + (br ? walk + bW : 0), fixed: true, units: o.units, unit: o.unit, tableW: o.tableW, start: inL, gap: gap, end: o.end, hc: o.hc || 0,
+    finish: fin, finTL: tL, finTW: tW, boxW: bxW,
     mainWidth: o.width || 0, zones: zones, branch: br || null, v: 2 };
   function center(zid, x, y, L, W) {
     var c = centerOf(zid), dx = 0, dy = 0;
-    if (c) { dx = x - c.x; dy = y - c.y; ST.items.forEach(function (it) { if (it !== c && (it.zone || 'main') === zid && !isInputObj(it)) { it.x = n1(it.x + dx); it.y = n1(it.y + dy); } }); }
+    if (c) { dx = x - c.x; dy = y - c.y; ST.items.forEach(function (it) { if (it !== c && (it.zone || 'main') === zid && !isInputObj(it) && !isFinishObj(it)) { it.x = n1(it.x + dx); it.y = n1(it.y + dy); } }); }
     else { c = { id: uid(), kind: 'obj', role: 'center', zone: zid === 'main' ? undefined : zid, name: zid === 'main' ? t('centerTable') : t('centerTableB'), H: 75, rot: 0, color: '#d9cdb0' }; ST.items.unshift(c); }
     c.L = L; c.W = W; c.x = n1(x); c.y = n1(y);
   }
@@ -1081,6 +1148,31 @@ function setupLine(o) {
   if (br) center('branch', br.units * br.unit / 2, brY + bW / 2, br.units * br.unit, br.tableW);
   else { var cb = centerOf('branch'); if (cb) ST.items = ST.items.filter(function (it) { return it !== cb; }); }
   ST.items.filter(isInputObj).forEach(function (it) { placeInput(it, it.zone === 'branch' ? 'branch' : 'main'); });
+  placeFinish(oldF, oldB);
+}
+function isFinishObj(it) { return it.zone === 'finish' || it.zone === 'boxes'; }
+/* tables of the finishing area and the boxes: created once, then moved with their area (the arrangement made by the user is kept) */
+function placeFinish(oldF, oldB) {
+  var F = zoneById('finish'), Bz = zoneById('boxes'), L = ST.line;
+  if (!F) { ST.items = ST.items.filter(function (it) { return !isFinishObj(it); }); return; }
+  [[oldF, F, 'finish'], [oldB, Bz, 'boxes']].forEach(function (p) {
+    if (!p[0]) return;
+    var dx = p[1].x - p[0].x, dy = p[1].y - p[0].y;
+    ST.items.forEach(function (it) { if (it.zone === p[2]) { it.x = n1(it.x + dx); it.y = n1(it.y + dy); } });
+  });
+  var cy = F.y + F.W / 2, tL = L.finTL, tW = L.finTW;
+  if (!ST.items.some(function (it) { return it.zone === 'finish'; })) {
+    var px = F.x + 20 + tW + tL / 2;   // packing tables touch the QC table
+    ST.items.push({ id: uid(), kind: 'obj', zone: 'finish', name: 'QC', L: tL, W: tW, H: 75, x: n1(F.x + 20 + tW / 2), y: n1(cy), rot: 90, color: '#9fd3a8' },   // QC table upright
+      { id: uid(), kind: 'obj', zone: 'finish', name: 'PCK 1', L: tL, W: tW, H: 75, x: n1(px), y: n1(cy - tW / 2), rot: 0, color: '#f2cf8d' },   // two packing tables face to face
+      { id: uid(), kind: 'obj', zone: 'finish', name: 'PCK 2', L: tL, W: tW, H: 75, x: n1(px), y: n1(cy + tW / 2), rot: 0, color: '#f2cf8d' });
+  }
+  if (!ST.items.some(function (it) { return it.zone === 'boxes'; })) {
+    var bw = L.boxW;
+    [['boxY', '#f2c230'], ['boxR', '#e04848'], ['boxG', '#3fae6a']].forEach(function (b, k) {
+      ST.items.push({ id: uid(), kind: 'obj', zone: 'boxes', name: '', box: b[0], L: bw, W: Bz.W, H: 60, x: n1(Bz.x + bw / 2 + k * bw), y: n1(Bz.y + Bz.W / 2), rot: 0, color: b[1] });   // upright strips, as long as the line is wide, side by side
+    });
+  }
 }
 function isInputObj(it) { return it.kind === 'obj' && it.role !== 'center' && /^input$/i.test(String(it.name || '').trim()); }
 /* the input table: in the middle of the input area of its line (main / branch) */
@@ -1101,8 +1193,18 @@ function homeOf(it) { var h = it && it.by ? itemById(it.by) : null; return h && 
 function satellitesOf(home) { return ST.items.filter(function (i) { return i.by === home.id && i.noOp; }); }
 function opToggleOne(it) { if (it.noOp) { delete it.noOp; delete it.by; } else { it.noOp = true; delete it.by; } ST.items.forEach(function (i) { if (i.by === it.id && it.noOp) delete i.by; }); }
 /* one operator for all the given machines (the first one keeps the operator), or split them when they already share one */
+/* side of a machine: its line (main / branch) and its side of that line's central table; one person never crosses the table or the walkway */
+function sideKey(it) { var z = it.zone === 'branch' ? 'branch' : 'main', ct = centerOf(z); return z + (ct ? (it.y < ct.y ? '|T' : '|B') : ''); }
+/* a machine run by a person who sits on the other side of the central table (or on the other line), e.g. after a drag
+   or in a project saved before this rule: it gets its own operator back */
+function splitCrossLinks() {
+  var n = 0;
+  ST.items.forEach(function (it) { if (it.kind === 'mc' && it.noOp && it.by) { var h = itemById(it.by); if (h && sideKey(h) !== sideKey(it)) { delete it.noOp; delete it.by; n++; } } });
+  return n;
+}
 function opShare(list) {
   if (list.length < 2) { if (list[0]) opToggleOne(list[0]); return 'one'; }
+  if (list.some(function (i) { return sideKey(i) !== sideKey(list[0]); })) return 'cross';
   var home = list.filter(function (i) { return !i.noOp; })[0] || list[0], ids = list.map(function (i) { return i.id; });
   var grouped = list.every(function (i) { return i === home ? !i.noOp : (i.noOp && i.by === home.id); });
   if (grouped) { list.forEach(function (i) { delete i.noOp; delete i.by; }); return 'split'; }
@@ -1170,6 +1272,8 @@ function pal(light) {
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 function n1(v) { return Math.round(v * 10) / 10; }
 
+/* label text sizes (factor of the default), kept in this browser */
+var LBL = (function () { try { var o = JSON.parse(localStorage.getItem('ls_lblsz') || '{}'); return { mc: +o.mc || 1, op: +o.op || 1 }; } catch (e) { return { mc: 1, op: 1 }; } })();
 /* returns the inner SVG markup. o = {s: px per cm, P: palette, exp: true for export (no selection)} */
 function planMarkup(o) {
   var P = o.P, s = o.s, L = ST.line.length, W = ST.line.width, e = ST.erg, h = [];
@@ -1191,7 +1295,7 @@ function planMarkup(o) {
       h.push('<text x="' + (z.x + z.L / 2) + '" y="' + (z.y + z.W / 2 + fs * 0.35) + '" font-size="' + fs * 0.9 + '" font-weight="700" fill="' + P.walkEdge + '" text-anchor="middle" stroke="' + P.floor + '" stroke-width="' + fs * 0.2 + '" paint-order="stroke">' + esc(t('walkLbl', [z.W])) + '</text>');
     } else {
       h.push('<rect x="' + z.x + '" y="' + z.y + '" width="' + z.L + '" height="' + z.W + '" fill="none" stroke="' + P.edge + '" stroke-width="' + 2 * sw + '"/>');
-      h.push('<text x="' + (z.x + fs * 0.4) + '" y="' + (z.y + fs * 1.1) + '" font-size="' + fs * 0.85 + '" font-weight="700" fill="' + P.muted + '">' + esc(t(z.id === 'branch' ? 'zoneBranch' : /^input/.test(z.id) ? 'zoneInput' : 'zoneMain')) + '</text>');
+      h.push('<text x="' + (z.x + fs * 0.4) + '" y="' + (z.y + fs * 1.1) + '" font-size="' + fs * 0.85 + '" font-weight="700" fill="' + P.muted + '">' + esc(t(z.id === 'branch' ? 'zoneBranch' : /^input/.test(z.id) ? 'zoneInput' : z.id === 'finish' ? 'zoneFinish' : z.id === 'boxes' ? 'zoneBoxes' : 'zoneMain')) + '</text>');
     }
   });
   var bad = issueIds('bad'), warn = issueIds('warn'), labels = [];
@@ -1254,18 +1358,19 @@ function planMarkup(o) {
   labels.forEach(function (l) {
     var it = l.it, S = shapes(it), halo = '" fill="#14181f" stroke="rgba(255,255,255,.8)" paint-order="stroke" text-anchor="middle" font-weight="700" pointer-events="none"';
     if (it.kind !== 'mc') {
-      var f0 = fs * 0.9;
+      if (it.zone === 'boxes') return;   // the boxes: only the area label "Khu thùng"
+      var f0 = fs * 0.9 * LBL.mc;
       h.push('<text x="' + n1(it.x) + '" y="' + n1(it.y - f0 * 0.1) + '" font-size="' + f0 + '" stroke-width="' + f0 * 0.18 + halo + '>' + esc(it.name || '') + '</text>' +
         '<text x="' + n1(it.x) + '" y="' + n1(it.y + f0 * 0.85) + '" font-size="' + f0 * 0.75 + '" stroke-width="' + f0 * 0.15 + halo + '>' + esc(it.L + '×' + it.W) + '</text>');
       return;
     }
     // machine code on the table; the operation number (big) on the operator's seat, or on the table when the station has no operator
-    var fc = fs * 1.05, fo = fs * 1.7, op = String(it.op || '');
+    var fc = fs * 1.05 * LBL.mc, fo = fs * 1.7 * LBL.op, op = String(it.op || '');
     if (S.chair) {
       h.push('<text x="' + n1(it.x) + '" y="' + n1(it.y + fc * 0.35) + '" font-size="' + fc + '" stroke-width="' + fc * 0.18 + halo + '>' + esc(it.code) + '</text>');
       if (op) h.push('<text x="' + n1(S.chair.x) + '" y="' + n1(S.chair.y + fo * 0.36) + '" font-size="' + fo + '" stroke-width="' + fo * 0.16 + halo.replace('#14181f', '#0b3d91') + '>' + esc(op) + '</text>');
     } else {
-      var fo2 = fs * 1.35;
+      var fo2 = fs * 1.35 * LBL.op;
       h.push('<text x="' + n1(it.x) + '" y="' + n1(it.y - fc * 0.25) + '" font-size="' + fc + '" stroke-width="' + fc * 0.18 + halo + '>' + esc(it.code) + '</text>');
       if (op) h.push('<text x="' + n1(it.x) + '" y="' + n1(it.y + fo2 * 0.85) + '" font-size="' + fo2 + '" stroke-width="' + fo2 * 0.16 + halo.replace('#14181f', '#0b3d91') + '>' + esc(op) + '</text>');
     }
@@ -1419,7 +1524,7 @@ function toggleOperator() {
   // keep the click order: the first selected machine keeps the operator
   var mc = SEL.map(itemById).filter(function (i) { return i && i.kind === 'mc'; }); if (!mc.length) return;
   var r = opShare(mc); changed();
-  if (r === 'share') toast(t('opShared', [mc.length, label(mc[0])])); else if (r === 'split') toast(t('opSplit', [mc.length]));
+  if (r === 'share') toast(t('opShared', [mc.length, label(mc[0])])); else if (r === 'split') toast(t('opSplit', [mc.length])); else if (r === 'cross') toast(t('opCross'), true);
 }
 /* ---------- edit commands (2D and 3D share them) ---------- */
 function rotateSel(deg) {
@@ -1704,7 +1809,7 @@ function machineLabel(code, op) {
   var tw = x.measureText(code).width; if (tw > 288) { fz = Math.max(30, Math.floor(fz * 288 / tw)); x.font = 'bold ' + fz + 'px Segoe UI, Arial'; }   // long names (Bàn giữa…) fit in the box
   x.fillText(code, 160, y0 + 58 + fz * 0.35);
   var tx = new THREE.CanvasTexture(cv); tx.anisotropy = 4;
-  var s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tx, depthTest: false })); s.scale.set(80, 80 * cv.height / cv.width, 1); s.renderOrder = 11; return s;
+  var s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tx, depthTest: false })); var k = op ? (LBL.mc + 2 * LBL.op) / 3 : LBL.mc; s.scale.set(80 * k, 80 * k * cv.height / cv.width, 1); s.renderOrder = 11; return s;
 }
 function smallSprite(txt, w) {
   var cv = document.createElement('canvas'); cv.width = 256; cv.height = 64; var x = cv.getContext('2d');
@@ -1840,7 +1945,7 @@ function rebuild3d() {
       }
     } else {
       g = buildObject(it);
-      if (V3.labels && it.name) { var sp2 = machineLabel(it.name, ''); sp2.position.set(0, (it.H || 75) + 45, 0); g.add(sp2); }
+      if (V3.labels && it.name && it.zone !== 'boxes') { var sp2 = machineLabel(it.name, ''); sp2.position.set(0, (it.H || 75) + 45, 0); g.add(sp2); }
     }
     var sel = SEL.indexOf(it.id) >= 0;
     if (sel || bad[it.id] || warn[it.id]) g.add(rectLoop(d.L + 6, d.W + 6, sel ? '#1f6feb' : bad[it.id] ? '#e5484d' : '#e0a100', 1));
@@ -2315,7 +2420,7 @@ function xlShapes(xml) {
   function xf(el) { var p = xlKid(el, 'spPr') || xlKid(el, 'grpSpPr'); return p ? xlKid(p, 'xfrm') : null; }
   function num(el, a) { return el ? +el.getAttribute(a) || 0 : 0; }
   function walk(el, T) {
-    xlKids(el, 'sp').concat(xlKids(el, 'cxnSp')).forEach(function (sp) {
+    xlKids(el, 'sp').concat(xlKids(el, 'cxnSp'), xlKids(el, 'pic')).forEach(function (sp) {
       var x = xf(sp); if (!x) return;
       var o = xlKid(x, 'off'), e = xlKid(x, 'ext'), rot = num(x, 'rot');
       var p0 = T(num(o, 'x'), num(o, 'y')), p1 = T(num(o, 'x') + num(e, 'cx'), num(o, 'y') + num(e, 'cy'));
@@ -2344,17 +2449,23 @@ function xlIsCode(cl) {
   return !codeList().length && /^[A-Z]{4}$/.test(cl);
 }
 var OPS_RE = /^\d{1,3}[a-z]?(\s*[\/+,&]\s*\d{1,3}[a-z]?)*$/i;
+/* one box with both: "31- 1SLM", "35/41- 1CSM", "51 -1ZZM", "116-GFIS" (operation, dash, machine code) */
+var OPCODE_RE = /^(\d{1,3}[a-z]?(?:\s*[\/+,&]\s*\d{1,3}[a-z]?)*)\s*[-–—:.]\s*([A-Za-z0-9]{3,5})$/;
+/* the central table / conveyor drawn as a long box ("Băng chuyền đôi 30cm", "Bàn giữa") */
+var BELT_RE = /băng\s*chuyền|bang\s*chuyen|conveyor|bàn\s*giữa|ban\s*giua|central\s*table|center\s*table/i;
 /* machine boxes paired with the operation box touching them, grouped into layouts (blocks separated by empty space) and rows */
 function xlLayouts(shapes) {
-  var codes = [], nums = [];
+  var codes = [], nums = [], belts = [], st = [], pics = [];
   shapes.forEach(function (s) {
+    if (s.kind === 'pic') { s.cx = (s.x0 + s.x1) / 2; s.cy = (s.y0 + s.y1) / 2; s.w = s.x1 - s.x0; s.h = s.y1 - s.y0; pics.push(s); return; }
     if (s.kind !== 'sp' || !s.text) return;
-    var t0 = s.text.trim(), cl = t0.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    var t0 = s.text.trim(), cl = t0.toUpperCase().replace(/[^A-Z0-9]/g, ''), mm = t0.match(OPCODE_RE);
     s.cx = (s.x0 + s.x1) / 2; s.cy = (s.y0 + s.y1) / 2; s.w = s.x1 - s.x0; s.h = s.y1 - s.y0;
-    if (OPS_RE.test(t0)) { s.op = t0.replace(/\s+/g, ''); nums.push(s); }
+    if (BELT_RE.test(t0) && s.w > 3 * s.h) belts.push(s);
+    else if (OPS_RE.test(t0)) { s.op = t0.replace(/\s+/g, ''); nums.push(s); }
+    else if (mm && xlIsCode(mm[2].toUpperCase())) st.push({ code: mm[2].toUpperCase(), op: mm[1].replace(/\s+/g, ''), side: null, cx: s.cx, x0: s.x0, x1: s.x1, w: s.w, cy: s.cy, y0: s.y0, y1: s.y1, h: s.h, one: true });
     else if (cl.length === 4 && t0.replace(/\s/g, '').length <= 5 && xlIsCode(cl)) { s.code = cl; codes.push(s); }
   });
-  var st = [];
   codes.forEach(function (c) {
     var best = null, bd = Infinity;
     nums.forEach(function (n) {
@@ -2370,6 +2481,23 @@ function xlLayouts(shapes) {
   });
   if (!st.length) return [];
   var medW = median(st.map(function (s) { return s.w; })), medH = median(st.map(function (s) { return s.h; }));
+  // boxes holding operation + machine: the operator side from the chair picture next to the box; a tall box = machine turned 90°
+  var gap = function (s, c) { var dx = Math.max(s.x0 - c.cx, 0, c.cx - s.x1), dy = Math.max(s.y0 - c.cy, 0, c.cy - s.y1); return Math.hypot(dx, dy); };
+  var ones = st.filter(function (s) { return s.one; });
+  pics.forEach(function (c) {   // each chair belongs to the box nearest to it
+    var bs = null, bd = Infinity;
+    ones.forEach(function (s) { var sh = Math.min(s.w, s.h); if (Math.min(c.w, c.h) < 0.5 * sh || c.w * c.h > 1.5 * s.w * s.h) return; var d = gap(s, c); if (d < bd && d < 0.7 * Math.max(s.w, s.h)) { bd = d; bs = s; } });   // chairs, not the small thread / cone icons
+    if (bs) (bs.chairs = bs.chairs || []).push(c);
+  });
+  st.forEach(function (s) {
+    if (!s.one) return;
+    var best = (s.chairs || []).sort(function (a, b) { return gap(s, a) - gap(s, b); })[0];
+    if (best) {
+      var nx = (best.cx - s.cx) / (s.w / 2), ny = (best.cy - s.cy) / (s.h / 2);
+      s.dir = Math.abs(nx) > Math.abs(ny) ? (nx > 0 ? 'right' : 'left') : (ny > 0 ? 'bottom' : 'top');
+    }
+    s.tall = s.h > 1.6 * s.w;
+  });
   // blocks: stations connected when close in both directions
   var par = st.map(function (s, i) { return i; });
   function f(i) { while (par[i] !== i) { par[i] = par[par[i]]; i = par[i]; } return i; }
@@ -2383,12 +2511,22 @@ function xlLayouts(shapes) {
     g.sort(function (a, b) { return a.cy - b.cy; });
     var rows = [];
     g.forEach(function (s) { var r = rows[rows.length - 1]; if (r && Math.abs(s.cy - r.cy) < medH * 0.5) { r.items.push(s); r.cy = (r.cy * (r.items.length - 1) + s.cy) / r.items.length; } else rows.push({ cy: s.cy, items: [s] }); });
-    var x0 = Math.min.apply(null, g.map(function (s) { return s.x0; })), k = 107 / (median(g.map(function (s) { return s.w; })) || 1);
+    // drawing scale: a machine box is one standard machine (107 cm) long; boxes drawn upright (turned machines) are measured on their long side
+    var oneBox = g.filter(function (s) { return s.one; }).length > g.length / 2;
+    var x0 = Math.min.apply(null, g.map(function (s) { return s.x0; })), k = 107 / (median(g.map(function (s) { return oneBox ? Math.max(s.w, s.h) : s.w; })) || 1);
+    var gx0 = Math.min.apply(null, g.map(function (s) { return s.x0; })), gx1 = Math.max.apply(null, g.map(function (s) { return s.x1; }));
+    var belt = belts.filter(function (b) { return Math.min(b.x1, gx1) - Math.max(b.x0, gx0) > 0.3 * (gx1 - gx0); }).sort(function (a, b) { return Math.abs(a.cy - rows[0].cy) - Math.abs(b.cy - rows[0].cy); })[0];
+    var midY = belt ? belt.cy : (rows[0].cy + rows[rows.length - 1].cy) / 2;
     var prow = rows.map(function (r) {
       r.items.sort(function (a, b) { return a.cx - b.cx; });
       var up = r.items.filter(function (s) { return s.side === 'top'; }).length, dn = r.items.filter(function (s) { return s.side === 'bottom'; }).length;
-      var side = up || dn ? (up >= dn ? 'top' : 'bottom') : null;
-      return { cy: r.cy, side: side, sideFound: !!side, cells: r.items.map(function (s, ci) { return { col: ci, code: s.code, op: s.op, side: s.side || side || 'top', x: (s.cx - x0) * k }; }) };
+      var side = up || dn ? (up >= dn ? 'top' : 'bottom') : rows.length > 1 || belt ? (r.cy < midY ? 'top' : 'bottom') : null;
+      var rs = side || 'top';
+      return { cy: r.cy, side: side, sideFound: !!(up || dn), cells: r.items.map(function (s, ci) {
+        // a tall box without chair: the machine is turned, the operator on the right above the conveyor, on the left below it (as drawn usually)
+        var dir = s.dir || (s.tall ? (rs === 'top' ? 'right' : 'left') : null);
+        return { col: ci, code: s.code, op: s.op, side: dir === 'top' || dir === 'bottom' ? dir : (s.side || rs), dir: dir === 'left' || dir === 'right' ? dir : null, x: (s.cx - x0) * k };
+      }) };
     });
     return { rows: prow, n: g.length, x0: x0, y0: Math.min.apply(null, g.map(function (s) { return s.y0; })), x1: Math.max.apply(null, g.map(function (s) { return s.x1; })), y1: Math.max.apply(null, g.map(function (s) { return s.y1; })), stations: g };
   });
@@ -2451,16 +2589,18 @@ function xlOpsTables(ws, layoutOps) {
   if (!ws || !ws['!ref']) return out;
   var R = XLSX.utils.decode_range(ws['!ref']), r1 = Math.min(R.e.r, 1500), c1 = Math.min(R.e.c, 40);
   function v(r, c) { var x = ws[XLSX.utils.encode_cell({ r: r, c: c })]; return x && x.v != null ? String(x.w != null ? x.w : x.v).trim() : ''; }
-  function num(r, c) { var x = ws[XLSX.utils.encode_cell({ r: r, c: c })]; if (!x || x.v == null || x.v === '') return NaN; return typeof x.v === 'number' ? x.v : parseFloat(String(x.v).replace(',', '.')); }
+  function num(r, c) { var x = ws[XLSX.utils.encode_cell({ r: r, c: c })]; if (!x || x.v == null || x.v === '' || x.t === 'e') return NaN; return typeof x.v === 'number' ? x.v : parseFloat(String(x.v).replace(',', '.')); }
   var want = {}; (layoutOps || []).forEach(function (o) { want[String(o)] = 1; });
   for (var r = R.s.r; r <= r1; r++) {
-    var samC = -1, mcC = -1, optrC = -1, mcnC = -1, opHdr = false;
+    var samC = -1, mcC = -1, optrC = -1, mcnC = -1, effC = -1, descC = -1, opHdr = false;
     for (var c = 0; c <= c1; c++) {   // a header may take two rows ("Factory" / "SMV"); a "SAM:" label of the sheet header is not a column
       var h1 = v(r, c).toLowerCase(), h = (h1 + ' ' + v(r + 1, c).toLowerCase()).trim();
       if (samC < 0 && h1.indexOf(':') < 0 && (/^(sam|smv)(\s*\/\s*(sam|smv))?\b/.test(h1) || /sam\s*\/\s*smv|factory\s*smv/.test(h))) samC = c;
       if (mcC < 0 && /m\/c\s*type|machine\s*type|loại máy/.test(h)) mcC = c;
+      if (descC < 0 && /description|mô tả|operation\s*name|tên công đoạn|工序名称/.test(h)) descC = c;
       if (optrC < 0 && /arrange\.?\s*optr/.test(h)) optrC = c;
-      if (mcnC < 0 && /no\.?\s*(of\s*)?m\/?c\b|số\s*máy|qty\s*(of\s*)?m\/?c|m\/c\s*qty/.test(h)) mcnC = c;
+      if (mcnC < 0 && /no\.?\s*(of\s*)?m\/?c\b|số\s*máy|qty\s*(of\s*)?m\/?c|m\/c\s*qty|arrange\.?\s*m\/?c/.test(h)) mcnC = c;
+      if (effC < 0 && h.indexOf(':') < 0 && /target\s*eff|m\.?\s*tiêu\s*hiệu\s*suất|hiệu\s*suất\s*mục\s*tiêu/.test(h)) effC = c;   // "Target eff (M.tiêu Hiệu suất)" per operation
       if (/^squ\b|op\.?\s*no|operation|công đoạn|op\s*code/.test(h1)) opHdr = true;
     }
     if (samC < 0 || !(opHdr || mcC >= 0)) continue;
@@ -2473,7 +2613,11 @@ function xlOpsTables(ws, layoutOps) {
     if (best < 0) continue;
     // "Arrange. Optr / CN sắp xếp": a cell merged over several operations = those operations done together by that many people
     var merges = ws['!merges'] || [], last = null, idx = 0;
-    var mergeAt = function (row) { for (var i = 0; i < merges.length; i++) { var m = merges[i]; if (m.s.c <= optrC && m.e.c >= optrC && m.s.r <= row && m.e.r >= row && m.e.r > m.s.r) return m; } return null; };
+    var mergeAt = function (row, col) { if (col == null) col = optrC; for (var i = 0; i < merges.length; i++) { var m = merges[i]; if (m.s.c <= col && m.e.c >= col && m.s.r <= row && m.e.r >= row && m.e.r > m.s.r) return m; } return null; };
+    var effAt = function (row) {   // target efficiency of the operation (a merged cell covers its operations), in %
+      if (effC < 0) return null; var mg = mergeAt(row, effC), e = num(mg ? mg.s.r : row, effC);
+      if (!isFinite(e) || e <= 0) return null; if (e <= 3) e *= 100; return Math.round(Math.min(300, e));
+    };
     for (rr = r + 1; rr <= Math.min(r1, r + 200); rr++) {
       if (/total|tổng/i.test(v(rr, 0)) || /^total|^subtotal/i.test(v(rr, samC - 1))) break;
       var op = num(rr, best), sam = num(rr, samC);
@@ -2491,7 +2635,12 @@ function xlOpsTables(ws, layoutOps) {
         else arr = num(rr, optrC);
         if (!isFinite(arr)) arr = mg ? 0 : null;
       }
-      out[k] = { sam: Math.round(sam * 10000) / 10000, mc: mcC >= 0 ? v(rr, mcC).split(/\s/)[0] : '', optr: arr, ar: arr, ag: ag, ai: idx++, mcn: mcnC >= 0 && isFinite(num(rr, mcnC)) ? num(rr, mcnC) : null };
+      // operation name: the description column; the next column without header usually holds the Vietnamese text
+      var cl = function (x) { return String(x || '').replace(/\s+/g, ' ').trim(); };
+      var d1 = descC >= 0 ? cl(v(rr, descC)) : '', d2 = descC >= 0 && descC + 1 < Math.min(samC, mcC >= 0 ? mcC : samC) ? cl(v(rr, descC + 1)) : '';
+      var isVi = function (x) { return /[ăâđêôơưạảấầẩẫậắằẳẵặẹẻẽếềểễệỉịọỏốồổỗộớờởỡợụủứừửữựỳỵỷỹáàãéèíìóòõúùý]/i.test(x) && !/[\u4e00-\u9fff]/.test(x); };
+      var vi = isVi(d2) ? d2 : isVi(d1) ? d1 : '', ot = vi === d2 ? d1 : vi === d1 ? d2 : d1;
+      out[k] = { nm: vi, nm2: ot || '', sam: Math.round(sam * 10000) / 10000, mc: mcC >= 0 ? v(rr, mcC).split(/\s/)[0] : '', optr: arr, ar: arr, ag: ag, ai: idx++, mcn: mcnC >= 0 && isFinite(num(rr, mcnC)) ? num(rr, mcnC) : null, tef: effAt(rr) };
       last = k;
     }
     r += 2;
@@ -2577,7 +2726,7 @@ function xlOpen(f) {
       XLI.sheets.forEach(function (s) { s.info = xlSheetInfo(wb && wb.Sheets[s.name], s.name, f.name); });
       // SAM table: the layout's own sheet first, other sheets fill the missing operations; sequences typed in cells too
       if (wb) XLI.sheets.forEach(function (s) {
-        var ops = []; s.layouts.forEach(function (l) { (l.cells ? parsePaste(l.tsv).rows : l.rows).forEach(function (r) { r.cells.forEach(function (c) { String(c.op || '').split(/[\/+,&]/).forEach(function (o) { if (o.trim()) ops.push(o.trim()); }); }); }); });
+        var ops = []; s.layouts.forEach(function (l) { (l.cells ? parsePaste(l.tsv).rows : l.rows).forEach(function (r) { r.cells.forEach(function (c) { String(c.op || '').split(/[\/+,&]/).forEach(function (o) { o = o.trim().replace(/^0+(?=\d)/, ''); if (o) ops.push(o); }); }); }); });
         s.ops = xlOpsTables(wb.Sheets[s.name], ops);
         wb.SheetNames.forEach(function (sn) { if (sn === s.name) return; var o2 = xlOpsTables(wb.Sheets[sn], ops); Object.keys(o2).forEach(function (k) { if (!s.ops[k] && ops.indexOf(k) >= 0) s.ops[k] = o2[k]; }); });
         var seen = {}; s.seqs.forEach(function (q) { seen[q.text.replace(/\s/g, '')] = 1; });
@@ -2605,6 +2754,7 @@ function xlOpen(f) {
         return '<option value="a:' + k + '">' + esc('⚙ ' + t('xlAutoOpt', [a.name + (a.hidden ? ' (' + t('xlHidden') + ')' : ''), r.nOps, r.nMc, r.nLines])) + '</option>';
       }).join('');
       document.getElementById('xlBox').style.display = '';
+      document.getElementById('xlAutoBtn').style.display = XLI.auto.length ? '' : 'none';
       xlFillBranchPick();
       // the visible sheet with the most machines first
       var bi = 0, bn = -1; [].forEach.call(sel.options, function (o, k) { var p = o.value.split(':'); if (p[0] === 'a') { if (bn < 0 && !XLI.auto[+p[1]].hidden) { bn = 0; bi = k; } return; } var s = XLI.sheets[+p[0]]; if (!s.hidden && s.layouts[+p[1]].n > bn) { bn = s.layouts[+p[1]].n; bi = k; } });
@@ -2624,6 +2774,13 @@ function xlFillBranchPick() {
   if (!on) { sel.value = ''; return; }
   sel.innerHTML = '<option value="">' + esc(t('xlBranchNone')) + '</option>' + [].filter.call(document.getElementById('xlPick').options, function (o) { return !/^a:/.test(o.value); }).map(function (o) { return o.outerHTML; }).join('');
 }
+/* SAM etc. of the chosen layout: its own tables first, then the operation tables of every other sheet (as the automatic layout sees them) */
+function xlOpsAll(own) {
+  var out = Object.assign({}, own || {});
+  if (!XLI) return out;
+  (XLI.auto || []).forEach(function (a) { Object.keys(a.ops).forEach(function (k) { if (!out[k] || !(out[k].sam > 0)) out[k] = out[k] ? Object.assign({}, a.ops[k], { ar: out[k].ar, ag: out[k].ag, ai: out[k].ai }) : a.ops[k]; }); });
+  return out;
+}
 function xlUse() {
   if (/^a:/.test(document.getElementById('xlPick').value)) { document.getElementById('xlPickB').value = ''; xlAuto(+document.getElementById('xlPick').value.slice(2)); return; }
   var pb = document.getElementById('xlPickB').value;
@@ -2632,7 +2789,7 @@ function xlUse() {
     var main = xlRows(s1.layouts[+p1[1]]).map(function (r) { r.zone = 'main'; return r; }), br = xlRows(s2.layouts[+p2[1]]).map(function (r) { r.zone = 'branch'; return r; });
     var rows = ((ST.line.branch || {}).pos === 'bottom' ? main.concat(br) : br.concat(main));
     PASTE = { rows: rows, nCols: 0, nMc: rows.reduce(function (a, r) { return a + r.cells.length; }, 0), fromXl: true, seq: s1.seqs.length ? s1.seqs : s2.seqs,
-      meta: { style: s1.info.style, file: XLI.name, sheet: s1.name, optr: s1.info.optr, sam: s1.info.sam, obd: s1.info.obd, target: s1.info.target, eff: s1.info.eff }, ops: Object.assign({}, s2.ops, s1.ops) };
+      meta: { style: s1.info.style, file: XLI.name, sheet: s1.name, optr: s1.info.optr, sam: s1.info.sam, obd: s1.info.obd, target: s1.info.target, eff: s1.info.eff }, ops: xlOpsAll(Object.assign({}, s2.ops, s1.ops)) };
     var stb = document.getElementById('ocrStatus'); stb.className = 'small'; stb.textContent = t('xlTwo', [PASTE.nMc]);
     document.getElementById('ocrView').innerHTML = '';
     renderPastePreview(); return;
@@ -2642,14 +2799,14 @@ function xlUse() {
   var st0 = document.getElementById('ocrStatus'); st0.className = 'small';
   if (lay.cells) {   // a layout written in cells: the same reader as a paste from Excel
     document.getElementById('pasteTxt').value = lay.tsv;
-    PASTE = parsePaste(lay.tsv); PASTE.seq = sh.seqs; PASTE.meta = meta; PASTE.ops = sh.ops;
+    PASTE = parsePaste(lay.tsv); PASTE.seq = sh.seqs; PASTE.meta = meta; PASTE.ops = xlOpsAll(sh.ops);
     st0.textContent = t('xlRead', [XLI.name, sh.name, PASTE.nMc, sh.seqs.length]) + ' ' + t('xlCells', [lay.ref]) + '.' + (sh.info.style ? ' ' + t('xlStyle', [sh.info.style, sh.info.optr || '?', sh.info.sam || '?', sh.info.obd || '?']) : '');
     document.getElementById('ocrView').innerHTML = '';
     renderPastePreview(); return;
   }
   var rows = lay.rows.map(function (r) { return { side: r.side || 'top', sideFound: r.sideFound, cells: r.cells.map(function (c) { return Object.assign({}, c); }) }; });
   PASTE = { rows: rows, nCols: Math.max.apply(null, rows.map(function (r) { return r.cells.length; })), nMc: lay.n, fromXl: true, seq: sh.seqs,
-    meta: meta, ops: sh.ops };
+    meta: meta, ops: xlOpsAll(sh.ops) };
   // the table text for reference (editing it switches back to the text grid)
   var lines = []; rows.forEach(function (r, i) { if (i) lines.push(''); var ops = r.cells.map(function (c) { return c.op; }).join('\t'), cs = r.cells.map(function (c) { return c.code; }).join('\t'); if (r.side === 'top') lines.push(ops, cs); else lines.push(cs, ops); });
   document.getElementById('pasteTxt').value = lines.join('\n') + '\n';
@@ -2660,9 +2817,14 @@ function xlUse() {
 function xlPreviewSvg(lay) {
   var w = lay.x1 - lay.x0, h = lay.y1 - lay.y0, svg = '';
   lay.stations.forEach(function (s) {
-    var col = FAM_COL[famOf(s.code)] || '#ccc';
+    var col = FAM_COL[famOf(s.code)] || '#ccc', x = s.cx - lay.x0, y = s.cy - lay.y0, up = s.h > 1.3 * s.w;
+    var fs = Math.max(7, Math.min(up ? s.w * 0.36 : s.h * 0.3, (up ? s.h : s.w) / Math.max(4, (s.code + ' ' + (s.op || '')).length * 0.62)));
     svg += '<rect x="' + (s.x0 - lay.x0) + '" y="' + (s.y0 - lay.y0) + '" width="' + s.w + '" height="' + s.h + '" fill="' + col + '" fill-opacity=".6" stroke="#333" stroke-width="1"/>' +
-      '<text x="' + (s.cx - lay.x0) + '" y="' + (s.cy - lay.y0 + 4) + '" font-size="' + Math.max(9, s.h * 0.22) + '" text-anchor="middle" font-weight="700">' + esc(s.code) + (s.op ? ' ' + esc(s.op) : '') + '</text>';
+      '<text x="' + x + '" y="' + y + '" dy=".35em" font-size="' + fs.toFixed(1) + '" text-anchor="middle" font-weight="700"' + (up ? ' transform="rotate(-90 ' + x + ' ' + y + ')"' : '') + '>' + esc((s.op ? s.op + ' ' : '') + s.code) + '</text>';
+    // the operator's place found in the drawing (chair / operation box side)
+    var d = s.dir || (s.side === 'top' ? 'top' : s.side === 'bottom' ? 'bottom' : null), r = Math.max(4, Math.min(s.w, s.h) * 0.22);
+    if (d) { var px = d === 'left' ? s.x0 - lay.x0 - r * 1.4 : d === 'right' ? s.x1 - lay.x0 + r * 1.4 : x, py = d === 'top' ? s.y0 - lay.y0 - r * 1.4 : d === 'bottom' ? s.y1 - lay.y0 + r * 1.4 : y;
+      svg += '<circle cx="' + px.toFixed(1) + '" cy="' + py.toFixed(1) + '" r="' + r.toFixed(1) + '" fill="#f2c230" stroke="#555" stroke-width="1"/>'; }
   });
   document.getElementById('ocrView').innerHTML = '<div class="ocrwrap"><svg viewBox="-5 -5 ' + (w + 10) + ' ' + (h + 10) + '" style="position:static;height:auto;width:100%">' + svg + '</svg></div>';
 }
@@ -2694,14 +2856,17 @@ function autoRows(ops, seqs, branchOn) {
     var A = lines.filter(function (l) { return l.asm; })[0] || lines[lines.length - 1];
     rest.forEach(function (o) { var k = 0; while (k < A.ops.length && !(simNum(A.ops[k]) > simNum(o))) k++; A.ops.splice(k, 0, o); });
   }
-  var useBr = branchOn && lines.length > 1, zones = {}, nMc = 0, nOps = 0;
+  var useBr = branchOn && lines.length > 1, zones = {}, nMc = 0, nOps = 0, unitOf = {}, unitSide = {};
+  arrUnits(ops).forEach(function (u, ui) { u.ops.forEach(function (o) { unitOf[o] = ui; }); });   // operations done by the same people: one side of the table
   lines.forEach(function (l) {
     var zid = useBr && !l.asm ? 'branch' : 'main';
     var Z = zones[zid] || (zones[zid] = { cur: { top: 0, bottom: 0 }, rows: { top: [], bottom: [] } });
     l.ops.forEach(function (o) {
       var code = autoCode(ops[o].mc), n = autoCount(ops, o), L = dimOf(code).L; nOps++;
+      var uk = unitOf[o] != null ? zid + ':' + unitOf[o] : null;
       for (var i = 0; i < n; i++) {
-        var side = Z.cur.top <= Z.cur.bottom ? 'top' : 'bottom';
+        var side = uk && unitSide[uk] ? unitSide[uk] : Z.cur.top <= Z.cur.bottom ? 'top' : 'bottom';
+        if (uk) unitSide[uk] = side;
         Z.rows[side].push({ code: code, op: o, x: Z.cur[side] + L / 2, side: side }); Z.cur[side] += L; nMc++;
       }
     });
@@ -2771,7 +2936,7 @@ function stationsOf(op) {
   var key = String(op).trim().replace(/^0+(?=\d)/, '').toUpperCase(), out = [];
   ST.items.forEach(function (it) {
     if (it.kind === 'mc') { if (opsOf(it).some(function (o) { return o.toUpperCase() === key; })) { var s = shapes(it); out.push({ it: it, p: s.chair || s.front }); } }
-    else if (it.name && it.name.trim().toUpperCase().indexOf(key) === 0 && /[A-Z]/.test(key)) out.push({ it: it, p: { x: it.x, y: it.y } });
+    else if (it.name && /[A-Z]/.test(key) && (it.name.trim().toUpperCase().indexOf(key) === 0 || (/^PA?CK/.test(key) && /^PA?CK/i.test(it.name.trim())))) out.push({ it: it, p: { x: it.x, y: it.y } });
   });
   return out;
 }
@@ -3053,7 +3218,9 @@ function simOperators(opsSet) {
 }
 /* static balance: share of each operator's time per operation (proportional to SAM), capacity in pieces / hour */
 /* efficiency of one operation: its own value (%, edited in the table) or the general one */
-function effOf(op, eff) { var o = (ST.ops || {})[op]; return o && o.eff > 0 ? o.eff / 100 : eff; }
+/* efficiency of an operation: the value edited in the table, else the target efficiency of the operation in the layout file ("Target eff"), else the general one */
+function useTef() { var c = document.getElementById('smTef'); return !c || c.checked; }
+function effOf(op, eff) { var o = (ST.ops || {})[op]; return o && o.eff > 0 ? o.eff / 100 : o && o.tef > 0 && useTef() ? o.tef / 100 : eff; }
 /* headcount of the line: line set-up, else the workers of the layout file, else 0 (= operators as on the plan) */
 function lineHC() { var h = parseFloat(ST.line.hc); if (h > 0) return Math.round(h); var f = parseFloat((ST.info || {}).optr); return f > 0 ? Math.round(f) : 0; }
 /* static balance: share of each operator's time per operation (proportional to SAM), capacity in pieces / hour.
@@ -3066,12 +3233,13 @@ function simBalance(eff) {
   function calc() {
     var share = {}, cnt = {};
     opers.forEach(function (p) {
-      var tot = p.ops.reduce(function (a, o) { return a + (samOf(o) || 0.0001); }, 0);
-      p.ops.forEach(function (o) { share[o] = (share[o] || 0) + (samOf(o) || 0.0001) / tot; cnt[o] = (cnt[o] || 0) + 1; });
+      // time of a shared operator split by the working time of each operation (SAM / efficiency)
+      var tm = function (o) { return (samOf(o) || 0.0001) / effOf(o, eff); }, tot = p.ops.reduce(function (a, o) { return a + tm(o); }, 0);
+      p.ops.forEach(function (o) { share[o] = (share[o] || 0) + tm(o) / tot; cnt[o] = (cnt[o] || 0) + 1; });
     });
     var rows = Object.keys(set).sort(function (a, b) { return simNum(a) - simNum(b); }).map(function (o) {
       var sam = samOf(o), sh = share[o] || 0, ef = effOf(o, eff);
-      return { op: o, sam: sam, eff: ef, effOwn: !!(((ST.ops || {})[o] || {}).eff > 0), mc: ((ST.ops || {})[o] || {}).mc || (st[o] && st[o][0] ? st[o][0].code : ''), stations: (st[o] || []).length, its: st[o] || [],
+      return { op: o, sam: sam, eff: ef, effOwn: !!(((ST.ops || {})[o] || {}).eff > 0), effFile: !(((ST.ops || {})[o] || {}).eff > 0) && ((ST.ops || {})[o] || {}).tef > 0 && useTef(), mc: ((ST.ops || {})[o] || {}).mc || (st[o] && st[o][0] ? st[o][0].code : ''), stations: (st[o] || []).length, its: st[o] || [],
         people: sh, nOper: cnt[o] || 0, adj: adj[o] || 0, cap: sam > 0 && sh > 0 ? sh * 60 * ef / sam : (sh > 0 ? Infinity : 0) };
     });
     return rows;
@@ -3149,7 +3317,7 @@ function simRun(p) {
   var rows = B.rows.map(function (r) {
     var n = node[r.op] || {};
     var endQ = r.op === join ? 0 : (push && starts.indexOf(r.op) >= 0 ? null : n.q);
-    return Object.assign({}, r, { util: r.people > 0 ? (n.busyT || 0) / (r.people * T) : null, wipEnd: endQ == null ? null : endQ * bundle, wipMax: (n.qMax || 0) * bundle, wipAvg: (n.qSum || 0) / T * bundle, done: (n.done || 0) * bundle,
+    return Object.assign({}, r, { util: r.people > 0 ? Math.min(1, (n.busyT || 0) / (r.people * T)) : null, wipEnd: endQ == null ? null : endQ * bundle, wipMax: (n.qMax || 0) * bundle, wipAvg: (n.qSum || 0) / T * bundle, done: (n.done || 0) * bundle,
       feedEnd: n.feed ? fbuf[r.op] * bundle : null, feedMax: n.feed ? (n.fMax || 0) * bundle : null, start: starts.indexOf(r.op) >= 0, join: r.op === join });
   });
   var people = opers.length, samTot = Object.keys(node).reduce(function (a, o) { return a + node[o].sam; }, 0);
@@ -3189,25 +3357,48 @@ function renderSim() {
   $('smSrc').innerHTML = esc(B.L.fromSeq ? t('simSrcSeq', [B.L.lines.length]) : t('simSrcDef')) + (B.L.added && B.L.added.length ? ' · ' + esc(t('simCombAdd', [B.L.added.join(', ')])) : '') + ((ST.opsOff || []).length ? ' · ' + esc(t('simOff', [ST.opsOff.map(function (x) { return x.op; }).join(', ')])) : '') + ' · ' + esc(B.hc ? t('simHC', [B.hc, B.onPlan]) : t('simOpers', [B.opers.length])) +
     (B.hc && B.hc !== B.onPlan ? ' · ' + esc(t(B.hc > B.onPlan ? 'simHCplus' : 'simHCminus', [B.rows.filter(function (x) { return x.adj; }).map(function (x) { return x.op + ' ' + (x.adj > 0 ? '+' : '') + x.adj; }).join(', ')])) : '') +
     (missing.length ? '<div class="t-warn tagline">⚠ ' + esc(t('simNoSam', [missing.join(', ')])) + '</div>' : '');
-  var maxCap = Math.max.apply(null, B.rows.map(function (x) { return isFinite(x.cap) ? x.cap : 0; }).concat([1]));
+  var maxCap = Math.max.apply(null, B.rows.map(function (x) { return isFinite(x.cap) ? x.cap : 0; }).concat([1, (+(ST.info || {}).target || 0) * 1.15]));
   var arr = null;   // people arranged in the layout file, per operation (with the operations sharing the cell)
   if (hasArr()) { arr = {}; arrGroups().forEach(function (g) { g.ops.forEach(function (o) { arr[o] = g; }); }); }
-  $('smTable').innerHTML = '<table><tr><th>' + esc(t('simOp')) + '</th><th>' + esc(t('simMc')) + '</th><th class="n">SAM</th><th class="n">' + esc(t('simSt')) + '</th><th class="n">' + esc(t('simPeople')) + '</th>' + (arr ? '<th class="n" title="' + esc(t('simArrTip')) + '">' + esc(t('simArr')) + '</th>' : '') + '<th class="n">' + esc(t('simEffCol')) + '</th><th class="n">' + esc(t('simCap')) + '</th><th style="width:24%">' + esc(t('simLoad')) + '</th>' +
-    (r ? '<th class="n" title="' + esc(t('simUtilTip')) + '">' + esc(t('simUtilCol')) + '</th><th class="n">' + esc(t('simWipEnd')) + '</th><th class="n">' + esc(t('simWipMax')) + '</th>' : '') + '</tr>' +
-    B.rows.map(function (x) {
-      var bn = B.bottleneck.indexOf(x.op) >= 0, rr = rowsBy[x.op], wip = rr ? (rr.wipEnd != null ? rr.wipEnd : 0) + (rr.feedEnd || 0) : 0;
-      var cls = bn ? ' class="bn"' : (rr && wip >= p.wipWarn ? ' class="wip"' : '');
-      var w = isFinite(x.cap) ? Math.round(100 * x.cap / maxCap) : 100;
-      // load = output needed (the target, else the slowest operation) / capacity of this operation
-      var need = i.target || B.capMin, load = isFinite(x.cap) && x.cap > 0 && need ? Math.round(100 * need / x.cap) : null;
-      return '<tr' + cls + ' data-op="' + esc(x.op) + '"><td><button class="rmop" data-rmop="' + esc(x.op) + '" title="' + esc(t('simRmOp')) + '">✕</button> <b>' + esc(x.op) + '</b>' + (comb[x.op] ? ' <span class="tag t-info" title="' + esc(t('simComb', [comb[x.op].join(', ')])) + '">⇄ ' + esc(comb[x.op].join(', ')) + '</span>' : '') + (bn ? ' <span class="tag t-bad">' + esc(t('simBn')) + '</span>' : '') + '</td><td>' + esc(x.mc) + '</td>' +
-        '<td class="n"><input style="width:84px" type="number" step="0.0001" min="0" data-sam="' + esc(x.op) + '" value="' + (x.sam || '') + '"></td><td class="n">' + x.stations + '</td><td class="n">' + x.people.toFixed(2) + (x.adj ? ' <span class="tag ' + (x.adj > 0 ? 't-info' : 't-warn') + '">' + (x.adj > 0 ? '+' : '') + x.adj + '</span>' : '') + '</td>' +
-        (arr ? '<td class="n">' + (arr[x.op] ? arr[x.op].v + (arr[x.op].ops.length > 1 ? ' <span class="muted small" title="' + esc(t('simArrGrp', [arr[x.op].ops.join(', ')])) + '">⟨' + esc(arr[x.op].ops.join('·')) + '⟩</span>' : '') : '<span class="muted">—</span>') + '</td>' : '') +
-        '<td class="n"><input style="width:62px" type="number" step="1" min="5" max="150" data-eff="' + esc(x.op) + '" value="' + (x.effOwn ? Math.round(x.eff * 100) : '') + '" placeholder="' + Math.round(p.eff * 100) + '"></td>' +
-        '<td class="n">' + (isFinite(x.cap) ? Math.round(x.cap) : '∞') + '</td><td><div class="bar"><i style="width:' + w + '%;background:' + (bn || (load && load > 100) ? 'var(--bad)' : 'var(--accent)') + '"></i>' + (takt ? '<b style="left:' + Math.min(100, Math.round(100 * (i.target || 0) / maxCap)) + '%"></b>' : '') +
-        '<span class="barT">' + (isFinite(x.cap) ? Math.round(x.cap) + ' ' + esc(t('simPcsH')) : '∞') + (load != null ? ' · ' + esc(t('simLoadPct', [load])) : '') + '</span></div></td>' +
-        (r ? '<td class="n">' + (rr && rr.util != null ? '<span class="' + (rr.util >= 0.95 ? 't-bad' : rr.util < 0.6 ? 't-warn' : '') + '">' + Math.round(rr.util * 100) + '%</span>' : '') + '</td><td class="n">' + (rr && rr.wipEnd == null ? '<span class="muted">∞</span>' : wip) + '</td><td class="n">' + (rr ? rr.wipMax + (rr.feedMax || 0) : '') + '</td>' : '') + '</tr>';
-    }).join('') + '</table>';
+  var nmOf = function (o) { var x = (ST.ops || {})[o] || {}; return LANG === 'en' ? x.nm2 || x.nm || '' : x.nm || x.nm2 || ''; };
+  var tgt = +i.target || 0, rowsH = B.rows.map(function (x) {
+    var bn = B.bottleneck.indexOf(x.op) >= 0, rr = rowsBy[x.op], wip = rr ? (rr.wipEnd != null ? rr.wipEnd : 0) + (rr.feedEnd || 0) : 0;
+    var cls = bn ? ' class="bn"' : (rr && wip >= p.wipWarn ? ' class="wip"' : '');
+    // load = output needed (the target, else the slowest operation) / capacity; people needed for the target = target x SAM / (60 x efficiency)
+    var need = tgt || B.capMin, load = isFinite(x.cap) && x.cap > 0 && need ? Math.round(100 * need / x.cap) : null;
+    var req = tgt && x.sam > 0 ? tgt * x.sam / (60 * x.eff) : null, w = isFinite(x.cap) ? Math.max(2, Math.round(100 * x.cap / maxCap)) : 100;
+    var lc = load == null ? 'var(--accent)' : load > 100 ? 'var(--bad)' : load >= 90 ? 'var(--warn)' : 'var(--ok)', nm = nmOf(x.op);
+    return '<tr' + cls + ' data-op="' + esc(x.op) + '"><td class="opc"><div><button class="rmop" data-rmop="' + esc(x.op) + '" title="' + esc(t('simRmOp')) + '">✕</button> <b>' + esc(x.op) + '</b>' +
+      (comb[x.op] ? ' <span class="tag t-info" title="' + esc(t('simComb', [comb[x.op].join(', ')])) + '">⇄ ' + esc(comb[x.op].join(', ')) + '</span>' : '') + (bn ? ' <span class="tag t-bad">' + esc(t('simBn')) + '</span>' : '') + '</div>' +
+      (nm ? '<div class="opn" title="' + esc(nm + ((ST.ops[x.op] || {}).nm2 && (ST.ops[x.op] || {}).nm2 !== nm ? '\n' + ST.ops[x.op].nm2 : '')) + '">' + esc(nm) + '</div>' : '') + '</td><td>' + esc(autoCode(x.mc) || x.mc) + '</td>' +
+      '<td class="n"><input style="width:78px" type="number" step="0.0001" min="0" data-sam="' + esc(x.op) + '" value="' + (x.sam || '') + '"></td><td class="n">' + x.stations + '</td>' +
+      '<td class="n"><b>' + x.people.toFixed(2) + '</b>' + (x.adj ? ' <span class="tag ' + (x.adj > 0 ? 't-info' : 't-warn') + '">' + (x.adj > 0 ? '+' : '') + x.adj + '</span>' : '') +
+      (arr && arr[x.op] ? '<div class="muted small" title="' + esc(t('simArrTip')) + (arr[x.op].ops.length > 1 ? ' · ' + esc(t('simArrGrp', [arr[x.op].ops.join(', ')])) : '') + '">' + esc(t('simFileN', [arr[x.op].v])) + (arr[x.op].ops.length > 1 ? ' ⟨' + esc(arr[x.op].ops.join('·')) + '⟩' : '') + '</div>' : '') + '</td>' +
+      (tgt ? '<td class="n">' + (req == null ? '' : '<span class="' + (req > x.people + 0.05 ? 't-bad' : '') + '">' + req.toFixed(2) + '</span>') + '</td>' : '') +
+      '<td class="n"><input style="width:58px" type="number" step="1" min="5" max="300" data-eff="' + esc(x.op) + '" value="' + (x.effOwn ? Math.round(x.eff * 100) : '') + '" placeholder="' + Math.round((x.effFile ? x.eff : p.eff) * 100) + '"' + (x.effFile ? ' class="effFile" title="' + esc(t('simEffFile')) + '"' : '') + '></td>' +
+      // capacity: the number, a thin bar under it (scale = the fastest operation, tick = target); load: coloured chip
+      '<td class="n capc"><b>' + (isFinite(x.cap) ? Math.round(x.cap) : '∞') + '</b><div class="mbar"><i style="width:' + w + '%;background:' + lc + '"></i>' + (tgt ? '<u style="left:' + Math.min(100, Math.round(100 * tgt / maxCap)) + '%"></u>' : '') + '</div></td>' +
+      '<td class="n">' + (load != null ? '<span class="chipl ' + (load > 100 ? 'lb' : load >= 90 ? 'lw' : 'lo') + '" title="' + esc(t('simLoadTip')) + '">' + load + '%</span>' : '') + '</td>' +
+      (r ? '<td class="n">' + (rr && rr.util != null ? '<span class="' + (rr.util >= 0.95 ? 't-bad' : rr.util < 0.6 ? 't-warn' : '') + '">' + Math.round(rr.util * 100) + '%</span>' : '') + '</td><td class="n">' + (rr && rr.wipEnd == null ? '<span class="muted">∞</span>' : wip) + '</td><td class="n">' + (rr ? rr.wipMax + (rr.feedMax || 0) : '') + '</td>' : '') + '</tr>';
+  }).join('');
+  // totals: work content, machines, people, people needed, weighted efficiency, output and line balance, utilisation, WIP
+  var fr = B.rows.filter(function (x) { return x.sam > 0; }), sSam = fr.reduce(function (a, x) { return a + x.sam; }, 0), sT = fr.reduce(function (a, x) { return a + x.sam / x.eff; }, 0);
+  var sSt = B.rows.reduce(function (a, x) { return a + x.stations; }, 0), sPp = B.rows.reduce(function (a, x) { return a + x.people; }, 0);
+  var sReq = tgt ? fr.reduce(function (a, x) { return a + tgt * x.sam / (60 * x.eff); }, 0) : 0, avgEff = sT > 0 ? sSam / sT : 0;
+  var lbe = sPp > 0 && B.capMin > 0 ? sT * B.capMin / (60 * sPp) : 0;   // line balance: work content / (people x bottleneck cycle time)
+  var uW = r ? r.rows.reduce(function (a, x) { return a + (x.util != null ? x.util * x.people : 0); }, 0) / Math.max(0.0001, r.rows.reduce(function (a, x) { return a + (x.util != null ? x.people : 0); }, 0)) : null;
+  var wE = r ? r.rows.reduce(function (a, x) { return a + (x.wipEnd || 0) + (x.feedEnd || 0); }, 0) : 0, wM = r ? Math.max.apply(null, r.rows.map(function (x) { return (x.wipMax || 0) + (x.feedMax || 0); }).concat([0])) : 0;
+  var outV = r ? Math.round(r.outH) : Math.round(B.capMin);
+  var foot = '<tfoot><tr><td><b>' + esc(t('simTotal')) + '</b><div class="muted small">' + esc(t('simTotalN', [B.rows.length])) + '</div></td><td></td><td class="n"><b>' + (Math.round(sSam * 1000) / 1000) + '</b></td><td class="n"><b>' + sSt + '</b></td>' +
+    '<td class="n"><b>' + (Math.round(sPp * 10) / 10) + '</b>' + (B.hc ? '<div class="muted small">HC ' + B.hc + '</div>' : '') + (arr ? '<div class="muted small">' + esc(t('simFileN', [Math.round(arrGroups().reduce(function (a, g) { return a + g.v; }, 0) * 10) / 10])) + '</div>' : '') + '</td>' +
+    (tgt ? '<td class="n"><b class="' + (sReq > sPp + 0.05 ? 't-bad' : '') + '">' + sReq.toFixed(1) + '</b></td>' : '') +
+    '<td class="n"><b>' + Math.round(avgEff * 100) + '%</b><div class="muted small">' + esc(t('simAvgW')) + '</div></td>' +
+    '<td class="n"><b>' + outV + '</b><div class="muted small">' + esc(t(r ? 'simOutSimS' : 'simOutCapS')) + (tgt ? ' · ' + esc(t('simVsTarget', [tgt])) : '') + '</div></td>' +
+    '<td class="n" title="' + esc(t('simLbeTip')) + '"><b>' + Math.round(lbe * 100) + '%</b><div class="muted small">' + esc(t('simLbeS')) + '</div></td>' +
+    (r ? '<td class="n"><b>' + Math.round(uW * 100) + '%</b></td><td class="n"><b>' + wE + '</b></td><td class="n"><b>' + wM + '</b></td>' : '') + '</tr></tfoot>';
+  $('smTable').innerHTML = '<table><thead><tr><th>' + esc(t('simOp')) + '</th><th>' + esc(t('simMc')) + '</th><th class="n">SAM</th><th class="n">' + esc(t('simSt')) + '</th><th class="n">' + esc(t('simPeople')) + '</th>' +
+    (tgt ? '<th class="n" title="' + esc(t('simNeedTip')) + '">' + esc(t('simNeed')) + '</th>' : '') + '<th class="n">' + esc(t('simEffCol')) + '</th><th class="n" title="' + esc(t('simCapTip')) + '">' + esc(t('simCapH')) + '</th><th class="n" title="' + esc(t('simLoadTip')) + '">' + esc(t('simLoadH')) + '</th>' +
+    (r ? '<th class="n" title="' + esc(t('simUtilTip')) + '">' + esc(t('simUtilCol')) + '</th><th class="n">' + esc(t('simWipEnd')) + '</th><th class="n">' + esc(t('simWipMax')) + '</th>' : '') + '</tr></thead><tbody>' + rowsH + '</tbody>' + foot + '</table>';
   if (!r) { $('smRes').innerHTML = '<div class="muted">' + esc(t('simPress')) + '</div>'; return; }
   var hot = r.rows.map(function (x) { return { op: x.op, w: (x.wipEnd || 0) + (x.feedEnd || 0) }; }).filter(function (x) { return x.w >= p.wipWarn; }).sort(function (a, b) { return b.w - a.w; });
   var byOp = {}; r.opers.forEach(function (o) { o.ops.forEach(function (op) { (byOp[op] = byOp[op] || []).push(o.util); }); });
@@ -3228,12 +3419,13 @@ function renderSim() {
     '<ul class="sug">' + sug.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ul>' +
     '<details open><summary>' + esc(t('simUtil')) + '</summary><div class="utils">' + r.opers.slice().sort(function (a, b) { return b.util - a.util; }).map(function (o) {
       var u = Math.round(o.util * 100), col = u >= 95 ? 'var(--bad)' : u < 60 ? 'var(--warn)' : 'var(--ok)';
-      return '<div title="' + esc(t('simUtilOne', [label(o.it), o.ops.join(', '), u])) + '"><span>' + esc(o.ops.join('+')) + ' <i class="muted">' + esc(o.it ? o.it.code : '') + '</i></span><div class="bar"><i style="width:' + Math.min(100, u) + '%;background:' + col + '"></i><span class="barT">' + u + '%</span></div></div>';
+      return '<div title="' + esc(t('simUtilOne', [label(o.it), o.ops.join(', '), u])) + '"><span>' + esc(o.ops.join('+')) + ' <i class="muted">' + esc(o.it ? o.it.code : '') + '</i></span><div class="mbar" style="width:100%;margin:0"><i style="width:' + Math.min(100, u) + '%;background:' + col + '"></i></div><b style="text-align:right;color:' + col + '">' + u + '%</b></div>';
     }).join('') + '</div></details>';
 }
 function initSim() {
   $('smRun').onclick = function () { var p = simParams(); simRun(p); OPT.wip = true; $('optWip').checked = true; renderSim(); render2d(); toast(t('simDone', [Math.round(SIMR.outH)])); };
   ['smEff', 'smRate'].forEach(function (id) { $(id).addEventListener('input', function () { this.dataset.touched = '1'; }); });
+  $('smTef').onchange = function () { SIMR = null; renderSim(); wipSoon(); };
   $('smMode').onchange = function () { this.dataset.touched = '1'; $('smRate').disabled = this.value !== 'rate'; };
   $('smTable').addEventListener('change', function (e) {
     var op = e.target.dataset.sam || e.target.dataset.eff; if (!op) return;
@@ -3253,8 +3445,8 @@ function initSim() {
 
 /* ---------- people arranged in the layout file ("Arrange. Optr / CN sắp xếp") ---------- */
 /* groups of operations: a merged cell = one group; value = people for the whole group */
-function arrGroups() {
-  var g = {}, ops = ST.ops || {};
+function arrGroups(opsTable) {
+  var g = {}, ops = opsTable || ST.ops || {};
   Object.keys(ops).forEach(function (op) {
     var o = ops[op]; if (o.ar == null || !isFinite(o.ar)) return;
     var k = o.ag || op; g[k] = g[k] || { key: k, ops: [], v: o.ar, ai: o.ai != null ? o.ai : 1e6 };
@@ -3265,9 +3457,9 @@ function arrGroups() {
 function hasArr() { return arrGroups().length > 0; }
 /* operator units: a group with 1 person or more = its own people (rounded up); groups of less than one person
    (0.5 …) are joined in table order until one full person (the IE's "0.5 + 0.5" arrangement) */
-function arrUnits() {
+function arrUnits(opsTable) {
   var out = [], pool = null;
-  arrGroups().forEach(function (g) {
+  arrGroups(opsTable).forEach(function (g) {
     var v = Math.round(g.v * 1000) / 1000;
     if (v <= 0) { out.push({ ops: g.ops.slice(), p: 0, v: 0 }); return; }
     if (v >= 1) { out.push({ ops: g.ops.slice(), p: Math.ceil(v - 1e-6), v: v }); return; }
@@ -3280,7 +3472,7 @@ function arrUnits() {
    are run by the same person (neighbouring machines together); a unit with 0 people has no own operator */
 function applyArrangement() {
   var units = arrUnits(); if (!units.length) return null;
-  var done = {}, shared = 0, none = 0;
+  var done = {}, shared = 0, none = 0, extra = 0;
   function mcsOf(ops) {
     return ST.items.filter(function (it) { return it.kind === 'mc' && !done[it.id] && ops.indexOf(opsOf(it)[0]) >= 0; })
       .sort(function (a, b) { return (a.zone === 'branch' ? 0 : 1) - (b.zone === 'branch' ? 0 : 1) || Math.round(a.y / 60) - Math.round(b.y / 60) || a.x - b.x; });
@@ -3290,14 +3482,24 @@ function applyArrangement() {
     var M = mcsOf(u.ops); M.forEach(function (it) { done[it.id] = 1; });
     if (!M.length) return;
     if (u.p === 0) { M.forEach(function (it) { it.noOp = true; }); none += M.length; return; }
-    if (M.length <= u.p) return;
-    var k = u.p, at = 0;
-    for (var i = 0; i < k; i++) {
-      var n = Math.round((M.length - at) / (k - i)), chunk = M.slice(at, at + n); at += n;
-      if (chunk.length > 1) { opShare(chunk); shared += chunk.length - 1; }
-    }
+    // a person works on one side of the central table only: the people of the unit are shared out per side (at least one per side)
+    var sides = {}, keys = [];
+    M.forEach(function (it) { var k = sideKey(it); if (!sides[k]) { sides[k] = []; keys.push(k); } sides[k].push(it); });
+    keys.sort(function (a, b) { return sides[b].length - sides[a].length; });
+    var ppl = {}, left = u.p;
+    keys.forEach(function (k) { ppl[k] = 1; left--; });
+    if (left < 0) extra += -left;
+    while (left > 0) { var bk = keys.slice().sort(function (a, b) { return sides[b].length / ppl[b] - sides[a].length / ppl[a]; })[0]; ppl[bk]++; left--; }
+    keys.forEach(function (k) {
+      var S = sides[k], p = Math.min(ppl[k], S.length), at = 0;
+      if (S.length <= p) return;
+      for (var i = 0; i < p; i++) {
+        var n = Math.round((S.length - at) / (p - i)), chunk = S.slice(at, at + n); at += n;
+        if (chunk.length > 1 && opShare(chunk) === 'share') shared += chunk.length - 1;
+      }
+    });
   });
-  return { units: units.length, shared: shared, none: none, people: units.reduce(function (a, u) { return a + u.p; }, 0), total: Math.round(units.reduce(function (a, u) { return a + u.v; }, 0) * 100) / 100 };
+  return { units: units.length, shared: shared, none: none, extra: extra, people: units.reduce(function (a, u) { return a + u.p; }, 0), total: Math.round(units.reduce(function (a, u) { return a + u.v; }, 0) * 100) / 100 };
 }
 </script>
 <script>/* changes.js: changes against the imported layout file (machines per operation), add machines by operation,
@@ -3321,6 +3523,12 @@ function baseChanges() {
   return out.sort(function (x, y) { return simNum(x.op) - simNum(y.op) || (x.op < y.op ? -1 : x.op > y.op ? 1 : 0) || (x.code < y.code ? -1 : 1); });
 }
 function chgText(c) { return t('chgLine', [c.op || t('chgNoOp'), c.code, c.from, c.to, (c.to > c.from ? '+' : '') + (c.to - c.from)]); }
+/* an operation known without machines: in the sequence or in the operation table */
+function opKnown(op) {
+  var k = normOp(op); if (!k) return false;
+  if (Object.keys(ST.ops || {}).some(function (o) { return normOp(o) === k; })) return true;
+  return seqParse(ST.seqText).lines.some(function (l) { return l.ops.some(function (o) { return normOp(o) === k; }); });
+}
 function opIsOff(op) { var k = normOp(op); return (ST.opsOff || []).some(function (x) { return normOp(x.op) === k; }); }
 
 /* ---------- machine of an operation ---------- */
@@ -3397,8 +3605,10 @@ function removeOpPlan(op) {
 }
 function removeOp(op, ask) {
   var r = removeOpPlan(op);
-  if (!r.del.length && !r.rel.length) { toast(t('opNone', [r.op]), true); return false; }
-  if (ask && !confirm(t('opRemoveAsk', [r.op, r.del.length, r.rel.length]))) return false;
+  if (!r.del.length && !r.rel.length) {   // no machine on the plan (e.g. an operation of the sequence / table without SAM): only taken out of the sequence and the simulation
+    if (!opKnown(r.op)) { toast(t('opNone', [r.op]), true); return false; }
+    if (ask && !confirm(t('opRemoveAsk0', [r.op]))) return false;
+  } else if (ask && !confirm(t('opRemoveAsk', [r.op, r.del.length, r.rel.length]))) return false;
   var rec = { op: r.op, at: new Date().toISOString(), items: r.del.map(function (it) { return JSON.parse(JSON.stringify(it)); }), rel: r.rel.map(function (it) { return { id: it.id, op: it.op }; }) };
   ST.items = ST.items.filter(function (it) { return r.del.indexOf(it) < 0; });
   r.rel.forEach(function (it) { it.op = opsOf(it).filter(function (o) { return o.toUpperCase() !== r.op; }).join('/'); });
@@ -3476,7 +3686,7 @@ function opDlgPrev() {
   $('odPrev').innerHTML = h;
   $('odCodeRow').style.display = k && !m ? '' : 'none';
   $('odAdd').disabled = !k || (!m && !normCode($('odCode').value));
-  $('odDel').disabled = !r || (!r.del.length && !r.rel.length);
+  $('odDel').disabled = !r || (!r.del.length && !r.rel.length && !opKnown(k));
 }
 function initChanges() {
   $('chgBody').addEventListener('click', chgClick);
@@ -3524,9 +3734,9 @@ function $(id) { return document.getElementById(id); }
 function num(v, d) { var n = parseFloat(String(v).replace(',', '.')); return isFinite(n) ? n : d; }
 function toast(msg, bad) { var e = $('toast'); e.textContent = msg; e.className = 'toast show' + (bad ? ' bad' : ''); clearTimeout(e._t); e._t = setTimeout(function () { e.className = 'toast'; }, 3200); }
 
-function changed() { runChecks(); commit(); render2d(); renderSide(); if (TAB === '3d') rebuild3d(); wipSoon(); }
+function changed() { var nx = splitCrossLinks(); if (nx) toast(t('opCrossFix', [nx]), true); runChecks(); commit(); render2d(); renderSide(); if (TAB === '3d') rebuild3d(); wipSoon(); }
 function onSelChange() { renderSel(); placeSelTools(); if (TAB === '3d') rebuild3d(); }
-function renderAll() { runChecks(); render2d(); renderSide(); if (TAB === '3d') rebuild3d(); if (TAB === 'lib') renderLib(); }
+function renderAll() { splitCrossLinks(); runChecks(); render2d(); renderSide(); if (TAB === '3d') rebuild3d(); if (TAB === 'lib') renderLib(); }
 
 function setTab(tb) {
   TAB = tb;
@@ -3664,11 +3874,17 @@ function cmd(c) {
 /* ---------- paste dialog ---------- */
 var PASTE = null;
 function openPaste() {
+  PASTE = null; XLI = null; $('xlBox').style.display = 'none'; $('fileXl').value = '';
   $('pasteTxt').value = ''; $('pastePrev').innerHTML = ''; $('ocrStatus').textContent = ''; $('ocrView').innerHTML = '';
   $('pasteGo').disabled = true; $('pasteReplace').checked = true; $('pasteFit').checked = !ST.line.fixed;
   if (!$('dlgPaste').open) $('dlgPaste').showModal();
 }
-function pastePreview() { PASTE = parsePaste($('pasteTxt').value); renderPastePreview(); }
+function pastePreview() {
+  var prev = PASTE; PASTE = parsePaste($('pasteTxt').value);
+  // the text of a layout read from an Excel file was edited: keep what the file gave (SAM, sequence, style, people)
+  if (prev && prev.fromXl && typeof XLI !== 'undefined' && XLI) { PASTE.ops = prev.ops; PASTE.seq = prev.seq; PASTE.meta = prev.meta; PASTE.fromXl = false; }
+  renderPastePreview();
+}
 function renderPastePreview() {
   var br = !!centerOf('branch');
   if (br) {   // with a branch line: with 3+ rows the two rows on the branch side go to the branch line
@@ -3681,11 +3897,16 @@ function renderPastePreview() {
   else {
     h += '<div>' + esc(t('pasteFound', [PASTE.rows.length, PASTE.nMc])) + '</div><table class="mini"><tr><th>#</th><th>' + esc(t('pasteRowMc')) + '</th><th>' + esc(t('pasteSide')) + '</th>' + (br ? '<th>' + esc(t('pasteZone')) + '</th>' : '') + '</tr>';
     PASTE.rows.forEach(function (r, i) {
-      h += '<tr><td>' + (i + 1) + '</td><td class="small">' + r.cells.map(function (c) { return esc(c.code) + (c.op ? '<sub>' + esc(c.op) + '</sub>' : ''); }).join(' ') + '</td><td><select data-row="' + i + '"><option value="top"' + (r.side === 'top' ? ' selected' : '') + '>' + esc(t('sideTop')) + '</option><option value="bottom"' + (r.side === 'bottom' ? ' selected' : '') + '>' + esc(t('sideBottom')) + '</option></select>' + (r.sideFound ? '' : ' <span class="muted small">' + esc(t('sideGuess')) + '</span>') + '</td>' +
+      h += '<tr><td>' + (i + 1) + '</td><td class="small">' + r.cells.map(function (c) { return esc(c.code) + (c.op ? '<sub>' + esc(c.op) + '</sub>' : '') + (c.dir ? '<span title="' + esc(t(c.dir === 'right' ? 'turnR' : 'turnL')) + '">' + (c.dir === 'right' ? '↻' : '↺') + '</span>' : ''); }).join(' ') + '</td><td><select data-row="' + i + '"><option value="top"' + (r.side === 'top' ? ' selected' : '') + '>' + esc(t('sideTop')) + '</option><option value="bottom"' + (r.side === 'bottom' ? ' selected' : '') + '>' + esc(t('sideBottom')) + '</option></select>' + (r.sideFound ? '' : ' <span class="muted small">' + esc(t('sideGuess')) + '</span>') + '</td>' +
         (br ? '<td><select data-zone="' + i + '"><option value="main"' + (r.zone !== 'branch' ? ' selected' : '') + '>' + esc(t('zoneMain')) + '</option><option value="branch"' + (r.zone === 'branch' ? ' selected' : '') + '>' + esc(t('zoneBranch')) + '</option></select></td>' : '') + '</tr>';
     });
     h += '</table>';
     var u = Object.keys(unk); if (u.length) h += '<div class="t-warn tagline">⚠ ' + esc(t('pasteUnknown', [u.join(', '), DEF_DIM.L + '×' + DEF_DIM.W])) + '</div>';
+    if (PASTE.ops) {   // SAM found for the operations of the layout
+      var lo = {}; PASTE.rows.forEach(function (r) { r.cells.forEach(function (c) { String(c.op || '').split(/[\/+,&]/).forEach(function (o) { o = o.trim().replace(/^0+(?=\d)/, ''); if (/^\d/.test(o)) lo[o] = 1; }); }); });
+      var lk = Object.keys(lo), miss = lk.filter(function (o) { return !(PASTE.ops[o] && PASTE.ops[o].sam > 0); });
+      if (lk.length) h += '<div class="tagline ' + (miss.length ? 't-warn' : 't-ok') + '">' + esc(t('pasteSam', [lk.length - miss.length, lk.length])) + (miss.length ? ' ' + esc(t('pasteSamMiss', [miss.join(', ')])) : '') + '</div>';
+    }
     if (PASTE.seq && PASTE.seq.length) h += '<div class="tagline t-info">' + esc(t('xlSeqFound')) + '<br>' + PASTE.seq.map(function (q) { return esc((q.name ? q.name + ': ' : '') + q.text); }).join('<br>') + '</div>';
   }
   $('pastePrev').innerHTML = h; $('pasteGo').disabled = !PASTE.nMc;
@@ -3694,21 +3915,22 @@ function pasteGo() {
   if (!PASTE || !PASTE.nMc) return;
   document.querySelectorAll('#pastePrev select[data-row]').forEach(function (s) { var r = PASTE.rows[+s.dataset.row]; r.side = s.value; if (!PASTE.fromXl) return; r.cells.forEach(function (c) { if (!c.sideFixed) c.side = s.value; }); });
   document.querySelectorAll('#pastePrev select[data-zone]').forEach(function (s) { PASTE.rows[+s.dataset.zone].zone = s.value; });
-  var replace = $('pasteReplace').checked, y0 = 60, cts = ST.items.filter(function (i) { return i.role === 'center'; });
+  var replace = $('pasteReplace').checked, y0 = 60, cts = ST.items.filter(function (i) { return i.role === 'center'; }), keep = ST.items.filter(function (i) { return i.role !== 'center' && isFinishObj(i); });
   if (!replace) { var b = bbox(ST.items); if (b) y0 = Math.round(b.y1 + 60); }
   var useCt = cts.length && (replace || ST.items.length === cts.length);
   var items = buildFromPaste(PASTE, { addInput: $('pasteInput').checked, x0: 60, y0: y0, centers: useCt ? { main: centerOf('main'), branch: centerOf('branch') } : null });
-  if (replace) ST.items = cts.concat(items); else ST.items = ST.items.concat(items);
+  if (replace) ST.items = cts.concat(items, keep); else ST.items = ST.items.concat(items);
   if (PASTE.meta && (replace || !(ST.info || {}).style)) ST.info = Object.assign({}, ST.info, PASTE.meta);
+  if (typeof XLI !== 'undefined' && XLI && (PASTE.fromXl || PASTE.meta)) PASTE.ops = xlOpsAll(PASTE.ops);   // operations still without SAM: the operation tables of every sheet of the file
   if (PASTE.ops && Object.keys(PASTE.ops).length) ST.ops = Object.assign(replace ? {} : (ST.ops || {}), PASTE.ops);   // SAM per operation from the layout file
   if (PASTE.seq && PASTE.seq.length) ST.seqText = PASTE.seq.map(function (q) { return (q.name ? q.name + ': ' : '') + q.text; }).join('\n');
   else if (replace) ST.seqText = '';   // a new layout without sequence: the previous layout's sequence does not apply
-  if ($('pasteFit').checked) { var bb = bbox(ST.items); ST.line.length = Math.ceil((bb.x1 + 60) / 10) * 10; ST.line.width = Math.ceil((bb.y1 + 60) / 10) * 10; }
+  if ($('pasteFit').checked) { var bb = bbox(ST.items.filter(function (i) { return !isFinishObj(i); })); ST.line.length = Math.ceil((bb.x1 + 60) / 10) * 10; ST.line.width = Math.ceil((bb.y1 + 60) / 10) * 10; }
   var arrRes = PASTE.ops && Object.keys(PASTE.ops).some(function (k) { return PASTE.ops[k].ar != null; }) ? applyArrangement() : null;   // people as arranged in the file
   if (replace) setBase([(PASTE.meta || {}).file, (PASTE.meta || {}).sheet].filter(Boolean).join(' / ') || t('chgBasePaste')); else addToBase(items);   // reference for "Thay đổi so với file layout"
   SEL = items.map(function (i) { return i.id; });
   $('dlgPaste').close(); changed(); fitView(); if (TAB === '3d') view3dReset(false);
-  toast(t('pasteDone', [items.filter(function (i) { return i.kind === 'mc'; }).length]) + (arrRes ? ' ' + t('arrDone', [arrRes.total, arrRes.shared, arrRes.none]) : ''));
+  toast(t('pasteDone', [items.filter(function (i) { return i.kind === 'mc'; }).length]) + (arrRes ? ' ' + t('arrDone', [arrRes.total, arrRes.shared, arrRes.none]) + (arrRes.extra ? ' ' + t('arrExtra', [arrRes.extra]) : '') : ''));
 }
 
 /* ---------- line set-up (standard machine units + central table) ---------- */
@@ -3717,6 +3939,7 @@ function lineVals() {
   return { name: $('lsName').value.trim(), units: Math.max(1, Math.round(num($('lsUnits').value, L.units || LINE_DEF.units))), unit: Math.max(10, num($('lsUnit').value, LINE_DEF.unit)),
     tableW: Math.max(0, num($('lsTable').value, LINE_DEF.tableW)), start: Math.max(0, num($('lsStart').value, LINE_DEF.start)), gap: Math.max(0, num($('lsGap').value, LINE_DEF.gap)), end: Math.max(0, num($('lsEnd').value, LINE_DEF.end)),
     width: num($('lsWidth').value, 0), hc: Math.max(0, Math.round(num($('lsHC').value, 0))),
+    finish: $('lsFin').checked, finTL: Math.max(40, num($('lsFinL').value, LINE_DEF.finTL)), finTW: Math.max(30, num($('lsFinW').value, LINE_DEF.finTW)), boxW: Math.max(30, num($('lsBoxW').value, LINE_DEF.boxW)),
     branch: !$('lsBr').checked ? null : { units: Math.max(1, Math.round(num($('lsBUnits').value, 6))), unit: Math.max(10, num($('lsUnit').value, LINE_DEF.unit)), tableW: Math.max(0, num($('lsBTable').value, LINE_DEF.tableW)),
       end: 30, pos: $('lsBPos').value, walk: Math.max(0, num($('lsBWalk').value, 100)), width: num($('lsBWidth').value, 0) } };
 }
@@ -3732,6 +3955,7 @@ function openLineSetup() {
   $('lsName').value = L.name || ''; $('lsUnits').value = L.units || LINE_DEF.units; $('lsUnit').value = L.unit || LINE_DEF.unit;
   $('lsTable').value = ct ? ct.W : (L.tableW != null ? L.tableW : LINE_DEF.tableW); $('lsStart').value = L.v === 2 && L.start != null ? L.start : LINE_DEF.start; $('lsGap').value = L.gap != null ? L.gap : LINE_DEF.gap; $('lsEnd').value = L.end != null ? L.end : LINE_DEF.end;
   $('lsWidth').value = L.units ? (L.mainWidth || (L.zones ? zoneById('main').W : L.width)) : '';
+  $('lsFin').checked = L.finish !== false; $('lsFinL').value = L.finTL || LINE_DEF.finTL; $('lsFinW').value = L.finTW || LINE_DEF.finTW; $('lsBoxW').value = L.boxW || LINE_DEF.boxW;
   $('lsHC').value = L.hc || ''; $('lsHC').placeholder = (ST.info || {}).optr || ST.items.filter(function (i) { return i.kind === 'mc' && !i.noOp; }).length || '';
   var B = L.branch, cb = centerOf('branch');
   $('lsBr').checked = !!B; $('lsBUnits').value = B ? B.units : 6; $('lsBTable').value = cb ? cb.W : (B ? B.tableW : LINE_DEF.tableW); $('lsBPos').value = B ? B.pos : 'top';
@@ -3972,6 +4196,11 @@ function startApp() {
   $('bXlOpen').onclick = function () { $('fileXl').value = ''; $('fileXl').click(); };
   $('fileXl').onchange = function () { if (this.files[0]) xlOpen(this.files[0]); };
   $('xlPick').onchange = xlUse; $('xlPickB').onchange = xlUse;
+  $('xlAutoBtn').onclick = function () {   // the automatic layout of the sheet chosen (or the first one)
+    var cur = $('xlPick').value.split(':'), sh = cur[0] !== 'a' && XLI.sheets[+cur[0]] ? XLI.sheets[+cur[0]].name : null, k = 0;
+    XLI.auto.forEach(function (a, i) { if (a.name === sh) k = i; });
+    $('xlPick').value = 'a:' + k; xlUse();
+  };
   $('lsBr').onchange = lineCalc; ['lsBUnits', 'lsBTable', 'lsBWalk', 'lsBWidth', 'lsBPos'].forEach(function (id) { $(id).oninput = lineCalc; $(id).onchange = lineCalc; });
   $('bOpAll').onclick = function () { ST.items.forEach(function (i) { delete i.noOp; delete i.by; }); changed(); };
   ['bStandAll', 'bStandAll2', 'bStandAll3'].forEach(function (id) { $(id).onclick = function () { var st = standAll(); changed(); toast(t(st ? 'allStand' : 'allSit')); }; });
@@ -4008,9 +4237,19 @@ function startApp() {
   runChecks(); renderSide();
   requestAnimationFrame(function () { fitView(); firstRun(); });
   initSim(); initChanges();
+  // label text sizes (2D toolbar and 3D toolbar stay in step)
+  var szs = [0.6, 0.8, 1, 1.25, 1.5, 2, 2.5];
+  [['lblMc', 'mc'], ['lblOp', 'op'], ['lblMc3', 'mc'], ['lblOp3', 'op']].forEach(function (p) {
+    var el = $(p[0]); el.innerHTML = szs.map(function (v) { return '<option value="' + v + '"' + (v === LBL[p[1]] ? ' selected' : '') + '>' + Math.round(v * 100) + '%</option>'; }).join('');
+    el.onchange = function () {
+      LBL[p[1]] = +this.value; ['lblMc', 'lblMc3'].forEach(function (id) { $(id).value = LBL.mc; }); ['lblOp', 'lblOp3'].forEach(function (id) { $(id).value = LBL.op; });
+      try { localStorage.setItem('ls_lblsz', JSON.stringify(LBL)); } catch (e) {}
+      render2d(); if (TAB === '3d') rebuild3d();
+    };
+  });
   ['bArr', 'smArr'].forEach(function (id) { $(id).onclick = function () {
     var r = applyArrangement(); if (!r) { toast(t('arrNone'), true); return; }
-    SIMR = null; changed(); if (TAB === 'sim') renderSim(); toast(t('arrDone', [r.total, r.shared, r.none]));
+    SIMR = null; changed(); if (TAB === 'sim') renderSim(); toast(t('arrDone', [r.total, r.shared, r.none]) + (r.extra ? ' ' + t('arrExtra', [r.extra]) : ''));
   }; });
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () { render2d(); if (TAB === '3d') rebuild3d(); });
 }

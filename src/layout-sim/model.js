@@ -14,7 +14,7 @@ var ERG_DEF = {
   emptyPitch: 107,// width of an empty cell in the pasted grid
   snap: 5
 };
-var LINE_DEF = { units: 17, unit: 107, tableW: 30, start: 90, gap: 30, end: 30 };   // start = length of the input area in front of the line
+var LINE_DEF = { units: 17, unit: 107, tableW: 30, start: 90, gap: 30, end: 30, finTL: 175, finTW: 75, boxW: 70 };   // start = length of the input area in front of the line
 var ST = { line: { name: '', length: 2400, width: 600, fixed: false }, erg: Object.assign({}, ERG_DEF), items: [], seq: 1 };
 var SEL = [];            // selected ids (not saved)
 var UNDO = [], REDO = [];
@@ -56,7 +56,7 @@ function shapes(it) {
     if (it.noOp) return r;                    // station without its own operator (one worker runs two machines)
     r.zone = obb(it, sx, d.W / 2 + zd / 2, zw / 2, zd / 2);
     r.chair = rotPt(it, sx, d.W / 2 + (st ? e.standGap : e.chairGap + e.chairD / 2));   // operator position (seat centre or standing spot)
-    r.aisle = e.aisle > 0 ? obb(it, sx, d.W / 2 + zd + e.aisle / 2, zw / 2, e.aisle / 2) : null;
+    r.aisle = e.aisle > 0 && (it.rot || 0) % 180 === 0 ? obb(it, sx, d.W / 2 + zd + e.aisle / 2, zw / 2, e.aisle / 2) : null;   // a machine turned across the row: the operator sits between machines, no aisle behind
   }
   return r;
 }
@@ -192,15 +192,24 @@ function buildFromPaste(p, opt) {
   // real machine lengths: never overlap inside a row
   p.rows.forEach(function (r) {
     r.cells.sort(function (a, b) { return a.rx - b.rx; });
-    for (var i = 1; i < r.cells.length; i++) { var pa = r.cells[i - 1], cu = r.cells[i], mn = pa.rx + dimOf(pa.code).L / 2 + e.colGap + dimOf(cu.code).L / 2; if (cu.rx < mn - 0.5) cu.rx = mn; }
+    // a turned machine (operator on its left / right) takes its width plus the operator's place along the row
+    var zd = function (c) { return STAND_FAMS[famOf(c.code)] ? e.standDepth : e.opDepth; };
+    var lo = function (c) { var d = dimOf(c.code); return c.dir ? d.W / 2 + (c.dir === 'left' ? zd(c) : 0) : d.L / 2; };
+    var hi = function (c) { var d = dimOf(c.code); return c.dir ? d.W / 2 + (c.dir === 'right' ? zd(c) : 0) : d.L / 2; };
+    for (var i = 1; i < r.cells.length; i++) { var pa = r.cells[i - 1], cu = r.cells[i], mn = pa.rx + hi(pa) + e.colGap + lo(cu); if (cu.rx < mn - 0.5) cu.rx = mn; }
   });
   var inputL = 60, zones = {}, order = [];
   p.rows.forEach(function (r) { var z = r.zone || 'main'; if (!zones[z]) { zones[z] = []; order.push(z); } zones[z].push(r); });
   var yCursor = opt.y0, mainSpan = null;
   order.forEach(function (zid) {
     var rows = zones[zid], ct = opt.centers && opt.centers[zid], x0, ys = [];
-    function place(r, yOf, zoneId) {
+    function place(r, yOf, zoneId, yOfT) {
       r.cells.forEach(function (x) {
+        if (x.dir) {   // turned 90°: its length across the row, the operator beside it (right: 270°, left: 90°)
+          var D = dimOf(x.code).L, yt = yOfT(D);
+          items.push({ id: uid(), kind: 'mc', code: x.code, op: x.op, x: n1(x0 + x.rx), y: n1(yt), rot: x.dir === 'right' ? 270 : 90, zone: zoneId === 'main' ? undefined : zoneId });
+          ys.push(yt - D / 2, yt + D / 2); return;
+        }
         var W = dimOf(x.code).W, top = (x.side || r.side) === 'top', yy = yOf(W, top);
         items.push({ id: uid(), kind: 'mc', code: x.code, op: x.op, x: n1(x0 + x.rx), y: n1(yy), rot: top ? 180 : 0, zone: zoneId === 'main' ? undefined : zoneId });
         ys.push(yy - W / 2 - (top ? e.opDepth : 0), yy + W / 2 + (top ? 0 : e.opDepth));
@@ -208,16 +217,16 @@ function buildFromPaste(p, opt) {
     }
     function band(r, y) {   // a row without a table: operators on their side, machines lined up on the operator side
       var Wmax = 0, anyTop = false, anyBot = false;
-      r.cells.forEach(function (x) { Wmax = Math.max(Wmax, dimOf(x.code).W); if ((x.side || r.side) === 'top') anyTop = true; else anyBot = true; });
+      r.cells.forEach(function (x) { Wmax = Math.max(Wmax, x.dir ? dimOf(x.code).L : dimOf(x.code).W); if ((x.side || r.side) === 'top') anyTop = true; else anyBot = true; });
       var tt = y + (anyTop ? e.opDepth : 0);
-      place(r, function (W, top) { return top ? tt + W / 2 : tt + Wmax - W / 2; }, zid);
+      place(r, function (W, top) { return top ? tt + W / 2 : tt + Wmax - W / 2; }, zid, function (D) { return tt + D / 2; });
       return tt + Wmax + (anyBot ? e.opDepth : 0) + e.rowGap;
     }
     if (ct) {
       x0 = ct.x - ct.L / 2;
       var tTop = ct.y - ct.W / 2, tBot = ct.y + ct.W / 2;
-      if (rows[0]) place(rows[0], function (W, top) { return top ? tTop - W / 2 : tTop - e.opDepth - W / 2; }, zid);
-      if (rows[1]) place(rows[1], function (W, top) { return top ? tBot + e.opDepth + W / 2 : tBot + W / 2; }, zid);
+      if (rows[0]) place(rows[0], function (W, top) { return top ? tTop - W / 2 : tTop - e.opDepth - W / 2; }, zid, function (D) { return tTop - D / 2; });
+      if (rows[1]) place(rows[1], function (W, top) { return top ? tBot + e.opDepth + W / 2 : tBot + W / 2; }, zid, function (D) { return tBot + D / 2; });
       var yy = (ys.length ? Math.max.apply(null, ys) : tBot) + e.rowGap;
       rows.slice(2).forEach(function (r) { yy = band(r, yy); });
     } else {
@@ -251,6 +260,13 @@ function setupLine(o) {
   if (br) { bL = Math.round(br.units * br.unit + br.end); bW = Math.round(br.width || lineAutoWidth(br.tableW)); walk = Math.round(br.walk); }
   var mainY = br && br.pos === 'top' ? bW + walk : 0, brY = br ? (br.pos === 'top' ? 0 : mW + walk) : 0, inX = -(inL + gap);
   var zones = [{ id: 'main', x: 0, y: mainY, L: mL, W: mW }];
+  // finishing area (1 QC table + 2 packing tables) and box area (3 boxes) after the main line, as wide as it
+  var fin = o.finish !== false, tL = Math.max(40, +o.finTL || LINE_DEF.finTL), tW = Math.max(30, +o.finTW || LINE_DEF.finTW), bxW = Math.max(30, +o.boxW || LINE_DEF.boxW);
+  var oldF = zoneById('finish'), oldB = zoneById('boxes');
+  if (fin) {
+    var fL = Math.round(20 + tW + tL), fx = mL + gap;   // QC, packing tables and boxes side by side, touching
+    zones.push({ id: 'finish', x: fx, y: mainY, L: fL, W: mW }, { id: 'boxes', x: fx + fL, y: mainY, L: Math.round(3 * bxW), W: mW });   // 3 box strips across the line width
+  }
   if (inL > 0) zones.push({ id: 'input', x: inX, y: mainY, L: inL, W: mW });
   if (br) {
     var wx0 = inL > 0 ? inX : 0, wx1 = Math.max(mL, bL);
@@ -258,10 +274,11 @@ function setupLine(o) {
     if (inL > 0) zones.push({ id: 'inputB', x: inX, y: brY, L: inL, W: bW });
   }
   ST.line = { name: o.name || '', length: Math.max(mL, bL), width: mW + (br ? walk + bW : 0), fixed: true, units: o.units, unit: o.unit, tableW: o.tableW, start: inL, gap: gap, end: o.end, hc: o.hc || 0,
+    finish: fin, finTL: tL, finTW: tW, boxW: bxW,
     mainWidth: o.width || 0, zones: zones, branch: br || null, v: 2 };
   function center(zid, x, y, L, W) {
     var c = centerOf(zid), dx = 0, dy = 0;
-    if (c) { dx = x - c.x; dy = y - c.y; ST.items.forEach(function (it) { if (it !== c && (it.zone || 'main') === zid && !isInputObj(it)) { it.x = n1(it.x + dx); it.y = n1(it.y + dy); } }); }
+    if (c) { dx = x - c.x; dy = y - c.y; ST.items.forEach(function (it) { if (it !== c && (it.zone || 'main') === zid && !isInputObj(it) && !isFinishObj(it)) { it.x = n1(it.x + dx); it.y = n1(it.y + dy); } }); }
     else { c = { id: uid(), kind: 'obj', role: 'center', zone: zid === 'main' ? undefined : zid, name: zid === 'main' ? t('centerTable') : t('centerTableB'), H: 75, rot: 0, color: '#d9cdb0' }; ST.items.unshift(c); }
     c.L = L; c.W = W; c.x = n1(x); c.y = n1(y);
   }
@@ -269,6 +286,31 @@ function setupLine(o) {
   if (br) center('branch', br.units * br.unit / 2, brY + bW / 2, br.units * br.unit, br.tableW);
   else { var cb = centerOf('branch'); if (cb) ST.items = ST.items.filter(function (it) { return it !== cb; }); }
   ST.items.filter(isInputObj).forEach(function (it) { placeInput(it, it.zone === 'branch' ? 'branch' : 'main'); });
+  placeFinish(oldF, oldB);
+}
+function isFinishObj(it) { return it.zone === 'finish' || it.zone === 'boxes'; }
+/* tables of the finishing area and the boxes: created once, then moved with their area (the arrangement made by the user is kept) */
+function placeFinish(oldF, oldB) {
+  var F = zoneById('finish'), Bz = zoneById('boxes'), L = ST.line;
+  if (!F) { ST.items = ST.items.filter(function (it) { return !isFinishObj(it); }); return; }
+  [[oldF, F, 'finish'], [oldB, Bz, 'boxes']].forEach(function (p) {
+    if (!p[0]) return;
+    var dx = p[1].x - p[0].x, dy = p[1].y - p[0].y;
+    ST.items.forEach(function (it) { if (it.zone === p[2]) { it.x = n1(it.x + dx); it.y = n1(it.y + dy); } });
+  });
+  var cy = F.y + F.W / 2, tL = L.finTL, tW = L.finTW;
+  if (!ST.items.some(function (it) { return it.zone === 'finish'; })) {
+    var px = F.x + 20 + tW + tL / 2;   // packing tables touch the QC table
+    ST.items.push({ id: uid(), kind: 'obj', zone: 'finish', name: 'QC', L: tL, W: tW, H: 75, x: n1(F.x + 20 + tW / 2), y: n1(cy), rot: 90, color: '#9fd3a8' },   // QC table upright
+      { id: uid(), kind: 'obj', zone: 'finish', name: 'PCK 1', L: tL, W: tW, H: 75, x: n1(px), y: n1(cy - tW / 2), rot: 0, color: '#f2cf8d' },   // two packing tables face to face
+      { id: uid(), kind: 'obj', zone: 'finish', name: 'PCK 2', L: tL, W: tW, H: 75, x: n1(px), y: n1(cy + tW / 2), rot: 0, color: '#f2cf8d' });
+  }
+  if (!ST.items.some(function (it) { return it.zone === 'boxes'; })) {
+    var bw = L.boxW;
+    [['boxY', '#f2c230'], ['boxR', '#e04848'], ['boxG', '#3fae6a']].forEach(function (b, k) {
+      ST.items.push({ id: uid(), kind: 'obj', zone: 'boxes', name: '', box: b[0], L: bw, W: Bz.W, H: 60, x: n1(Bz.x + bw / 2 + k * bw), y: n1(Bz.y + Bz.W / 2), rot: 0, color: b[1] });   // upright strips, as long as the line is wide, side by side
+    });
+  }
 }
 function isInputObj(it) { return it.kind === 'obj' && it.role !== 'center' && /^input$/i.test(String(it.name || '').trim()); }
 /* the input table: in the middle of the input area of its line (main / branch) */
@@ -289,8 +331,18 @@ function homeOf(it) { var h = it && it.by ? itemById(it.by) : null; return h && 
 function satellitesOf(home) { return ST.items.filter(function (i) { return i.by === home.id && i.noOp; }); }
 function opToggleOne(it) { if (it.noOp) { delete it.noOp; delete it.by; } else { it.noOp = true; delete it.by; } ST.items.forEach(function (i) { if (i.by === it.id && it.noOp) delete i.by; }); }
 /* one operator for all the given machines (the first one keeps the operator), or split them when they already share one */
+/* side of a machine: its line (main / branch) and its side of that line's central table; one person never crosses the table or the walkway */
+function sideKey(it) { var z = it.zone === 'branch' ? 'branch' : 'main', ct = centerOf(z); return z + (ct ? (it.y < ct.y ? '|T' : '|B') : ''); }
+/* a machine run by a person who sits on the other side of the central table (or on the other line), e.g. after a drag
+   or in a project saved before this rule: it gets its own operator back */
+function splitCrossLinks() {
+  var n = 0;
+  ST.items.forEach(function (it) { if (it.kind === 'mc' && it.noOp && it.by) { var h = itemById(it.by); if (h && sideKey(h) !== sideKey(it)) { delete it.noOp; delete it.by; n++; } } });
+  return n;
+}
 function opShare(list) {
   if (list.length < 2) { if (list[0]) opToggleOne(list[0]); return 'one'; }
+  if (list.some(function (i) { return sideKey(i) !== sideKey(list[0]); })) return 'cross';
   var home = list.filter(function (i) { return !i.noOp; })[0] || list[0], ids = list.map(function (i) { return i.id; });
   var grouped = list.every(function (i) { return i === home ? !i.noOp : (i.noOp && i.by === home.id); });
   if (grouped) { list.forEach(function (i) { delete i.noOp; delete i.by; }); return 'split'; }
