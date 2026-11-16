@@ -1,17 +1,20 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>3D Gá & dụng cụ may: Hướng dẫn sử dụng</title><link rel="icon" href="../icon.png"><link rel="stylesheet" href="manual.css"></head><body>
-<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>3D Gá & dụng cụ may v1.0: Hướng dẫn sử dụng</b><a href="design3d.en.html" title="English" onclick="try{localStorage.setItem('ie_site_lang','en')}catch(e){}">EN</a><a href="../index.html">‹ Trang chủ</a></header>
+<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>3D Gá & dụng cụ may v1.1: Hướng dẫn sử dụng</b><a href="design3d.en.html" title="English" onclick="try{localStorage.setItem('ie_site_lang','en')}catch(e){}">EN</a><a href="../index.html">‹ Trang chủ</a></header>
 <div class="wrap">
 <nav class="toc"><b>Nội dung</b>
 <a href="#gioi-thieu">1. Giới thiệu</a>
 <a href="#3-buoc">2. Ba bước</a>
 <a href="#chi-tiet">3. Các loại chi tiết</a>
 <a href="#chinh">4. Chỉnh chi tiết</a>
-<a href="#pdf">5. Xuất PDF</a>
-<a href="#luu">6. Lưu và mở thiết kế</a>
-<a href="#phim">7. Phím tắt</a>
-<a href="#loi">8. Xử lý sự cố</a>
+<a href="#gop">5. Gộp / cắt hình</a>
+<a href="#offset">6. Offset (nới / thu viền)</a>
+<a href="#pdf">7. Xuất PDF</a>
+<a href="#cad">8. Xuất file CAD / 3D</a>
+<a href="#luu">9. Lưu và mở thiết kế</a>
+<a href="#phim">10. Phím tắt</a>
+<a href="#loi">11. Xử lý sự cố</a>
 </nav>
 <main>
 <section id="gioi-thieu"><h1>3D Gá & dụng cụ may</h1>
@@ -32,7 +35,10 @@
 <tr><td>Tấm nền, Tấm có cửa sổ, Tấm có 4 lỗ, Tấm có rãnh</td><td>Mặt gá, mẫu cắt, mẫu đặt nhãn, mẫu may túi. Tấm có thể thêm lỗ tròn, rãnh, cửa sổ chữ nhật và bo góc.</td></tr>
 <tr><td>Thanh dẫn, Chốt chặn, Khối</td><td>Canh mép vải, chặn, đế, tay cầm, gối kê.</td></tr>
 <tr><td>Chốt tròn</td><td>Chốt định vị đi qua lỗ.</td></tr>
-<tr><td>Mái dốc</td><td>Dẫn vải vào, gập mép.</td></tr></table>
+<tr><td>Mái dốc</td><td>Dẫn vải vào, gập mép.</td></tr>
+<tr><td>Bánh xe</td><td>Bánh cao su để di chuyển gá. Khi đang chọn một chi tiết, bánh được đặt <b>dưới</b> chi tiết đó (Z âm); nhân bản và nhập X, Y để đặt đủ 4 bánh.</td></tr>
+<tr><td>Tay cầm</td><td>Tay cầm chữ U; đặt lên trên chi tiết đang chọn. Chỉnh Dài, Đường kính thanh, Cao.</td></tr>
+<tr><td>Nam châm, Vít</td><td>Nam châm tròn dẹt giữ thước canh trên bàn; vít nhỏ bắt các chi tiết (là chốt tròn kích thước sẵn).</td></tr></table>
 <p>Vật liệu: acrylic trong, nhựa ABS/PVC, nhôm, thép, gỗ ép, cao su/mút. Chương trình ước tính <b>khối lượng</b> theo khối lượng riêng của vật liệu (đã trừ lỗ).</p>
 </section>
 <section id="chinh"><h2>4. Chỉnh chi tiết</h2>
@@ -43,22 +49,50 @@
 <li><b>Bàn máy may tham khảo</b> (khi chưa chọn chi tiết nào, cột phải): hiện mặt bàn máy và vị trí kim để đặt gá đúng so với kim; kim cũng có trên bản vẽ PDF.</li>
 <li>Ô <b>Bước kéo</b> (dưới hình 3D): 1, 5 hoặc 10 mm khi kéo chuột; giữ Alt để kéo tự do.</li></ul>
 </section>
-<section id="pdf"><h2>5. Xuất PDF</h2>
+<figure><a href="img/d3-wheels.png"><img src="img/d3-wheels.png" alt="Gá có bánh xe và tay cầm" loading="lazy"></a><figcaption>Gá có 4 bánh xe và tay cầm chữ U.</figcaption></figure>
+<section id="gop"><h2>5. Gộp / cắt hình</h2>
+<p>Giữ <b>Ctrl</b> hoặc <b>Shift</b> rồi bấm để chọn nhiều chi tiết (trên hình hoặc trong danh sách). Chi tiết chọn <b>đầu tiên</b> là chi tiết gốc. Cột phải hiện ba lệnh:</p>
+<table><tr><th>Lệnh</th><th>Kết quả</th></tr>
+<tr><td>⊕ Gộp thành một khối</td><td>Cộng các hình lại thành một chi tiết. Các chi tiết phải cùng độ cao đáy (Z) và cùng độ dày; nếu khác, chương trình báo để chỉnh trước.</td></tr>
+<tr><td>⊖ Cắt bỏ phần trùng</td><td>Trừ các chi tiết chọn sau khỏi chi tiết gốc (ví dụ khoét một cửa sổ có hình bất kỳ). Lấy độ dày của chi tiết gốc.</td></tr>
+<tr><td>⊗ Giữ phần giao nhau</td><td>Chỉ giữ phần các hình chồng lên nhau.</td></tr></table>
+<p>Kết quả là một chi tiết <b>Hình tự do</b>: vẫn đổi được vật liệu, độ dày, Dài / Rộng (co giãn cả hình), xoay, và có trong PDF và file CAD. Muốn làm lại, bấm Ctrl+Z. Hình tự do không còn bảng lỗ; muốn đổi lỗ, hãy sửa chi tiết gốc rồi gộp lại.</p>
+<figure><a href="img/d3-multi.png"><img src="img/d3-multi.png" alt="Chọn nhiều chi tiết" loading="lazy"></a><figcaption>Chọn nhiều chi tiết: các lệnh gộp, cắt, giao hiện ở cột phải.</figcaption></figure>
+</section>
+<section id="offset"><h2>6. Offset (nới / thu viền)</h2>
+<p>Chọn một chi tiết, cuộn cột phải đến mục <b>Offset</b>. Nhập <b>Khoảng cách</b> (mm), chọn áp dụng cho <b>Viền ngoài</b> hoặc <b>Lỗ / cửa sổ</b>, rồi bấm <span class="btn">➕ Nới ra</span> hoặc <span class="btn">➖ Thu vào</span>.</p>
+<ul><li><b>Viền ngoài + Nới ra</b>: tấm to đều ra mọi phía (góc ngoài được bo tròn). Dùng làm khung viền, tấm đế rộng hơn.</li>
+<li><b>Lỗ / cửa sổ + Nới ra</b>: lỗ và cửa sổ rộng đều ra; dùng làm khe hở cho mẫu vừa khít.</li>
+<li>Ô <b>Giữ chi tiết gốc, tạo thêm bản sao</b> (mặc định bật): chi tiết gốc được giữ để so sánh hoặc dùng cùng lệnh Cắt để làm khung.</li></ul>
+<figure><a href="img/d3-offset.png"><img src="img/d3-offset.png" alt="Offset cửa sổ" loading="lazy"></a><figcaption>Ví dụ: cửa sổ của tấm được nới thêm 4 mm mỗi phía (bản sao nằm cạnh bản gốc).</figcaption></figure>
+</section>
+<section id="pdf"><h2>7. Xuất PDF</h2>
 <p><b>Tên IE là bắt buộc</b> (nút Tải PDF bị khóa nếu để trống; tên được nhớ cho lần sau). Có thể nhập thêm mã hàng, mục đích sử dụng, ghi chú, phiên bản và ngày. Bản xem trước hiện từng trang; bỏ chọn trang nào không cần.</p>
 <figure><a href="img/d3-pdf1.png"><img src="img/d3-pdf1.png" alt="Trang 1 PDF" loading="lazy"></a><figcaption>Trang 1: logo và tên Crystal Martin Vietnam, tên thiết kế, hình 3D có số thứ tự, thông tin (tên IE, mã hàng, ngày, kích thước tổng, khối lượng) và ô ký.</figcaption></figure>
 <figure><a href="img/d3-pdf3.png"><img src="img/d3-pdf3.png" alt="Bản vẽ 3 hướng" loading="lazy"></a><figcaption>Bản vẽ 3 hướng có kích thước tổng và tỉ lệ.</figcaption></figure>
 <figure><a href="img/d3-pdf4.png"><img src="img/d3-pdf4.png" alt="Bản vẽ tấm" loading="lazy"></a><figcaption>Bản vẽ tấm: lỗ đánh số H1, H2... và bảng tọa độ X, Y, kích thước từ góc dưới trái.</figcaption></figure>
 <div class="note">Các trang PDF là <b>hình ảnh</b> (chữ không chọn/sao chép được) để hiển thị đúng tiếng Việt trên mọi máy. Tên IE vẫn được ghi vào thông tin tác giả của file PDF.</div>
 </section>
-<section id="luu"><h2>6. Lưu và mở thiết kế</h2>
+<figure><a href="img/d3-cad.png"><img src="img/d3-cad.png" alt="Xuất file CAD" loading="lazy"></a><figcaption>Hộp thoại Xuất file CAD / 3D.</figcaption></figure>
+<section id="cad"><h2>8. Xuất file CAD / 3D</h2>
+<p>Bấm <span class="btn">⬇ CAD / 3D</span> ở đầu trang, nhập tên IE (ghi vào file) rồi chọn loại file. Đơn vị mm, trục Z hướng lên.</p>
+<table><tr><th>File</th><th>Dùng cho</th></tr>
+<tr><td>STL</td><td>In 3D, phần mềm cắt lớp, xem 3D. Dùng được ở hầu hết phần mềm.</td></tr>
+<tr><td>OBJ</td><td>Mô hình 3D, mỗi chi tiết một đối tượng (Blender, SketchUp, Windows 3D Viewer).</td></tr>
+<tr><td>DXF 3D</td><td>Mô hình 3D dạng mặt (3DFACE) cho AutoCAD, BricsCAD, Fusion, SolidWorks.</td></tr>
+<tr><td>DXF 2D</td><td>Mặt bằng nhìn từ trên, đúng vị trí, số chi tiết ghi trên hình, lớp OUTLINE (viền), HOLES (lỗ), LABEL, INFO (tên thiết kế, tên IE, ngày).</td></tr>
+<tr><td>DXF phẳng</td><td>Từng tấm xếp thành hàng, sẵn sàng cắt laser / CNC.</td></tr></table>
+<div class="note"><b>DWG:</b> là định dạng riêng của Autodesk nên chương trình <b>không</b> ghi trực tiếp (cũng không có file STEP). Mở file DXF trong AutoCAD rồi <i>Save As DWG</i>, hoặc dùng ODA File Converter (miễn phí) để đổi DXF sang DWG. File 3D là lưới tam giác, không phải khối đặc có thể sửa tham số trong CAD. Hình bo cung trong DXF 2D và DXF phẳng là cung tròn thật; hình tự do (gộp / offset) gồm nhiều đoạn thẳng nhỏ (0,05 mm).</div>
+</section>
+<section id="luu"><h2>9. Lưu và mở thiết kế</h2>
 <p><span class="btn">Lưu…</span> tải file <code>.fixture3d.json</code> (để mở lại, sửa tiếp); <span class="btn">Mở…</span> mở lại file đó. Chương trình cũng tự giữ bản đang làm trong trình duyệt này. Thiết kế chỉ nằm trên máy bạn.</p>
 </section>
-<section id="phim"><h2>7. Phím tắt</h2>
+<section id="phim"><h2>10. Phím tắt</h2>
 <table><tr><th>Phím</th><th>Tác dụng</th></tr>
-<tr><td>Delete</td><td>Xóa chi tiết đang chọn</td></tr><tr><td>R / Shift+R</td><td>Xoay 90° phải / trái</td></tr><tr><td>Mũi tên (Shift = ×10)</td><td>Dịch chuyển theo bước kéo</td></tr>
+<tr><td>Ctrl / Shift + bấm</td><td>Chọn thêm / bỏ chọn một chi tiết</td></tr><tr><td>Delete</td><td>Xóa các chi tiết đang chọn</td></tr><tr><td>R / Shift+R</td><td>Xoay 90° phải / trái</td></tr><tr><td>Mũi tên (Shift = ×10)</td><td>Dịch chuyển theo bước kéo</td></tr>
 <tr><td>Ctrl+D</td><td>Nhân bản</td></tr><tr><td>Ctrl+Z / Ctrl+Y</td><td>Hoàn tác / làm lại</td></tr><tr><td>Ctrl+S</td><td>Lưu file thiết kế</td></tr></table>
 </section>
-<section id="loi"><h2>8. Xử lý sự cố</h2>
+<section id="loi"><h2>11. Xử lý sự cố</h2>
 <table><tr><th>Hiện tượng</th><th>Cách xử lý</th></tr>
 <tr><td>Màn hình 3D trắng / báo lỗi</td><td>Dùng Chrome hoặc Edge mới; bật tăng tốc phần cứng trong Cài đặt.</td></tr>
 <tr><td>Không tải được PDF</td><td>Nhập tên IE; cho phép tải nhiều file nếu trình duyệt hỏi.</td></tr>

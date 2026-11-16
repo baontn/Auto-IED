@@ -24,8 +24,22 @@ function rrPath(path,x,y,w,h,r){
   path.moveTo(x+r,y);path.lineTo(x+w-r,y);path.absarc(x+w-r,y+r,r,-Math.PI/2,0,false);path.lineTo(x+w,y+h-r);path.absarc(x+w-r,y+h-r,r,0,Math.PI/2,false);
   path.lineTo(x+r,y+h);path.absarc(x+r,y+h-r,r,Math.PI/2,Math.PI,false);path.lineTo(x,y+r);path.absarc(x+r,y+r,r,Math.PI,Math.PI*1.5,false);path.closePath();
 }
+function shapeOf(q){
+  var s=new THREE.Shape(q.o.map(function(a){return new THREE.Vector2(a[0],a[1]);}));
+  q.h.forEach(function(h){s.holes.push(new THREE.Path(h.map(function(a){return new THREE.Vector2(a[0],a[1]);})));});return s;
+}
 function partGeometry(p){
   var g;
+  if(p.kind==='poly'){return p.polys.map(function(q){return {geo:new THREE.ExtrudeGeometry(shapeOf(q),{depth:p.h,bevelEnabled:false})};});}
+  if(p.kind==='wheel'){
+    var tire=new THREE.CylinderGeometry(p.w/2,p.w/2,p.d,48),hub=new THREE.CylinderGeometry(p.w*0.28,p.w*0.28,p.d*1.12,32);
+    tire.translate(0,0,p.w/2);hub.translate(0,0,p.w/2);   /* axis along local Y, centre p.w/2 above the bottom */
+    return [{geo:tire},{geo:hub,col:'#9aa3ad'}];
+  }
+  if(p.kind==='handle'){
+    var r=p.d/2,ph=Math.max(p.h-r,1),px=p.w/2-r,gp=new THREE.CylinderGeometry(r,r,p.w,24);gp.rotateZ(Math.PI/2);gp.translate(0,0,p.h-r);
+    var out=[{geo:gp}];[-px,px].forEach(function(x){var c=new THREE.CylinderGeometry(r,r,ph,20);c.rotateX(Math.PI/2);c.translate(x,0,ph/2);out.push({geo:c});});return out;
+  }
   if(p.kind==='plate'){
     var s=new THREE.Shape();rrPath(s,-p.w/2,-p.d/2,p.w,p.d,p.r||0);
     (p.holes||[]).forEach(function(h){
@@ -42,21 +56,24 @@ function partGeometry(p){
     var t=new THREE.Shape();t.moveTo(-p.w/2,0);t.lineTo(p.w/2,0);t.lineTo(p.w/2,p.h);t.closePath();
     g=new THREE.ExtrudeGeometry(t,{depth:p.d,bevelEnabled:false});g.rotateX(Math.PI/2);g.translate(0,p.d/2,0);
   }else{g=new THREE.BoxGeometry(p.w,p.d,p.h);g.translate(0,0,p.h/2);}
-  return g;
+  return [{geo:g}];
 }
+function selArr(s){return s==null?[]:(Array.isArray(s)?s:[s]);}
 function buildPart(p,selected){
-  var g=new THREE.Group(),m=MATS[p.mat]||MATS.abs,geo=partGeometry(p);
-  var mat=new THREE.MeshStandardMaterial({color:new THREE.Color(m.col),roughness:0.55,metalness:m.met,transparent:m.op<1,opacity:m.op,side:m.op<1?THREE.DoubleSide:THREE.FrontSide,depthWrite:m.op>=1});
-  if(selected){mat.emissive=new THREE.Color(0x1f6feb);mat.emissiveIntensity=0.45;}
-  var mesh=new THREE.Mesh(geo,mat);g.add(mesh);
-  var ln=new THREE.LineSegments(new THREE.EdgesGeometry(geo,25),new THREE.LineBasicMaterial({color:selected?0x0b5cad:0x2b3340,transparent:true,opacity:selected?1:0.55}));g.add(ln);
+  var g=new THREE.Group(),m=MATS[p.mat]||MATS.abs;
+  partGeometry(p).forEach(function(it){
+    var mat=new THREE.MeshStandardMaterial({color:new THREE.Color(it.col||m.col),roughness:0.55,metalness:m.met,transparent:m.op<1,opacity:m.op,side:m.op<1?THREE.DoubleSide:THREE.FrontSide,depthWrite:m.op>=1});
+    if(selected){mat.emissive=new THREE.Color(0x1f6feb);mat.emissiveIntensity=0.45;}
+    g.add(new THREE.Mesh(it.geo,mat));
+    g.add(new THREE.LineSegments(new THREE.EdgesGeometry(it.geo,25),new THREE.LineBasicMaterial({color:selected?0x0b5cad:0x2b3340,transparent:true,opacity:selected?1:0.55})));
+  });
   g.position.set(p.x,p.y,p.z);g.rotation.z=rad(p.rot||0);g.userData.id=p.id;
   return g;
 }
-function glSetParts(parts,selId,ref){
-  var i;
+function glSetParts(parts,sel,ref){
+  var i,sa=selArr(sel);
   while(G.parts.children.length){var c=G.parts.children[0];G.parts.remove(c);c.traverse(function(o){if(o.geometry)o.geometry.dispose();if(o.material)o.material.dispose();});}
-  for(i=0;i<parts.length;i++)G.parts.add(buildPart(parts[i],parts[i].id===selId));
+  for(i=0;i<parts.length;i++)G.parts.add(buildPart(parts[i],sa.indexOf(parts[i].id)>=0));
   while(G.refg.children.length){var r=G.refg.children[0];G.refg.remove(r);r.traverse(function(o){if(o.geometry)o.geometry.dispose();if(o.material)o.material.dispose();});}
   if(ref&&ref.on){
     var bed=new THREE.Mesh(new THREE.BoxGeometry(REF_BED.w,REF_BED.d,REF_BED.t),new THREE.MeshStandardMaterial({color:0x8a94a3,transparent:true,opacity:0.35,roughness:0.8}));
@@ -96,13 +113,14 @@ function glView(name,parts,ref){
 /* projection helper: design point -> pixel */
 function projPt(cam,w,h,x,y,z){var v=new THREE.Vector3(x,z,-y);v.project(cam);return {x:(v.x+1)/2*w,y:(1-v.y)/2*h,ok:v.z<1};}
 /* labels (part numbers) and the X Y Z triad drawn over the 3D picture */
-function drawOverlay(ctx,cam,w,h,parts,selId,k){
+function drawOverlay(ctx,cam,w,h,parts,sel,k){
+  var sa=selArr(sel);
   cam.updateMatrixWorld();cam.updateProjectionMatrix();
   var o=projPt(cam,w,h,0,0,0),ax=[['X',60,0,0,'#d03030'],['Y',0,60,0,'#2e9a3e'],['Z',0,0,60,'#2a62d6']];
   ctx.save();ctx.lineWidth=2*k;ctx.font='bold '+Math.round(12*k)+'px Segoe UI,Arial';ctx.textAlign='center';ctx.textBaseline='middle';
   ax.forEach(function(a){var e=projPt(cam,w,h,a[1],a[2],a[3]);if(!o.ok||!e.ok)return;ctx.strokeStyle=a[4];ctx.fillStyle=a[4];ctx.beginPath();ctx.moveTo(o.x,o.y);ctx.lineTo(e.x,e.y);ctx.stroke();ctx.fillText(a[0],e.x+(e.x-o.x)*0.18,e.y+(e.y-o.y)*0.18);});
   parts.forEach(function(p,i){
-    var q=projPt(cam,w,h,p.x,p.y,p.z+p.h);if(!q.ok)return;var sel=p.id===selId,rr=(sel?12:10)*k;
+    var q=projPt(cam,w,h,p.x,p.y,p.z+p.h);if(!q.ok)return;var sel=sa.indexOf(p.id)>=0,rr=(sel?12:10)*k;
     ctx.beginPath();ctx.arc(q.x,q.y-rr,rr,0,Math.PI*2);ctx.fillStyle=sel?'#1f6feb':'#ffffff';ctx.fill();ctx.lineWidth=1.5*k;ctx.strokeStyle=sel?'#0b3d91':'#1d2330';ctx.stroke();
     ctx.fillStyle=sel?'#ffffff':'#1d2330';ctx.font='bold '+Math.round(12*k)+'px Segoe UI,Arial';ctx.fillText(String(i+1),q.x,q.y-rr+0.5*k);
   });
@@ -150,9 +168,9 @@ function bindGl(){
   cv.addEventListener('pointerdown',function(e){
     cv.setPointerCapture(e.pointerId);lx=e.clientX;ly=e.clientY;moved=false;
     if(e.button===0){
-      var h=pickAt(e);
+      var h=pickAt(e);G.add=e.shiftKey||e.ctrlKey||e.metaKey;
       if(h){
-        mode='drag';if(G.onPick)G.onPick(h.id);var p=G.getPart(h.id);
+        mode='drag';if(G.onPick)G.onPick(h.id,G.add);var p=G.getPart(h.id);
         if(p&&!p.lock){var pl=new THREE.Plane(new THREE.Vector3(0,1,0),-h.pt.y),o=new THREE.Vector3();G.drag={id:h.id,plane:pl,dx:h.pt.x-p.x,dy:-h.pt.z-p.y,first:true};}
         else G.drag=null;
       }else{mode='orbit';}
@@ -174,7 +192,7 @@ function bindGl(){
       }
     }
   });
-  function up(e){if(mode==='orbit'&&!moved&&G.onPick)G.onPick(null);if(mode==='drag'&&G.onDragEnd)G.onDragEnd();mode=null;G.drag=null;}
+  function up(e){if(mode==='orbit'&&!moved&&G.onPick)G.onPick(null,G.add);if(mode==='drag'&&G.onDragEnd)G.onDragEnd();mode=null;G.drag=null;}
   cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
   cv.addEventListener('wheel',function(e){e.preventDefault();G.ctl.r=Math.max(30,Math.min(20000,G.ctl.r*Math.exp(e.deltaY*0.001)));G.dirty=true;},{passive:false});
 }
