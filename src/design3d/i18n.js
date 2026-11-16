@@ -1,6 +1,7 @@
 /* Vietnamese (default) and English texts. A key defined twice in one block: the later one wins, so grep before adding a key. */
 var LANG='vi';
 var I18N={vi:{
+pj_tip:'Thư mục lưu dự án. Bấm để đổi thư mục.',pj_none:'Chọn thư mục',pj_dl:'Tải về',pj_nofs:'Trình duyệt này không chọn được thư mục: dự án sẽ được tải về. Hãy dùng Chrome hoặc Edge.',pj_saved:'Đã lưu',pj_cancel:'Chưa lưu: chưa chọn thư mục',pj_err:'Không lưu được:',pj_open:'Mở dự án',pj_folder:'Thư mục dự án',pj_empty:'Chưa có dự án nào trong thư mục này. Bấm Lưu để tạo.',pj_other:'Mở file khác…',pj_change:'Đổi thư mục…',
 mg_join_t:'Nối hai hình gần nhau',mg_join_tip:'Khi các hình chưa chạm nhau nhưng nằm gần nhau, nút này nối chúng thành MỘT hình liền (lấp khe hở, các góc trong được bo tròn).',mg_gap:'Khe hở tối đa được nối',mg_join:'Nối thành một hình',mg_gapfound:'Khe hở giữa các hình',mg_touch:'Các hình đã chạm nhau, sẽ gộp liền.',mg_gapnone:'Không nối được: các hình cách nhau xa hơn',mg_sfx_j:'đã nối',
 tr_btn:'Từ ảnh → 3D',tr_btnd:'Mở ảnh chụp hoặc bản vẽ, nhập kích thước thật, tạo hình 3D.',tr_title:'Từ ảnh sang 3D',tr_intro:'Chọn ảnh chụp thẳng từ trên (hoặc bản vẽ scan), vật thể đậm màu trên nền sáng. Chương trình lấy đường viền, bạn chỉ cần nhập kích thước thật.',
 tr_drop:'Hoặc kéo thả ảnh vào khung, hoặc dán ảnh bằng Ctrl+V.',tr_thr:'Ngưỡng sáng / tối',tr_auto:'Tự động',tr_inv:'Vật thể sáng trên nền tối (đảo)',tr_fill:'Tô đầy hình kín (ảnh chỉ có nét viền)',tr_tol:'Làm mịn đường viền',tr_min:'Bỏ đốm nhỏ (% của hình lớn nhất)',
@@ -22,7 +23,7 @@ f_wwid:'Bề rộng bánh',tt_wwid:'Bề rộng của bánh xe (theo trục Y)',
 k_wheel:'Bánh xe',k_handle:'Tay cầm',k_poly:'Hình tự do',
 pr_wheel:'Bánh xe',prd_wheel:'Bánh xe cao su để di chuyển gá. Đặt dưới chi tiết đang chọn.',pr_handle:'Tay cầm',prd_handle:'Tay cầm hình chữ U. Đặt lên trên chi tiết đang chọn.',
 pr_magnet:'Nam châm',prd_magnet:'Nam châm tròn dẹt để giữ thước canh, mẫu trên bàn.',pr_screw:'Vít',prd_screw:'Vít nhỏ để bắt các chi tiết.',pdf_poly:'Hình tự do (gộp / offset): kích thước theo hình bao.',
-appName:'3D Gá & dụng cụ may',home:'← IE Tools',ph_name:'Tên thiết kế (ví dụ: Mẫu may túi sau)',b_new:'Mới',b_open:'Mở…',b_save:'Lưu…',b_help:'Hướng dẫn',b_pdf:'📄 Xuất PDF',
+appName:'3D Gá & dụng cụ may',home:'← IE Tools',ph_name:'Tên thiết kế (ví dụ: Mẫu may túi sau)',b_new:'Mới',b_open:'Mở…',b_save:'💾 Lưu',b_help:'Hướng dẫn',b_pdf:'📄 Xuất PDF',
 s1:'Thêm chi tiết',s2:'Chỉnh kích thước, vị trí',s3:'Xuất PDF (có tên IE và logo)',
 lib_title:'1. Thêm chi tiết',list_title:'Danh sách chi tiết',list_empty:'Chưa có chi tiết. Bấm một nút ở trên để thêm.',
 pr_plate:'Tấm nền',prd_plate:'Tấm phẳng (acrylic, nhựa, nhôm). Thêm lỗ, rãnh ở cột bên phải.',
@@ -64,6 +65,7 @@ pdf_sig_ie:'Người thiết kế (IE)',pdf_sig_chk:'Kiểm tra',pdf_sig_ok:'Duy
 pdf_c_name:'Tên chi tiết',pdf_c_kind:'Loại',pdf_c_size:'Kích thước (mm)',pdf_c_mat:'Vật liệu',pdf_c_holes:'Số lỗ',pdf_c_g:'Khối lượng (g)',pdf_total:'Tổng',
 pdf_top:'Nhìn từ trên',pdf_front:'Nhìn phía trước',pdf_side:'Nhìn bên phải',pdf_scale:'Tỉ lệ',pdf_needle:'Kim',pdf_origin:'Gốc: góc dưới trái của tấm',pdf_noholes:'Tấm không có lỗ.',pdf_holenote:'X, Y: tính từ góc dưới trái của tấm (mm). Khối lượng tính theo khối lượng riêng của vật liệu.',pdf_pages:'trang'
 },en:{
+pj_tip:'Project folder. Click to change the folder.',pj_none:'Choose folder',pj_dl:'Download',pj_nofs:'This browser cannot pick a folder: the project will be downloaded. Use Chrome or Edge.',pj_saved:'Saved',pj_cancel:'Not saved: no folder chosen',pj_err:'Could not save:',pj_open:'Open a project',pj_folder:'Project folder',pj_empty:'No project in this folder yet. Press Save to create one.',pj_other:'Open another file…',pj_change:'Change folder…',
 mg_join_t:'Join shapes that are close',mg_join_tip:'When shapes do not touch but lie close together, this button joins them into ONE connected shape (the gap is filled, inner corners are rounded).',mg_gap:'Largest gap to bridge',mg_join:'Join into one shape',mg_gapfound:'Gap between the shapes',mg_touch:'The shapes already touch and will be merged.',mg_gapnone:'Cannot join: the shapes are farther apart than',mg_sfx_j:'joined',
 tr_btn:'Picture → 3D',tr_btnd:'Open a photo or drawing, type the real size, make a 3D shape.',tr_title:'Picture to 3D',tr_intro:'Choose a photo taken straight from above (or a scanned drawing), a dark object on a light background. The tool traces the outline; you only type the real size.',
 tr_drop:'Or drop an image on the window, or paste it with Ctrl+V.',tr_thr:'Light / dark threshold',tr_auto:'Auto',tr_inv:'Light object on dark background (invert)',tr_fill:'Fill closed shapes (picture has outline strokes only)',tr_tol:'Smooth the outline',tr_min:'Ignore small specks (% of the largest shape)',
@@ -85,7 +87,7 @@ f_wwid:'Wheel width',tt_wwid:'Width of the wheel (along the Y axis)',f_bar:'Bar 
 k_wheel:'Wheel',k_handle:'Handle',k_poly:'Free shape',
 pr_wheel:'Wheel',prd_wheel:'Rubber wheel to move the fixture. Placed under the selected part.',pr_handle:'Handle',prd_handle:'U-shaped handle. Placed on top of the selected part.',
 pr_magnet:'Magnet',prd_magnet:'Flat round magnet to hold guides and templates on the table.',pr_screw:'Screw',prd_screw:'Small screw to fasten parts.',pdf_poly:'Free shape (merged / offset): size from the bounding box.',
-appName:'3D Fixtures & sewing tools',home:'← IE Tools',ph_name:'Design name (e.g. Back pocket template)',b_new:'New',b_open:'Open…',b_save:'Save…',b_help:'Help',b_pdf:'📄 Export PDF',
+appName:'3D Fixtures & sewing tools',home:'← IE Tools',ph_name:'Design name (e.g. Back pocket template)',b_new:'New',b_open:'Open…',b_save:'💾 Save',b_help:'Help',b_pdf:'📄 Export PDF',
 s1:'Add parts',s2:'Adjust size and position',s3:'Export PDF (IE name and logo)',
 lib_title:'1. Add parts',list_title:'Parts list',list_empty:'No parts yet. Press a button above to add one.',
 pr_plate:'Base plate',prd_plate:'Flat plate (acrylic, plastic, aluminium). Add holes and slots in the right panel.',

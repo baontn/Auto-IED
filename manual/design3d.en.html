@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>3D fixtures &amp; sewing tools: User guide</title><link rel="icon" href="../icon.png"><link rel="stylesheet" href="manual.css"></head><body>
-<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>3D fixtures &amp; sewing tools v1.3: User guide</b><a href="design3d.html" title="Tiếng Việt" onclick="try{localStorage.setItem('ie_site_lang','vi')}catch(e){}">VI</a><a href="../index.html">‹ Home</a></header>
+<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>3D fixtures &amp; sewing tools v1.4: User guide</b><a href="design3d.html" title="Tiếng Việt" onclick="try{localStorage.setItem('ie_site_lang','vi')}catch(e){}">VI</a><a href="../index.html">‹ Home</a></header>
 <div class="wrap">
 <nav class="toc"><b>Contents</b>
 <a href="#intro">1. Introduction</a>
@@ -106,7 +106,9 @@
 <div class="note"><b>DWG:</b> is a proprietary Autodesk format, so the tool does <b>not</b> write it directly (and there is no STEP file either). Open the DXF in AutoCAD and use <i>Save As DWG</i>, or convert DXF to DWG with the free ODA File Converter. The 3D files are triangle meshes, not editable parametric solids. Rounded corners in DXF 2D and DXF flat are true arcs; free shapes (merge / offset) are made of many tiny straight segments (0.05 mm).</div>
 </section>
 <section id="save"><h2>9. Saving and opening</h2>
-<p><span class="btn">Save…</span> downloads a <code>.fixture3d.json</code> file (to open and continue later); <span class="btn">Open…</span> opens it again. The current work is also kept in this browser. Designs stay on your computer.</p>
+<p>The first time you press <span class="btn">💾 Save</span> (or Ctrl+S) the tool asks for the <b>project folder</b>. Choose a folder (for example on the shared drive) and press Allow. From then on every Save writes the project straight into this folder, <b>with no file download</b>; the same design name overwrites the same file, and a new name makes a new file. The folder name is shown on the 📁 button at the top; press it to change the folder.</p>
+<p><span class="btn">Open…</span> lists the projects in the folder (newest first); click one to open it. <i>Open another file…</i> and <i>Change folder…</i> are also there. A browser that cannot pick a folder (not Chrome / Edge) downloads the file as before. The current work is also kept in this browser.</p>
+<figure><a href="img/d3-open.png"><img src="img/d3-open.png" alt="Open a project" loading="lazy"></a><figcaption>The Open a project window: the projects in the chosen folder. (Vietnamese interface shown.)</figcaption></figure>
 </section>
 <section id="keys"><h2>10. Keyboard shortcuts</h2>
 <table><tr><th>Key</th><th>Action</th></tr>
