@@ -1,6 +1,6 @@
 /* 3D scene (three.js): build meshes from the parts, own orbit camera, picking and dragging, picture for the PDF.
    Everything inside G.root uses the DESIGN axes (z up); G.root is turned so that z points up in three.js. */
-var G={ren:null,scene:null,cam:null,root:null,parts:null,refg:null,grid:null,ctl:{th:Math.PI/2-0.6,ph:1.0,r:600,tx:0,ty:0,tz:0},dirty:true,drag:null,ray:null,onPick:null,onDrag:null,onDragEnd:null,snap:5,meas:[],mode:null,pend:null,hover:null,snapPts:[],gridExt:250,onRuler:null};
+var G={ren:null,scene:null,cam:null,root:null,parts:null,refg:null,grid:null,ctl:{th:Math.PI/2-0.6,ph:1.0,r:600,tx:0,ty:0,tz:0},dirty:true,drag:null,ray:null,onPick:null,onDrag:null,onDragEnd:null,snap:5,meas:[],mode:null,pend:null,hover:null,snapPts:[],gridExt:250,onRuler:null,meshList:[],snapSegs:[],hoverSnap:null,hl:null,onFace:null,onFaceHover:null,faceKey:'',faceCache:null,keepSel:false};
 function cssVar(n,d){try{var v=getComputedStyle(document.documentElement).getPropertyValue(n).trim();return v||d;}catch(e){return d;}}
 function glInit(canvas,ovCanvas){
   G.cv=canvas;G.ov=ovCanvas;
@@ -86,7 +86,7 @@ function glSetParts(parts,sel,ref){
     var plate=new THREE.Mesh(new THREE.BoxGeometry(60,30,0.6),new THREE.MeshStandardMaterial({color:0xb7bec9,roughness:0.4,metalness:0.5}));plate.position.set(ref.nx,ref.ny,0.3);G.refg.add(plate);
     var nd=new THREE.Mesh(new THREE.CylinderGeometry(1,1,35,12),new THREE.MeshBasicMaterial({color:0xed1c24}));nd.rotateX(Math.PI/2);nd.position.set(ref.nx,ref.ny,17.5);G.refg.add(nd);
   }
-  buildSnap(parts);glGrid(parts,ref);G.dirty=true;
+  collectGeo();buildSnap(parts);glGrid(parts,ref);G.dirty=true;
 }
 var REF_BED={w:420,d:180,t:20};
 function glGrid(parts,ref){
@@ -143,9 +143,23 @@ function drawOverlay(ctx,cam,w,h,parts,sel,k,live){
     var q=projPt(cam,w,h,p.x,p.y,p.z+p.h);if(!q.ok)return;var sel=sa.indexOf(p.id)>=0,rr=(sel?12:10)*k;
     ctx.beginPath();ctx.arc(q.x,q.y-rr,rr,0,Math.PI*2);ctx.fillStyle=sel?'#1f6feb':'#ffffff';ctx.fill();ctx.lineWidth=1.5*k;ctx.strokeStyle=sel?'#0b3d91':'#1d2330';ctx.stroke();
     ctx.fillStyle=sel?'#ffffff':'#1d2330';ctx.font='bold '+Math.round(12*k)+'px Segoe UI,Arial';ctx.fillText(String(i+1),q.x,q.y-rr+0.5*k);
+    if(live&&p.lock){ctx.font='11px Segoe UI,Arial';ctx.fillText('🔒',q.x+rr+6,q.y-rr);ctx.font='bold '+Math.round(12*k)+'px Segoe UI,Arial';}
   });
   ctx.restore();
   (G.meas||[]).forEach(function(m){drawMeas(ctx,cam,w,h,m.a,m.b,k,false);});
+  if(live&&G.mode==='ruler'&&G.hoverSnap&&G.hoverSnap.snap){
+    var hs=G.hoverSnap,hp=projPt(cam,w,h,hs.p[0],hs.p[1],hs.p[2]);ctx.save();ctx.lineCap='round';
+    if(hs.a){var ea=projPt(cam,w,h,hs.a[0],hs.a[1],hs.a[2]),eb=projPt(cam,w,h,hs.b[0],hs.b[1],hs.b[2]);if(ea.ok&&eb.ok){ctx.strokeStyle=hs.type==='e'?'#ff8a00':'rgba(255,138,0,0.55)';ctx.lineWidth=(hs.type==='e'?5:3);ctx.beginPath();ctx.moveTo(ea.x,ea.y);ctx.lineTo(eb.x,eb.y);ctx.stroke();}}
+    if(hp.ok){
+      ctx.fillStyle='#ff8a00';ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.beginPath();
+      if(hs.type==='m'){ctx.moveTo(hp.x,hp.y-8);ctx.lineTo(hp.x+7,hp.y+6);ctx.lineTo(hp.x-7,hp.y+6);ctx.closePath();}else ctx.arc(hp.x,hp.y,hs.type==='v'?7:5,0,Math.PI*2);
+      ctx.fill();ctx.stroke();
+      var tx=hs.type==='v'?t('rl_vertex'):hs.type==='m'?t('rl_mid')+' · '+t('rl_edge')+' '+fmt(hs.len)+' mm':t('rl_edge')+' '+fmt(hs.len)+' mm';
+      ctx.font='bold 12px Segoe UI,Arial';var tw=ctx.measureText(tx).width+10;ctx.fillStyle='rgba(255,255,255,0.95)';ctx.fillRect(hp.x+12,hp.y-26,tw,20);ctx.strokeStyle='#ff8a00';ctx.lineWidth=1;ctx.strokeRect(hp.x+12,hp.y-26,tw,20);ctx.fillStyle='#b34000';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(tx,hp.x+17,hp.y-16);
+    }
+    ctx.restore();
+  }
+  if(live&&G.facePt){var fp=projPt(cam,w,h,G.facePt[0],G.facePt[1],G.facePt[2]);if(fp.ok){ctx.save();ctx.strokeStyle='#ff6a00';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(fp.x-10,fp.y);ctx.lineTo(fp.x+10,fp.y);ctx.moveTo(fp.x,fp.y-10);ctx.lineTo(fp.x,fp.y+10);ctx.stroke();ctx.beginPath();ctx.arc(fp.x,fp.y,6,0,Math.PI*2);ctx.stroke();ctx.restore();}}
   if(live&&G.pend){if(G.hover)drawMeas(ctx,cam,w,h,G.pend,G.hover,k,true);else{var pp=projPt(cam,w,h,G.pend[0],G.pend[1],G.pend[2]);ctx.fillStyle='#e8590c';ctx.beginPath();ctx.arc(pp.x,pp.y,5,0,Math.PI*2);ctx.fill();}}
 }
 function glRender(parts,selId){
@@ -189,17 +203,95 @@ function buildSnap(parts){
   });
   G.snapPts=pts;
 }
-function rulerPoint(e){
-  var rc=G.cv.getBoundingClientRect(),mx=e.clientX-rc.left,my=e.clientY-rc.top,best=null,bd=14,i;
-  for(i=0;i<G.snapPts.length;i++){var s=G.snapPts[i],q=projPt(G.cam,rc.width,rc.height,s[0],s[1],s[2]);if(!q.ok)continue;var d=Math.sqrt((q.x-mx)*(q.x-mx)+(q.y-my)*(q.y-my));if(d<bd){bd=d;best=s;}}
-  if(best)return {p:best.slice(),snap:true};
-  var h=pickAt(e),out;
-  if(h)out=[h.pt.x,-h.pt.z,h.pt.y];
-  else{
-    var m=new THREE.Vector2(mx/rc.width*2-1,-(my/rc.height)*2+1),o=new THREE.Vector3();G.ray.setFromCamera(m,G.cam);
-    if(G.ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0,1,0),0),o))out=[o.x,-o.z,0];else out=[0,0,0];
+/* all meshes and all edges (segments) of the parts in design coordinates, for face picking and edge / vertex snapping */
+function collectGeo(){
+  G.meshList=[];G.snapSegs=[];G.faceCache=null;
+  G.parts.children.forEach(function(g){
+    g.updateMatrix();
+    g.children.forEach(function(o){
+      o.updateMatrix();var M=g.matrix.clone().multiply(o.matrix);o.userData.M=M;
+      if(o.isMesh)G.meshList.push(o);
+      else if(o.isLineSegments&&G.snapSegs.length<30000){
+        var pos=o.geometry.attributes.position,v=new THREE.Vector3(),a,i;
+        for(i=0;i+1<pos.count;i+=2){v.fromBufferAttribute(pos,i).applyMatrix4(M);a=[v.x,v.y,v.z];v.fromBufferAttribute(pos,i+1).applyMatrix4(M);G.snapSegs.push([a[0],a[1],a[2],v.x,v.y,v.z]);}
+      }
+    });
+  });
+}
+function toThree(p){return new THREE.Vector3(p[0],p[2],-p[1]);}
+function occluded(pt){
+  var from=G.cam.position,to=toThree(pt),dir=to.clone().sub(from),dist=dir.length();dir.normalize();
+  var rc=new THREE.Raycaster(from,dir,0.1,dist),hits=rc.intersectObjects(G.meshList,false);
+  return hits.length>0&&hits[0].distance<dist-(0.4+dist*0.002);
+}
+/* closest point of the segment (design coords) to the mouse ray */
+function segPointOnRay(sg){
+  var A=toThree(sg.slice(0,3)),B=toThree(sg.slice(3,6)),u=B.clone().sub(A),o=G.ray.ray.origin,d=G.ray.ray.direction,w0=A.clone().sub(o);
+  var a=u.dot(u),b=u.dot(d),d0=u.dot(w0),e=d.dot(w0),den=a-b*b,s=den>1e-9?(b*e-d0)/den:0.5;s=Math.max(0,Math.min(1,s));
+  return [sg[0]+(sg[3]-sg[0])*s,sg[1]+(sg[4]-sg[1])*s,sg[2]+(sg[5]-sg[2])*s];
+}
+/* what is under the pointer for the ruler: vertex, edge middle, point on an edge (highlighted), else the surface */
+function snapAt(e){
+  var rc=G.cv.getBoundingClientRect(),mx=e.clientX-rc.left,my=e.clientY-rc.top,cands=[],i;
+  G.ray.setFromCamera(new THREE.Vector2(mx/rc.width*2-1,-(my/rc.height)*2+1),G.cam);
+  function P(x,y,z){return projPt(G.cam,rc.width,rc.height,x,y,z);}
+  for(i=0;i<G.snapPts.length;i++){var s=G.snapPts[i],q=P(s[0],s[1],s[2]);if(!q.ok)continue;var d=Math.sqrt((q.x-mx)*(q.x-mx)+(q.y-my)*(q.y-my));if(d<12)cands.push({type:'v',p:s,d:d,pr:0});}
+  for(i=0;i<G.snapSegs.length;i++){
+    var sg=G.snapSegs[i],a=P(sg[0],sg[1],sg[2]),b=P(sg[3],sg[4],sg[5]);if(!a.ok||!b.ok)continue;
+    var mid=[(sg[0]+sg[3])/2,(sg[1]+sg[4])/2,(sg[2]+sg[5])/2],m=P(mid[0],mid[1],mid[2]),dm=Math.sqrt((m.x-mx)*(m.x-mx)+(m.y-my)*(m.y-my));
+    if(dm<10)cands.push({type:'m',p:mid,d:dm,pr:1,sg:sg});
+    var dx=b.x-a.x,dy=b.y-a.y,l2=dx*dx+dy*dy,t=l2>0?Math.max(0,Math.min(1,((mx-a.x)*dx+(my-a.y)*dy)/l2)):0,px=a.x+t*dx-mx,py=a.y+t*dy-my,de=Math.sqrt(px*px+py*py);
+    if(de<7)cands.push({type:'e',d:de,pr:2,sg:sg});
   }
-  return {p:out.map(function(v){return Math.round(v*10)/10;}),snap:false};
+  cands.sort(function(x,y){return x.pr-y.pr||x.d-y.d;});
+  for(i=0;i<Math.min(cands.length,8);i++){
+    var c=cands[i],pt=c.type==='e'?segPointOnRay(c.sg):c.p;
+    if(occluded(pt))continue;
+    var out={p:pt.map(function(v){return Math.round(v*10)/10;}),snap:true,type:c.type};
+    if(c.sg){out.a=c.sg.slice(0,3);out.b=c.sg.slice(3,6);out.len=Math.sqrt(Math.pow(c.sg[3]-c.sg[0],2)+Math.pow(c.sg[4]-c.sg[1],2)+Math.pow(c.sg[5]-c.sg[2],2));}
+    return out;
+  }
+  var h=pickAt(e),o;
+  if(h)o=[h.pt.x,-h.pt.z,h.pt.y];
+  else{var pl=new THREE.Vector3();if(G.ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0,1,0),0),pl))o=[pl.x,-pl.z,0];else o=[0,0,0];}
+  return {p:o.map(function(v){return Math.round(v*10)/10;}),snap:false,type:'f'};
+}
+function rulerPoint(e){return snapAt(e);}
+/* the flat face under the pointer: all coplanar triangles of that mesh, in design coordinates */
+function faceAt(e){
+  var rc=G.cv.getBoundingClientRect();
+  G.ray.setFromCamera(new THREE.Vector2((e.clientX-rc.left)/rc.width*2-1,-((e.clientY-rc.top)/rc.height)*2+1),G.cam);
+  var hits=G.ray.intersectObjects(G.meshList,false);if(!hits.length)return null;
+  var h=hits[0],mesh=h.object,g=mesh.parent,geo=mesh.geometry,pos=geo.attributes.position,ix=geo.index,M=mesh.userData.M,nt=ix?ix.count/3:pos.count/3;
+  function tri(fi){var k=ix?[ix.getX(3*fi),ix.getX(3*fi+1),ix.getX(3*fi+2)]:[3*fi,3*fi+1,3*fi+2];return k.map(function(j){return new THREE.Vector3().fromBufferAttribute(pos,j).applyMatrix4(M);});}
+  function nrm(t){return new THREE.Vector3().subVectors(t[1],t[0]).cross(new THREE.Vector3().subVectors(t[2],t[0]));}
+  var t0=tri(h.faceIndex),n=nrm(t0);if(n.lengthSq()<1e-12)return null;n.normalize();var d=n.dot(t0[0]),key=mesh.uuid+'|'+n.x.toFixed(3)+','+n.y.toFixed(3)+','+n.z.toFixed(3)+'|'+d.toFixed(2);
+  var f;
+  if(G.faceCache&&G.faceCache.key===key)f=G.faceCache.f;
+  else{
+    var tris=[],i,cx=0,cy=0,cz=0,A=0;
+    for(i=0;i<nt;i++){
+      var t=tri(i),nn=nrm(t),ar=nn.length()/2;if(ar<1e-9)continue;nn.normalize();
+      if(nn.dot(n)>0.9995&&Math.abs(n.dot(t[0])-d)<0.02&&Math.abs(n.dot(t[1])-d)<0.02&&Math.abs(n.dot(t[2])-d)<0.02){
+        tris.push([t[0].x,t[0].y,t[0].z,t[1].x,t[1].y,t[1].z,t[2].x,t[2].y,t[2].z]);
+        cx+=ar*(t[0].x+t[1].x+t[2].x)/3;cy+=ar*(t[0].y+t[1].y+t[2].y)/3;cz+=ar*(t[0].z+t[1].z+t[2].z)/3;A+=ar;
+      }
+    }
+    var kind=n.z>0.9?'top':n.z<-0.9?'bottom':'side';
+    f={key:key,pid:g.userData.id,n:[n.x,n.y,n.z],d:d,kind:kind,tris:tris,c:A>0?[cx/A,cy/A,cz/A]:[t0[0].x,t0[0].y,t0[0].z],z:(tris.length?tris[0][2]:t0[0].z)};
+    G.faceCache={key:key,f:f};
+  }
+  var out=Object.assign({},f);out.pt=[h.point.x,-h.point.z,h.point.y];return out;
+}
+function glSetFaceHL(hover,sel){
+  if(G.hl){G.root.remove(G.hl);G.hl.traverse(function(o){if(o.geometry)o.geometry.dispose();if(o.material)o.material.dispose();});}
+  G.hl=new THREE.Group();
+  function mk(tris,col,op){
+    if(!tris||!tris.length)return;var arr=new Float32Array(tris.length*9);tris.forEach(function(t,i){arr.set(t,i*9);});
+    var g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(arr,3));
+    var m=new THREE.Mesh(g,new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:op,side:THREE.DoubleSide,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4}));m.renderOrder=5;G.hl.add(m);
+  }
+  mk(hover,0x4c8dff,0.35);mk(sel,0xff8a00,0.5);G.root.add(G.hl);G.dirty=true;
 }
 /* mouse / touch */
 function pickAt(ev){
@@ -215,18 +307,21 @@ function bindGl(){
   cv.addEventListener('contextmenu',function(e){e.preventDefault();});
   cv.addEventListener('pointerdown',function(e){
     cv.setPointerCapture(e.pointerId);lx=e.clientX;ly=e.clientY;sx=lx;sy=ly;moved=false;
-    if(e.button===0&&G.mode==='ruler'){mode='orbit';G.rclick=true;}
+    G.keepSel=false;
+    if(e.button===0&&(G.mode==='ruler'||G.mode==='face')){mode='orbit';G.rclick=true;}
     else if(e.button===0){G.rclick=false;
       var h=pickAt(e);G.add=e.shiftKey||e.ctrlKey||e.metaKey;
       if(h){
         mode='drag';if(G.onPick)G.onPick(h.id,G.add);var p=G.getPart(h.id);
-        if(p&&!p.lock){var pl=new THREE.Plane(new THREE.Vector3(0,1,0),-h.pt.y),o=new THREE.Vector3();G.drag={id:h.id,plane:pl,dx:h.pt.x-p.x,dy:-h.pt.z-p.y,first:true};}
+        if(p&&p.lock){mode='orbit';G.keepSel=true;G.drag=null;}
+        else if(p){var pl=new THREE.Plane(new THREE.Vector3(0,1,0),-h.pt.y),o=new THREE.Vector3();G.drag={id:h.id,plane:pl,dx:h.pt.x-p.x,dy:-h.pt.z-p.y,first:true};}
         else G.drag=null;
       }else{mode='orbit';}
     }else mode=e.button===1||e.button===2?'pan':null;
   });
   cv.addEventListener('pointermove',function(e){
-    if(G.mode==='ruler'&&!mode){G.hover=rulerPoint(e).p;G.dirty=true;}
+    if(G.mode==='ruler'&&!mode){var sn=snapAt(e);G.hover=sn.p;G.hoverSnap=sn;G.dirty=true;}
+    else if(G.mode==='face'&&!mode&&G.onFaceHover)G.onFaceHover(faceAt(e));
     if(!mode)return;var dx=e.clientX-lx,dy=e.clientY-ly;if(Math.abs(e.clientX-sx)+Math.abs(e.clientY-sy)>4)moved=true;
     if(mode==='orbit'){G.ctl.th-=dx*0.008;G.ctl.ph=Math.max(0.03,Math.min(Math.PI-0.03,G.ctl.ph-dy*0.008));lx=e.clientX;ly=e.clientY;G.dirty=true;}
     else if(mode==='pan'){
@@ -242,7 +337,7 @@ function bindGl(){
       }
     }
   });
-  function up(e){if(mode==='orbit'&&!moved&&G.rclick){if(G.onRuler)G.onRuler(rulerPoint(e).p);}else if(mode==='orbit'&&!moved&&G.onPick)G.onPick(null,G.add);if(mode==='drag'&&G.onDragEnd)G.onDragEnd();mode=null;G.drag=null;}
+  function up(e){if(mode==='orbit'&&!moved&&G.rclick){if(G.mode==='face'){if(G.onFace)G.onFace(faceAt(e));}else if(G.onRuler)G.onRuler(snapAt(e).p);}else if(mode==='orbit'&&!moved&&G.onPick&&!G.keepSel)G.onPick(null,G.add);if(mode==='drag'&&G.onDragEnd)G.onDragEnd();mode=null;G.drag=null;}
   cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
   cv.addEventListener('wheel',function(e){e.preventDefault();G.ctl.r=Math.max(30,Math.min(20000,G.ctl.r*Math.exp(e.deltaY*0.001)));G.dirty=true;},{passive:false});
 }

@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>3D fixtures &amp; sewing tools: User guide</title><link rel="icon" href="../icon.png"><link rel="stylesheet" href="manual.css"></head><body>
-<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>3D fixtures &amp; sewing tools v1.4: User guide</b><a href="design3d.html" title="Tiếng Việt" onclick="try{localStorage.setItem('ie_site_lang','vi')}catch(e){}">VI</a><a href="../index.html">‹ Home</a></header>
+<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>3D fixtures &amp; sewing tools v1.5: User guide</b><a href="design3d.html" title="Tiếng Việt" onclick="try{localStorage.setItem('ie_site_lang','vi')}catch(e){}">VI</a><a href="../index.html">‹ Home</a></header>
 <div class="wrap">
 <nav class="toc"><b>Contents</b>
 <a href="#intro">1. Introduction</a>
@@ -9,6 +9,8 @@
 <a href="#parts">3. Kinds of parts</a>
 <a href="#adjust">4. Adjusting a part</a>
 <a href="#tables">4b. Sample tables</a>
+<a href="#face">4a. Add shapes on a face</a>
+<a href="#lock">4e. Lock position</a>
 <a href="#ruler">4c. Ruler</a>
 <a href="#pic">4d. Picture to 3D</a>
 <a href="#merge">5. Merge / cut shapes</a>
@@ -58,8 +60,19 @@
 <p>The <b>Sample tables</b> section in the left column has a sewing table (1200 × 600 × 750), work table (1500 × 750 × 750), cutting table (2400 × 1500 × 850) and small table (600 × 600 × 700). The table is placed <b>under</b> the design (table top at Z = 0) to compare with the real table. Length, Width, Height and top thickness can be changed.</p>
 <p>A table is a <b>reference only</b> part: it is shown in the 3D view (and the PDF 3D picture) but <b>not counted</b> in the parts list, weight, PDF drawings and CAD files. Tick <i>Reference only</i> in the right column to give any other part the same status.</p>
 </section>
+<section id="face"><h2>4a. Add shapes on a face (Onshape style)</h2>
+<p>Press <span class="btn">▦ Pick face</span> (or key <b>F</b>). Move the pointer over a part: <b>the face under the pointer lights up</b>. Click to select the face (it turns orange; the orange + is the placement point). Then press a shape button in the left column: the new shape is put <b>right on that face</b>, at the point you clicked.</p>
+<ul><li><b>Top face</b>: the shape stands on it. <b>Bottom face</b>: the shape hangs under it. <b>Side face</b>: the shape touches it (a rail lies along the face, a wheel gets its axle across the face).</li>
+<li>Click on the face again to change the placement point; <i>Put at face centre</i> picks the centre; <i>Clear face</i> or Esc leaves. The selected face is kept so several shapes can be added in a row.</li>
+<li>The face is cleared automatically when its part is resized or moved.</li></ul>
+<figure><a href="img/d3-face.png"><img src="img/d3-face.png" alt="Face selected" loading="lazy"></a><figcaption>The top face of the plate is selected (orange, the + is the placement point); the block on the left lights up because the pointer is over its face. (Vietnamese interface shown.)</figcaption></figure>
+</section>
 <section id="ruler"><h2>4c. Ruler</h2>
-<p>Press <span class="btn">📏 Ruler</span> (or key <b>M</b>), then click two points on the picture. Points <b>snap</b> to nearby part corners and hole centres (a dashed line follows the mouse). The result shows the length and ΔX, ΔY, ΔZ, is listed in the right column (with a delete button) and is <b>printed in the PDF 3D picture</b>. Esc leaves the ruler. The X and Y axes also carry mm scale marks whose step follows the zoom level.</p>
+<p>Press <span class="btn">📏 Ruler</span> (or key <b>M</b>), then click two points on the picture. Points <b>snap</b> to nearby part corners and hole centres (a dashed line follows the mouse). While you move the mouse, the <b>edge or vertex near the pointer is highlighted in orange</b> (with its name and the edge length); edge middles snap too, and hidden edges are ignored. The result shows the length and ΔX, ΔY, ΔZ, is listed in the right column (with a delete button) and is <b>printed in the PDF 3D picture</b>. Esc leaves the ruler. The X and Y axes also carry mm scale marks whose step follows the zoom level.</p>
+</section>
+<figure><a href="img/d3-edge.png"><img src="img/d3-edge.png" alt="Edge highlight" loading="lazy"></a><figcaption>Ruler: the edge near the pointer is highlighted in orange with its length (138 mm).</figcaption></figure>
+<section id="lock"><h2>4e. Lock position</h2>
+<p>Select one or more parts and press <span class="btn">🔒 Lock</span> (or key <b>L</b>, or <i>Lock position</i> in the right column). A locked part <b>cannot be dragged, nudged with the arrow keys, or have its X, Y, Z and rotation changed</b>; size, material and holes can still be edited. Locked parts show 🔒 on the picture and in the list; dragging on a locked part rotates the view like dragging the background. Press again to unlock. With nothing selected the right column has <i>Lock all / Unlock all</i>. The lock is saved with the project.</p>
 </section>
 <section id="pic"><h2>4d. Picture to 3D</h2>
 <p>Press <span class="btn">📷 Picture → 3D</span> at the top of the left column.</p>
@@ -112,7 +125,7 @@
 </section>
 <section id="keys"><h2>10. Keyboard shortcuts</h2>
 <table><tr><th>Key</th><th>Action</th></tr>
-<tr><td>M</td><td>Turn the ruler on / off</td></tr><tr><td>Ctrl / Shift + click</td><td>Add / remove a part from the selection</td></tr><tr><td>Delete</td><td>Delete the selected parts</td></tr><tr><td>R / Shift+R</td><td>Rotate 90° right / left</td></tr><tr><td>Arrow keys (Shift = ×10)</td><td>Move by the drag step</td></tr>
+<tr><td>F</td><td>Turn face picking on / off</td></tr><tr><td>L</td><td>Lock / unlock the selected parts</td></tr><tr><td>M</td><td>Turn the ruler on / off</td></tr><tr><td>Ctrl / Shift + click</td><td>Add / remove a part from the selection</td></tr><tr><td>Delete</td><td>Delete the selected parts</td></tr><tr><td>R / Shift+R</td><td>Rotate 90° right / left</td></tr><tr><td>Arrow keys (Shift = ×10)</td><td>Move by the drag step</td></tr>
 <tr><td>Ctrl+D</td><td>Duplicate</td></tr><tr><td>Ctrl+Z / Ctrl+Y</td><td>Undo / redo</td></tr><tr><td>Ctrl+S</td><td>Save the design file</td></tr></table>
 </section>
 <section id="trouble"><h2>11. Troubleshooting</h2>
