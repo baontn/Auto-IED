@@ -9156,7 +9156,7 @@ function init(){
   applyLang();changed(true);glView('iso',fitParts(),ST.ref);
   $('snap').value=String(G.snap);
   /* events */
-  $('lib').addEventListener('click',function(e){var b=e.target.closest('[data-add]');if(b)addPreset(b.dataset.add);});
+  [$('lib'),$('libT')].forEach(function(box){box.addEventListener('click',function(e){var b=e.target.closest('[data-add]');if(b)addPreset(b.dataset.add);});});
   $('list').addEventListener('click',function(e){var r=e.target.closest('[data-id]');if(r)selectPart(+r.dataset.id,e.ctrlKey||e.shiftKey||e.metaKey);});
   $('props').addEventListener('change',function(e){
     var t0=e.target;

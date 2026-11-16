@@ -152,6 +152,9 @@ async def main():
         await pg.keyboard.press('Escape')
         # ---- v1.2: tables, ruler, picture -> 3D ----
         await pg.evaluate('ST=blank();SELS=[];changed(true)')
+        await pg.click('[data-add=tbl_work]'); check(await pg.evaluate('ST.parts.length') == 1 and await pg.evaluate('ST.parts[0].kind') == 'table', 'clicking a table button adds the table')
+        await pg.fill('[data-f=w]', '1800'); await pg.press('[data-f=w]', 'Tab'); check(await pg.evaluate('ST.parts[0].w') == 1800, 'table size can be edited')
+        await pg.evaluate('ST=blank();SELS=[];changed(true)')
         await pg.evaluate('addPreset("window");addPreset("tbl_sew")')
         tz = await pg.evaluate('ST.parts[1].z'); check(tz == -750 and await pg.evaluate('ST.parts[1].ref') is True, 'table is a reference part under the design (z=%s)' % tz)
         check('1 ' in await pg.inner_text('#sum') and await pg.evaluate('numOf(ST.parts[0])') == 1, 'list counts only real parts: %s' % (await pg.inner_text('#sum')))
