@@ -65,15 +65,32 @@ function booleanWorld(parts,mode){
   }
   return pathsToPolys(acc);
 }
+function clipGrow(paths,d){
+  var base=cexec(ClipperLib.ClipType.ctUnion,paths,[]);if(!d)return base;
+  var co=new ClipperLib.ClipperOffset(2,0.05*CSC);co.AddPaths(base,ClipperLib.JoinType.jtRound,ClipperLib.EndType.etClosedPolygon);
+  var sol=new ClipperLib.Paths();co.Execute(sol,d*CSC);return sol;
+}
+/* Join shapes that are close together into ONE shape: closing (grow by r, shrink by r) with the smallest r that
+   connects them; the holes of the plain union are kept. Returns {polys, gap} (gap = distance bridged, mm) or null. */
+function joinWorld(parts,maxGap){
+  var u=booleanWorld(parts,'union');if(!u.length)return null;
+  if(u.length===1)return {polys:u,gap:0};
+  var solid=[],holes=[];u.forEach(function(q){solid.push(toClip(q.o));q.h.forEach(function(h){holes.push(toClip(h));});});
+  var r=0.5,lim=Math.max(maxGap,1)/2+0.001;
+  while(r<=lim){
+    var closed=clipGrow(clipGrow(solid,r),-r);
+    if(holes.length)closed=cexec(ClipperLib.ClipType.ctDifference,closed,cexec(ClipperLib.ClipType.ctUnion,holes,[]));
+    var polys=pathsToPolys(closed);
+    if(polys.length===1)return {polys:polys,gap:Math.round(2*r*10)/10};
+    r+=Math.max(0.5,r*0.2);
+  }
+  return null;
+}
 /* offset of the outline (what='outer') or of the holes (what='holes') of one part by delta mm (+ grows the shape / the holes). Returns local polys */
 function offsetLocal(p,delta,what){
   var polys=polysLocal(p),outs=[],holes=[];
   polys.forEach(function(q){outs.push(toClip(q.o));q.h.forEach(function(h){holes.push(toClip(h));});});
-  function grow(paths,d){
-    var base=cexec(ClipperLib.ClipType.ctUnion,paths,[]);if(!d)return base;
-    var co=new ClipperLib.ClipperOffset(2,0.05*CSC);co.AddPaths(base,ClipperLib.JoinType.jtRound,ClipperLib.EndType.etClosedPolygon);
-    var sol=new ClipperLib.Paths();co.Execute(sol,d*CSC);return sol;
-  }
+  var grow=clipGrow;
   var res;
   if(what==='holes'){
     if(!holes.length)return null;

@@ -69,8 +69,11 @@ function renderProps(){
   if(SELS.length>1){
     h+='<h3>'+SELS.length+' '+esc(t('st_multi'))+'</h3><div class="tip">'+esc(t('mg_tip'))+'</div><h4>'+esc(t('mg_title'))+'</h4>'+
       '<div class="btns col"><button data-bool="union">⊕ '+esc(t('mg_union'))+'</button><button data-bool="cut">⊖ '+esc(t('mg_cut'))+'</button><button data-bool="and">⊗ '+esc(t('mg_and'))+'</button></div>'+
+      '<h4>'+esc(t('mg_join_t'))+'</h4><div class="tip">'+esc(t('mg_join_tip'))+'</div><div id="jnInfo" class="tipsm"></div>'+
+      '<label class="f"><span>'+esc(t('mg_gap'))+'</span><input type="number" id="jnGap" min="1" step="1" value="'+JN.gap+'"><i>mm</i></label>'+
+      '<div class="btns col"><button data-bool="join">🔗 '+esc(t('mg_join'))+'</button></div>'+
       '<div class="tip">'+esc(t('mg_order'))+'</div><div class="btns end"><button data-act="dup">⧉ '+esc(t('b_dup'))+'</button><button class="danger" data-act="del">🗑 '+esc(t('b_del'))+'</button></div>';
-    e.innerHTML=h;return;
+    e.innerHTML=h;joinInfo();return;
   }
   if(!p){
     var bb=bboxAll(realParts(ST.parts));
@@ -157,6 +160,12 @@ function polyPart(polys,base,name){
   var q={id:ST.nid++,kind:'poly',name:name,x:0,y:0,z:base.z,h:base.h,rot:0,mat:base.mat,r:0,holes:[],polys:polys,w:1,d:1};
   polyBox(q);q.x=q.cx;q.y=q.cy;delete q.cx;delete q.cy;return q;
 }
+var JN={gap:20};
+function joinInfo(){
+  var ps=selParts(),e=$('jnInfo');if(!e||ps.length<2)return;
+  var base=ps[0];if(ps.some(function(q){return Math.abs(q.z-base.z)>0.01||Math.abs(q.h-base.h)>0.01;})){e.textContent=t('mg_same');return;}
+  try{var r=joinWorld(ps,JN.gap);e.textContent=r?(r.gap?t('mg_gapfound')+' ≈ '+r.gap+' mm':t('mg_touch')):t('mg_gapnone')+' '+JN.gap+' mm';}catch(x){e.textContent='';}
+}
 function doBool(mode){
   var ps=SELS.map(getPart).filter(function(q){return q;});if(ps.length<2)return;
   var base=ps[0];
@@ -164,9 +173,15 @@ function doBool(mode){
     var bad=ps.some(function(q){return Math.abs(q.z-base.z)>0.01||Math.abs(q.h-base.h)>0.01;});
     if(bad){toast(t('mg_same'));return;}
   }
-  var res;try{res=booleanWorld(ps,mode);}catch(e){toast(t('mg_fail'));return;}
+  var res;
+  if(mode==='join'){
+    var gv=Math.max(1,num(($('jnGap')||{}).value,JN.gap));JN.gap=gv;
+    var bad2=ps.some(function(q){return Math.abs(q.z-base.z)>0.01||Math.abs(q.h-base.h)>0.01;});if(bad2){toast(t('mg_same'));return;}
+    var jr=null;try{jr=joinWorld(ps,gv);}catch(e){}
+    if(!jr){toast(t('mg_gapnone')+' '+gv+' mm');return;}res=jr.polys;
+  }else{try{res=booleanWorld(ps,mode);}catch(e){toast(t('mg_fail'));return;}}
   if(!res.length){toast(t('mg_empty'));return;}
-  var suffix={union:t('mg_sfx_u'),cut:t('mg_sfx_c'),and:t('mg_sfx_a')}[mode];
+  var suffix={union:t('mg_sfx_u'),cut:t('mg_sfx_c'),and:t('mg_sfx_a'),join:t('mg_sfx_j')}[mode];
   mut(function(){
     var np=polyPart(res,base,(base.name||t('k_'+base.kind))+' ('+suffix+')');
     var at=ST.parts.indexOf(base);ST.parts=ST.parts.filter(function(q){return !isSel(q.id);});ST.parts.splice(Math.min(at,ST.parts.length),0,np);SELS=[np.id];
@@ -345,6 +360,7 @@ function init(){
   $('list').addEventListener('click',function(e){var r=e.target.closest('[data-id]');if(r)selectPart(+r.dataset.id,e.ctrlKey||e.shiftKey||e.metaKey);});
   $('props').addEventListener('change',function(e){
     var t0=e.target;
+    if(t0.id==='jnGap'){JN.gap=Math.max(1,num(t0.value,20));joinInfo();return;}
     if(t0.dataset.f)applyField(t0.dataset.f,t0.value);
     else if(t0.dataset.hi!==undefined)applyHole(+t0.dataset.hi,t0.dataset.hf,t0.value);
     else if(t0.dataset.reff!==undefined){var pp=getSel();if(pp)mut(function(){pp.ref=t0.checked;},true);}

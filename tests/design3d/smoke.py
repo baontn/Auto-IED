@@ -186,6 +186,15 @@ async def main():
         await pg.fill('#trTh', '4'); await pg.click('#trMake'); await pg.wait_for_timeout(200)
         q = await pg.evaluate('(function(){var p=ST.parts[ST.parts.length-1];return {k:p.kind,w:p.w,d:p.d,h:p.h,holes:p.polys[0].h.length};})()')
         check(q['k'] == 'poly' and abs(q['w'] - 150) < 1.5 and abs(q['d'] - 100) < 2 and q['h'] == 4 and q['holes'] == 1, 'picture became a 150 x 100 x 4 part with a hole %s' % q)
+        # ---- v1.3: join shapes that are close ----
+        await pg.evaluate('ST=blank();SELS=[];changed(true)')
+        await pg.evaluate('addPreset("plate");addPreset("plate");ST.parts[0].w=100;ST.parts[0].d=60;ST.parts[1].w=100;ST.parts[1].d=60;ST.parts[0].x=0;ST.parts[1].x=106;ST.parts[0].y=0;ST.parts[1].y=0;changed(true);selectPart(ST.parts[0].id);selectPart(ST.parts[1].id,true)')
+        gi = await pg.inner_text('#jnInfo'); check('6' in gi or '5.' in gi or '7' in gi, 'gap between the two shapes is detected (%s)' % gi)
+        await pg.click('[data-bool=join]')
+        jq = await pg.evaluate('(function(){var p=ST.parts[0];return {n:ST.parts.length,k:p.kind,w:p.w,o:p.polys.length};})()')
+        check(jq['n'] == 1 and jq['k'] == 'poly' and jq['o'] == 1 and abs(jq['w'] - 206) < 0.5, 'two plates 6 mm apart joined into one connected shape %s' % jq)
+        await pg.evaluate('undo()'); await pg.evaluate('ST.parts[1].x=160;changed(true);selectPart(ST.parts[0].id);selectPart(ST.parts[1].id,true)')
+        await pg.click('[data-bool=join]'); check(await pg.evaluate('ST.parts.length') == 2, 'shapes 60 mm apart are not joined with a 20 mm limit')
         # English UI
         await pg.click('.lang [data-lang=en]'); await pg.wait_for_timeout(200)
         check('Export PDF' in await pg.inner_text('#bPdf'), 'English UI')
