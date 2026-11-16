@@ -30,6 +30,7 @@ function holePathLocal(c,h){
 }
 function partOutlineLocal(c,p){
   if(p.kind==='pin'){c.moveTo(p.w/2,0);c.arc(0,0,p.w/2,0,Math.PI*2);}
+  else if(p.kind==='poly'){p.polys.forEach(function(q){[q.o].concat(q.h).forEach(function(r){r.forEach(function(a,i){if(i)c.lineTo(a[0],a[1]);else c.moveTo(a[0],a[1]);});c.closePath();});});}
   else{ctxRR(c,-p.w/2,-p.d/2,p.w,p.d,p.kind==='plate'?(p.r||0):0);}
   if(p.kind==='plate')(p.holes||[]).forEach(function(h){holePathLocal(c,h);});
 }

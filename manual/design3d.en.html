@@ -1,17 +1,23 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>3D fixtures &amp; sewing tools: User guide</title><link rel="icon" href="../icon.png"><link rel="stylesheet" href="manual.css"></head><body>
-<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>3D fixtures &amp; sewing tools v1.0: User guide</b><a href="design3d.html" title="Tiếng Việt" onclick="try{localStorage.setItem('ie_site_lang','vi')}catch(e){}">VI</a><a href="../index.html">‹ Home</a></header>
+<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>3D fixtures &amp; sewing tools v1.3: User guide</b><a href="design3d.html" title="Tiếng Việt" onclick="try{localStorage.setItem('ie_site_lang','vi')}catch(e){}">VI</a><a href="../index.html">‹ Home</a></header>
 <div class="wrap">
 <nav class="toc"><b>Contents</b>
 <a href="#intro">1. Introduction</a>
 <a href="#steps">2. Three steps</a>
 <a href="#parts">3. Kinds of parts</a>
 <a href="#adjust">4. Adjusting a part</a>
-<a href="#pdf">5. Export PDF</a>
-<a href="#save">6. Saving and opening</a>
-<a href="#keys">7. Keyboard shortcuts</a>
-<a href="#trouble">8. Troubleshooting</a>
+<a href="#tables">4b. Sample tables</a>
+<a href="#ruler">4c. Ruler</a>
+<a href="#pic">4d. Picture to 3D</a>
+<a href="#merge">5. Merge / cut shapes</a>
+<a href="#offset">6. Offset (grow / shrink)</a>
+<a href="#pdf">7. Export PDF</a>
+<a href="#cad">8. Export CAD / 3D files</a>
+<a href="#save">9. Saving and opening</a>
+<a href="#keys">10. Keyboard shortcuts</a>
+<a href="#trouble">11. Troubleshooting</a>
 </nav>
 <main>
 <section id="intro"><h1>3D fixtures &amp; sewing tools</h1>
@@ -32,7 +38,10 @@
 <tr><td>Base plate, Plate with window, Plate with 4 holes, Plate with slot</td><td>Fixture base, cutting template, label template, pocket template. A plate can get round holes, slots, rectangular windows and rounded corners.</td></tr>
 <tr><td>Guide rail, Stop block, Block</td><td>Following a fabric edge, stops, bases, handles, spacers.</td></tr>
 <tr><td>Round pin</td><td>Locating pin through a hole.</td></tr>
-<tr><td>Ramp</td><td>Leading fabric in, folding an edge.</td></tr></table>
+<tr><td>Ramp</td><td>Leading fabric in, folding an edge.</td></tr>
+<tr><td>Wheel</td><td>Rubber wheel to move the fixture. With a part selected, the wheel goes <b>under</b> it (negative Z); duplicate it and type X, Y to place all four.</td></tr>
+<tr><td>Handle</td><td>U-shaped handle, placed on top of the selected part. Adjust Length, Bar diameter, Height.</td></tr>
+<tr><td>Magnet, Screw</td><td>Flat round magnet to hold a guide on the table; small screw to fasten parts (both are round pins with ready sizes).</td></tr></table>
 <p>Materials: clear acrylic, ABS/PVC, aluminium, steel, plywood, rubber/foam. The <b>weight</b> is estimated from the material density (holes subtracted).</p>
 </section>
 <section id="adjust"><h2>4. Adjusting a part</h2>
@@ -43,22 +52,68 @@
 <li><b>Reference sewing machine bed</b> (right column when no part is selected): shows the machine bed and the needle position so the fixture can be placed against the needle; the needle is also on the PDF drawings.</li>
 <li><b>Drag step</b> (under the 3D picture): 1, 5 or 10 mm when dragging; hold Alt to drag freely.</li></ul>
 </section>
-<section id="pdf"><h2>5. Export PDF</h2>
+<figure><a href="img/d3-wheels.png"><img src="img/d3-wheels.png" alt="Fixture with wheels and handle" loading="lazy"></a><figcaption>A fixture with four wheels and a U-shaped handle.</figcaption></figure>
+<figure><a href="img/d3-tables.png"><img src="img/d3-tables.png" alt="Sample table and ruler" loading="lazy"></a><figcaption>A sewing table under the fixture; two measurements (ruler) on the picture with mm scale marks along both axes. (The screenshot shows the Vietnamese interface.)</figcaption></figure>
+<section id="tables"><h2>4b. Sample tables (reference)</h2>
+<p>The <b>Sample tables</b> section in the left column has a sewing table (1200 × 600 × 750), work table (1500 × 750 × 750), cutting table (2400 × 1500 × 850) and small table (600 × 600 × 700). The table is placed <b>under</b> the design (table top at Z = 0) to compare with the real table. Length, Width, Height and top thickness can be changed.</p>
+<p>A table is a <b>reference only</b> part: it is shown in the 3D view (and the PDF 3D picture) but <b>not counted</b> in the parts list, weight, PDF drawings and CAD files. Tick <i>Reference only</i> in the right column to give any other part the same status.</p>
+</section>
+<section id="ruler"><h2>4c. Ruler</h2>
+<p>Press <span class="btn">📏 Ruler</span> (or key <b>M</b>), then click two points on the picture. Points <b>snap</b> to nearby part corners and hole centres (a dashed line follows the mouse). The result shows the length and ΔX, ΔY, ΔZ, is listed in the right column (with a delete button) and is <b>printed in the PDF 3D picture</b>. Esc leaves the ruler. The X and Y axes also carry mm scale marks whose step follows the zoom level.</p>
+</section>
+<section id="pic"><h2>4d. Picture to 3D</h2>
+<p>Press <span class="btn">📷 Picture → 3D</span> at the top of the left column.</p>
+<ol><li>Choose an image (or drop it, or paste with Ctrl+V). Best is a photo taken <b>straight from above</b>, dark object on a light background; a tilted photo is distorted.</li>
+<li>The tool traces the outline (and inner holes) and draws it over the picture for checking. Adjust the <b>Threshold</b> if parts are missing or extra, <b>Invert</b> for a light object on a dark background, <b>Fill closed shapes</b> if the picture has outline strokes only, and <b>Smooth</b> / <b>Ignore specks</b> for a cleaner outline.</li>
+<li><b>Type the real size</b>: Length (or Width); the other follows the picture ratio. Enter the thickness and material.</li>
+<li>Press <span class="btn">Create 3D part</span>: you get a <b>Free shape</b> part that works like any other (merge / cut, offset, PDF, CAD).</li></ol>
+<figure><a href="img/d3-trace.png"><img src="img/d3-trace.png" alt="Picture to 3D" loading="lazy"></a><figcaption>Example: a picture of a plate with a window, outline in orange; typing Length 150 mm gives Width 100 mm.</figcaption></figure>
+<div class="note">Accuracy depends on the picture (sharpness, light, camera angle) and on the size you type: check with the ruler or measure the real object before manufacturing. The picture is processed on your computer and sent nowhere.</div>
+</section>
+<section id="merge"><h2>5. Merge / cut shapes</h2>
+<p>Hold <b>Ctrl</b> or <b>Shift</b> and click to select several parts (in the picture or in the list). The <b>first</b> selected part is the base part. The right column shows three commands:</p>
+<table><tr><th>Command</th><th>Result</th></tr>
+<tr><td>⊕ Merge into one</td><td>Adds the shapes into one part. The parts must have the same bottom height (Z) and thickness; if not, the tool tells you to adjust them first.</td></tr>
+<tr><td>⊖ Cut the overlap</td><td>Subtracts the parts selected later from the base part (for example to cut a window of any shape). The thickness of the base part is used.</td></tr>
+<tr><td>⊗ Keep the overlap</td><td>Keeps only the area where the shapes overlap.</td></tr></table>
+<p><b>Join shapes that are close:</b> when the shapes do not touch, the right column shows the gap (for example ≈ 6 mm). Enter the <b>Largest gap to bridge</b> and press <span class="btn">🔗 Join into one shape</span>: the shapes become ONE connected shape (the gap is filled, inner corners are rounded). The shapes need the same bottom height and thickness; existing holes are kept.</p>
+<p>The result is one <b>Free shape</b> part: you can still change material, thickness, Length / Width (scales the whole shape) and rotation, and it is included in the PDF and CAD files. Press Ctrl+Z to undo. A free shape has no hole table; to change holes, edit the original part and merge again.</p>
+<figure><a href="img/d3-multi.png"><img src="img/d3-multi.png" alt="Several parts selected" loading="lazy"></a><figcaption>Several parts selected: merge, cut and overlap commands in the right column.</figcaption></figure>
+</section>
+<section id="offset"><h2>6. Offset (grow / shrink)</h2>
+<p>Select a part and scroll the right column to <b>Offset</b>. Type the <b>Distance</b> (mm), choose <b>Outer outline</b> or <b>Holes / windows</b>, then press <span class="btn">➕ Grow</span> or <span class="btn">➖ Shrink</span>.</p>
+<ul><li><b>Outer outline + Grow</b>: the plate becomes larger evenly on all sides (outer corners are rounded). Use it for frame borders and wider base plates.</li>
+<li><b>Holes / windows + Grow</b>: holes and windows become wider evenly; use it for clearance so a template fits.</li>
+<li><b>Keep the original, make a copy</b> (on by default): the original stays for comparison, or use it with the Cut command to make a frame.</li></ul>
+<figure><a href="img/d3-offset.png"><img src="img/d3-offset.png" alt="Window offset" loading="lazy"></a><figcaption>Example: the window of a plate offset by 4 mm on every side (the copy lies next to the original).</figcaption></figure>
+</section>
+<section id="pdf"><h2>7. Export PDF</h2>
 <p><b>The IE name is required</b> (Download PDF stays locked while it is empty; the name is remembered). You can also enter style, purpose, notes, revision and date. The preview shows each page; untick the pages you do not need.</p>
 <figure><a href="img/d3-pdf1.png"><img src="img/d3-pdf1.png" alt="PDF page 1" loading="lazy"></a><figcaption>Page 1: Crystal Martin Vietnam logo and name, design name, numbered 3D picture, details (IE name, style, date, overall size, weight) and signature boxes.</figcaption></figure>
 <figure><a href="img/d3-pdf3.png"><img src="img/d3-pdf3.png" alt="Three-view drawing" loading="lazy"></a><figcaption>Three-view drawing with overall dimensions and scale.</figcaption></figure>
 <figure><a href="img/d3-pdf4.png"><img src="img/d3-pdf4.png" alt="Plate drawing" loading="lazy"></a><figcaption>Plate drawing: holes numbered H1, H2... and a table of X, Y and sizes from the bottom left corner.</figcaption></figure>
 <div class="note">The PDF pages are <b>pictures</b> (text cannot be selected or copied) so Vietnamese displays correctly on every computer. The IE name is still written in the author field of the PDF file.</div>
 </section>
-<section id="save"><h2>6. Saving and opening</h2>
+<figure><a href="img/d3-cad.png"><img src="img/d3-cad.png" alt="CAD export" loading="lazy"></a><figcaption>The Export CAD / 3D dialog.</figcaption></figure>
+<section id="cad"><h2>8. Export CAD / 3D files</h2>
+<p>Press <span class="btn">⬇ CAD / 3D</span> at the top, type the IE name (written into the file) and choose a file type. Units are mm, Z points up.</p>
+<table><tr><th>File</th><th>Used for</th></tr>
+<tr><td>STL</td><td>3D printing, slicers, 3D viewers. Works in almost every program.</td></tr>
+<tr><td>OBJ</td><td>3D model, one object per part (Blender, SketchUp, Windows 3D Viewer).</td></tr>
+<tr><td>DXF 3D</td><td>3D model made of faces (3DFACE) for AutoCAD, BricsCAD, Fusion, SolidWorks.</td></tr>
+<tr><td>DXF 2D</td><td>Top view plan in true positions with part numbers; layers OUTLINE, HOLES, LABEL, INFO (design name, IE name, date).</td></tr>
+<tr><td>DXF flat</td><td>Each plate laid out in a row, ready for laser / CNC cutting.</td></tr></table>
+<div class="note"><b>DWG:</b> is a proprietary Autodesk format, so the tool does <b>not</b> write it directly (and there is no STEP file either). Open the DXF in AutoCAD and use <i>Save As DWG</i>, or convert DXF to DWG with the free ODA File Converter. The 3D files are triangle meshes, not editable parametric solids. Rounded corners in DXF 2D and DXF flat are true arcs; free shapes (merge / offset) are made of many tiny straight segments (0.05 mm).</div>
+</section>
+<section id="save"><h2>9. Saving and opening</h2>
 <p><span class="btn">Save…</span> downloads a <code>.fixture3d.json</code> file (to open and continue later); <span class="btn">Open…</span> opens it again. The current work is also kept in this browser. Designs stay on your computer.</p>
 </section>
-<section id="keys"><h2>7. Keyboard shortcuts</h2>
+<section id="keys"><h2>10. Keyboard shortcuts</h2>
 <table><tr><th>Key</th><th>Action</th></tr>
-<tr><td>Delete</td><td>Delete the selected part</td></tr><tr><td>R / Shift+R</td><td>Rotate 90° right / left</td></tr><tr><td>Arrow keys (Shift = ×10)</td><td>Move by the drag step</td></tr>
+<tr><td>M</td><td>Turn the ruler on / off</td></tr><tr><td>Ctrl / Shift + click</td><td>Add / remove a part from the selection</td></tr><tr><td>Delete</td><td>Delete the selected parts</td></tr><tr><td>R / Shift+R</td><td>Rotate 90° right / left</td></tr><tr><td>Arrow keys (Shift = ×10)</td><td>Move by the drag step</td></tr>
 <tr><td>Ctrl+D</td><td>Duplicate</td></tr><tr><td>Ctrl+Z / Ctrl+Y</td><td>Undo / redo</td></tr><tr><td>Ctrl+S</td><td>Save the design file</td></tr></table>
 </section>
-<section id="trouble"><h2>8. Troubleshooting</h2>
+<section id="trouble"><h2>11. Troubleshooting</h2>
 <table><tr><th>Problem</th><th>What to do</th></tr>
 <tr><td>3D picture blank / error</td><td>Use a recent Chrome or Edge; turn on hardware acceleration in Settings.</td></tr>
 <tr><td>PDF does not download</td><td>Enter the IE name; allow multiple downloads if the browser asks.</td></tr>

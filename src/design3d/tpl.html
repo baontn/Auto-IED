@@ -45,11 +45,14 @@ h3{margin:2px 0 8px;font-size:15px}h4{margin:12px 0 4px;font-size:13px;color:var
 .li:hover{background:var(--sel)}.li.sel{background:var(--sel);border-color:var(--accent)}
 .li i,.badge{font-style:normal;background:var(--accent);color:var(--accent-tx);border-radius:50%;min-width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;padding:0 4px}
 .li span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.li small{color:var(--muted);font-size:11px}
+.tipsm{font-size:12px;color:var(--muted);margin:-4px 0 6px}.li.refp span{font-style:italic;color:var(--muted)}
 .muted{color:var(--muted)}.pad{padding:6px}
 #view{flex:1;position:relative;min-width:0;background:var(--vbg)}
 #gl,#ov{position:absolute;inset:0;width:100%;height:100%;display:block}
 #gl{touch-action:none;cursor:grab}#ov{pointer-events:none}
 #vbtns{position:absolute;left:10px;top:10px;display:flex;gap:4px;flex-wrap:wrap;z-index:2}
+#vbtns button.on{background:var(--accent);color:var(--accent-tx);border-color:var(--accent)}
+#props .kv b .x{border:none;background:none;color:var(--bad);padding:0 4px}
 #vbtns button{padding:5px 10px;box-shadow:0 1px 3px rgba(0,0,0,.15)}
 #hint{position:absolute;left:10px;bottom:38px;right:10px;color:var(--muted);font-size:12px;pointer-events:none;text-shadow:0 0 4px var(--vbg)}
 #sbar{position:absolute;left:0;right:0;bottom:0;padding:6px 12px;background:var(--panel);border-top:1px solid var(--line);font-size:13px;display:flex;gap:10px;align-items:center}
@@ -80,6 +83,8 @@ h3{margin:2px 0 8px;font-size:15px}h4{margin:12px 0 4px;font-size:13px;color:var
 .warn{background:var(--warnbg);color:var(--warn);border-radius:8px;padding:6px 9px;font-size:13px;margin-top:6px;display:none}
 .foot{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
 .toast{position:fixed;left:50%;bottom:60px;transform:translateX(-50%) translateY(20px);background:var(--text);color:var(--bg);padding:8px 16px;border-radius:10px;opacity:0;transition:.25s;pointer-events:none;z-index:50;max-width:90vw}.toast.on{opacity:1;transform:translateX(-50%)}
+#props .btns.col{flex-direction:column}#props .btns.col button{text-align:left;white-space:normal;width:100%}
+.cadrow{display:flex;gap:10px;align-items:center;margin:6px 0}.cadrow button{min-width:96px;font-weight:600}.cadrow span{font-size:13px;color:var(--muted)}
 kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 4px;font-size:11px;background:var(--bg)}
 @media (max-width:980px){#left{width:200px}#right{width:250px}.exg{grid-template-columns:1fr}}
 </style>
@@ -94,19 +99,24 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
 <button id="bNew" data-t="b_new">Mới</button><button id="bOpen" data-t="b_open">Mở…</button><button id="bSave" data-t="b_save">Lưu…</button>
 <button id="bUndo" title="Ctrl+Z">↶</button><button id="bRedo" title="Ctrl+Y">↷</button><button id="bHelp" data-tt="b_help">?</button>
 <div class="lang"><button data-lang="vi">VI</button><button data-lang="en">EN</button></div>
+<button id="bCad" data-t="b_cad">⬇ CAD / 3D</button>
 <button id="bPdf" class="primary" data-t="b_pdf">📄 Xuất PDF</button>
 </header>
 <div id="steps"><span class="step" id="s1"><i>1</i><span data-t="s1">Thêm chi tiết</span></span><span class="step" id="s2"><i>2</i><span data-t="s2">Chỉnh kích thước, vị trí</span></span><span class="step" id="s3"><i>3</i><span data-t="s3">Xuất PDF (có tên IE và logo)</span></span></div>
 <div id="main">
 <aside id="left">
 <h3 data-t="lib_title">1. Thêm chi tiết</h3>
+<button class="lib" id="bTrace"><span class="ico">📷</span><span class="lt"><b data-t="tr_btn">Từ ảnh → 3D</b><small data-t="tr_btnd">Mở ảnh chụp hoặc bản vẽ, nhập kích thước thật, tạo hình 3D.</small></span></button>
 <div id="lib"></div>
+<h3 data-t="tbl_title">Bàn mẫu (tham khảo)</h3>
+<div class="tipsm" data-t="tbl_tip">Đặt bàn dưới thiết kế để so với bàn thật. Bàn không tính vào danh sách, khối lượng, PDF bản vẽ và file CAD.</div>
+<div id="libT"></div>
 <h3 data-t="list_title">Danh sách chi tiết</h3>
 <div id="list"></div><div id="sum" class="muted pad"></div>
 </aside>
 <section id="view">
 <canvas id="gl"></canvas><canvas id="ov"></canvas>
-<div id="vbtns"><button data-view="iso" data-t="v_iso">3D</button><button data-view="top" data-t="v_top">Từ trên</button><button data-view="front" data-t="v_front">Phía trước</button><button data-view="right" data-t="v_right">Bên phải</button><button data-view="fit" data-t="v_fit">Vừa khung</button></div>
+<div id="vbtns"><button data-view="iso" data-t="v_iso">3D</button><button data-view="top" data-t="v_top">Từ trên</button><button data-view="front" data-t="v_front">Phía trước</button><button data-view="right" data-t="v_right">Bên phải</button><button data-view="fit" data-t="v_fit">Vừa khung</button><button id="bRuler" data-t="v_ruler">📏 Thước đo</button></div>
 <div id="hint" data-t="hint">Kéo chi tiết để di chuyển · Kéo vào nền để xoay · Lăn chuột để phóng to · Chuột phải kéo để dịch</div>
 <div id="sbar"><span id="status"></span><span class="r"><span data-t="snap">Bước kéo</span><select id="snap"><option value="1">1 mm</option><option value="5">5 mm</option><option value="10">10 mm</option></select></span></div>
 </section>
@@ -134,6 +144,41 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
 <div class="foot"><button data-close data-t="b_cancel">Đóng</button><button class="primary" id="bDl" data-t="b_dl">⬇ Tải PDF</button></div>
 </div></div>
 
+<div class="modal" id="dlgTr"><div class="card" style="max-width:1000px">
+<h2 data-t="tr_title">Từ ảnh sang 3D</h2>
+<div class="exg" style="grid-template-columns:330px 1fr">
+<div>
+<div class="tip" data-t="tr_intro">Chọn ảnh chụp thẳng từ trên (hoặc bản vẽ scan), vật thể đậm màu trên nền sáng. Chương trình lấy đường viền, bạn chỉ cần nhập kích thước thật.</div>
+<input type="file" id="trFile" accept="image/*"><div class="tipsm" data-t="tr_drop">Hoặc kéo thả ảnh vào khung, hoặc dán ảnh bằng Ctrl+V.</div>
+<label class="t" data-t="tr_thr">Ngưỡng sáng / tối</label><div style="display:flex;gap:6px"><input type="range" id="trThr" min="1" max="254" value="128"><button id="trAuto" data-t="tr_auto">Tự động</button></div>
+<label class="chk"><input type="checkbox" id="trInv"> <span data-t="tr_inv">Vật thể sáng trên nền tối (đảo)</span></label>
+<label class="chk"><input type="checkbox" id="trFill"> <span data-t="tr_fill">Tô đầy hình kín (ảnh chỉ có nét viền)</span></label>
+<label class="t" data-t="tr_tol">Làm mịn đường viền</label><input type="range" id="trTol" min="0.5" max="5" step="0.1" value="1.5">
+<label class="t" data-t="tr_min">Bỏ đốm nhỏ (% của hình lớn nhất)</label><input type="range" id="trMin" min="0" max="10" step="0.1" value="0.5">
+<h4 data-t="tr_meas">Kích thước thật</h4>
+<div class="row2"><label class="f"><span data-t="tr_len">Dài (ngang)</span><input type="number" id="trLen" min="1" step="1" value="200"><i>mm</i></label><label class="f"><span data-t="tr_wid">Rộng (dọc)</span><input type="number" id="trWid" min="1" step="1"><i>mm</i></label></div>
+<div class="tipsm" data-t="tr_lock">Giữ đúng tỉ lệ ảnh: sửa một số, số kia tự đổi.</div>
+<div class="row2"><label class="f"><span data-t="tr_th">Dày</span><input type="number" id="trTh" min="0.5" step="0.5" value="3"><i>mm</i></label><label class="f"><span data-t="f_mat">Vật liệu</span><select id="trMat"></select></label></div>
+<label class="t" data-t="f_name">Tên chi tiết</label><input id="trName" maxlength="60">
+</div>
+<div><canvas id="trCv" width="560" height="420" style="width:100%;height:auto;border:1px solid var(--line);border-radius:8px;background:var(--bg)"></canvas><div id="trInfo" class="tipsm" style="margin-top:6px"></div></div>
+</div>
+<div class="foot"><button data-close data-t="b_cancel">Đóng</button><button class="primary" id="trMake" data-t="tr_make">Tạo chi tiết 3D</button></div>
+</div></div>
+
+<div class="modal" id="dlgCad"><div class="card" style="max-width:760px">
+<h2 data-t="cad_title">Xuất file CAD / 3D</h2>
+<div class="tip" data-t="cad_intro">Chọn loại file phù hợp với phần mềm hoặc máy sẽ dùng. Đơn vị mm, trục Z hướng lên.</div>
+<label class="t" data-t="ex_ie">Tên IE (người thiết kế) *</label><input id="cIe" data-ph="ph_ie" maxlength="60" style="margin-bottom:8px">
+<div class="cadrow"><button data-cad="stl">STL</button><span data-t="cad_stl">In 3D, phần mềm cắt lớp, xem 3D. Dùng được ở hầu hết phần mềm 3D.</span></div>
+<div class="cadrow"><button data-cad="obj">OBJ</button><span data-t="cad_obj">Mô hình 3D, mỗi chi tiết là một đối tượng riêng (Blender, SketchUp, Windows 3D Viewer).</span></div>
+<div class="cadrow"><button data-cad="dxf3d">DXF 3D</button><span data-t="cad_dxf3d">Mô hình 3D dạng mặt (3DFACE), mở trong AutoCAD, BricsCAD, Fusion, SolidWorks.</span></div>
+<div class="cadrow"><button data-cad="dxf2d">DXF 2D</button><span data-t="cad_dxf2d">Mặt bằng nhìn từ trên (đúng vị trí, có số chi tiết, lỗ nằm lớp HOLES) để mở trong AutoCAD.</span></div>
+<div class="cadrow"><button data-cad="dxfflat">DXF phẳng</button><span data-t="cad_dxfflat">Từng tấm xếp thành hàng, sẵn sàng cắt laser / CNC (viền lớp OUTLINE, lỗ lớp HOLES).</span></div>
+<div class="tip" data-t="cad_dwg">DWG là định dạng riêng của Autodesk nên chương trình không ghi trực tiếp. Mở file DXF trong AutoCAD rồi Save As DWG, hoặc dùng ODA File Converter (miễn phí) để đổi DXF sang DWG.</div>
+<div class="foot"><button data-close data-t="b_cancel">Đóng</button></div>
+</div></div>
+
 <div class="modal" id="dlgHelp"><div class="card" style="max-width:860px">
 <h2 data-t="w_title">Thiết kế gá, mẫu và dụng cụ may bằng 3D</h2>
 <div data-t="w_intro">Công cụ này dùng để thiết kế gá (jig), mẫu (template), thước canh và dụng cụ hỗ trợ may. Không cần biết 3D: chỉ cần 3 bước.</div>
@@ -151,11 +196,15 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
 <div class="toast" id="toast"></div>
 <script>var LOGO_URI="{{LOGO}}";</script>
 <script>/*__THREE__*/</script>
+<script>/*__CLIPPER__*/</script>
 <script>/*__I18N__*/</script>
 <script>/*__MODEL__*/</script>
+<script>/*__GEOM__*/</script>
 <script>/*__SCENE__*/</script>
 <script>/*__DRAW2D__*/</script>
 <script>/*__PDF__*/</script>
+<script>/*__CAD__*/</script>
+<script>/*__TRACE__*/</script>
 <script>/*__APP__*/</script>
 </body>
 </html>
