@@ -30,7 +30,7 @@ function polysLocal(p){
     });
     return [{o:rrRing(p.w,p.d,p.r||0),h:hs}];
   }
-  return [{o:rrRing(p.w,p.d,0),h:[]}];
+  return [{o:rrRing(p.w,p.d,p.kind==='block'?(p.r||0):0),h:[]}];
 }
 function polysWorld(p){
   var c=Math.cos(rad(p.rot||0)),s=Math.sin(rad(p.rot||0));
@@ -100,4 +100,17 @@ function offsetLocal(p,delta,what){
     res=holes.length?cexec(ClipperLib.ClipType.ctDifference,o2,cexec(ClipperLib.ClipType.ctUnion,holes,[])):o2;
   }
   var out=pathsToPolys(res);return out.length?out:null;
+}
+
+/* a minus b (both lists of {o,h}); result as list of {o,h} */
+function cutPolys(a,b){return pathsToPolys(cexec(ClipperLib.ClipType.ctDifference,region(a),region(b)));}
+/* union of several shapes, each a list of {o,h} */
+function unionAll(list){
+  var acc=null;list.forEach(function(pl){var r=region(pl);acc=acc?cexec(ClipperLib.ClipType.ctUnion,acc,r):r;});
+  return acc?pathsToPolys(acc):[];
+}
+/* round the corners of a free shape: convex corners (opening) or concave corners (closing) with radius r */
+function roundPolys(polys,r,mode){
+  var paths=ringsOf(polys),a=mode==='convex'?clipGrow(clipGrow(paths,-r),r):clipGrow(clipGrow(paths,r),-r);
+  return pathsToPolys(a);
 }

@@ -70,7 +70,7 @@ function dxfPart(p,T,ents){
   var O='OUTLINE',H='HOLES',c;
   if(p.kind==='pin'){c=T(0,0);ents.push.apply(ents,dxfCircle(O,c[0],c[1],p.w/2));return;}
   if(p.kind==='poly'){p.polys.forEach(function(q){ents.push.apply(ents,dxfPline(O,q.o.map(function(a){return [a[0],a[1],0];}),T));q.h.forEach(function(r){ents.push.apply(ents,dxfPline(H,r.map(function(a){return [a[0],a[1],0];}),T));});});return;}
-  ents.push.apply(ents,dxfPline(O,rrVerts(p.w,p.d,p.kind==='plate'?(p.r||0):0),T));
+  ents.push.apply(ents,dxfPline(O,rrVerts(p.w,p.d,(p.kind==='plate'||p.kind==='block')?(p.r||0):0),T));
   if(p.kind==='plate')(p.holes||[]).forEach(function(h){
     if(h.t==='round'){c=T(h.x,h.y);ents.push.apply(ents,dxfCircle(H,c[0],c[1],h.a/2));}
     else{var w=h.t==='slot'?h.a:h.a,hh=h.t==='slot'?Math.min(h.b,h.a):h.b,r=h.t==='slot'?hh/2:(h.c||0);

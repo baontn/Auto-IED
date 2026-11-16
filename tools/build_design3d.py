@@ -9,7 +9,7 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 SRC, VENDOR = ROOT / 'src' / 'design3d', ROOT / 'vendor'
 OUT = ROOT / 'design3d' / 'Design3D.html'
 PARTS = [('THREE', VENDOR / 'three.min.js'), ('CLIPPER', VENDOR / 'clipper.js'), ('I18N', SRC / 'i18n.js'), ('MODEL', SRC / 'model.js'), ('GEOM', SRC / 'geom.js'),
-         ('SCENE', SRC / 'scene.js'), ('DRAW2D', SRC / 'draw2d.js'), ('PDF', SRC / 'pdf.js'), ('CAD', SRC / 'cad.js'), ('TRACE', SRC / 'trace.js'), ('PROJECT', SRC / 'project.js'), ('APP', SRC / 'app.js')]
+         ('SCENE', SRC / 'scene.js'), ('DRAW2D', SRC / 'draw2d.js'), ('PDF', SRC / 'pdf.js'), ('CAD', SRC / 'cad.js'), ('TRACE', SRC / 'trace.js'), ('PROJECT', SRC / 'project.js'), ('SKETCH', SRC / 'sketch.js'), ('APP', SRC / 'app.js')]
 
 def main():
     html = (SRC / 'tpl.html').read_text(encoding='utf-8')
