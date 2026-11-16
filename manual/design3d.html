@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>3D Gá & dụng cụ may: Hướng dẫn sử dụng</title><link rel="icon" href="../icon.png"><link rel="stylesheet" href="manual.css"></head><body>
+<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>3D Gá & dụng cụ may v1.0: Hướng dẫn sử dụng</b><a href="design3d.en.html" title="English" onclick="try{localStorage.setItem('ie_site_lang','en')}catch(e){}">EN</a><a href="../index.html">‹ Trang chủ</a></header>
+<div class="wrap">
+<nav class="toc"><b>Nội dung</b>
+<a href="#gioi-thieu">1. Giới thiệu</a>
+<a href="#3-buoc">2. Ba bước</a>
+<a href="#chi-tiet">3. Các loại chi tiết</a>
+<a href="#chinh">4. Chỉnh chi tiết</a>
+<a href="#pdf">5. Xuất PDF</a>
+<a href="#luu">6. Lưu và mở thiết kế</a>
+<a href="#phim">7. Phím tắt</a>
+<a href="#loi">8. Xử lý sự cố</a>
+</nav>
+<main>
+<section id="gioi-thieu"><h1>3D Gá & dụng cụ may</h1>
+<p class="lead">Thiết kế gá (jig), mẫu (template), thước canh và dụng cụ hỗ trợ may bằng 3D, rồi xuất PDF có logo Crystal Martin Vietnam và tên IE. Không cần biết 3D. Chạy bằng Chrome hoặc Edge, không gửi dữ liệu đi đâu. Công cụ này khác với Layout Sim (bố trí chuyền).</p>
+<h2>1. Giới thiệu</h2>
+<figure><a href="img/d3-main.png"><img src="img/d3-main.png" alt="Màn hình chính" loading="lazy"></a><figcaption>Cột trái: thêm chi tiết. Giữa: hình 3D. Cột phải: chỉnh chi tiết đang chọn. Thanh ① ② ③ phía trên cho biết đang ở bước nào.</figcaption></figure>
+<div class="note">Ảnh chụp dùng <b>dữ liệu mẫu</b>, không phải dữ liệu công ty. Đơn vị luôn là <b>mm</b>.</div>
+</section>
+<section id="3-buoc"><h2>2. Ba bước</h2>
+<figure><a href="img/d3-welcome.png"><img src="img/d3-welcome.png" alt="Hướng dẫn lần đầu" loading="lazy"></a><figcaption>Cửa sổ hiện ở lần mở đầu tiên (mở lại bằng nút <span class="btn">?</span>). Có sẵn 4 ví dụ: mẫu may túi, thước canh đường may, gá đặt nhãn, gá gập gấu.</figcaption></figure>
+<table><tr><th>Bước</th><th>Làm gì</th></tr>
+<tr><td><b>1. Thêm chi tiết</b></td><td>Bấm một nút ở cột trái. Chi tiết mới nằm cạnh các chi tiết cũ; nếu đang chọn một chi tiết thì chốt, thanh, khối mới được đặt <b>lên trên</b> chi tiết đó.</td></tr>
+<tr><td><b>2. Chỉnh</b></td><td>Bấm vào chi tiết (trên hình hoặc trong danh sách). Nhập Dài, Rộng, Cao, vị trí X, Y, Z ở cột phải, hoặc kéo chi tiết bằng chuột. Kéo vào nền trống để xoay hình, lăn chuột để phóng to, chuột phải kéo để dịch.</td></tr>
+<tr><td><b>3. Xuất PDF</b></td><td>Bấm <span class="btn">📄 Xuất PDF</span>, nhập tên IE, xem trước, bấm <span class="btn">⬇ Tải PDF</span>.</td></tr></table>
+</section>
+<section id="chi-tiet"><h2>3. Các loại chi tiết</h2>
+<table><tr><th>Nút</th><th>Dùng cho</th></tr>
+<tr><td>Tấm nền, Tấm có cửa sổ, Tấm có 4 lỗ, Tấm có rãnh</td><td>Mặt gá, mẫu cắt, mẫu đặt nhãn, mẫu may túi. Tấm có thể thêm lỗ tròn, rãnh, cửa sổ chữ nhật và bo góc.</td></tr>
+<tr><td>Thanh dẫn, Chốt chặn, Khối</td><td>Canh mép vải, chặn, đế, tay cầm, gối kê.</td></tr>
+<tr><td>Chốt tròn</td><td>Chốt định vị đi qua lỗ.</td></tr>
+<tr><td>Mái dốc</td><td>Dẫn vải vào, gập mép.</td></tr></table>
+<p>Vật liệu: acrylic trong, nhựa ABS/PVC, nhôm, thép, gỗ ép, cao su/mút. Chương trình ước tính <b>khối lượng</b> theo khối lượng riêng của vật liệu (đã trừ lỗ).</p>
+</section>
+<section id="chinh"><h2>4. Chỉnh chi tiết</h2>
+<ul><li><b>Dài / Rộng / Cao (Dày)</b>: Dài theo hướng ngang (X), Rộng theo hướng ra xa (Y), Cao theo hướng lên (Z).</li>
+<li><b>X, Y, Z</b>: vị trí so với gốc 0. Z là độ cao của mặt đáy chi tiết (0 = trên mặt bàn). Nút <span class="btn">⬆ Đặt lên trên</span> tự tính Z để chi tiết nằm trên các chi tiết bên dưới.</li>
+<li><b>Xoay</b>: ⟲ 90°, ⟳ 90° hoặc nhập góc.</li>
+<li><b>Lỗ, rãnh, cửa sổ</b> (chỉ tấm): vị trí tính từ tâm tấm. Bản vẽ PDF đổi sang tọa độ từ góc dưới trái của tấm để gia công.</li>
+<li><b>Bàn máy may tham khảo</b> (khi chưa chọn chi tiết nào, cột phải): hiện mặt bàn máy và vị trí kim để đặt gá đúng so với kim; kim cũng có trên bản vẽ PDF.</li>
+<li>Ô <b>Bước kéo</b> (dưới hình 3D): 1, 5 hoặc 10 mm khi kéo chuột; giữ Alt để kéo tự do.</li></ul>
+</section>
+<section id="pdf"><h2>5. Xuất PDF</h2>
+<p><b>Tên IE là bắt buộc</b> (nút Tải PDF bị khóa nếu để trống; tên được nhớ cho lần sau). Có thể nhập thêm mã hàng, mục đích sử dụng, ghi chú, phiên bản và ngày. Bản xem trước hiện từng trang; bỏ chọn trang nào không cần.</p>
+<figure><a href="img/d3-pdf1.png"><img src="img/d3-pdf1.png" alt="Trang 1 PDF" loading="lazy"></a><figcaption>Trang 1: logo và tên Crystal Martin Vietnam, tên thiết kế, hình 3D có số thứ tự, thông tin (tên IE, mã hàng, ngày, kích thước tổng, khối lượng) và ô ký.</figcaption></figure>
+<figure><a href="img/d3-pdf3.png"><img src="img/d3-pdf3.png" alt="Bản vẽ 3 hướng" loading="lazy"></a><figcaption>Bản vẽ 3 hướng có kích thước tổng và tỉ lệ.</figcaption></figure>
+<figure><a href="img/d3-pdf4.png"><img src="img/d3-pdf4.png" alt="Bản vẽ tấm" loading="lazy"></a><figcaption>Bản vẽ tấm: lỗ đánh số H1, H2... và bảng tọa độ X, Y, kích thước từ góc dưới trái.</figcaption></figure>
+<div class="note">Các trang PDF là <b>hình ảnh</b> (chữ không chọn/sao chép được) để hiển thị đúng tiếng Việt trên mọi máy. Tên IE vẫn được ghi vào thông tin tác giả của file PDF.</div>
+</section>
+<section id="luu"><h2>6. Lưu và mở thiết kế</h2>
+<p><span class="btn">Lưu…</span> tải file <code>.fixture3d.json</code> (để mở lại, sửa tiếp); <span class="btn">Mở…</span> mở lại file đó. Chương trình cũng tự giữ bản đang làm trong trình duyệt này. Thiết kế chỉ nằm trên máy bạn.</p>
+</section>
+<section id="phim"><h2>7. Phím tắt</h2>
+<table><tr><th>Phím</th><th>Tác dụng</th></tr>
+<tr><td>Delete</td><td>Xóa chi tiết đang chọn</td></tr><tr><td>R / Shift+R</td><td>Xoay 90° phải / trái</td></tr><tr><td>Mũi tên (Shift = ×10)</td><td>Dịch chuyển theo bước kéo</td></tr>
+<tr><td>Ctrl+D</td><td>Nhân bản</td></tr><tr><td>Ctrl+Z / Ctrl+Y</td><td>Hoàn tác / làm lại</td></tr><tr><td>Ctrl+S</td><td>Lưu file thiết kế</td></tr></table>
+</section>
+<section id="loi"><h2>8. Xử lý sự cố</h2>
+<table><tr><th>Hiện tượng</th><th>Cách xử lý</th></tr>
+<tr><td>Màn hình 3D trắng / báo lỗi</td><td>Dùng Chrome hoặc Edge mới; bật tăng tốc phần cứng trong Cài đặt.</td></tr>
+<tr><td>Không tải được PDF</td><td>Nhập tên IE; cho phép tải nhiều file nếu trình duyệt hỏi.</td></tr>
+<tr><td>Không chọn được chi tiết nhỏ</td><td>Chọn trong danh sách bên trái, hoặc phóng to hình.</td></tr>
+<tr><td>Sau khi cập nhật, giao diện cũ</td><td>Nhấn Ctrl+F5.</td></tr></table>
+</section>
+</main></div></body></html>

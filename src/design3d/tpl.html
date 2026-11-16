@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3D Gá &amp; dụng cụ may</title>
+<link rel="icon" href="{{LOGO}}">
+<style>
+:root{--bg:#f1f1ef;--panel:#fff;--text:#091d36;--muted:#5f6670;--line:#dcdfe4;--accent:#0058a0;--accent-tx:#fff;--red:#ed1c24;--sel:#e3eef8;
+--warn:#9a6700;--warnbg:#fff5d6;--bad:#c8161e;--badbg:#fde8e9;--ok:#15803d;--okbg:#e7f6ec;--vbg:#eef1f5;--vgrid:#d9dee6;--vgrid2:#b3bcc9}
+@media (prefers-color-scheme:dark){:root{--bg:#06142a;--panel:#0d2140;--text:#e8edf3;--muted:#9fb0c4;--line:#24405f;--accent:#5e9fe0;--accent-tx:#04101f;--red:#ff5a5f;--sel:#15335a;
+--warn:#e3b341;--warnbg:#3a2d0b;--bad:#ff6b6b;--badbg:#3d1416;--ok:#56d364;--okbg:#12301b;--vbg:#0a1a33;--vgrid:#17304f;--vgrid2:#2a4a72;color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 "Segoe UI",Roboto,Arial,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+button{font:inherit;padding:6px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--text);cursor:pointer;white-space:nowrap}
+button:hover:not(:disabled){border-color:var(--accent)}button:disabled{opacity:.4;cursor:not-allowed}
+button.primary{background:var(--accent);color:var(--accent-tx);border-color:var(--accent);font-weight:600}
+button.danger{color:var(--bad)}
+input,select,textarea{font:inherit;padding:5px 7px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--text);min-width:0;width:100%}
+input.bad{border-color:var(--bad);background:var(--badbg)}
+header{display:flex;gap:8px;align-items:center;padding:6px 12px;background:var(--panel);border-bottom:3px solid var(--accent);box-shadow:0 1px 0 var(--red);flex-wrap:wrap}
+header img{height:28px}
+.homebtn{display:inline-flex;padding:5px 10px;border:1px solid var(--line);border-radius:8px;color:var(--text);text-decoration:none;font-size:13px}.homebtn:hover{border-color:var(--accent);color:var(--accent)}
+.ttl{font-size:16px}.tag{background:var(--sel);color:var(--accent);border-radius:10px;padding:1px 8px;font-size:12px;margin-left:4px;font-weight:400}
+#dName{width:260px;font-weight:600}
+.sp{flex:1}
+.lang{display:flex;gap:3px}.lang button{padding:4px 9px;font-size:13px}.lang button.on{background:var(--accent);color:var(--accent-tx);border-color:var(--accent)}
+#bPdf{padding:8px 16px;font-size:15px}
+#bPdf.pulse{animation:pl 1.6s infinite}@keyframes pl{0%,100%{box-shadow:0 0 0 0 rgba(31,111,235,.55)}50%{box-shadow:0 0 0 8px rgba(31,111,235,0)}}
+#steps{display:flex;gap:8px;padding:6px 12px;background:var(--bg);align-items:center;font-size:13px;flex-wrap:wrap}
+.step{display:flex;align-items:center;gap:6px;padding:3px 12px 3px 4px;border-radius:20px;background:var(--panel);border:1px solid var(--line);color:var(--muted)}
+.step i{font-style:normal;width:22px;height:22px;border-radius:50%;background:var(--line);color:var(--text);display:inline-flex;align-items:center;justify-content:center;font-weight:700}
+.step.on{border-color:var(--accent);color:var(--text);font-weight:600}.step.on i{background:var(--accent);color:var(--accent-tx)}
+.step.done i{background:var(--ok);color:#fff}
+#main{flex:1;display:flex;min-height:0}
+aside{background:var(--panel);overflow:auto;padding:10px;flex:none}
+#left{width:268px;border-right:1px solid var(--line)}
+#right{width:306px;border-left:1px solid var(--line)}
+h3{margin:2px 0 8px;font-size:15px}h4{margin:12px 0 4px;font-size:13px;color:var(--muted);font-weight:600}
+.lib{display:flex;gap:10px;align-items:center;width:100%;text-align:left;margin-bottom:6px;padding:7px 9px;white-space:normal}
+.lib .ico{font-size:24px;width:34px;text-align:center;color:var(--accent)}.lib small{display:block;color:var(--muted);font-size:12px;line-height:1.25}
+.lib:hover{background:var(--sel)}
+.li{display:flex;gap:6px;align-items:center;padding:4px 6px;border-radius:8px;cursor:pointer;border:1px solid transparent}
+.li:hover{background:var(--sel)}.li.sel{background:var(--sel);border-color:var(--accent)}
+.li i,.badge{font-style:normal;background:var(--accent);color:var(--accent-tx);border-radius:50%;min-width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;padding:0 4px}
+.li span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.li small{color:var(--muted);font-size:11px}
+.muted{color:var(--muted)}.pad{padding:6px}
+#view{flex:1;position:relative;min-width:0;background:var(--vbg)}
+#gl,#ov{position:absolute;inset:0;width:100%;height:100%;display:block}
+#gl{touch-action:none;cursor:grab}#ov{pointer-events:none}
+#vbtns{position:absolute;left:10px;top:10px;display:flex;gap:4px;flex-wrap:wrap;z-index:2}
+#vbtns button{padding:5px 10px;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+#hint{position:absolute;left:10px;bottom:38px;right:10px;color:var(--muted);font-size:12px;pointer-events:none;text-shadow:0 0 4px var(--vbg)}
+#sbar{position:absolute;left:0;right:0;bottom:0;padding:6px 12px;background:var(--panel);border-top:1px solid var(--line);font-size:13px;display:flex;gap:10px;align-items:center}
+#sbar .r{margin-left:auto;display:flex;gap:6px;align-items:center;color:var(--muted)}
+#sbar select{width:auto;padding:2px 4px}
+.tip{background:var(--sel);border-radius:8px;padding:7px 9px;font-size:12.5px;margin:4px 0 8px;color:var(--text)}
+.kv{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--line);font-size:13px}.kv span{color:var(--muted)}
+.f{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--muted);position:relative}.f.wide{margin-bottom:6px}
+.f input,.f select{color:var(--text);font-size:14px}
+.f i{position:absolute;right:8px;bottom:6px;font-style:normal;font-size:11px;color:var(--muted);pointer-events:none}
+.f.inl{flex-direction:row;align-items:center;width:90px}.f.inl i{bottom:8px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.btns{display:flex;gap:6px;margin:8px 0;flex-wrap:wrap}.btns.end{margin-top:14px}
+.hole{border:1px solid var(--line);border-radius:8px;padding:6px;margin-bottom:6px;position:relative}
+.hole .x{position:absolute;right:4px;top:3px;padding:0 6px;border:none;background:none;color:var(--bad)}
+.chk{display:flex;gap:6px;align-items:center;font-size:13px}.chk input{width:auto}
+.modal{position:fixed;inset:0;background:rgba(5,12,25,.55);display:none;align-items:center;justify-content:center;z-index:30;padding:16px}.modal.on{display:flex}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;max-width:1180px;width:100%;max-height:94vh;overflow:auto;padding:16px 18px}
+.card h2{margin:0 0 6px;font-size:19px}
+.steps3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
+.steps3>div{border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--bg)}.steps3 b{display:block;margin-bottom:3px;color:var(--accent)}
+.exg{display:grid;grid-template-columns:340px 1fr;gap:16px}
+.exg label.t{display:block;font-size:12px;color:var(--muted);margin:8px 0 2px}
+.exg textarea{height:62px;resize:vertical}
+#pv{width:100%;height:auto;border:1px solid var(--line);border-radius:6px;background:#fff;display:block}
+.pvbar{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:8px}
+.warn{background:var(--warnbg);color:var(--warn);border-radius:8px;padding:6px 9px;font-size:13px;margin-top:6px;display:none}
+.foot{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+.toast{position:fixed;left:50%;bottom:60px;transform:translateX(-50%) translateY(20px);background:var(--text);color:var(--bg);padding:8px 16px;border-radius:10px;opacity:0;transition:.25s;pointer-events:none;z-index:50;max-width:90vw}.toast.on{opacity:1;transform:translateX(-50%)}
+kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 4px;font-size:11px;background:var(--bg)}
+@media (max-width:980px){#left{width:200px}#right{width:250px}.exg{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+<a class="homebtn" href="../index.html" data-t="home">← IE Tools</a>
+<img src="{{LOGO}}" alt="Crystal">
+<b class="ttl"><span data-t="appName">3D Gá & dụng cụ may</span><span class="tag">v{{VERSION}}</span></b>
+<input id="dName" data-ph="ph_name" maxlength="80">
+<span class="sp"></span>
+<button id="bNew" data-t="b_new">Mới</button><button id="bOpen" data-t="b_open">Mở…</button><button id="bSave" data-t="b_save">Lưu…</button>
+<button id="bUndo" title="Ctrl+Z">↶</button><button id="bRedo" title="Ctrl+Y">↷</button><button id="bHelp" data-tt="b_help">?</button>
+<div class="lang"><button data-lang="vi">VI</button><button data-lang="en">EN</button></div>
+<button id="bPdf" class="primary" data-t="b_pdf">📄 Xuất PDF</button>
+</header>
+<div id="steps"><span class="step" id="s1"><i>1</i><span data-t="s1">Thêm chi tiết</span></span><span class="step" id="s2"><i>2</i><span data-t="s2">Chỉnh kích thước, vị trí</span></span><span class="step" id="s3"><i>3</i><span data-t="s3">Xuất PDF (có tên IE và logo)</span></span></div>
+<div id="main">
+<aside id="left">
+<h3 data-t="lib_title">1. Thêm chi tiết</h3>
+<div id="lib"></div>
+<h3 data-t="list_title">Danh sách chi tiết</h3>
+<div id="list"></div><div id="sum" class="muted pad"></div>
+</aside>
+<section id="view">
+<canvas id="gl"></canvas><canvas id="ov"></canvas>
+<div id="vbtns"><button data-view="iso" data-t="v_iso">3D</button><button data-view="top" data-t="v_top">Từ trên</button><button data-view="front" data-t="v_front">Phía trước</button><button data-view="right" data-t="v_right">Bên phải</button><button data-view="fit" data-t="v_fit">Vừa khung</button></div>
+<div id="hint" data-t="hint">Kéo chi tiết để di chuyển · Kéo vào nền để xoay · Lăn chuột để phóng to · Chuột phải kéo để dịch</div>
+<div id="sbar"><span id="status"></span><span class="r"><span data-t="snap">Bước kéo</span><select id="snap"><option value="1">1 mm</option><option value="5">5 mm</option><option value="10">10 mm</option></select></span></div>
+</section>
+<aside id="right"><div id="props"></div></aside>
+</div>
+
+<div class="modal" id="dlgExp"><div class="card">
+<h2 data-t="ex_title">Xuất PDF</h2>
+<div class="exg">
+<div>
+<label class="t" data-t="ex_ie">Tên IE (người thiết kế) *</label><input id="eIe" data-ph="ph_ie" maxlength="60">
+<div class="warn" id="ieWarn" data-t="ex_iewarn">Nhập tên IE để tải PDF.</div>
+<label class="t" data-t="ex_style">Mã hàng / ứng dụng</label><input id="eStyle" maxlength="80">
+<label class="t" data-t="ex_purpose">Mục đích sử dụng</label><textarea id="ePurpose" maxlength="400" data-ph="ph_purpose"></textarea>
+<label class="t" data-t="ex_notes">Ghi chú</label><textarea id="eNotes" maxlength="500"></textarea>
+<div class="row2"><div><label class="t" data-t="ex_rev">Phiên bản</label><input id="eRev" maxlength="10"></div><div><label class="t" data-t="ex_date">Ngày</label><input id="eDate" type="date"></div></div>
+<label class="t" data-t="ex_pages">Các trang trong PDF</label>
+<label class="chk"><input type="checkbox" id="pg3d" checked> <span data-t="pdf_p3d">Hình 3D</span></label>
+<label class="chk"><input type="checkbox" id="pgList" checked> <span data-t="pdf_plist">Danh sách chi tiết</span></label>
+<label class="chk"><input type="checkbox" id="pgViews" checked> <span data-t="pdf_views">Bản vẽ 3 hướng</span></label>
+<label class="chk"><input type="checkbox" id="pgPlates" checked> <span data-t="pdf_plates">Bản vẽ tấm</span></label>
+</div>
+<div><canvas id="pv"></canvas><div class="pvbar"><button id="pvPrev">‹</button><b id="pvLab"></b><button id="pvNext">›</button></div></div>
+</div>
+<div class="foot"><button data-close data-t="b_cancel">Đóng</button><button class="primary" id="bDl" data-t="b_dl">⬇ Tải PDF</button></div>
+</div></div>
+
+<div class="modal" id="dlgHelp"><div class="card" style="max-width:860px">
+<h2 data-t="w_title">Thiết kế gá, mẫu và dụng cụ may bằng 3D</h2>
+<div data-t="w_intro">Công cụ này dùng để thiết kế gá (jig), mẫu (template), thước canh và dụng cụ hỗ trợ may. Không cần biết 3D: chỉ cần 3 bước.</div>
+<div class="steps3">
+<div><b data-t="w_s1t">1. Thêm chi tiết</b><span data-t="w_s1">Bấm một chi tiết ở cột bên trái (tấm nền, tấm có cửa sổ, thanh dẫn, chốt chặn...). Chi tiết hiện ra ngay trên màn hình.</span></div>
+<div><b data-t="w_s2t">2. Chỉnh</b><span data-t="w_s2">Bấm vào chi tiết, nhập Dài, Rộng, Cao (mm) ở cột bên phải. Kéo chi tiết bằng chuột để đặt vị trí, hoặc nhập X, Y, Z. Tấm có thể thêm lỗ, rãnh, cửa sổ.</span></div>
+<div><b data-t="w_s3t">3. Xuất PDF</b><span data-t="w_s3">Bấm Xuất PDF, nhập tên IE, kiểm tra bản xem trước rồi tải. PDF có logo Crystal Martin Vietnam, hình 3D, danh sách chi tiết, bản vẽ có kích thước.</span></div>
+</div>
+<div class="tip" data-t="w_tip">Đơn vị là mm. X = sang phải, Y = ra xa, Z = lên cao. Kéo chuột trái vào nền trống để xoay, lăn chuột để phóng to. Phím: Delete xóa, R xoay 90°, Ctrl+Z hoàn tác, phím mũi tên dịch chuyển.</div>
+<div><b data-t="w_ex">Bắt đầu nhanh với một ví dụ:</b></div>
+<div class="btns"><button data-ex="pocket" data-t="ex_pocket">Mẫu may túi</button><button data-ex="seam" data-t="ex_seam">Thước canh đường may</button><button data-ex="label" data-t="ex_label">Gá đặt nhãn</button><button data-ex="hem" data-t="ex_hem">Gá gập gấu</button></div>
+<div class="foot"><button class="primary" id="bStart" data-t="w_start">Bắt đầu thiết kế trống</button></div>
+</div></div>
+<input type="file" id="fOpen" accept=".json,application/json" hidden>
+<div class="toast" id="toast"></div>
+<script>var LOGO_URI="{{LOGO}}";</script>
+<script>/*__THREE__*/</script>
+<script>/*__I18N__*/</script>
+<script>/*__MODEL__*/</script>
+<script>/*__SCENE__*/</script>
+<script>/*__DRAW2D__*/</script>
+<script>/*__PDF__*/</script>
+<script>/*__APP__*/</script>
+</body>
+</html>
