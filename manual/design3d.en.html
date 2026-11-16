@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>3D fixtures &amp; sewing tools: User guide</title><link rel="icon" href="../icon.png"><link rel="stylesheet" href="manual.css"></head><body>
+<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>3D fixtures &amp; sewing tools v1.0: User guide</b><a href="design3d.html" title="Tiếng Việt" onclick="try{localStorage.setItem('ie_site_lang','vi')}catch(e){}">VI</a><a href="../index.html">‹ Home</a></header>
+<div class="wrap">
+<nav class="toc"><b>Contents</b>
+<a href="#intro">1. Introduction</a>
+<a href="#steps">2. Three steps</a>
+<a href="#parts">3. Kinds of parts</a>
+<a href="#adjust">4. Adjusting a part</a>
+<a href="#pdf">5. Export PDF</a>
+<a href="#save">6. Saving and opening</a>
+<a href="#keys">7. Keyboard shortcuts</a>
+<a href="#trouble">8. Troubleshooting</a>
+</nav>
+<main>
+<section id="intro"><h1>3D fixtures &amp; sewing tools</h1>
+<p class="lead">Design jigs, templates, seam guides and sewing aids in 3D, then export a PDF with the Crystal Martin Vietnam logo and the IE name. No 3D knowledge needed. Runs in Chrome or Edge and sends no data anywhere. This is not Layout Sim (line layout).</p>
+<h2>1. Introduction</h2>
+<figure><a href="img/d3-main.png"><img src="img/d3-main.png" alt="Main screen" loading="lazy"></a><figcaption>Left: add parts. Middle: the 3D picture. Right: adjust the selected part. The ① ② ③ bar on top shows the current step. (The screenshot shows the Vietnamese interface; switch with VI / EN.)</figcaption></figure>
+<div class="note">Screenshots use <b>sample data</b>, not company data. The unit is always <b>mm</b>.</div>
+</section>
+<section id="steps"><h2>2. Three steps</h2>
+<figure><a href="img/d3-welcome.png"><img src="img/d3-welcome.png" alt="First-use help" loading="lazy"></a><figcaption>The window shown at first start (open it again with <span class="btn">?</span>). Four examples are included: pocket template, seam guide, label placement jig, hem folding jig.</figcaption></figure>
+<table><tr><th>Step</th><th>What to do</th></tr>
+<tr><td><b>1. Add parts</b></td><td>Press a button in the left column. A new part goes next to the existing ones; when a part is selected, a new pin, bar or block is put <b>on top</b> of it.</td></tr>
+<tr><td><b>2. Adjust</b></td><td>Click a part (in the picture or in the list). Type Length, Width, Height and position X, Y, Z in the right column, or drag the part with the mouse. Drag the empty background to rotate, wheel to zoom, right-drag to pan.</td></tr>
+<tr><td><b>3. Export PDF</b></td><td>Press <span class="btn">📄 Export PDF</span>, type the IE name, check the preview, press <span class="btn">⬇ Download PDF</span>.</td></tr></table>
+</section>
+<section id="parts"><h2>3. Kinds of parts</h2>
+<table><tr><th>Button</th><th>Used for</th></tr>
+<tr><td>Base plate, Plate with window, Plate with 4 holes, Plate with slot</td><td>Fixture base, cutting template, label template, pocket template. A plate can get round holes, slots, rectangular windows and rounded corners.</td></tr>
+<tr><td>Guide rail, Stop block, Block</td><td>Following a fabric edge, stops, bases, handles, spacers.</td></tr>
+<tr><td>Round pin</td><td>Locating pin through a hole.</td></tr>
+<tr><td>Ramp</td><td>Leading fabric in, folding an edge.</td></tr></table>
+<p>Materials: clear acrylic, ABS/PVC, aluminium, steel, plywood, rubber/foam. The <b>weight</b> is estimated from the material density (holes subtracted).</p>
+</section>
+<section id="adjust"><h2>4. Adjusting a part</h2>
+<ul><li><b>Length / Width / Height (Thickness)</b>: Length is horizontal (X), Width goes away from you (Y), Height goes up (Z).</li>
+<li><b>X, Y, Z</b>: position from the origin 0. Z is the height of the bottom face (0 = on the table). <span class="btn">⬆ Put on top</span> calculates Z so the part rests on the parts below it.</li>
+<li><b>Rotate</b>: ⟲ 90°, ⟳ 90° or type an angle.</li>
+<li><b>Holes, slots, windows</b> (plates only): positions are from the plate centre. The PDF drawing switches to coordinates from the bottom left corner for manufacturing.</li>
+<li><b>Reference sewing machine bed</b> (right column when no part is selected): shows the machine bed and the needle position so the fixture can be placed against the needle; the needle is also on the PDF drawings.</li>
+<li><b>Drag step</b> (under the 3D picture): 1, 5 or 10 mm when dragging; hold Alt to drag freely.</li></ul>
+</section>
+<section id="pdf"><h2>5. Export PDF</h2>
+<p><b>The IE name is required</b> (Download PDF stays locked while it is empty; the name is remembered). You can also enter style, purpose, notes, revision and date. The preview shows each page; untick the pages you do not need.</p>
+<figure><a href="img/d3-pdf1.png"><img src="img/d3-pdf1.png" alt="PDF page 1" loading="lazy"></a><figcaption>Page 1: Crystal Martin Vietnam logo and name, design name, numbered 3D picture, details (IE name, style, date, overall size, weight) and signature boxes.</figcaption></figure>
+<figure><a href="img/d3-pdf3.png"><img src="img/d3-pdf3.png" alt="Three-view drawing" loading="lazy"></a><figcaption>Three-view drawing with overall dimensions and scale.</figcaption></figure>
+<figure><a href="img/d3-pdf4.png"><img src="img/d3-pdf4.png" alt="Plate drawing" loading="lazy"></a><figcaption>Plate drawing: holes numbered H1, H2... and a table of X, Y and sizes from the bottom left corner.</figcaption></figure>
+<div class="note">The PDF pages are <b>pictures</b> (text cannot be selected or copied) so Vietnamese displays correctly on every computer. The IE name is still written in the author field of the PDF file.</div>
+</section>
+<section id="save"><h2>6. Saving and opening</h2>
+<p><span class="btn">Save…</span> downloads a <code>.fixture3d.json</code> file (to open and continue later); <span class="btn">Open…</span> opens it again. The current work is also kept in this browser. Designs stay on your computer.</p>
+</section>
+<section id="keys"><h2>7. Keyboard shortcuts</h2>
+<table><tr><th>Key</th><th>Action</th></tr>
+<tr><td>Delete</td><td>Delete the selected part</td></tr><tr><td>R / Shift+R</td><td>Rotate 90° right / left</td></tr><tr><td>Arrow keys (Shift = ×10)</td><td>Move by the drag step</td></tr>
+<tr><td>Ctrl+D</td><td>Duplicate</td></tr><tr><td>Ctrl+Z / Ctrl+Y</td><td>Undo / redo</td></tr><tr><td>Ctrl+S</td><td>Save the design file</td></tr></table>
+</section>
+<section id="trouble"><h2>8. Troubleshooting</h2>
+<table><tr><th>Problem</th><th>What to do</th></tr>
+<tr><td>3D picture blank / error</td><td>Use a recent Chrome or Edge; turn on hardware acceleration in Settings.</td></tr>
+<tr><td>PDF does not download</td><td>Enter the IE name; allow multiple downloads if the browser asks.</td></tr>
+<tr><td>A small part cannot be clicked</td><td>Select it in the list on the left, or zoom in.</td></tr>
+<tr><td>Old interface after an update</td><td>Press Ctrl+F5.</td></tr></table>
+</section>
+</main></div></body></html>
