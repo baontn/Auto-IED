@@ -45,6 +45,8 @@ h3{margin:2px 0 8px;font-size:15px}h4{margin:12px 0 4px;font-size:13px;color:var
 .li:hover{background:var(--sel)}.li.sel{background:var(--sel);border-color:var(--accent)}
 .li i,.badge{font-style:normal;background:var(--accent);color:var(--accent-tx);border-radius:50%;min-width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;padding:0 4px}
 .li span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.li small{color:var(--muted);font-size:11px}
+.facecard{background:#fff1e0;border:1px solid #ff8a00}@media (prefers-color-scheme:dark){.facecard{background:#3a2a10}}
+#props .btns button.on{background:var(--accent);color:var(--accent-tx)}
 .tipsm{font-size:12px;color:var(--muted);margin:-4px 0 6px}.li.refp span{font-style:italic;color:var(--muted)}
 .muted{color:var(--muted)}.pad{padding:6px}
 #view{flex:1;position:relative;min-width:0;background:var(--vbg)}
@@ -116,7 +118,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
 </aside>
 <section id="view">
 <canvas id="gl"></canvas><canvas id="ov"></canvas>
-<div id="vbtns"><button data-view="iso" data-t="v_iso">3D</button><button data-view="top" data-t="v_top">Từ trên</button><button data-view="front" data-t="v_front">Phía trước</button><button data-view="right" data-t="v_right">Bên phải</button><button data-view="fit" data-t="v_fit">Vừa khung</button><button id="bRuler" data-t="v_ruler">📏 Thước đo</button></div>
+<div id="vbtns"><button data-view="iso" data-t="v_iso">3D</button><button data-view="top" data-t="v_top">Từ trên</button><button data-view="front" data-t="v_front">Phía trước</button><button data-view="right" data-t="v_right">Bên phải</button><button data-view="fit" data-t="v_fit">Vừa khung</button><button id="bFace" data-t="v_face">▦ Chọn mặt</button><button id="bRuler" data-t="v_ruler">📏 Thước đo</button><button id="bLock" data-t="v_lock">🔒 Khóa</button></div>
 <div id="hint" data-t="hint">Kéo chi tiết để di chuyển · Kéo vào nền để xoay · Lăn chuột để phóng to · Chuột phải kéo để dịch</div>
 <div id="sbar"><span id="status"></span><span class="r"><span data-t="snap">Bước kéo</span><select id="snap"><option value="1">1 mm</option><option value="5">5 mm</option><option value="10">10 mm</option></select></span></div>
 </section>
