@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>3D Gá & dụng cụ may: Hướng dẫn sử dụng</title><link rel="icon" href="../icon.png"><link rel="stylesheet" href="manual.css"></head><body>
-<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>3D Gá & dụng cụ may v1.5: Hướng dẫn sử dụng</b><a href="design3d.en.html" title="English" onclick="try{localStorage.setItem('ie_site_lang','en')}catch(e){}">EN</a><a href="../index.html">‹ Trang chủ</a></header>
+<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>3D Gá & dụng cụ may v1.6: Hướng dẫn sử dụng</b><a href="design3d.en.html" title="English" onclick="try{localStorage.setItem('ie_site_lang','en')}catch(e){}">EN</a><a href="../index.html">‹ Trang chủ</a></header>
 <div class="wrap">
 <nav class="toc"><b>Nội dung</b>
 <a href="#gioi-thieu">1. Giới thiệu</a>
@@ -10,6 +10,8 @@
 <a href="#chinh">4. Chỉnh chi tiết</a>
 <a href="#ban">4b. Bàn mẫu</a>
 <a href="#mat">4a. Thêm hình lên một mặt</a>
+<a href="#phac">4f. Vẽ phác và đùn</a>
+<a href="#bo">4g. Bo tròn, vát cạnh</a>
 <a href="#khoa">4e. Khóa vị trí</a>
 <a href="#thuoc">4c. Thước đo</a>
 <a href="#anh">4d. Từ ảnh sang 3D</a>
@@ -64,13 +66,29 @@
 <p>Bấm <span class="btn">▦ Chọn mặt</span> (hoặc phím <b>F</b>). Rê chuột lên chi tiết: <b>mặt dưới con trỏ sáng lên</b>. Bấm để chọn mặt (mặt chuyển màu cam, dấu + cam là điểm đặt). Rồi bấm một nút hình ở cột trái: hình mới được đặt <b>đúng lên mặt đó</b>, tại điểm vừa bấm.</p>
 <ul><li><b>Mặt trên</b>: hình đứng trên mặt. <b>Mặt dưới</b>: hình treo dưới mặt. <b>Mặt bên</b>: hình áp sát vào mặt (thanh dẫn song song với mặt, bánh xe có trục vuông góc mặt).</li>
 <li>Bấm lại trên mặt để đổi điểm đặt; nút <i>Đặt ở tâm mặt</i> chọn tâm mặt; <i>Bỏ chọn mặt</i> hoặc Esc để thoát. Mặt đã chọn vẫn giữ để thêm nhiều hình liên tiếp.</li>
-<li>Mặt tự bỏ chọn khi chi tiết chứa nó bị đổi kích thước hoặc di chuyển.</li></ul>
+<li>Mặt tự bỏ chọn khi chi tiết chứa nó bị đổi kích thước hoặc di chuyển.</li>
+<li><b>Mặt cong</b> (thành trụ của chốt, bánh xe, góc bo) được chọn <b>nguyên cả mặt</b>, không còn từng mảnh nhỏ; hình mới đặt tiếp xúc tại điểm bấm theo hướng pháp tuyến.</li></ul>
 <figure><a href="img/d3-face.png"><img src="img/d3-face.png" alt="Chọn mặt" loading="lazy"></a><figcaption>Mặt trên của tấm đã chọn (màu cam, dấu + là điểm đặt); khối bên trái sáng lên vì con trỏ đang ở trên mặt đó.</figcaption></figure>
 </section>
 <section id="thuoc"><h2>4c. Thước đo</h2>
 <p>Bấm <span class="btn">📏 Thước đo</span> (hoặc phím <b>M</b>), rồi bấm hai điểm trên hình. Điểm tự <b>bám</b> vào góc chi tiết và tâm lỗ gần con trỏ (đường nét đứt hiện khi di chuột). Khi rê chuột, <b>cạnh hoặc đỉnh gần con trỏ được tô sáng màu cam</b> (kèm tên và chiều dài cạnh); điểm giữa cạnh cũng bám được; cạnh bị che khuất không được chọn. Kết quả gồm độ dài và ΔX, ΔY, ΔZ, được liệt kê ở cột phải (có nút xóa) và <b>in trong hình 3D của PDF</b>. Esc để thoát thước đo. Hai trục X, Y cũng có thang chia mm, tự đổi bước theo mức phóng to.</p>
 </section>
 <figure><a href="img/d3-edge.png"><img src="img/d3-edge.png" alt="Tô sáng cạnh" loading="lazy"></a><figcaption>Thước đo: cạnh gần con trỏ sáng màu cam, kèm chiều dài (138 mm).</figcaption></figure>
+<section id="phac"><h2>4f. Vẽ phác trên mặt và đùn (kéo dày)</h2>
+<p>Chọn một <b>mặt trên hoặc mặt dưới</b> (mặt phẳng nằm ngang) bằng <span class="btn">▦ Chọn mặt</span>, rồi bấm <span class="btn">✏ Vẽ phác trên mặt này</span>. Hình nhìn thẳng vào mặt, cột phải hiện bản phác.</p>
+<ol><li>Chọn công cụ <b>Chữ nhật</b> (2 góc đối diện), <b>Tròn</b> (tâm rồi một điểm trên đường tròn) hoặc <b>Đa giác</b> (bấm các đỉnh, bấm lại đỉnh đầu hoặc Enter để khép kín). Điểm bấm tự bám đỉnh chi tiết và lưới (giữ Alt để bỏ bám lưới). Có thể vẽ nhiều hình; các hình chồng nhau sẽ được gộp.</li>
+<li>Sửa số liệu từng hình (X, Y, Dài, Cao, Ø) trong danh sách bên phải.</li>
+<li>Ở mục <b>Đùn</b> chọn kiểu và chiều sâu, rồi bấm <span class="btn">✔ Đùn</span>: <b>Thêm khối mới trên mặt</b> tạo một khối hình tự do đứng trên mặt (mặt trên) hoặc treo dưới mặt (mặt dưới); <b>Cắt vào chi tiết</b> khoét theo bản phác: sâu bằng hoặc hơn độ dày thì cắt xuyên, nông hơn thì chi tiết được tách thành 2 lớp xếp chồng (lớp chưa cắt và lớp đã cắt).</li></ol>
+<figure><a href="img/d3-sketch.png"><img src="img/d3-sketch.png" alt="Vẽ phác" loading="lazy"></a><figcaption>Bản phác trên mặt trên của tấm: một chữ nhật 50 × 30 và một hình tròn Ø30, chuẩn bị đùn.</figcaption></figure>
+<div class="note">Giới hạn: chỉ vẽ phác được trên mặt <b>nằm ngang</b>; mặt bên và mặt cong dùng để đặt hình (mục 4a). Khối đùn là một chi tiết mới, không tự hợp nhất với chi tiết gốc; dùng Gộp (mục 5) nếu cần cùng cao độ.</div>
+</section>
+<section id="bo"><h2>4g. Bo tròn, vát cạnh</h2>
+<ul><li><b>Góc đứng</b> (bốn góc nhìn từ trên) của tấm và khối: ô <b>Bo góc</b> (R, mm).</li>
+<li><b>Cạnh trên và cạnh dưới</b> quanh viền (tấm, khối, hình tự do): mục <b>Bo / vát cạnh trên và dưới</b>, nhập bán kính và chọn <i>Bo tròn (fillet)</i> hoặc <i>Vát (chamfer)</i>. Kích thước ngoài không đổi. Giá trị tối đa bằng nửa độ dày.</li>
+<li><b>Hình tự do</b> (từ gộp, cắt, offset, ảnh, đùn): mục <b>Bo tròn góc</b> với bán kính R: <i>Bo góc lồi</i> (góc ngoài) hoặc <i>Bo góc lõm</i> (góc trong).</li>
+<li>Muốn bo mép <b>lỗ</b> hoặc cửa sổ của tấm: dùng bo cạnh trên và dưới (cũng bo mép lỗ). Chốt tròn, bánh xe và tay cầm vốn đã tròn.</li></ul>
+<figure><a href="img/d3-round.png"><img src="img/d3-round.png" alt="Bo cạnh" loading="lazy"></a><figcaption>Tấm có góc bo R10 và cạnh trên, dưới bo 2 mm; khối đùn từ bản phác đứng trên mặt.</figcaption></figure>
+</section>
 <section id="khoa"><h2>4e. Khóa vị trí</h2>
 <p>Chọn một hoặc nhiều chi tiết rồi bấm <span class="btn">🔒 Khóa</span> (hoặc phím <b>L</b>, hoặc nút <i>Khóa vị trí</i> ở cột phải). Chi tiết bị khóa <b>không kéo được, không dịch bằng phím mũi tên, không đổi X, Y, Z và góc xoay</b>; vẫn đổi được kích thước, vật liệu và lỗ. Chi tiết khóa có biểu tượng 🔒 trên hình và trong danh sách; kéo chuột vào chi tiết khóa sẽ xoay hình như kéo vào nền. Bấm lại để mở khóa. Khi chưa chọn chi tiết nào có nút <i>Khóa tất cả / Mở khóa tất cả</i>. Trạng thái khóa được lưu cùng dự án.</p>
 </section>

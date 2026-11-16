@@ -30,7 +30,7 @@ def check(c, msg):
 
 async def main():
     # static: every key used in the sources exists in both languages
-    src = ''.join((ROOT / 'src' / 'design3d' / f).read_text(encoding='utf-8') for f in ['app.js', 'pdf.js', 'draw2d.js', 'cad.js'])
+    src = ''.join((ROOT / 'src' / 'design3d' / f).read_text(encoding='utf-8') for f in ['app.js', 'pdf.js', 'draw2d.js', 'cad.js', 'sketch.js'])
     tpl = (ROOT / 'src' / 'design3d' / 'tpl.html').read_text(encoding='utf-8')
     keys = set(re.findall(r"\bt\('([a-z0-9_]+)'\)", src)) | set(re.findall(r'data-(?:t|ph|tt)="([a-zA-Z0-9_]+)"', tpl))
     for pre, vals in [('pr_', ['plate', 'window', 'holes', 'slot', 'rail', 'stop', 'block', 'pin', 'wedge', 'wheel', 'handle', 'magnet', 'screw', 'tbl_sew', 'tbl_work', 'tbl_cut', 'tbl_small']), ('prd_', ['plate', 'window', 'holes', 'slot', 'rail', 'stop', 'block', 'pin', 'wedge', 'wheel', 'handle', 'magnet', 'screw']),
@@ -255,6 +255,40 @@ async def main():
         check('🔒' in await pg.inner_text('#list'), 'locked part marked in the list')
         js2 = json.loads(await pg.evaluate('JSON.stringify(ST)')); check(js2['parts'][0]['lock'] is True, 'lock is saved in the project')
         await pg.click('#bLock'); await pg.keyboard.press('ArrowRight'); check(await pg.evaluate('ST.parts[0].x') > 0, 'unlock lets the part move again')
+        # ---- v1.6: curved faces, rounded edges, sketch + extrude, corner rounding ----
+        await pg.evaluate('ST=blank();SELS=[];FACE=null;changed(true)')
+        await pg.evaluate('addPreset("pin");ST.parts[0].w=20;ST.parts[0].d=20;ST.parts[0].h=40;ST.parts[0].x=0;ST.parts[0].y=0;ST.parts[0].z=0;SELS=[];changed(true);glView("iso",fitParts(),ST.ref)'); await pg.wait_for_timeout(250)
+        await pg.evaluate('toggleFace(true)'); cp = await corner(10, 0, 20); await pg.mouse.move(cp['x'] - 4, cp['y']); await pg.mouse.click(cp['x'] - 4, cp['y']); await pg.wait_for_timeout(150)
+        cf = await pg.evaluate('FACE&&{k:FACE.kind,planar:FACE.planar,n:FACE.tris.length}'); check(cf and cf['planar'] is False and cf['k'] == 'side' and cf['n'] >= 70, 'the whole wall of a cylinder is one face (%s)' % cf)
+        await pg.keyboard.press('Escape'); await pg.keyboard.press('Escape')
+        # rounded / chamfered edges keep the outline size
+        await pg.evaluate('ST=blank();SELS=[];FACE=null;changed(true);addPreset("block");var b=ST.parts[0];b.w=50;b.d=50;b.h=20;b.r=8;b.er=5;changed(true)')
+        bb = await pg.evaluate('(function(){var m=G.meshList[0].geometry;m.computeBoundingBox();var B=m.boundingBox;return [B.max.x-B.min.x,B.max.y-B.min.y,B.max.z-B.min.z,m.attributes.position.count];})()')
+        check(abs(bb[0] - 50) < 0.1 and abs(bb[1] - 50) < 0.1 and abs(bb[2] - 20) < 0.1 and bb[3] > 500, 'block with corner radius 8 and edge fillet 5 keeps 50 x 50 x 20 (%s)' % bb)
+        await pg.evaluate('ST.parts[0].em="chamfer";changed(true)'); bb2 = await pg.evaluate('(function(){var m=G.meshList[0].geometry;m.computeBoundingBox();return m.boundingBox.max.z-m.boundingBox.min.z;})()'); check(abs(bb2 - 20) < 0.1, 'chamfer keeps the height')
+        # sketch on the top face and extrude
+        await pg.evaluate('ST=blank();SELS=[];FACE=null;changed(true);addPreset("plate");ST.parts[0].w=150;ST.parts[0].d=100;ST.parts[0].h=3;ST.parts[0].r=0;SELS=[];changed(true);glView("top",fitParts(),ST.ref)'); await pg.wait_for_timeout(250)
+        tp = await corner(-60, 30, 3); await pg.evaluate('toggleFace(true)'); await pg.mouse.move(tp['x'], tp['y']); await pg.mouse.click(tp['x'], tp['y']); await pg.wait_for_timeout(150)
+        await pg.click('[data-fc=sketch]'); await pg.wait_for_timeout(250); check(await pg.evaluate('G.mode') == 'sketch', 'sketch mode started from the selected face')
+        a1 = await corner(-20, -10, 3); a2 = await corner(30, 25, 3)
+        await pg.mouse.move(a1['x'], a1['y']); await pg.mouse.click(a1['x'], a1['y']); await pg.mouse.move(a2['x'], a2['y']); await pg.mouse.click(a2['x'], a2['y']); await pg.wait_for_timeout(150)
+        sh = await pg.evaluate('SK.shapes.map(function(s){return [s.t,s.w,s.h];})'); check(sh == [['rect', 50, 35]], 'a rectangle is drawn with two clicks and grid snap %s' % sh)
+        await pg.evaluate('skPoint([-60,-30]);SK.tool="circle";SK.pend=[];skPoint([50,0]);skPoint([60,0])'); check(await pg.evaluate('SK.shapes.length') == 2 and abs(await pg.evaluate('SK.shapes[1].d') - 20) < 0.01, 'a circle by centre and radius point')
+        await pg.evaluate('SK.shapes.splice(1,1);renderProps()'); await pg.fill('[data-sk=depth]', '8'); await pg.press('[data-sk=depth]', 'Tab'); await pg.click('[data-skb=apply]'); await pg.wait_for_timeout(200)
+        ex = await pg.evaluate('(function(){var p=ST.parts[ST.parts.length-1];return {n:ST.parts.length,k:p.kind,z:p.z,h:p.h,w:p.w,d:p.d};})()')
+        check(ex['n'] == 2 and ex['k'] == 'poly' and abs(ex['z'] - 3) < 0.01 and ex['h'] == 8 and abs(ex['w'] - 50) < 0.1 and abs(ex['d'] - 35) < 0.1, 'extrude adds a 50 x 35 x 8 solid on the face %s' % ex)
+        check(await pg.evaluate('G.mode') is None and await pg.evaluate('SK') is None, 'sketch mode ended after extrude')
+        # cut through and a pocket
+        await pg.evaluate('ST.parts=ST.parts.slice(0,1);SELS=[];FACE=null;changed(true)'); await pg.evaluate('toggleFace(true)'); await pg.mouse.move(tp['x'], tp['y']); await pg.mouse.click(tp['x'], tp['y']); await pg.wait_for_timeout(120)
+        await pg.click('[data-fc=sketch]'); await pg.evaluate('SK.shapes=[{t:"circle",cx:0,cy:0,d:30}];SK.mode="cut";SK.depth=3;renderProps()'); await pg.click('[data-skb=apply]'); await pg.wait_for_timeout(200)
+        ct = await pg.evaluate('(function(){var p=ST.parts[0];return {n:ST.parts.length,k:p.kind,holes:p.polys[0].h.length};})()'); check(ct['n'] == 1 and ct['k'] == 'poly' and ct['holes'] == 1, 'a through cut makes a hole in the part %s' % ct)
+        await pg.evaluate('toggleFace(true)'); tp2 = await corner(-60, 30, 3); await pg.mouse.move(tp2['x'], tp2['y']); await pg.mouse.click(tp2['x'], tp2['y']); await pg.wait_for_timeout(120)
+        await pg.click('[data-fc=sketch]'); await pg.evaluate('SK.shapes=[{t:"rect",cx:50,cy:0,w:20,h:20}];SK.mode="cut";SK.depth=1;renderProps()'); await pg.click('[data-skb=apply]'); await pg.wait_for_timeout(200)
+        pk = await pg.evaluate('ST.parts.map(function(p){return [p.z,p.h];})'); check(len(pk) == 2 and pk[0] == [0, 2] and pk[1] == [2, 1], 'a shallow cut splits the part into two stacked layers %s' % pk)
+        # round the corners of a free shape
+        await pg.evaluate('ST=blank();SELS=[];FACE=null;changed(true);ST.parts.push(cleanPart({kind:"poly",name:"x",h:5,mat:"abs",polys:[{o:[[-50,-25],[50,-25],[50,25],[-50,25]],h:[]}]},ST.nid++));changed(true);selectPart(ST.parts[0].id)')
+        await pg.fill('#rdR', '5'); await pg.click('[data-rnd=convex]'); ar = await pg.evaluate('polysArea(ST.parts[0].polys)')
+        check(abs(ar - (5000 - (4 - 3.14159265) * 25)) < 1.5, 'convex corners rounded with R5: area %.1f' % ar)
         # English UI
         await pg.click('.lang [data-lang=en]'); await pg.wait_for_timeout(200)
         check('Export PDF' in await pg.inner_text('#bPdf'), 'English UI')

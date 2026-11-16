@@ -93,7 +93,7 @@ function cleanPart(p,id){
   if(k==='pin')o.d=o.w;
   if(k==='wheel')o.h=o.w;
   if(k==='table'){o.tt=Math.max(1,Math.min(num(p.tt,30),o.h));}
-  o.ref=!!p.ref;o.lock=!!p.lock;
+  o.ref=!!p.ref;o.lock=!!p.lock;o.er=Math.max(0,num(p.er,0));o.em=p.em==='chamfer'?'chamfer':'fillet';
   if(k==='poly'){o.polys=[];(p.polys||[]).forEach(function(q){var cl=function(r){return (r||[]).map(function(a){return [num(a[0],0),num(a[1],0)];});};var oo=cl(q.o);if(oo.length>=3)o.polys.push({o:oo,h:(q.h||[]).map(cl).filter(function(r){return r.length>=3;})});});polyBox(o);delete o.cx;delete o.cy;}
   (p.holes||[]).forEach(function(h){if(['round','slot','rect'].indexOf(h.t)<0)return;o.holes.push({t:h.t,x:num(h.x,0),y:num(h.y,0),a:Math.max(0.5,num(h.a,6)),b:Math.max(0.5,num(h.b,6)),c:Math.max(0,num(h.c,0))});});
   return o;
