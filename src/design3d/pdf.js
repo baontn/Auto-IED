@@ -21,7 +21,7 @@ function wtText(g){return g>=1000?(Math.round(g)/1000).toFixed(2)+' kg':(Math.ro
 function totals(parts){var g=0;parts.forEach(function(p){g+=weightOf(p);});return g;}
 function boxFrame(c,bx){c.strokeStyle='#b8c0cc';c.lineWidth=1.5;c.strokeRect(bx.x,bx.y,bx.w,bx.h);}
 function buildPages(ST,o){
-  var parts=ST.parts,pages=[],plates=parts.map(function(p,i){return {p:p,i:i};}).filter(function(e){return e.p.kind==='plate'||e.p.kind==='poly';});
+  var parts=realParts(ST.parts),pages=[],plates=parts.map(function(p,i){return {p:p,i:i};}).filter(function(e){return e.p.kind==='plate'||e.p.kind==='poly';});
   var want=o.pages||{p3d:true,list:true,views:true,plates:true},defs=[],ROWS=22;
   if(want.p3d)defs.push({k:'3d'});
   if(want.list){for(var i=0;i<Math.max(1,Math.ceil(parts.length/ROWS));i++)defs.push({k:'list',from:i*ROWS});}

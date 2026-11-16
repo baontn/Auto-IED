@@ -18,7 +18,16 @@ var PRESETS=[
  {id:'magnet',kind:'pin',ico:'⏺',mk:function(){return {w:20,d:20,h:5,r:0,mat:'steel',holes:[]};}},
  {id:'screw',kind:'pin',ico:'⊙',mk:function(){return {w:5,d:5,h:12,r:0,mat:'steel',holes:[]};}}
 ];
-var KINDS=['plate','block','pin','wedge','wheel','handle','poly'];
+var TABLES=[
+ {id:'tbl_sew',kind:'table',ico:'⊓',mk:function(){return {w:1200,d:600,h:750,tt:30,r:0,mat:'wood',ref:true,holes:[]};}},
+ {id:'tbl_work',kind:'table',ico:'⊓',mk:function(){return {w:1500,d:750,h:750,tt:30,r:0,mat:'wood',ref:true,holes:[]};}},
+ {id:'tbl_cut',kind:'table',ico:'⊓',mk:function(){return {w:2400,d:1500,h:850,tt:40,r:0,mat:'wood',ref:true,holes:[]};}},
+ {id:'tbl_small',kind:'table',ico:'⊓',mk:function(){return {w:600,d:600,h:700,tt:25,r:0,mat:'wood',ref:true,holes:[]};}}
+];
+PRESETS=PRESETS.concat(TABLES);
+var KINDS=['plate','block','pin','wedge','wheel','handle','poly','table'];
+function realParts(parts){return parts.filter(function(p){return !p.ref;});}
+function legSize(p){return Math.max(5,Math.min(40,p.w/6,p.d/6));}
 function presetById(id){for(var i=0;i<PRESETS.length;i++)if(PRESETS[i].id===id)return PRESETS[i];return null;}
 function rad(d){return d*Math.PI/180;}
 function num(v,def){v=parseFloat(v);return isFinite(v)?v:def;}
@@ -47,6 +56,7 @@ function volOf(p){
   if(p.kind==='pin')return Math.PI*p.w*p.w/4*p.h;
   if(p.kind==='wedge')return p.w*p.d*p.h/2;
   if(p.kind==='wheel')return Math.PI*p.w*p.w/4*p.d;
+  if(p.kind==='table'){var ls=legSize(p);return p.w*p.d*p.tt+4*ls*ls*Math.max(p.h-p.tt,0);}
   if(p.kind==='handle'){var q=Math.PI*p.d*p.d/4;return q*(p.w+2*Math.max(p.h-p.d/2,0));}
   if(p.kind==='poly')return polysArea(p.polys||[])*p.h;
   return p.w*p.d*p.h;
@@ -82,6 +92,8 @@ function cleanPart(p,id){
     w:Math.max(0.5,num(p.w,50)),d:Math.max(0.5,num(p.d,50)),h:Math.max(0.5,num(p.h,10)),r:Math.max(0,num(p.r,0)),mat:MATS[p.mat]?p.mat:'abs',holes:[]};
   if(k==='pin')o.d=o.w;
   if(k==='wheel')o.h=o.w;
+  if(k==='table'){o.tt=Math.max(1,Math.min(num(p.tt,30),o.h));}
+  o.ref=!!p.ref;
   if(k==='poly'){o.polys=[];(p.polys||[]).forEach(function(q){var cl=function(r){return (r||[]).map(function(a){return [num(a[0],0),num(a[1],0)];});};var oo=cl(q.o);if(oo.length>=3)o.polys.push({o:oo,h:(q.h||[]).map(cl).filter(function(r){return r.length>=3;})});});polyBox(o);delete o.cx;delete o.cy;}
   (p.holes||[]).forEach(function(h){if(['round','slot','rect'].indexOf(h.t)<0)return;o.holes.push({t:h.t,x:num(h.x,0),y:num(h.y,0),a:Math.max(0.5,num(h.a,6)),b:Math.max(0.5,num(h.b,6)),c:Math.max(0,num(h.c,0))});});
   return o;

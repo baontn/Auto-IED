@@ -24,8 +24,8 @@ async def main():
     src = ''.join((ROOT / 'src' / 'design3d' / f).read_text(encoding='utf-8') for f in ['app.js', 'pdf.js', 'draw2d.js', 'cad.js'])
     tpl = (ROOT / 'src' / 'design3d' / 'tpl.html').read_text(encoding='utf-8')
     keys = set(re.findall(r"\bt\('([a-z0-9_]+)'\)", src)) | set(re.findall(r'data-(?:t|ph|tt)="([a-zA-Z0-9_]+)"', tpl))
-    for pre, vals in [('pr_', ['plate', 'window', 'holes', 'slot', 'rail', 'stop', 'block', 'pin', 'wedge', 'wheel', 'handle', 'magnet', 'screw']), ('prd_', ['plate', 'window', 'holes', 'slot', 'rail', 'stop', 'block', 'pin', 'wedge', 'wheel', 'handle', 'magnet', 'screw']),
-                      ('k_', ['plate', 'block', 'pin', 'wedge', 'wheel', 'handle', 'poly']), ('m_', ['acrylic', 'abs', 'alu', 'steel', 'wood', 'rubber']), ('h_', ['round', 'slot', 'rect']), ('ex_', ['pocket', 'seam', 'label', 'hem'])]:
+    for pre, vals in [('pr_', ['plate', 'window', 'holes', 'slot', 'rail', 'stop', 'block', 'pin', 'wedge', 'wheel', 'handle', 'magnet', 'screw', 'tbl_sew', 'tbl_work', 'tbl_cut', 'tbl_small']), ('prd_', ['plate', 'window', 'holes', 'slot', 'rail', 'stop', 'block', 'pin', 'wedge', 'wheel', 'handle', 'magnet', 'screw']),
+                      ('k_', ['plate', 'block', 'pin', 'wedge', 'wheel', 'handle', 'poly', 'table']), ('m_', ['acrylic', 'abs', 'alu', 'steel', 'wood', 'rubber']), ('h_', ['round', 'slot', 'rect']), ('ex_', ['pocket', 'seam', 'label', 'hem'])]:
         keys |= {pre + v for v in vals}
     i18n = (ROOT / 'src' / 'design3d' / 'i18n.js').read_text(encoding='utf-8')
     vi, en = i18n.split('},en:{')
@@ -150,6 +150,39 @@ async def main():
             print('SKIP ezdxf not installed (pip install ezdxf) - DXF files not parsed')
         if SHOTS: await pg.screenshot(path=SHOTS + '/d3-cad.png')
         await pg.keyboard.press('Escape')
+        # ---- v1.2: tables, ruler, picture -> 3D ----
+        await pg.evaluate('ST=blank();SELS=[];changed(true)')
+        await pg.evaluate('addPreset("window");addPreset("tbl_sew")')
+        tz = await pg.evaluate('ST.parts[1].z'); check(tz == -750 and await pg.evaluate('ST.parts[1].ref') is True, 'table is a reference part under the design (z=%s)' % tz)
+        check('1 ' in await pg.inner_text('#sum') and await pg.evaluate('numOf(ST.parts[0])') == 1, 'list counts only real parts: %s' % (await pg.inner_text('#sum')))
+        n_pages = await pg.evaluate('buildPages(ST,{pages:{p3d:true,list:true,views:true,plates:true},ie:"X",date:"2026-01-01"}).length')
+        check(n_pages == 4, 'PDF ignores the table (%d pages)' % n_pages)
+        check(await pg.evaluate('meshData().length') == 1, 'CAD export ignores the table')
+        await pg.evaluate('addPreset("rail")'); check(await pg.evaluate('ST.parts[2].z') == 0, 'a part added while the table is selected lands on the table top')
+        # ruler: two clicks on corners (snap) give the plate length
+        await pg.evaluate('SELS=[];changed(true);ST.parts=ST.parts.slice(0,1);ST.parts[0].x=0;ST.parts[0].y=0;ST.parts[0].z=0;changed(true);glView("top",fitParts(),ST.ref)'); await pg.wait_for_timeout(250)
+        await pg.click('#bRuler'); check(await pg.evaluate('G.mode') == 'ruler', 'ruler mode on')
+        async def corner(x, y, z):
+            return await pg.evaluate("(function(){var c=projPt(G.cam,G.cv.clientWidth,G.cv.clientHeight,%s,%s,%s),r=G.cv.getBoundingClientRect();return {x:r.left+c.x,y:r.top+c.y};})()" % (x, y, z))
+        ca = await corner(-90, -70, 3); cb = await corner(90, -70, 3)
+        await pg.mouse.click(ca['x'] + 3, ca['y'] - 2); await pg.mouse.click(cb['x'] - 2, cb['y'] + 3)
+        ms = await pg.evaluate('ST.meas.length'); ln = await pg.evaluate('ST.meas.length?measLen(ST.meas[0]):0')
+        check(ms == 1 and abs(ln - 180) < 0.2, 'ruler measures the plate length 180 with corner snap (%s)' % ln)
+        check('180' in await pg.inner_text('#props'), 'measurement listed in the panel')
+        await pg.keyboard.press('Escape'); check(await pg.evaluate('G.mode') is None, 'Esc leaves the ruler')
+        # picture -> 3D
+        from PIL import Image, ImageDraw
+        im = Image.new('RGB', (400, 300), 'white'); dr = ImageDraw.Draw(im)
+        dr.rounded_rectangle((50, 50, 350, 250), radius=30, fill='black'); dr.rectangle((150, 100, 250, 200), fill='white')
+        ip = tempfile.mkdtemp() + '/t.png'; im.save(ip)
+        await pg.click('#bTrace'); await pg.set_input_files('#trFile', ip); await pg.wait_for_timeout(500)
+        info = await pg.inner_text('#trInfo'); check(info.startswith('1 ') and ', 1 ' in info, 'traced 1 shape with 1 hole (%s)' % info)
+        await pg.fill('#trLen', '150'); await pg.wait_for_timeout(100)
+        wid = float(await pg.input_value('#trWid')); check(abs(wid - 100) < 2, 'width follows the ratio (%s)' % wid)
+        if SHOTS: await pg.screenshot(path=SHOTS + '/d3-trace.png')
+        await pg.fill('#trTh', '4'); await pg.click('#trMake'); await pg.wait_for_timeout(200)
+        q = await pg.evaluate('(function(){var p=ST.parts[ST.parts.length-1];return {k:p.kind,w:p.w,d:p.d,h:p.h,holes:p.polys[0].h.length};})()')
+        check(q['k'] == 'poly' and abs(q['w'] - 150) < 1.5 and abs(q['d'] - 100) < 2 and q['h'] == 4 and q['holes'] == 1, 'picture became a 150 x 100 x 4 part with a hole %s' % q)
         # English UI
         await pg.click('.lang [data-lang=en]'); await pg.wait_for_timeout(200)
         check('Export PDF' in await pg.inner_text('#bPdf'), 'English UI')

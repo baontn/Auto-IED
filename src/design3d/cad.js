@@ -5,14 +5,14 @@ function f4(v){return (Math.round(v*10000)/10000).toString();}
 function meshData(){
   var out=[],v=new THREE.Vector3();
   G.parts.children.forEach(function(g){
-    var id=g.userData.id,idx=-1,i;for(i=0;i<ST.parts.length;i++)if(ST.parts[i].id===id)idx=i;if(idx<0)return;
+    var id=g.userData.id,idx=-1,i,RP=realParts(ST.parts);for(i=0;i<RP.length;i++)if(RP[i].id===id)idx=i;if(idx<0)return;
     g.updateMatrix();var tris=[];
     g.children.forEach(function(m){
       if(!m.isMesh)return;m.updateMatrix();var M=g.matrix.clone().multiply(m.matrix),pos=m.geometry.attributes.position,ix=m.geometry.index,n=ix?ix.count:pos.count;
       function P(k){v.fromBufferAttribute(pos,ix?ix.getX(k):k).applyMatrix4(M);return [v.x,v.y,v.z];}
       for(var k=0;k+2<n;k+=3){tris.push(P(k),P(k+1),P(k+2));}
     });
-    out.push({i:idx,name:ST.parts[idx].name||t('k_'+ST.parts[idx].kind),tris:tris});
+    out.push({i:idx,name:RP[idx].name||t('k_'+RP[idx].kind),tris:tris});
   });
   return out;
 }
@@ -83,10 +83,10 @@ function dxfInfo(ents,x,y){
 }
 var DXF_LAYERS=[['OUTLINE',1],['HOLES',5],['LABEL',3],['INFO',7]];
 function makeDxf2d(flat){
-  var ents=[],b=bboxAll(ST.parts);
+  var ents=[],RP=realParts(ST.parts),b=bboxAll(RP);
   if(flat){
     var cur=0,maxd=0;
-    ST.parts.forEach(function(p,i){
+    RP.forEach(function(p,i){
       if(p.kind!=='plate'&&p.kind!=='poly')return;var ox=cur+p.w/2,oy=p.d/2;
       dxfPart(p,function(x,y){return [ox+x,oy+y];},ents);
       ents.push.apply(ents,dxfText('LABEL',cur,-8,4,'#'+(i+1)+' '+(p.name||t('k_'+p.kind))+'  '+fmt(p.w)+'x'+fmt(p.d)+'x'+fmt(p.h)+' mm  '+t('m_'+p.mat)));
@@ -94,7 +94,7 @@ function makeDxf2d(flat){
     });
     dxfInfo(ents,0,-30);
   }else{
-    ST.parts.forEach(function(p,i){
+    RP.forEach(function(p,i){
       var c=Math.cos(rad(p.rot||0)),s=Math.sin(rad(p.rot||0));
       dxfPart(p,function(x,y){return [p.x+x*c-y*s,p.y+x*s+y*c];},ents);
       ents.push.apply(ents,dxfText('LABEL',p.x,p.y,Math.max(3,Math.min(8,Math.min(p.w,p.d)/4)),String(i+1)));

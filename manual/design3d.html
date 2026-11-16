@@ -1,13 +1,16 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>3D Gá & dụng cụ may: Hướng dẫn sử dụng</title><link rel="icon" href="../icon.png"><link rel="stylesheet" href="manual.css"></head><body>
-<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>3D Gá & dụng cụ may v1.1: Hướng dẫn sử dụng</b><a href="design3d.en.html" title="English" onclick="try{localStorage.setItem('ie_site_lang','en')}catch(e){}">EN</a><a href="../index.html">‹ Trang chủ</a></header>
+<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>3D Gá & dụng cụ may v1.2: Hướng dẫn sử dụng</b><a href="design3d.en.html" title="English" onclick="try{localStorage.setItem('ie_site_lang','en')}catch(e){}">EN</a><a href="../index.html">‹ Trang chủ</a></header>
 <div class="wrap">
 <nav class="toc"><b>Nội dung</b>
 <a href="#gioi-thieu">1. Giới thiệu</a>
 <a href="#3-buoc">2. Ba bước</a>
 <a href="#chi-tiet">3. Các loại chi tiết</a>
 <a href="#chinh">4. Chỉnh chi tiết</a>
+<a href="#ban">4b. Bàn mẫu</a>
+<a href="#thuoc">4c. Thước đo</a>
+<a href="#anh">4d. Từ ảnh sang 3D</a>
 <a href="#gop">5. Gộp / cắt hình</a>
 <a href="#offset">6. Offset (nới / thu viền)</a>
 <a href="#pdf">7. Xuất PDF</a>
@@ -50,6 +53,23 @@
 <li>Ô <b>Bước kéo</b> (dưới hình 3D): 1, 5 hoặc 10 mm khi kéo chuột; giữ Alt để kéo tự do.</li></ul>
 </section>
 <figure><a href="img/d3-wheels.png"><img src="img/d3-wheels.png" alt="Gá có bánh xe và tay cầm" loading="lazy"></a><figcaption>Gá có 4 bánh xe và tay cầm chữ U.</figcaption></figure>
+<figure><a href="img/d3-tables.png"><img src="img/d3-tables.png" alt="Bàn mẫu và thước đo" loading="lazy"></a><figcaption>Bàn máy may đặt dưới gá; hai số đo (thước) hiện trên hình cùng thang chia mm dọc hai trục.</figcaption></figure>
+<section id="ban"><h2>4b. Bàn mẫu (tham khảo)</h2>
+<p>Mục <b>Bàn mẫu</b> ở cột trái có bàn máy may (1200 × 600 × 750), bàn làm việc (1500 × 750 × 750), bàn cắt (2400 × 1500 × 850) và bàn nhỏ (600 × 600 × 700). Bàn được đặt <b>dưới</b> thiết kế (mặt bàn ở Z = 0) để so sánh với bàn thật. Có thể chỉnh Dài, Rộng, Cao, Dày mặt bàn.</p>
+<p>Bàn là chi tiết <b>chỉ để tham khảo</b>: có trên hình 3D (và hình 3D của PDF) nhưng <b>không tính</b> vào danh sách, khối lượng, bản vẽ PDF và file CAD. Tích ô <i>Chỉ để tham khảo</i> ở cột phải để đặt cho bất kỳ chi tiết nào khác.</p>
+</section>
+<section id="thuoc"><h2>4c. Thước đo</h2>
+<p>Bấm <span class="btn">📏 Thước đo</span> (hoặc phím <b>M</b>), rồi bấm hai điểm trên hình. Điểm tự <b>bám</b> vào góc chi tiết và tâm lỗ gần con trỏ (đường nét đứt hiện khi di chuột). Kết quả gồm độ dài và ΔX, ΔY, ΔZ, được liệt kê ở cột phải (có nút xóa) và <b>in trong hình 3D của PDF</b>. Esc để thoát thước đo. Hai trục X, Y cũng có thang chia mm, tự đổi bước theo mức phóng to.</p>
+</section>
+<section id="anh"><h2>4d. Từ ảnh sang 3D</h2>
+<p>Bấm <span class="btn">📷 Từ ảnh → 3D</span> ở đầu cột trái.</p>
+<ol><li>Chọn ảnh (hoặc kéo thả, hoặc dán Ctrl+V). Nên <b>chụp thẳng từ trên</b>, vật thể đậm màu trên nền sáng; chụp nghiêng sẽ bị méo.</li>
+<li>Chương trình lấy đường viền (cả lỗ bên trong) và vẽ lên ảnh để kiểm tra. Chỉnh <b>Ngưỡng</b> nếu thiếu hoặc thừa, <b>Đảo</b> nếu vật sáng trên nền tối, <b>Tô đầy hình kín</b> nếu ảnh chỉ có nét viền, <b>Làm mịn</b> và <b>Bỏ đốm nhỏ</b> để đường viền gọn.</li>
+<li><b>Nhập kích thước thật</b>: Dài (hoặc Rộng); số còn lại tự tính theo tỉ lệ ảnh. Nhập Dày và vật liệu.</li>
+<li>Bấm <span class="btn">Tạo chi tiết 3D</span>: ra một chi tiết <b>Hình tự do</b>, dùng được như mọi chi tiết khác (gộp / cắt, offset, PDF, CAD).</li></ol>
+<figure><a href="img/d3-trace.png"><img src="img/d3-trace.png" alt="Từ ảnh sang 3D" loading="lazy"></a><figcaption>Ví dụ: ảnh một tấm có cửa sổ, đường viền màu cam; nhập Dài 150 mm thì Rộng tự ra 100 mm.</figcaption></figure>
+<div class="note">Độ chính xác phụ thuộc ảnh (độ nét, ánh sáng, góc chụp) và con số kích thước bạn nhập: hãy kiểm tra lại bằng thước đo hoặc đo vật thật trước khi gia công. Ảnh được xử lý ngay trên máy, không gửi đi đâu.</div>
+</section>
 <section id="gop"><h2>5. Gộp / cắt hình</h2>
 <p>Giữ <b>Ctrl</b> hoặc <b>Shift</b> rồi bấm để chọn nhiều chi tiết (trên hình hoặc trong danh sách). Chi tiết chọn <b>đầu tiên</b> là chi tiết gốc. Cột phải hiện ba lệnh:</p>
 <table><tr><th>Lệnh</th><th>Kết quả</th></tr>
@@ -89,7 +109,7 @@
 </section>
 <section id="phim"><h2>10. Phím tắt</h2>
 <table><tr><th>Phím</th><th>Tác dụng</th></tr>
-<tr><td>Ctrl / Shift + bấm</td><td>Chọn thêm / bỏ chọn một chi tiết</td></tr><tr><td>Delete</td><td>Xóa các chi tiết đang chọn</td></tr><tr><td>R / Shift+R</td><td>Xoay 90° phải / trái</td></tr><tr><td>Mũi tên (Shift = ×10)</td><td>Dịch chuyển theo bước kéo</td></tr>
+<tr><td>M</td><td>Bật / tắt thước đo</td></tr><tr><td>Ctrl / Shift + bấm</td><td>Chọn thêm / bỏ chọn một chi tiết</td></tr><tr><td>Delete</td><td>Xóa các chi tiết đang chọn</td></tr><tr><td>R / Shift+R</td><td>Xoay 90° phải / trái</td></tr><tr><td>Mũi tên (Shift = ×10)</td><td>Dịch chuyển theo bước kéo</td></tr>
 <tr><td>Ctrl+D</td><td>Nhân bản</td></tr><tr><td>Ctrl+Z / Ctrl+Y</td><td>Hoàn tác / làm lại</td></tr><tr><td>Ctrl+S</td><td>Lưu file thiết kế</td></tr></table>
 </section>
 <section id="loi"><h2>11. Xử lý sự cố</h2>
