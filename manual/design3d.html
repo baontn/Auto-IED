@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>3D Gá & dụng cụ may: Hướng dẫn sử dụng</title><link rel="icon" href="../icon.png"><link rel="stylesheet" href="manual.css"></head><body>
-<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>3D Gá & dụng cụ may v1.3: Hướng dẫn sử dụng</b><a href="design3d.en.html" title="English" onclick="try{localStorage.setItem('ie_site_lang','en')}catch(e){}">EN</a><a href="../index.html">‹ Trang chủ</a></header>
+<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>3D Gá & dụng cụ may v1.4: Hướng dẫn sử dụng</b><a href="design3d.en.html" title="English" onclick="try{localStorage.setItem('ie_site_lang','en')}catch(e){}">EN</a><a href="../index.html">‹ Trang chủ</a></header>
 <div class="wrap">
 <nav class="toc"><b>Nội dung</b>
 <a href="#gioi-thieu">1. Giới thiệu</a>
@@ -106,7 +106,9 @@
 <div class="note"><b>DWG:</b> là định dạng riêng của Autodesk nên chương trình <b>không</b> ghi trực tiếp (cũng không có file STEP). Mở file DXF trong AutoCAD rồi <i>Save As DWG</i>, hoặc dùng ODA File Converter (miễn phí) để đổi DXF sang DWG. File 3D là lưới tam giác, không phải khối đặc có thể sửa tham số trong CAD. Hình bo cung trong DXF 2D và DXF phẳng là cung tròn thật; hình tự do (gộp / offset) gồm nhiều đoạn thẳng nhỏ (0,05 mm).</div>
 </section>
 <section id="luu"><h2>9. Lưu và mở thiết kế</h2>
-<p><span class="btn">Lưu…</span> tải file <code>.fixture3d.json</code> (để mở lại, sửa tiếp); <span class="btn">Mở…</span> mở lại file đó. Chương trình cũng tự giữ bản đang làm trong trình duyệt này. Thiết kế chỉ nằm trên máy bạn.</p>
+<p>Lần đầu bấm <span class="btn">💾 Lưu</span> (hoặc Ctrl+S), chương trình hỏi <b>thư mục dự án</b>. Chọn một thư mục (ví dụ trên ổ chung) và bấm Cho phép. Từ đó mỗi lần bấm Lưu, dự án được ghi thẳng vào thư mục này, <b>không tải file về</b>; cùng tên thiết kế thì ghi đè cùng một file. Đổi tên thiết kế rồi Lưu sẽ tạo file mới. Tên thư mục hiện ở nút 📁 trên đầu trang; bấm nút đó để đổi thư mục.</p>
+<p><span class="btn">Mở…</span> liệt kê các dự án trong thư mục (mới nhất ở trên); bấm một dòng để mở. Có thêm <i>Mở file khác…</i> và <i>Đổi thư mục…</i>. Trình duyệt không hỗ trợ chọn thư mục (không phải Chrome / Edge) sẽ tải file về như bình thường. Chương trình cũng tự giữ bản đang làm trong trình duyệt này.</p>
+<figure><a href="img/d3-open.png"><img src="img/d3-open.png" alt="Mở dự án" loading="lazy"></a><figcaption>Hộp thoại Mở dự án: các dự án trong thư mục đã chọn.</figcaption></figure>
 </section>
 <section id="phim"><h2>10. Phím tắt</h2>
 <table><tr><th>Phím</th><th>Tác dụng</th></tr>

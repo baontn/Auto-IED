@@ -96,7 +96,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
 <b class="ttl"><span data-t="appName">3D Gá & dụng cụ may</span><span class="tag">v{{VERSION}}</span></b>
 <input id="dName" data-ph="ph_name" maxlength="80">
 <span class="sp"></span>
-<button id="bNew" data-t="b_new">Mới</button><button id="bOpen" data-t="b_open">Mở…</button><button id="bSave" data-t="b_save">Lưu…</button>
+<button id="bNew" data-t="b_new">Mới</button><button id="bDir" data-tt="pj_tip">📁 <span id="dirName"></span></button><button id="bOpen" data-t="b_open">Mở…</button><button id="bSave" data-t="b_save">💾 Lưu</button>
 <button id="bUndo" title="Ctrl+Z">↶</button><button id="bRedo" title="Ctrl+Y">↷</button><button id="bHelp" data-tt="b_help">?</button>
 <div class="lang"><button data-lang="vi">VI</button><button data-lang="en">EN</button></div>
 <button id="bCad" data-t="b_cad">⬇ CAD / 3D</button>
@@ -166,6 +166,13 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
 <div class="foot"><button data-close data-t="b_cancel">Đóng</button><button class="primary" id="trMake" data-t="tr_make">Tạo chi tiết 3D</button></div>
 </div></div>
 
+<div class="modal" id="dlgOpen"><div class="card" style="max-width:520px">
+<h2 data-t="pj_open">Mở dự án</h2>
+<div class="tipsm"><span data-t="pj_folder">Thư mục dự án</span>: <b id="pjDirName"></b></div>
+<div id="pjList" style="max-height:50vh;overflow:auto;margin:8px 0"></div>
+<div class="foot"><button id="pjOther" data-t="pj_other">Mở file khác…</button><button id="pjChange" data-t="pj_change">Đổi thư mục…</button><button data-close data-t="b_cancel">Đóng</button></div>
+</div></div>
+
 <div class="modal" id="dlgCad"><div class="card" style="max-width:760px">
 <h2 data-t="cad_title">Xuất file CAD / 3D</h2>
 <div class="tip" data-t="cad_intro">Chọn loại file phù hợp với phần mềm hoặc máy sẽ dùng. Đơn vị mm, trục Z hướng lên.</div>
@@ -205,6 +212,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
 <script>/*__PDF__*/</script>
 <script>/*__CAD__*/</script>
 <script>/*__TRACE__*/</script>
+<script>/*__PROJECT__*/</script>
 <script>/*__APP__*/</script>
 </body>
 </html>

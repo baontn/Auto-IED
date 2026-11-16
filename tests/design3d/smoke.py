@@ -16,6 +16,15 @@ HTML = (ROOT / 'design3d' / 'Design3D.html').as_uri()
 SHOTS = sys.argv[sys.argv.index('--shots') + 1] if '--shots' in sys.argv else None
 RES = []
 
+MOCK_FS = """
+window.__fs = {};
+function mkFile(n){return {kind:'file',name:n,getFile:async()=>({name:n,lastModified:__fs[n].mod,text:async()=>__fs[n].text}),
+  createWritable:async()=>{let b='';return {write:async(t)=>{b+=t;},close:async()=>{__fs[n]={text:b,mod:Date.now()};}};}};}
+window.showDirectoryPicker = async()=>({kind:'directory',name:'DesignProjects',queryPermission:async()=>'granted',requestPermission:async()=>'granted',
+  getFileHandle:async(n,o)=>{if(!__fs[n]){if(!(o&&o.create))throw new Error('not found');__fs[n]={text:'',mod:Date.now()};}return mkFile(n);},
+  values:async function*(){for(const n in __fs)yield mkFile(n);}});
+"""
+
 def check(c, msg):
     RES.append(bool(c)); print(('PASS ' if c else 'FAIL ') + msg)
 
@@ -43,6 +52,7 @@ async def main():
         pg = await ctx.new_page(); errs = []; reqs = []
         pg.on('pageerror', lambda e: errs.append(str(e))); pg.on('console', lambda m: errs.append(m.text) if m.type == 'error' else None)
         pg.on('request', lambda r: reqs.append(r.url) if not r.url.startswith(('file:', 'data:', 'blob:')) else None)
+        await pg.add_init_script(MOCK_FS); dls = []; pg.on('download', lambda d: dls.append(d.suggested_filename))
         await pg.goto(HTML); await pg.wait_for_timeout(600)
         check(await pg.is_visible('#dlgHelp.on'), 'welcome dialog on first start')
         if SHOTS: await pg.screenshot(path=SHOTS + '/d3-welcome.png')
@@ -87,14 +97,24 @@ async def main():
         check('FEFF' + 'Nguyễn Văn An'.encode('utf-16-be').hex().upper() in data.decode('latin1'), 'IE name stored as the PDF author')
         check('ST-1234' not in data.decode('latin1') or True, 'ok')
         pathlib.Path(tempfile.gettempdir(), 'd3_test.pdf').write_bytes(data)
-        # save / open round trip
-        await pg.click('[data-close]')
+        # save into the project folder (no download), open from the folder
+        await pg.click('[data-close]'); n_dl = len(dls)
+        check('Chọn thư mục' in await pg.inner_text('#dirName'), 'folder chip asks for a folder before the first save')
+        await pg.click('#bSave'); await pg.wait_for_timeout(300)
+        files = await pg.evaluate('Object.keys(__fs)'); check(len(files) == 1 and files[0].endswith('.fixture3d.json'), 'Save wrote the project into the chosen folder %s' % files)
+        check(len(dls) == n_dl, 'no file was downloaded by Save')
+        check('DesignProjects' in await pg.inner_text('#dirName'), 'folder name shown in the header')
+        js = json.loads(await pg.evaluate('__fs[Object.keys(__fs)[0]].text')); check(len(js['parts']) == 4, 'saved project has the parts')
+        await pg.click('#bSave'); await pg.wait_for_timeout(200); check(await pg.evaluate('Object.keys(__fs).length') == 1, 'Save again overwrites the same file')
+        await pg.evaluate('ST=blank();changed(true)'); await pg.click('#bOpen'); await pg.wait_for_timeout(300)
+        check(await pg.is_visible('#dlgOpen.on') and await pg.locator('#pjList [data-pj]').count() == 1, 'Open lists the projects of the folder')
+        await pg.click('#pjList [data-pj]'); await pg.wait_for_timeout(300)
+        check(await pg.evaluate('ST.parts.length') == 4, 'open from the folder restores 4 parts')
+        await pg.evaluate('window.showDirectoryPicker=undefined;pjChip()')
         async with pg.expect_download() as d2: await pg.click('#bSave')
-        d2v = await d2.value; sp = tempfile.mkdtemp() + '/a.json'; await d2v.save_as(sp)
-        js = json.loads(pathlib.Path(sp).read_text(encoding='utf-8')); check(len(js['parts']) == 4, 'saved project has the parts')
-        await pg.click('#bNew', no_wait_after=True) if False else None
-        await pg.evaluate('ST=blank();changed(true)'); await pg.set_input_files('#fOpen', sp); await pg.wait_for_timeout(300)
-        check(await pg.evaluate('ST.parts.length') == 4, 'open restores 4 parts')
+        check((await d2.value).suggested_filename.endswith('.fixture3d.json'), 'without folder access Save falls back to a download')
+        await pg.evaluate('window.showDirectoryPicker=undefined'); await pg.set_input_files('#fOpen', {'name': 'a.json', 'mimeType': 'application/json', 'buffer': json.dumps(js).encode()}); await pg.wait_for_timeout(200)
+        check(await pg.evaluate('ST.parts.length') == 4, 'opening a file by hand still works')
         # ---- v1.1: new parts, merge, offset, CAD export ----
         await pg.evaluate('ST=blank();SELS=[];changed(true)')
         for k in ['plate', 'plate', 'wheel', 'handle', 'magnet']:
