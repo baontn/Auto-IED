@@ -1,6 +1,6 @@
 /* 3D scene (three.js): build meshes from the parts, own orbit camera, picking and dragging, picture for the PDF.
    Everything inside G.root uses the DESIGN axes (z up); G.root is turned so that z points up in three.js. */
-var G={ren:null,scene:null,cam:null,root:null,parts:null,refg:null,grid:null,ctl:{th:Math.PI/2-0.6,ph:1.0,r:600,tx:0,ty:0,tz:0},dirty:true,drag:null,ray:null,onPick:null,onDrag:null,onDragEnd:null,snap:5,meas:[],mode:null,pend:null,hover:null,snapPts:[],gridExt:250,onRuler:null,meshList:[],snapSegs:[],hoverSnap:null,hl:null,onFace:null,onFaceHover:null,faceKey:'',faceCache:null,keepSel:false,sketch:null,onSketch:null};
+var G={ren:null,scene:null,cam:null,root:null,parts:null,refg:null,grid:null,ctl:{th:Math.PI/2-0.6,ph:1.0,r:600,tx:0,ty:0,tz:0},dirty:true,drag:null,ray:null,onPick:null,onDrag:null,onDragEnd:null,snap:5,meas:[],mode:null,pend:null,hover:null,snapPts:[],gridExt:250,onRuler:null,meshList:[],snapSegs:[],hoverSnap:null,hl:null,rmode:'line',onFace:null,onFaceHover:null,faceKey:'',faceCache:null,keepSel:false,sketch:null,onSketch:null};
 function cssVar(n,d){try{var v=getComputedStyle(document.documentElement).getPropertyValue(n).trim();return v||d;}catch(e){return d;}}
 function glInit(canvas,ovCanvas){
   G.cv=canvas;G.ov=ovCanvas;
@@ -127,6 +127,8 @@ function glView(name,parts,ref){
 /* projection helper: design point -> pixel */
 function projPt(cam,w,h,x,y,z){var v=new THREE.Vector3(x,z,-y);v.project(cam);return {x:(v.x+1)/2*w,y:(1-v.y)/2*h,ok:v.z<1};}
 /* labels (part numbers) and the X Y Z triad drawn over the 3D picture */
+/* ruler mode: straight line, vertical only (same X, Y) or horizontal only (same Z) */
+function rulerAdj(a,p){if(!a||!p)return p;return G.rmode==='vert'?[a[0],a[1],p[2]]:G.rmode==='horiz'?[p[0],p[1],a[2]]:p;}
 function drawMeas(ctx,cam,w,h,a,b,k,live){
   var p=projPt(cam,w,h,a[0],a[1],a[2]),q=projPt(cam,w,h,b[0],b[1],b[2]);if(!p.ok||!q.ok)return;
   var d=Math.sqrt(Math.pow(b[0]-a[0],2)+Math.pow(b[1]-a[1],2)+Math.pow(b[2]-a[2],2));
@@ -170,7 +172,7 @@ function drawOverlay(ctx,cam,w,h,parts,sel,k,live){
   }
   if(live&&G.sketch)drawSketch(ctx,cam,w,h);
   if(live&&G.facePt){var fp=projPt(cam,w,h,G.facePt[0],G.facePt[1],G.facePt[2]);if(fp.ok){ctx.save();ctx.strokeStyle='#ff6a00';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(fp.x-10,fp.y);ctx.lineTo(fp.x+10,fp.y);ctx.moveTo(fp.x,fp.y-10);ctx.lineTo(fp.x,fp.y+10);ctx.stroke();ctx.beginPath();ctx.arc(fp.x,fp.y,6,0,Math.PI*2);ctx.stroke();ctx.restore();}}
-  if(live&&G.pend){if(G.hover)drawMeas(ctx,cam,w,h,G.pend,G.hover,k,true);else{var pp=projPt(cam,w,h,G.pend[0],G.pend[1],G.pend[2]);ctx.fillStyle='#e8590c';ctx.beginPath();ctx.arc(pp.x,pp.y,5,0,Math.PI*2);ctx.fill();}}
+  if(live&&G.pend){if(G.hover)drawMeas(ctx,cam,w,h,G.pend,rulerAdj(G.pend,G.hover),k,true);else{var pp=projPt(cam,w,h,G.pend[0],G.pend[1],G.pend[2]);ctx.fillStyle='#e8590c';ctx.beginPath();ctx.arc(pp.x,pp.y,5,0,Math.PI*2);ctx.fill();}}
 }
 function glRender(parts,selId){
   if(!G.dirty)return;G.dirty=false;

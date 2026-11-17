@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>3D Gá & dụng cụ may: Hướng dẫn sử dụng</title><link rel="icon" href="../icon.png"><link rel="stylesheet" href="manual.css"></head><body>
-<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>3D Gá & dụng cụ may v1.6: Hướng dẫn sử dụng</b><a href="design3d.en.html" title="English" onclick="try{localStorage.setItem('ie_site_lang','en')}catch(e){}">EN</a><a href="../index.html">‹ Trang chủ</a></header>
+<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>3D Gá & dụng cụ may v1.7: Hướng dẫn sử dụng</b><a href="design3d.en.html" title="English" onclick="try{localStorage.setItem('ie_site_lang','en')}catch(e){}">EN</a><a href="../index.html">‹ Trang chủ</a></header>
 <div class="wrap">
 <nav class="toc"><b>Nội dung</b>
 <a href="#gioi-thieu">1. Giới thiệu</a>
@@ -58,8 +58,9 @@
 </section>
 <figure><a href="img/d3-wheels.png"><img src="img/d3-wheels.png" alt="Gá có bánh xe và tay cầm" loading="lazy"></a><figcaption>Gá có 4 bánh xe và tay cầm chữ U.</figcaption></figure>
 <figure><a href="img/d3-tables.png"><img src="img/d3-tables.png" alt="Bàn mẫu và thước đo" loading="lazy"></a><figcaption>Bàn máy may đặt dưới gá; hai số đo (thước) hiện trên hình cùng thang chia mm dọc hai trục.</figcaption></figure>
-<section id="ban"><h2>4b. Bàn mẫu (tham khảo)</h2>
-<p>Mục <b>Bàn mẫu</b> ở cột trái có bàn máy may (1200 × 600 × 750), bàn làm việc (1500 × 750 × 750), bàn cắt (2400 × 1500 × 850) và bàn nhỏ (600 × 600 × 700). Bàn được đặt <b>dưới</b> thiết kế (mặt bàn ở Z = 0) để so sánh với bàn thật. Có thể chỉnh Dài, Rộng, Cao, Dày mặt bàn.</p>
+<section id="ban"><h2>4b. Bàn có sẵn</h2>
+<p><b>Mới trong v1.7:</b> các nút bàn nằm ngay đầu cột trái. Khi thiết kế còn trống, bàn là <b>chi tiết thật</b>, đứng trên nền (Z = 0), được tính vào danh sách, khối lượng, PDF và file CAD; hãy thêm bàn trước rồi thêm các chi tiết lên trên. Khi đã có chi tiết, bàn đặt bên dưới và chỉ để tham khảo như mô tả dưới đây. Đổi chiều cao bàn tham khảo thì mặt bàn giữ nguyên vị trí. Bản vẽ 3 hướng trong PDF vẽ bàn có chân và mặt bàn.</p>
+<p>(Trước v1.7:) mục <b>Bàn mẫu</b> ở cột trái có bàn máy may (1200 × 600 × 750), bàn làm việc (1500 × 750 × 750), bàn cắt (2400 × 1500 × 850) và bàn nhỏ (600 × 600 × 700). Bàn được đặt <b>dưới</b> thiết kế (mặt bàn ở Z = 0) để so sánh với bàn thật. Có thể chỉnh Dài, Rộng, Cao, Dày mặt bàn.</p>
 <p>Bàn là chi tiết <b>chỉ để tham khảo</b>: có trên hình 3D (và hình 3D của PDF) nhưng <b>không tính</b> vào danh sách, khối lượng, bản vẽ PDF và file CAD. Tích ô <i>Chỉ để tham khảo</i> ở cột phải để đặt cho bất kỳ chi tiết nào khác.</p>
 </section>
 <section id="mat"><h2>4a. Thêm hình lên một mặt (như Onshape)</h2>
@@ -70,8 +71,11 @@
 <li><b>Mặt cong</b> (thành trụ của chốt, bánh xe, góc bo) được chọn <b>nguyên cả mặt</b>, không còn từng mảnh nhỏ; hình mới đặt tiếp xúc tại điểm bấm theo hướng pháp tuyến.</li></ul>
 <figure><a href="img/d3-face.png"><img src="img/d3-face.png" alt="Chọn mặt" loading="lazy"></a><figcaption>Mặt trên của tấm đã chọn (màu cam, dấu + là điểm đặt); khối bên trái sáng lên vì con trỏ đang ở trên mặt đó.</figcaption></figure>
 </section>
+<section id="them"><h2>4h. Thêm chi tiết thông minh</h2>
+<p>Từ v1.7, khi đã chọn một chi tiết (hoặc một mặt), chi tiết mới <b>nằm lên trên</b> chi tiết đó, kể cả tấm nền, và <b>tự lớn theo</b> chi tiết đang chọn (đến 10 lần): thêm chốt trụ cạnh bàn 1500 mm sẽ ra chốt cao, dày vừa mắt; bạn vẫn sửa số được. Nút <i>Về cao độ 0</i> đặt chi tiết về mức nền.</p>
+</section>
 <section id="thuoc"><h2>4c. Thước đo</h2>
-<p>Bấm <span class="btn">📏 Thước đo</span> (hoặc phím <b>M</b>), rồi bấm hai điểm trên hình. Điểm tự <b>bám</b> vào góc chi tiết và tâm lỗ gần con trỏ (đường nét đứt hiện khi di chuột). Khi rê chuột, <b>cạnh hoặc đỉnh gần con trỏ được tô sáng màu cam</b> (kèm tên và chiều dài cạnh); điểm giữa cạnh cũng bám được; cạnh bị che khuất không được chọn. Kết quả gồm độ dài và ΔX, ΔY, ΔZ, được liệt kê ở cột phải (có nút xóa) và <b>in trong hình 3D của PDF</b>. Esc để thoát thước đo. Hai trục X, Y cũng có thang chia mm, tự đổi bước theo mức phóng to.</p>
+<p>Bấm <span class="btn">📏 Thước đo</span> (hoặc phím <b>M</b>), rồi bấm hai điểm trên hình. Điểm tự <b>bám</b> vào góc chi tiết và tâm lỗ gần con trỏ (đường nét đứt hiện khi di chuột). Khi rê chuột, <b>cạnh hoặc đỉnh gần con trỏ được tô sáng màu cam</b> (kèm tên và chiều dài cạnh); điểm giữa cạnh cũng bám được; cạnh bị che khuất không được chọn. Kết quả gồm độ dài và ΔX, ΔY, ΔZ, được liệt kê ở cột phải (có nút xóa) và <b>in trong hình 3D của PDF</b>. Esc để thoát thước đo. Khi thước đo bật, hộp chọn cạnh nút cho 3 kiểu: <b>Đường thẳng</b>, <b>Chỉ chiều cao (đứng)</b> và <b>Chỉ chiều ngang</b>; hai kiểu sau bỏ qua phần lệch còn lại, tiện đo chiều cao thông thủy. Hai trục X, Y cũng có thang chia mm, tự đổi bước theo mức phóng to.</p>
 </section>
 <figure><a href="img/d3-edge.png"><img src="img/d3-edge.png" alt="Tô sáng cạnh" loading="lazy"></a><figcaption>Thước đo: cạnh gần con trỏ sáng màu cam, kèm chiều dài (138 mm).</figcaption></figure>
 <section id="phac"><h2>4f. Vẽ phác trên mặt và đùn (kéo dày)</h2>
@@ -119,7 +123,7 @@
 <figure><a href="img/d3-offset.png"><img src="img/d3-offset.png" alt="Offset cửa sổ" loading="lazy"></a><figcaption>Ví dụ: cửa sổ của tấm được nới thêm 4 mm mỗi phía (bản sao nằm cạnh bản gốc).</figcaption></figure>
 </section>
 <section id="pdf"><h2>7. Xuất PDF</h2>
-<p><b>Tên IE là bắt buộc</b> (nút Tải PDF bị khóa nếu để trống; tên được nhớ cho lần sau). Có thể nhập thêm mã hàng, mục đích sử dụng, ghi chú, phiên bản và ngày. Bản xem trước hiện từng trang; bỏ chọn trang nào không cần.</p>
+<p>Có thể sửa <b>Tiêu đề tài liệu</b> in ở đầu mỗi trang (mặc định "Bản thiết kế gá / dụng cụ may"), ví dụ "Bản thiết kế bàn kiểm hàng". <b>Tên IE là bắt buộc</b> (nút Tải PDF bị khóa nếu để trống; tên được nhớ cho lần sau). Có thể nhập thêm mã hàng, mục đích sử dụng, ghi chú, phiên bản và ngày. Bản xem trước hiện từng trang; bỏ chọn trang nào không cần.</p>
 <figure><a href="img/d3-pdf1.png"><img src="img/d3-pdf1.png" alt="Trang 1 PDF" loading="lazy"></a><figcaption>Trang 1: logo và tên Crystal Martin Vietnam, tên thiết kế, hình 3D có số thứ tự, thông tin (tên IE, mã hàng, ngày, kích thước tổng, khối lượng) và ô ký.</figcaption></figure>
 <figure><a href="img/d3-pdf3.png"><img src="img/d3-pdf3.png" alt="Bản vẽ 3 hướng" loading="lazy"></a><figcaption>Bản vẽ 3 hướng có kích thước tổng và tỉ lệ.</figcaption></figure>
 <figure><a href="img/d3-pdf4.png"><img src="img/d3-pdf4.png" alt="Bản vẽ tấm" loading="lazy"></a><figcaption>Bản vẽ tấm: lỗ đánh số H1, H2... và bảng tọa độ X, Y, kích thước từ góc dưới trái.</figcaption></figure>

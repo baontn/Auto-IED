@@ -1,6 +1,7 @@
 /* Vietnamese (default) and English texts. A key defined twice in one block: the later one wins, so grep before adding a key. */
 var LANG='vi';
 var I18N={vi:{
+rm_line:'Đường thẳng',rm_vert:'Chỉ chiều cao (đứng)',rm_horiz:'Chỉ chiều ngang',ex_doc:'Tiêu đề tài liệu',
 sk_start:'Vẽ phác trên mặt này',sk_need:'Chỉ vẽ phác được trên mặt phẳng nằm ngang (mặt trên hoặc mặt dưới). Hãy chọn mặt như vậy trước.',sk_title:'Bản phác',sk_tip:'Chọn công cụ, bấm trên mặt để vẽ. Điểm tự bám đỉnh của chi tiết và lưới. Giữ Alt để không bám lưới.',
 sk_rect:'Chữ nhật',sk_circle:'Tròn',sk_poly:'Đa giác',sk_h_rect1:'Chữ nhật: bấm góc thứ nhất.',sk_h_rect2:'Chữ nhật: bấm góc đối diện. Esc để hủy hình đang vẽ.',sk_h_circ1:'Tròn: bấm tâm.',sk_h_circ2:'Tròn: bấm một điểm trên đường tròn (xác định bán kính).',sk_h_poly1:'Đa giác: bấm các đỉnh.',sk_h_poly2:'Đa giác: bấm tiếp các đỉnh; bấm lại đỉnh đầu hoặc Enter để khép kín (từ 3 đỉnh).',sk_close:'Khép kín đa giác',sk_shapes:'Các hình đã vẽ',sk_pts:'đỉnh',
 sk_extrude:'Đùn (kéo dày)',sk_mode:'Kiểu',sk_add:'Thêm khối mới trên mặt',sk_cut:'Cắt vào chi tiết',sk_depth:'Chiều sâu / cao',sk_ext_name:'Khối đùn',sk_cuttip:'Cắt: sâu bằng hoặc hơn độ dày thì cắt xuyên; nông hơn thì chi tiết được tách thành 2 lớp xếp chồng (phần chưa cắt và phần đã cắt).',sk_apply:'Đùn',sk_cancel:'Hủy bản phác',
@@ -16,7 +17,7 @@ tr_drop:'Hoặc kéo thả ảnh vào khung, hoặc dán ảnh bằng Ctrl+V.',t
 tr_meas:'Kích thước thật',tr_len:'Dài (ngang)',tr_wid:'Rộng (dọc)',tr_lock:'Giữ đúng tỉ lệ ảnh: sửa một số, số kia tự đổi. Chụp nghiêng sẽ bị méo, nên chụp thẳng từ trên.',tr_th:'Dày',tr_make:'Tạo chi tiết 3D',tr_name:'Hình từ ảnh',tr_shapes:'hình',tr_holes:'lỗ',tr_none:'Chưa tìm thấy hình. Chỉnh ngưỡng hoặc đảo sáng / tối.',tr_bad:'Không mở được ảnh',tr_done:'Đã tạo chi tiết từ ảnh',
 v_ruler:'📏 Thước đo',rl_title:'Thước đo',rl_tip:'Bấm 📏 (hoặc phím M), rồi bấm hai điểm trên hình: đầu tiên và cuối. Điểm tự bám vào góc, tâm lỗ gần con trỏ. Kết quả có trong hình 3D của PDF. Esc để thoát.',rl_clear:'Xóa hết số đo',rl_a:'📏 Bấm điểm thứ nhất (tự bám góc, tâm lỗ).',rl_b:'📏 Bấm điểm thứ hai. Esc để thoát thước đo.',
 pr_tbl_sew:'Bàn máy may',prd_tbl_sew:'Bàn máy may 1200 × 600 × 750 mm.',pr_tbl_work:'Bàn làm việc',prd_tbl_work:'Bàn làm việc 1500 × 750 × 750 mm.',pr_tbl_cut:'Bàn cắt',prd_tbl_cut:'Bàn cắt vải 2400 × 1500 × 850 mm.',pr_tbl_small:'Bàn nhỏ',prd_tbl_small:'Bàn nhỏ 600 × 600 × 700 mm.',
-k_table:'Bàn',tbl_title:'Bàn mẫu (tham khảo)',tbl_tip:'Đặt bàn dưới thiết kế để so với bàn thật. Bàn không tính vào danh sách, khối lượng, PDF bản vẽ và file CAD.',f_tt:'Dày mặt bàn',tt_tt:'Độ dày mặt bàn',f_ref:'Chỉ để tham khảo (không tính vào danh sách, PDF, CAD)',ref_word:'chi tiết tham khảo',
+k_table:'Bàn',tbl_title:'Bàn có sẵn',tbl_tip:'Thiết kế trống: bàn là chi tiết thật, đứng trên nền. Đã có chi tiết: bàn đặt bên dưới để tham khảo.',f_tt:'Dày mặt bàn',tt_tt:'Độ dày mặt bàn',f_ref:'Chỉ để tham khảo (không tính vào danh sách, PDF, CAD)',ref_word:'chi tiết tham khảo',
 b_cad:'⬇ CAD / 3D',cad_title:'Xuất file CAD / 3D',cad_intro:'Chọn loại file phù hợp với phần mềm hoặc máy sẽ dùng. Đơn vị mm, trục Z hướng lên.',
 cad_stl:'In 3D, phần mềm cắt lớp, xem 3D. Dùng được ở hầu hết phần mềm 3D.',cad_obj:'Mô hình 3D, mỗi chi tiết là một đối tượng riêng (Blender, SketchUp, Windows 3D Viewer).',
 cad_dxf3d:'Mô hình 3D dạng mặt (3DFACE), mở trong AutoCAD, BricsCAD, Fusion, SolidWorks.',cad_dxf2d:'Mặt bằng nhìn từ trên (đúng vị trí, có số chi tiết, lỗ nằm lớp HOLES) để mở trong AutoCAD.',
@@ -54,9 +55,9 @@ ref_title:'Bàn máy may tham khảo',ref_on:'Hiện bàn máy may và vị trí
 f_name:'Tên chi tiết',f_mat:'Vật liệu',f_size:'Kích thước',f_w:'Dài',f_d:'Rộng',f_h:'Cao',f_thick:'Dày',f_dia:'Đường kính',f_r:'Bo góc',f_pos:'Vị trí (tính từ gốc 0)',f_rot:'Xoay',f_holes:'Lỗ, rãnh, cửa sổ',
 f_len:'Dài',f_wid:'Rộng',f_hh:'Cao',
 tt_w:'Chiều dài theo hướng ngang (trục X)',tt_d:'Chiều rộng theo hướng ra xa (trục Y)',tt_h:'Chiều cao hoặc độ dày (trục Z)',tt_dia:'Đường kính',tt_r:'Bán kính bo tròn bốn góc',
-tt_x:'Sang phải',tt_y:'Ra xa',tt_z:'Độ cao của mặt đáy (0 = trên mặt bàn)',tt_ontop:'Đặt chi tiết lên trên các chi tiết đang nằm dưới nó',
+tt_x:'Sang phải',tt_y:'Ra xa',tt_z:'Độ cao của mặt đáy (0 = mức nền của lưới)',tt_ontop:'Đặt chi tiết lên trên các chi tiết đang nằm dưới nó',
 tip_holes:'Vị trí lỗ tính từ tâm tấm: X sang phải, Y ra xa (mm).',
-b_ontop:'Đặt lên trên',b_ground:'Về mặt bàn (Z=0)',b_dup:'Nhân bản',b_del:'Xóa',b_cancel:'Đóng',b_dl:'⬇ Tải PDF',
+b_ontop:'Đặt lên trên',b_ground:'Về cao độ 0 (Z=0)',b_dup:'Nhân bản',b_del:'Xóa',b_cancel:'Đóng',b_dl:'⬇ Tải PDF',
 c_new:'Bỏ thiết kế hiện tại và bắt đầu thiết kế mới?',
 t_added:'Đã thêm',t_saved:'Đã lưu file thiết kế',t_opened:'Đã mở thiết kế',t_badfile:'File không đúng định dạng thiết kế',t_noparts:'Chưa có chi tiết nào để xuất PDF',t_pdfok:'Đã tạo PDF',
 untitled:'Thiết kế chưa đặt tên',
@@ -73,6 +74,7 @@ pdf_sig_ie:'Người thiết kế (IE)',pdf_sig_chk:'Kiểm tra',pdf_sig_ok:'Duy
 pdf_c_name:'Tên chi tiết',pdf_c_kind:'Loại',pdf_c_size:'Kích thước (mm)',pdf_c_mat:'Vật liệu',pdf_c_holes:'Số lỗ',pdf_c_g:'Khối lượng (g)',pdf_total:'Tổng',
 pdf_top:'Nhìn từ trên',pdf_front:'Nhìn phía trước',pdf_side:'Nhìn bên phải',pdf_scale:'Tỉ lệ',pdf_needle:'Kim',pdf_origin:'Gốc: góc dưới trái của tấm',pdf_noholes:'Tấm không có lỗ.',pdf_holenote:'X, Y: tính từ góc dưới trái của tấm (mm). Khối lượng tính theo khối lượng riêng của vật liệu.',pdf_pages:'trang'
 },en:{
+rm_line:'Straight line',rm_vert:'Height only (vertical)',rm_horiz:'Horizontal only',ex_doc:'Document title',
 sk_start:'Sketch on this face',sk_need:'You can only sketch on a flat horizontal face (top or bottom face). Select such a face first.',sk_title:'Sketch',sk_tip:'Choose a tool and click on the face to draw. Points snap to part vertices and to the grid. Hold Alt to ignore the grid.',
 sk_rect:'Rectangle',sk_circle:'Circle',sk_poly:'Polygon',sk_h_rect1:'Rectangle: click the first corner.',sk_h_rect2:'Rectangle: click the opposite corner. Esc cancels the shape being drawn.',sk_h_circ1:'Circle: click the centre.',sk_h_circ2:'Circle: click a point on the circle (sets the radius).',sk_h_poly1:'Polygon: click the corners.',sk_h_poly2:'Polygon: keep clicking corners; click the first corner again or press Enter to close (3 corners or more).',sk_close:'Close the polygon',sk_shapes:'Shapes drawn',sk_pts:'corners',
 sk_extrude:'Extrude',sk_mode:'Type',sk_add:'Add a new solid on the face',sk_cut:'Cut into the part',sk_depth:'Depth / height',sk_ext_name:'Extruded solid',sk_cuttip:'Cut: a depth equal to or more than the thickness cuts all the way through; a smaller depth splits the part into 2 stacked layers (uncut and cut).',sk_apply:'Extrude',sk_cancel:'Cancel sketch',
@@ -88,7 +90,7 @@ tr_drop:'Or drop an image on the window, or paste it with Ctrl+V.',tr_thr:'Light
 tr_meas:'Real size',tr_len:'Length (horizontal)',tr_wid:'Width (vertical)',tr_lock:'The picture ratio is kept: edit one number and the other follows. A tilted photo is distorted, so shoot straight from above.',tr_th:'Thickness',tr_make:'Create 3D part',tr_name:'Shape from picture',tr_shapes:'shapes',tr_holes:'holes',tr_none:'No shape found. Adjust the threshold or invert light / dark.',tr_bad:'The image could not be opened',tr_done:'Part created from the picture',
 v_ruler:'📏 Ruler',rl_title:'Ruler',rl_tip:'Press 📏 (or key M), then click two points on the picture: first and last. Points snap to nearby corners and hole centres. The results appear in the PDF 3D picture. Esc to leave.',rl_clear:'Clear all measurements',rl_a:'📏 Click the first point (snaps to corners and hole centres).',rl_b:'📏 Click the second point. Esc to leave the ruler.',
 pr_tbl_sew:'Sewing table',prd_tbl_sew:'Sewing table 1200 × 600 × 750 mm.',pr_tbl_work:'Work table',prd_tbl_work:'Work table 1500 × 750 × 750 mm.',pr_tbl_cut:'Cutting table',prd_tbl_cut:'Fabric cutting table 2400 × 1500 × 850 mm.',pr_tbl_small:'Small table',prd_tbl_small:'Small table 600 × 600 × 700 mm.',
-k_table:'Table',tbl_title:'Sample tables (reference)',tbl_tip:'Place a table under the design to compare with the real table. Tables are not counted in the parts list, weight, PDF drawings and CAD files.',f_tt:'Table top thickness',tt_tt:'Thickness of the table top',f_ref:'Reference only (not in the list, PDF, CAD)',ref_word:'reference parts',
+k_table:'Table',tbl_title:'Ready tables',tbl_tip:'Empty design: the table is a real part standing on the floor. With parts already there: the table goes underneath as a reference.',f_tt:'Table top thickness',tt_tt:'Thickness of the table top',f_ref:'Reference only (not in the list, PDF, CAD)',ref_word:'reference parts',
 b_cad:'⬇ CAD / 3D',cad_title:'Export CAD / 3D file',cad_intro:'Choose the file type for the software or machine you will use. Units are mm, Z points up.',
 cad_stl:'3D printing, slicers, 3D viewers. Works in almost every 3D program.',cad_obj:'3D model, each part is its own object (Blender, SketchUp, Windows 3D Viewer).',
 cad_dxf3d:'3D model made of faces (3DFACE), opens in AutoCAD, BricsCAD, Fusion, SolidWorks.',cad_dxf2d:'Top view plan (true positions, part numbers, holes on layer HOLES) to open in AutoCAD.',
@@ -126,9 +128,9 @@ ref_title:'Reference sewing machine bed',ref_on:'Show machine bed and needle pos
 f_name:'Part name',f_mat:'Material',f_size:'Size',f_w:'Length',f_d:'Width',f_h:'Height',f_thick:'Thickness',f_dia:'Diameter',f_r:'Corner radius',f_pos:'Position (from origin 0)',f_rot:'Rotate',f_holes:'Holes, slots, windows',
 f_len:'Length',f_wid:'Width',f_hh:'Height',
 tt_w:'Length in the horizontal direction (X axis)',tt_d:'Width in the direction away from you (Y axis)',tt_h:'Height or thickness (Z axis)',tt_dia:'Diameter',tt_r:'Radius of the four rounded corners',
-tt_x:'To the right',tt_y:'Away from you',tt_z:'Height of the bottom face (0 = on the table)',tt_ontop:'Put the part on top of the parts below it',
+tt_x:'To the right',tt_y:'Away from you',tt_z:'Height of the bottom face (0 = the grid level)',tt_ontop:'Put the part on top of the parts below it',
 tip_holes:'Hole positions are measured from the plate centre: X to the right, Y away (mm).',
-b_ontop:'Put on top',b_ground:'To table (Z=0)',b_dup:'Duplicate',b_del:'Delete',b_cancel:'Close',b_dl:'⬇ Download PDF',
+b_ontop:'Put on top',b_ground:'To level 0 (Z=0)',b_dup:'Duplicate',b_del:'Delete',b_cancel:'Close',b_dl:'⬇ Download PDF',
 c_new:'Discard the current design and start a new one?',
 t_added:'Added',t_saved:'Design file saved',t_opened:'Design opened',t_badfile:'The file is not a design file',t_noparts:'No parts to export yet',t_pdfok:'PDF created',
 untitled:'Untitled design',

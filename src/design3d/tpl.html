@@ -47,6 +47,7 @@ h3{margin:2px 0 8px;font-size:15px}h4{margin:12px 0 4px;font-size:13px;color:var
 .li span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.li small{color:var(--muted);font-size:11px}
 .facecard{background:#fff1e0;border:1px solid #ff8a00}@media (prefers-color-scheme:dark){.facecard{background:#3a2a10}}
 #props .btns button.on{background:var(--accent);color:var(--accent-tx)}
+.chips{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:6px}.chips button{white-space:normal;text-align:left;padding:5px 7px;font-size:12.5px;line-height:1.25}.chips small{display:block;color:var(--muted);font-size:11px}
 .tipsm{font-size:12px;color:var(--muted);margin:-4px 0 6px}.li.refp span{font-style:italic;color:var(--muted)}
 .muted{color:var(--muted)}.pad{padding:6px}
 #view{flex:1;position:relative;min-width:0;background:var(--vbg)}
@@ -108,17 +109,17 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
 <div id="main">
 <aside id="left">
 <h3 data-t="lib_title">1. Thêm chi tiết</h3>
+<h4 data-t="tbl_title" style="margin-top:2px">Bàn có sẵn</h4>
+<div id="libT" class="chips"></div>
+<div class="tipsm" data-t="tbl_tip"></div>
 <button class="lib" id="bTrace"><span class="ico">📷</span><span class="lt"><b data-t="tr_btn">Từ ảnh → 3D</b><small data-t="tr_btnd">Mở ảnh chụp hoặc bản vẽ, nhập kích thước thật, tạo hình 3D.</small></span></button>
 <div id="lib"></div>
-<h3 data-t="tbl_title">Bàn mẫu (tham khảo)</h3>
-<div class="tipsm" data-t="tbl_tip">Đặt bàn dưới thiết kế để so với bàn thật. Bàn không tính vào danh sách, khối lượng, PDF bản vẽ và file CAD.</div>
-<div id="libT"></div>
 <h3 data-t="list_title">Danh sách chi tiết</h3>
 <div id="list"></div><div id="sum" class="muted pad"></div>
 </aside>
 <section id="view">
 <canvas id="gl"></canvas><canvas id="ov"></canvas>
-<div id="vbtns"><button data-view="iso" data-t="v_iso">3D</button><button data-view="top" data-t="v_top">Từ trên</button><button data-view="front" data-t="v_front">Phía trước</button><button data-view="right" data-t="v_right">Bên phải</button><button data-view="fit" data-t="v_fit">Vừa khung</button><button id="bFace" data-t="v_face">▦ Chọn mặt</button><button id="bRuler" data-t="v_ruler">📏 Thước đo</button><button id="bLock" data-t="v_lock">🔒 Khóa</button></div>
+<div id="vbtns"><button data-view="iso" data-t="v_iso">3D</button><button data-view="top" data-t="v_top">Từ trên</button><button data-view="front" data-t="v_front">Phía trước</button><button data-view="right" data-t="v_right">Bên phải</button><button data-view="fit" data-t="v_fit">Vừa khung</button><button id="bFace" data-t="v_face">▦ Chọn mặt</button><button id="bRuler" data-t="v_ruler">📏 Thước đo</button><select id="rMode" style="display:none;width:auto;box-shadow:0 1px 3px rgba(0,0,0,.15)"><option value="line" data-t="rm_line">Đường thẳng</option><option value="vert" data-t="rm_vert">Chỉ chiều cao (đứng)</option><option value="horiz" data-t="rm_horiz">Chỉ chiều ngang</option></select><button id="bLock" data-t="v_lock">🔒 Khóa</button></div>
 <div id="hint" data-t="hint">Kéo chi tiết để di chuyển · Kéo vào nền để xoay · Lăn chuột để phóng to · Chuột phải kéo để dịch</div>
 <div id="sbar"><span id="status"></span><span class="r"><span data-t="snap">Bước kéo</span><select id="snap"><option value="1">1 mm</option><option value="5">5 mm</option><option value="10">10 mm</option></select></span></div>
 </section>
@@ -129,6 +130,7 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
 <h2 data-t="ex_title">Xuất PDF</h2>
 <div class="exg">
 <div>
+<label class="t" data-t="ex_doc">Tiêu đề tài liệu</label><input id="eDoc" maxlength="80">
 <label class="t" data-t="ex_ie">Tên IE (người thiết kế) *</label><input id="eIe" data-ph="ph_ie" maxlength="60">
 <div class="warn" id="ieWarn" data-t="ex_iewarn">Nhập tên IE để tải PDF.</div>
 <label class="t" data-t="ex_style">Mã hàng / ứng dụng</label><input id="eStyle" maxlength="80">
