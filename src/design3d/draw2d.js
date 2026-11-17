@@ -64,7 +64,15 @@ function drawElev(c,bx,parts,ref,mode){
   var padL=60,padT=50,padR=100,padB=90,bw=Math.max(h1-h0,1),bh=Math.max(z1-z0,1);
   var s=Math.min((bx.w-padL-padR)/bw,(bx.h-padT-padB)/bh),ox=bx.x+padL+((bx.w-padL-padR)-bw*s)/2,oy=bx.y+padT+((bx.h-padT-padB)-bh*s)/2;
   function X(v){return ox+(v-h0)*s;}function Y(z){return oy+(z1-z)*s;}
-  var items=parts.map(function(p,i){
+  var solids=[];
+  parts.forEach(function(p){
+    if(p.kind!=='table'){solids.push(p);return;}
+    /* a table is drawn as its top and four legs, not as one box */
+    var ls=legSize(p),ins=Math.min(30,p.w/8),c=Math.cos(rad(p.rot||0)),sn=Math.sin(rad(p.rot||0));
+    solids.push({kind:'block',x:p.x,y:p.y,z:p.z+p.h-p.tt,w:p.w,d:p.d,h:p.tt,rot:p.rot,mat:p.mat});
+    [[-1,-1],[1,-1],[1,1],[-1,1]].forEach(function(q){var lx=q[0]*(p.w/2-ins-ls/2),ly=q[1]*(p.d/2-ins-ls/2);solids.push({kind:'block',x:p.x+lx*c-ly*sn,y:p.y+lx*sn+ly*c,z:p.z,w:ls,d:ls,h:p.h-p.tt,rot:p.rot,mat:'steel'});});
+  });
+  var items=solids.map(function(p,i){
     var pts=vertsOf(p).map(function(v){return mode==='front'?[v[0],v[2]]:[v[1],v[2]];}),dep=mode==='front'?-(fp(p).y0+fp(p).y1)/2:(fp(p).x0+fp(p).x1)/2;
     return {p:p,i:i,poly:hull(pts),dep:dep};
   }).sort(function(a,z){return a.dep-z.dep;});

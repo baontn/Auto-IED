@@ -4,7 +4,7 @@ function newPage(o,n,total,title){
   var cv=document.createElement('canvas');cv.width=PW;cv.height=PH;var c=cv.getContext('2d');c.fillStyle='#fff';c.fillRect(0,0,PW,PH);
   if(LOGO_IMG&&LOGO_IMG.complete&&LOGO_IMG.naturalWidth){var lh=100,lw=lh*LOGO_IMG.naturalWidth/LOGO_IMG.naturalHeight;c.drawImage(LOGO_IMG,50,30,lw,lh);}
   text(c,'Crystal Martin Vietnam',205,76,38,ACC,'left',true);text(c,t('pdf_dept'),205,108,22,GREY,'left',false);
-  text(c,t('pdf_doc'),PW-50,52,22,GREY,'right',false);
+  text(c,o.doc||t('pdf_doc'),PW-50,52,22,GREY,'right',false);
   c.font='bold 38px "Segoe UI",Arial,sans-serif';var nm=o.name||t('untitled');while(c.measureText(nm).width>820&&nm.length>4)nm=nm.slice(0,-2);if(nm!==(o.name||t('untitled')))nm+='…';
   text(c,nm,PW-50,100,38,INK,'right',true);
   c.fillStyle=ACC;c.fillRect(50,146,PW-100,4);c.fillStyle=RED;c.fillRect(50,146,170,4);

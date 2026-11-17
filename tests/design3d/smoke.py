@@ -123,7 +123,7 @@ async def main():
         check(kinds == ['plate', 'plate', 'wheel', 'handle', 'pin'], 'wheel / handle / magnet added %s' % kinds)
         check(await pg.evaluate('ST.parts[2].z') < 0, 'wheel goes under the selected part')
         # two overlapping plates, same z/h -> union / cut / and
-        await pg.evaluate('ST.parts=ST.parts.slice(0,2);ST.parts[0].x=0;ST.parts[0].y=0;ST.parts[1].x=100;ST.parts[1].y=0;SELS=[];changed(true)')
+        await pg.evaluate('ST.parts=ST.parts.slice(0,2);ST.parts[0].x=0;ST.parts[0].y=0;ST.parts[1].x=100;ST.parts[1].y=0;ST.parts[1].z=0;SELS=[];changed(true)')
         await pg.evaluate('selectPart(ST.parts[0].id);selectPart(ST.parts[1].id,true)')
         check('2' in await pg.inner_text('#props h3'), 'multi-selection panel')
         await pg.evaluate('doBool("union")'); n = await pg.evaluate('ST.parts.length'); k0 = await pg.evaluate('ST.parts[0].kind')
@@ -208,7 +208,7 @@ async def main():
         check(q['k'] == 'poly' and abs(q['w'] - 150) < 1.5 and abs(q['d'] - 100) < 2 and q['h'] == 4 and q['holes'] == 1, 'picture became a 150 x 100 x 4 part with a hole %s' % q)
         # ---- v1.3: join shapes that are close ----
         await pg.evaluate('ST=blank();SELS=[];changed(true)')
-        await pg.evaluate('addPreset("plate");addPreset("plate");ST.parts[0].w=100;ST.parts[0].d=60;ST.parts[1].w=100;ST.parts[1].d=60;ST.parts[0].x=0;ST.parts[1].x=106;ST.parts[0].y=0;ST.parts[1].y=0;changed(true);selectPart(ST.parts[0].id);selectPart(ST.parts[1].id,true)')
+        await pg.evaluate('addPreset("plate");addPreset("plate");ST.parts[0].w=100;ST.parts[0].d=60;ST.parts[1].w=100;ST.parts[1].d=60;ST.parts[0].x=0;ST.parts[1].x=106;ST.parts[0].y=0;ST.parts[1].y=0;ST.parts[1].z=0;changed(true);selectPart(ST.parts[0].id);selectPart(ST.parts[1].id,true)')
         gi = await pg.inner_text('#jnInfo'); check('6' in gi or '5.' in gi or '7' in gi, 'gap between the two shapes is detected (%s)' % gi)
         await pg.click('[data-bool=join]')
         jq = await pg.evaluate('(function(){var p=ST.parts[0];return {n:ST.parts.length,k:p.kind,w:p.w,o:p.polys.length};})()')
@@ -289,6 +289,37 @@ async def main():
         await pg.evaluate('ST=blank();SELS=[];FACE=null;changed(true);ST.parts.push(cleanPart({kind:"poly",name:"x",h:5,mat:"abs",polys:[{o:[[-50,-25],[50,-25],[50,25],[-50,25]],h:[]}]},ST.nid++));changed(true);selectPart(ST.parts[0].id)')
         await pg.fill('#rdR', '5'); await pg.click('[data-rnd=convex]'); ar = await pg.evaluate('polysArea(ST.parts[0].polys)')
         check(abs(ar - (5000 - (4 - 3.14159265) * 25)) < 1.5, 'convex corners rounded with R5: area %.1f' % ar)
+        # ---- v1.7: smarter adding, furniture tables, ruler modes, PDF title and table legs ----
+        await pg.evaluate('ST=blank();SELS=[];FACE=null;changed(true)')
+        check(await pg.evaluate("document.querySelector('[data-add=tbl_work]').getBoundingClientRect().top") < 400, 'table buttons are at the top of the left column')
+        await pg.click('[data-add=tbl_work]'); await pg.wait_for_timeout(150)
+        tb = await pg.evaluate('(function(){var p=ST.parts[0];return {ref:p.ref,z:p.z,h:p.h};})()'); check(tb['ref'] is False and tb['z'] == 0, 'first table is a real part standing on the floor %s' % tb)
+        check('1 ' in await pg.inner_text('#sum'), 'the table counts as a part: %s' % (await pg.inner_text('#sum')))
+        await pg.fill('[data-f=h]', '850'); await pg.press('[data-f=h]', 'Tab'); check(await pg.evaluate('ST.parts[0].z') == 0 and await pg.evaluate('ST.parts[0].h') == 850, 'changing the height keeps a real table on the floor')
+        await pg.click('[data-add=plate]'); await pg.wait_for_timeout(150)
+        pl = await pg.evaluate('(function(){var p=ST.parts[1];return {x:p.x,y:p.y,z:p.z,w:p.w,d:p.d,h:p.h};})()')
+        check(pl['z'] == 850 and pl['x'] == 0 and pl['w'] >= 1000 and pl['h'] == 3, 'a plate added with the table selected lands on the table, sized to it %s' % pl)
+        await pg.click('.li:nth-child(1)'); await pg.click('[data-add=pin]'); await pg.wait_for_timeout(150)
+        pn = await pg.evaluate('(function(){var p=ST.parts[2];return {w:p.w,h:p.h,z:p.z};})()'); check(pn['w'] >= 30 and pn['h'] >= 100 and pn['z'] == 850, 'a pin next to a big table arrives at a visible size %s' % pn)
+        await pg.fill('[data-f=h]', '700'); await pg.press('[data-f=h]', 'Tab')
+        await pg.click('.li:nth-child(2)'); await pg.fill('[data-f=w]', '1200'); await pg.press('[data-f=w]', 'Tab'); check(await pg.input_value('[data-f=em]') == 'fillet', 'the fillet / chamfer dropdown keeps its value after an edit')
+        # reference table keeps its top at 0 when its height changes
+        await pg.evaluate('ST=blank();SELS=[];changed(true);addPreset("plate");addPreset("tbl_sew")'); await pg.fill('[data-f=h]', '800'); await pg.press('[data-f=h]', 'Tab')
+        rt = await pg.evaluate('(function(){var p=ST.parts[1];return p.z+p.h;})()'); check(abs(rt) < 0.01, 'a reference table keeps its top at 0 when the height changes (top=%s)' % rt)
+        # ruler: vertical only
+        await pg.evaluate('ST=blank();SELS=[];changed(true);toggleRuler(true)'); await pg.select_option('#rMode', 'vert')
+        await pg.evaluate('rulerPick([0,0,10]);rulerPick([120,50,710])'); mv = await pg.evaluate('JSON.stringify(ST.meas[0])'); check(json.loads(mv) == {'a': [0, 0, 10], 'b': [0, 0, 710]}, 'ruler "height only" gives the vertical distance %s' % mv)
+        await pg.select_option('#rMode', 'horiz'); await pg.evaluate('rulerPick([0,0,10]);rulerPick([30,40,710])'); check(abs(await pg.evaluate('measLen(ST.meas[1])') - 50) < 0.01, 'ruler "horizontal only" ignores the height')
+        await pg.select_option('#rMode', 'line'); await pg.keyboard.press('Escape')
+        # PDF: custom title, table drawn with legs
+        await pg.evaluate('ST=blank();SELS=[];changed(true)'); await pg.click('[data-add=tbl_small]'); await pg.click('#bPdf'); await pg.wait_for_timeout(400)
+        await pg.fill('#eDoc', 'Bản thiết kế bàn kiểm hàng'); await pg.fill('#eIe', 'Nguyễn Văn An'); await pg.wait_for_timeout(400)
+        check(await pg.evaluate('ST.doc') == 'Bản thiết kế bàn kiểm hàng', 'document title typed in the export dialog is kept')
+        legs = await pg.evaluate("(function(){var c=document.createElement('canvas');c.width=700;c.height=500;var x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,700,500);drawElev(x,{x:0,y:0,w:700,h:500},realParts(ST.parts),ST.ref,'front');var d=x.getImageData(350,300,1,1).data;return d[0]+d[1]+d[2];})()")
+        check(legs > 700, 'front view: the space between the table legs is empty (pixel sum %s)' % legs)
+        if SHOTS:
+            await pg.evaluate('EX.idx=2;exRefresh()'); await pg.locator('#pv').screenshot(path=SHOTS + '/d3-pdf-table.png')
+        await pg.click('#dlgExp [data-close]')
         # English UI
         await pg.click('.lang [data-lang=en]'); await pg.wait_for_timeout(200)
         check('Export PDF' in await pg.inner_text('#bPdf'), 'English UI')

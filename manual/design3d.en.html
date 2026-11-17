@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>3D fixtures &amp; sewing tools: User guide</title><link rel="icon" href="../icon.png"><link rel="stylesheet" href="manual.css"></head><body>
-<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>3D fixtures &amp; sewing tools v1.6: User guide</b><a href="design3d.html" title="Tiếng Việt" onclick="try{localStorage.setItem('ie_site_lang','vi')}catch(e){}">VI</a><a href="../index.html">‹ Home</a></header>
+<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>3D fixtures &amp; sewing tools v1.7: User guide</b><a href="design3d.html" title="Tiếng Việt" onclick="try{localStorage.setItem('ie_site_lang','vi')}catch(e){}">VI</a><a href="../index.html">‹ Home</a></header>
 <div class="wrap">
 <nav class="toc"><b>Contents</b>
 <a href="#intro">1. Introduction</a>
@@ -58,8 +58,9 @@
 </section>
 <figure><a href="img/d3-wheels.png"><img src="img/d3-wheels.png" alt="Fixture with wheels and handle" loading="lazy"></a><figcaption>A fixture with four wheels and a U-shaped handle.</figcaption></figure>
 <figure><a href="img/d3-tables.png"><img src="img/d3-tables.png" alt="Sample table and ruler" loading="lazy"></a><figcaption>A sewing table under the fixture; two measurements (ruler) on the picture with mm scale marks along both axes. (The screenshot shows the Vietnamese interface.)</figcaption></figure>
-<section id="tables"><h2>4b. Sample tables (reference)</h2>
-<p>The <b>Sample tables</b> section in the left column has a sewing table (1200 × 600 × 750), work table (1500 × 750 × 750), cutting table (2400 × 1500 × 850) and small table (600 × 600 × 700). The table is placed <b>under</b> the design (table top at Z = 0) to compare with the real table. Length, Width, Height and top thickness can be changed.</p>
+<section id="tables"><h2>4b. Ready tables</h2>
+<p><b>New in v1.7:</b> the table buttons are at the top of the left column. When the design is empty, a table is a <b>real part</b> standing on the floor (Z = 0) and counts in the list, weight, PDF and CAD files: add the table first, then add parts on top of it. When parts already exist, the table goes underneath and is a reference only, as described below. Changing the height of a reference table keeps its top in place. The three-view drawing in the PDF draws a table with legs and a top.</p>
+<p>(Before v1.7:) the <b>Sample tables</b> section in the left column has a sewing table (1200 × 600 × 750), work table (1500 × 750 × 750), cutting table (2400 × 1500 × 850) and small table (600 × 600 × 700). The table is placed <b>under</b> the design (table top at Z = 0) to compare with the real table. Length, Width, Height and top thickness can be changed.</p>
 <p>A table is a <b>reference only</b> part: it is shown in the 3D view (and the PDF 3D picture) but <b>not counted</b> in the parts list, weight, PDF drawings and CAD files. Tick <i>Reference only</i> in the right column to give any other part the same status.</p>
 </section>
 <section id="face"><h2>4a. Add shapes on a face (Onshape style)</h2>
@@ -70,8 +71,11 @@
 <li>A <b>curved face</b> (the wall of a pin, a wheel, a rounded corner) is picked <b>as one whole face</b>, not in small strips; a new shape touches it at the clicked point along the surface normal.</li></ul>
 <figure><a href="img/d3-face.png"><img src="img/d3-face.png" alt="Face selected" loading="lazy"></a><figcaption>The top face of the plate is selected (orange, the + is the placement point); the block on the left lights up because the pointer is over its face. (Vietnamese interface shown.)</figcaption></figure>
 </section>
+<section id="smart"><h2>4h. Smart adding</h2>
+<p>From v1.7, when a part (or a face) is selected, a new part is put <b>on top of it</b>, plates included, and <b>scales to fit</b> the selected part (up to 10 times): a pin added next to a 1500 mm table arrives tall and thick enough to see; you can still edit the numbers. The <i>To level 0</i> button puts a part back on the floor level.</p>
+</section>
 <section id="ruler"><h2>4c. Ruler</h2>
-<p>Press <span class="btn">📏 Ruler</span> (or key <b>M</b>), then click two points on the picture. Points <b>snap</b> to nearby part corners and hole centres (a dashed line follows the mouse). While you move the mouse, the <b>edge or vertex near the pointer is highlighted in orange</b> (with its name and the edge length); edge middles snap too, and hidden edges are ignored. The result shows the length and ΔX, ΔY, ΔZ, is listed in the right column (with a delete button) and is <b>printed in the PDF 3D picture</b>. Esc leaves the ruler. The X and Y axes also carry mm scale marks whose step follows the zoom level.</p>
+<p>Press <span class="btn">📏 Ruler</span> (or key <b>M</b>), then click two points on the picture. Points <b>snap</b> to nearby part corners and hole centres (a dashed line follows the mouse). While you move the mouse, the <b>edge or vertex near the pointer is highlighted in orange</b> (with its name and the edge length); edge middles snap too, and hidden edges are ignored. The result shows the length and ΔX, ΔY, ΔZ, is listed in the right column (with a delete button) and is <b>printed in the PDF 3D picture</b>. Esc leaves the ruler. While the ruler is on, a box next to the button offers 3 types: <b>Straight line</b>, <b>Height only (vertical)</b> and <b>Horizontal only</b>; the last two ignore the other offset, handy for clearance heights. The X and Y axes also carry mm scale marks whose step follows the zoom level.</p>
 </section>
 <figure><a href="img/d3-edge.png"><img src="img/d3-edge.png" alt="Edge highlight" loading="lazy"></a><figcaption>Ruler: the edge near the pointer is highlighted in orange with its length (138 mm).</figcaption></figure>
 <section id="sketch"><h2>4f. Sketch on a face and extrude</h2>
@@ -119,7 +123,7 @@
 <figure><a href="img/d3-offset.png"><img src="img/d3-offset.png" alt="Window offset" loading="lazy"></a><figcaption>Example: the window of a plate offset by 4 mm on every side (the copy lies next to the original).</figcaption></figure>
 </section>
 <section id="pdf"><h2>7. Export PDF</h2>
-<p><b>The IE name is required</b> (Download PDF stays locked while it is empty; the name is remembered). You can also enter style, purpose, notes, revision and date. The preview shows each page; untick the pages you do not need.</p>
+<p>You can also edit the <b>Document title</b> printed at the top of every page (default "Sewing fixture / tool design"), for example "Inspection table design". <b>The IE name is required</b> (Download PDF stays locked while it is empty; the name is remembered). You can also enter style, purpose, notes, revision and date. The preview shows each page; untick the pages you do not need.</p>
 <figure><a href="img/d3-pdf1.png"><img src="img/d3-pdf1.png" alt="PDF page 1" loading="lazy"></a><figcaption>Page 1: Crystal Martin Vietnam logo and name, design name, numbered 3D picture, details (IE name, style, date, overall size, weight) and signature boxes.</figcaption></figure>
 <figure><a href="img/d3-pdf3.png"><img src="img/d3-pdf3.png" alt="Three-view drawing" loading="lazy"></a><figcaption>Three-view drawing with overall dimensions and scale.</figcaption></figure>
 <figure><a href="img/d3-pdf4.png"><img src="img/d3-pdf4.png" alt="Plate drawing" loading="lazy"></a><figcaption>Plate drawing: holes numbered H1, H2... and a table of X, Y and sizes from the bottom left corner.</figcaption></figure>
