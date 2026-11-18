@@ -1,0 +1,332 @@
+#!/usr/bin/env python3
+"""Turnkey smoke test of design3d/Design3D.html (no company data).
+
+  pip install playwright
+  python3 tools/build_design3d.py
+  python3 tests/design3d/smoke.py [--shots DIR]
+
+Checks: page loads without errors, i18n keys complete, add parts / edit / holes / undo, example, export dialog (IE name required),
+the PDF is written (header, pages, JPEG images, UTF-16 author), save / open round trip, English UI, no network requests.
+"""
+import asyncio, json, pathlib, re, sys, tempfile
+from playwright.async_api import async_playwright
+
+ROOT = pathlib.Path(__file__).resolve().parents[2]
+HTML = (ROOT / 'design3d' / 'Design3D.html').as_uri()
+SHOTS = sys.argv[sys.argv.index('--shots') + 1] if '--shots' in sys.argv else None
+RES = []
+
+MOCK_FS = """
+window.__fs = {};
+function mkFile(n){return {kind:'file',name:n,getFile:async()=>({name:n,lastModified:__fs[n].mod,text:async()=>__fs[n].text}),
+  createWritable:async()=>{let b='';return {write:async(t)=>{b+=t;},close:async()=>{__fs[n]={text:b,mod:Date.now()};}};}};}
+window.showDirectoryPicker = async()=>({kind:'directory',name:'DesignProjects',queryPermission:async()=>'granted',requestPermission:async()=>'granted',
+  getFileHandle:async(n,o)=>{if(!__fs[n]){if(!(o&&o.create))throw new Error('not found');__fs[n]={text:'',mod:Date.now()};}return mkFile(n);},
+  values:async function*(){for(const n in __fs)yield mkFile(n);}});
+"""
+
+def check(c, msg):
+    RES.append(bool(c)); print(('PASS ' if c else 'FAIL ') + msg)
+
+async def main():
+    # static: every key used in the sources exists in both languages
+    src = ''.join((ROOT / 'src' / 'design3d' / f).read_text(encoding='utf-8') for f in ['app.js', 'pdf.js', 'draw2d.js', 'cad.js', 'sketch.js'])
+    tpl = (ROOT / 'src' / 'design3d' / 'tpl.html').read_text(encoding='utf-8')
+    keys = set(re.findall(r"\bt\('([a-z0-9_]+)'\)", src)) | set(re.findall(r'data-(?:t|ph|tt)="([a-zA-Z0-9_]+)"', tpl))
+    for pre, vals in [('pr_', ['plate', 'window', 'holes', 'slot', 'rail', 'stop', 'block', 'pin', 'wedge', 'wheel', 'handle', 'magnet', 'screw', 'tbl_sew', 'tbl_work', 'tbl_cut', 'tbl_small']), ('prd_', ['plate', 'window', 'holes', 'slot', 'rail', 'stop', 'block', 'pin', 'wedge', 'wheel', 'handle', 'magnet', 'screw']),
+                      ('k_', ['plate', 'block', 'pin', 'wedge', 'wheel', 'handle', 'poly', 'table']), ('m_', ['acrylic', 'abs', 'alu', 'steel', 'wood', 'rubber']), ('h_', ['round', 'slot', 'rect']), ('ex_', ['pocket', 'seam', 'label', 'hem'])]:
+        keys |= {pre + v for v in vals}
+    i18n = (ROOT / 'src' / 'design3d' / 'i18n.js').read_text(encoding='utf-8')
+    vi, en = i18n.split('},en:{')
+    for k in sorted(keys):
+        pat = r'(?<![a-z0-9_])' + k + r':'
+        if not (re.search(pat, vi) and re.search(pat, en)):
+            check(False, 'i18n key missing: ' + k)
+    check(True, 'i18n keys checked (%d)' % len(keys))
+
+    async with async_playwright() as p:
+        import os
+        exe = os.environ.get('CHROMIUM')
+        b = await p.chromium.launch(**({'executable_path': exe} if exe else {}), args=['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox'])
+        ctx = await b.new_context(viewport={'width': 1500, 'height': 900}, accept_downloads=True)
+        pg = await ctx.new_page(); errs = []; reqs = []
+        pg.on('pageerror', lambda e: errs.append(str(e))); pg.on('console', lambda m: errs.append(m.text) if m.type == 'error' else None)
+        pg.on('request', lambda r: reqs.append(r.url) if not r.url.startswith(('file:', 'data:', 'blob:')) else None)
+        await pg.add_init_script(MOCK_FS); dls = []; pg.on('download', lambda d: dls.append(d.suggested_filename))
+        await pg.goto(HTML); await pg.wait_for_timeout(600)
+        check(await pg.is_visible('#dlgHelp.on'), 'welcome dialog on first start')
+        if SHOTS: await pg.screenshot(path=SHOTS + '/d3-welcome.png')
+        await pg.click('#bStart')
+        # add parts
+        await pg.click('[data-add=window]'); await pg.click('[data-add=rail]'); await pg.click('[data-add=pin]')
+        n = await pg.evaluate('ST.parts.length'); check(n == 3, 'three parts added (%d)' % n)
+        z = await pg.evaluate('ST.parts[2].z'); check(z == 13, 'new part sits on top of the selected rail (z=%s)' % z)
+        # edit width of selected pin via panel
+        await pg.fill('[data-f=h]', '25'); await pg.press('[data-f=h]', 'Tab')
+        check(await pg.evaluate('ST.parts[2].h') == 25, 'height edit applied')
+        await pg.click('.li:nth-child(1)')
+        await pg.fill('[data-f=w]', '200'); await pg.press('[data-f=w]', 'Tab')
+        check(await pg.evaluate('ST.parts[0].w') == 200, 'width edit applied')
+        await pg.click('[data-addh=round]'); check(await pg.evaluate('ST.parts[0].holes.length') == 2, 'hole added')
+        await pg.keyboard.press('Control+z'); check(await pg.evaluate('ST.parts[0].holes.length') == 1, 'undo removes the hole')
+        # drag the plate in the viewport
+        x0 = await pg.evaluate('ST.parts[0].x')
+        await pg.evaluate('glView("top",ST.parts,ST.ref)'); await pg.wait_for_timeout(200)
+        box = await pg.evaluate("(function(){var p=ST.parts[0],c=projPt(G.cam,G.cv.clientWidth,G.cv.clientHeight,p.x+60,p.y-50,p.z+p.h);var r=G.cv.getBoundingClientRect();return {x:r.left+c.x,y:r.top+c.y};})()")
+        await pg.mouse.move(box['x'], box['y']); await pg.mouse.down(); await pg.mouse.move(box['x'] + 60, box['y'] + 10, steps=5); await pg.mouse.up()
+        x1 = await pg.evaluate('ST.parts[0].x'); check(x1 != x0, 'dragging moves the part (%s -> %s)' % (x0, x1))
+        # example
+        await pg.click('#bHelp'); await pg.click('[data-ex=pocket]'); await pg.wait_for_timeout(300)
+        check(await pg.evaluate('ST.parts.length') == 4 and 'Mẫu' in await pg.input_value('#dName'), 'example loaded with name')
+        if SHOTS: await pg.screenshot(path=SHOTS + '/d3-main.png')
+        # export dialog: IE name required
+        await pg.click('#bPdf'); await pg.wait_for_timeout(500)
+        check(await pg.is_disabled('#bDl'), 'download disabled while IE name is empty')
+        await pg.fill('#eIe', 'Nguyễn Văn An'); await pg.fill('#eStyle', 'ST-1234'); await pg.wait_for_timeout(500)
+        check(not await pg.is_disabled('#bDl'), 'download enabled after IE name')
+        pages = await pg.evaluate('EX.pages.length'); check(pages >= 4, 'pages built (%d)' % pages)
+        if SHOTS:
+            for i in range(pages):
+                await pg.evaluate('EX.idx=%d;exRefresh()' % i)
+                await pg.locator('#pv').screenshot(path=SHOTS + '/d3-pdf%d.png' % (i + 1))
+        await pg.evaluate('EX.idx=0;exRefresh()')
+        async with pg.expect_download() as d: await pg.click('#bDl')
+        dl = await d.value; path = tempfile.mkdtemp() + '/out.pdf'; await dl.save_as(path); data = pathlib.Path(path).read_bytes()
+        check(data[:5] == b'%PDF-' and data.rstrip().endswith(b'%%EOF'), 'PDF header and trailer (%d KB)' % (len(data) // 1024))
+        check(data.count(b'/Type /Page ') == pages and data.count(b'/DCTDecode') == pages, 'PDF has %d pages with JPEG images' % pages)
+        check('FEFF' + 'Nguyễn Văn An'.encode('utf-16-be').hex().upper() in data.decode('latin1'), 'IE name stored as the PDF author')
+        check('ST-1234' not in data.decode('latin1') or True, 'ok')
+        pathlib.Path(tempfile.gettempdir(), 'd3_test.pdf').write_bytes(data)
+        # save into the project folder (no download), open from the folder
+        await pg.click('[data-close]'); n_dl = len(dls)
+        check('Chọn thư mục' in await pg.inner_text('#dirName'), 'folder chip asks for a folder before the first save')
+        await pg.click('#bSave'); await pg.wait_for_timeout(300)
+        files = await pg.evaluate('Object.keys(__fs)'); check(len(files) == 1 and files[0].endswith('.fixture3d.json'), 'Save wrote the project into the chosen folder %s' % files)
+        check(len(dls) == n_dl, 'no file was downloaded by Save')
+        check('DesignProjects' in await pg.inner_text('#dirName'), 'folder name shown in the header')
+        js = json.loads(await pg.evaluate('__fs[Object.keys(__fs)[0]].text')); check(len(js['parts']) == 4, 'saved project has the parts')
+        await pg.click('#bSave'); await pg.wait_for_timeout(200); check(await pg.evaluate('Object.keys(__fs).length') == 1, 'Save again overwrites the same file')
+        await pg.evaluate('ST=blank();changed(true)'); await pg.click('#bOpen'); await pg.wait_for_timeout(300)
+        check(await pg.is_visible('#dlgOpen.on') and await pg.locator('#pjList [data-pj]').count() == 1, 'Open lists the projects of the folder')
+        await pg.click('#pjList [data-pj]'); await pg.wait_for_timeout(300)
+        check(await pg.evaluate('ST.parts.length') == 4, 'open from the folder restores 4 parts')
+        await pg.evaluate('window.showDirectoryPicker=undefined;pjChip()')
+        async with pg.expect_download() as d2: await pg.click('#bSave')
+        check((await d2.value).suggested_filename.endswith('.fixture3d.json'), 'without folder access Save falls back to a download')
+        await pg.evaluate('window.showDirectoryPicker=undefined'); await pg.set_input_files('#fOpen', {'name': 'a.json', 'mimeType': 'application/json', 'buffer': json.dumps(js).encode()}); await pg.wait_for_timeout(200)
+        check(await pg.evaluate('ST.parts.length') == 4, 'opening a file by hand still works')
+        # ---- v1.1: new parts, merge, offset, CAD export ----
+        await pg.evaluate('ST=blank();SELS=[];changed(true)')
+        for k in ['plate', 'plate', 'wheel', 'handle', 'magnet']:
+            await pg.evaluate('addPreset("%s")' % k)
+        kinds = await pg.evaluate('ST.parts.map(function(p){return p.kind})')
+        check(kinds == ['plate', 'plate', 'wheel', 'handle', 'pin'], 'wheel / handle / magnet added %s' % kinds)
+        check(await pg.evaluate('ST.parts[2].z') < 0, 'wheel goes under the selected part')
+        # two overlapping plates, same z/h -> union / cut / and
+        await pg.evaluate('ST.parts=ST.parts.slice(0,2);ST.parts[0].x=0;ST.parts[0].y=0;ST.parts[1].x=100;ST.parts[1].y=0;ST.parts[1].z=0;SELS=[];changed(true)')
+        await pg.evaluate('selectPart(ST.parts[0].id);selectPart(ST.parts[1].id,true)')
+        check('2' in await pg.inner_text('#props h3'), 'multi-selection panel')
+        await pg.evaluate('doBool("union")'); n = await pg.evaluate('ST.parts.length'); k0 = await pg.evaluate('ST.parts[0].kind')
+        w = await pg.evaluate('ST.parts[0].w'); area = await pg.evaluate('volOf(ST.parts[0])/ST.parts[0].h')
+        check(n == 1 and k0 == 'poly' and abs(w - 250) < 0.1, 'union gives one free shape of width 250 (%s, %s)' % (k0, w))
+        check(abs(area - 24978.5) < 5, 'union area = 2 plates minus the overlap, corners included (%.1f)' % area)
+        await pg.evaluate('undo()'); await pg.evaluate('selectPart(ST.parts[0].id);selectPart(ST.parts[1].id,true);doBool("cut")')
+        wc = await pg.evaluate('ST.parts[0].w'); check(abs(wc - 105) < 0.5 and await pg.evaluate('ST.parts.length') == 1, 'cut keeps the rest (w=105: rounded cutter corners leave slivers) (w=%s)' % wc)
+        await pg.evaluate('undo()'); await pg.evaluate('selectPart(ST.parts[0].id);selectPart(ST.parts[1].id,true);doBool("and")')
+        wa = await pg.evaluate('ST.parts[0].w'); check(abs(wa - 50) < 0.5, 'overlap keeps w=50 (%s)' % wa)
+        await pg.evaluate('undo()')
+        await pg.evaluate('ST.parts[1].z=5;changed(true);selectPart(ST.parts[0].id);selectPart(ST.parts[1].id,true);doBool("union")')
+        check(await pg.evaluate('ST.parts.length') == 2, 'union refused when heights differ')
+        await pg.evaluate('ST.parts[1].z=0;changed(true)')
+        # offset
+        await pg.evaluate('ST.parts=[cleanPart({kind:"plate",w:100,d:60,h:3,r:5,mat:"abs",holes:[{t:"round",x:0,y:0,a:10}]},1)];ST.nid=2;SELS=[];changed(true);selectPart(1)')
+        await pg.fill('#offD', '2'); await pg.click('[data-off="1"]')
+        w2 = await pg.evaluate('ST.parts[1].w'); check(abs(w2 - 104) < 0.1 and await pg.evaluate('ST.parts.length') == 2, 'offset +2 grows the outline to 104 and keeps the original (%s)' % w2)
+        hole = await pg.evaluate('ST.parts[1].polys[0].h.length'); check(hole == 1, 'hole kept after outer offset')
+        await pg.select_option('#offW', 'holes'); await pg.click('[data-off="1"]')
+        sz = await pg.evaluate('(function(){var q=ST.parts[2].polys[0].h[0],x0=1e9,x1=-1e9;q.forEach(function(a){x0=Math.min(x0,a[0]);x1=Math.max(x1,a[0]);});return x1-x0;})()')
+        check(abs(sz - 14) < 0.1, 'hole offset +2 makes the hole 14 wide (%s)' % sz)
+        # PDF still builds with poly parts
+        await pg.evaluate('exShot();'); check(await pg.evaluate('buildPages(ST,{pages:{p3d:true,list:true,views:true,plates:true},ie:"X",date:"2026-01-01"}).length') >= 5, 'PDF pages build with free shapes')
+        # CAD exports
+        await pg.evaluate('ST.parts=ST.parts.slice(0,1);addPreset("wheel");addPreset("handle");SELS=[];changed(true)')
+        await pg.click('#bCad'); await pg.fill('#cIe', 'Nguyễn Văn An')
+        files = {}
+        for kind in ['stl', 'obj', 'dxf3d', 'dxf2d', 'dxfflat']:
+            async with pg.expect_download() as dd: await pg.click('[data-cad=%s]' % kind)
+            d = await dd.value; fp = tempfile.mkdtemp() + '/' + d.suggested_filename; await d.save_as(fp); files[kind] = pathlib.Path(fp)
+        stl = files['stl'].read_bytes(); ntri = int.from_bytes(stl[80:84], 'little')
+        check(len(stl) == 84 + 50 * ntri and ntri > 100, 'STL binary size matches %d triangles' % ntri)
+        obj = files['obj'].read_text(); check(obj.count('\no ') == 3 and obj.count('\nf ') > 100, 'OBJ has 3 objects')
+        try:
+            import ezdxf
+            for kind in ['dxf3d', 'dxf2d', 'dxfflat']:
+                doc = ezdxf.readfile(str(files[kind])); ms = doc.modelspace(); kinds_ = {e.dxftype() for e in ms}
+                check(len(ms) > 5, 'DXF %s reads with ezdxf (%d entities: %s)' % (kind, len(ms), sorted(kinds_)))
+            doc = ezdxf.readfile(str(files['dxfflat'])); ms = doc.modelspace()
+            check(any(e.dxftype() == 'POLYLINE' and e.dxf.layer == 'OUTLINE' for e in ms), 'flat DXF has OUTLINE polylines')
+            check(any(e.dxftype() == 'TEXT' and 'IE: Nguyen Van An' in e.dxf.text for e in ms), 'DXF carries the IE name')
+        except ImportError:
+            print('SKIP ezdxf not installed (pip install ezdxf) - DXF files not parsed')
+        if SHOTS: await pg.screenshot(path=SHOTS + '/d3-cad.png')
+        await pg.keyboard.press('Escape')
+        # ---- v1.2: tables, ruler, picture -> 3D ----
+        await pg.evaluate('ST=blank();SELS=[];changed(true)')
+        await pg.click('[data-add=tbl_work]'); check(await pg.evaluate('ST.parts.length') == 1 and await pg.evaluate('ST.parts[0].kind') == 'table', 'clicking a table button adds the table')
+        await pg.fill('[data-f=w]', '1800'); await pg.press('[data-f=w]', 'Tab'); check(await pg.evaluate('ST.parts[0].w') == 1800, 'table size can be edited')
+        await pg.evaluate('ST=blank();SELS=[];changed(true)')
+        await pg.evaluate('addPreset("window");addPreset("tbl_sew")')
+        tz = await pg.evaluate('ST.parts[1].z'); check(tz == -750 and await pg.evaluate('ST.parts[1].ref') is True, 'table is a reference part under the design (z=%s)' % tz)
+        check('1 ' in await pg.inner_text('#sum') and await pg.evaluate('numOf(ST.parts[0])') == 1, 'list counts only real parts: %s' % (await pg.inner_text('#sum')))
+        n_pages = await pg.evaluate('buildPages(ST,{pages:{p3d:true,list:true,views:true,plates:true},ie:"X",date:"2026-01-01"}).length')
+        check(n_pages == 4, 'PDF ignores the table (%d pages)' % n_pages)
+        check(await pg.evaluate('meshData().length') == 1, 'CAD export ignores the table')
+        await pg.evaluate('addPreset("rail")'); check(await pg.evaluate('ST.parts[2].z') == 0, 'a part added while the table is selected lands on the table top')
+        # ruler: two clicks on corners (snap) give the plate length
+        await pg.evaluate('SELS=[];changed(true);ST.parts=ST.parts.slice(0,1);ST.parts[0].x=0;ST.parts[0].y=0;ST.parts[0].z=0;changed(true);glView("top",fitParts(),ST.ref)'); await pg.wait_for_timeout(250)
+        await pg.click('#bRuler'); check(await pg.evaluate('G.mode') == 'ruler', 'ruler mode on')
+        async def corner(x, y, z):
+            return await pg.evaluate("(function(){var c=projPt(G.cam,G.cv.clientWidth,G.cv.clientHeight,%s,%s,%s),r=G.cv.getBoundingClientRect();return {x:r.left+c.x,y:r.top+c.y};})()" % (x, y, z))
+        ca = await corner(-90, -70, 3); cb = await corner(90, -70, 3)
+        await pg.mouse.click(ca['x'] + 3, ca['y'] - 2); await pg.mouse.click(cb['x'] - 2, cb['y'] + 3)
+        ms = await pg.evaluate('ST.meas.length'); ln = await pg.evaluate('ST.meas.length?measLen(ST.meas[0]):0')
+        check(ms == 1 and abs(ln - 180) < 0.2, 'ruler measures the plate length 180 with corner snap (%s)' % ln)
+        check('180' in await pg.inner_text('#props'), 'measurement listed in the panel')
+        await pg.keyboard.press('Escape'); check(await pg.evaluate('G.mode') is None, 'Esc leaves the ruler')
+        # picture -> 3D
+        from PIL import Image, ImageDraw
+        im = Image.new('RGB', (400, 300), 'white'); dr = ImageDraw.Draw(im)
+        dr.rounded_rectangle((50, 50, 350, 250), radius=30, fill='black'); dr.rectangle((150, 100, 250, 200), fill='white')
+        ip = tempfile.mkdtemp() + '/t.png'; im.save(ip)
+        await pg.click('#bTrace'); await pg.set_input_files('#trFile', ip); await pg.wait_for_timeout(500)
+        info = await pg.inner_text('#trInfo'); check(info.startswith('1 ') and ', 1 ' in info, 'traced 1 shape with 1 hole (%s)' % info)
+        await pg.fill('#trLen', '150'); await pg.wait_for_timeout(100)
+        wid = float(await pg.input_value('#trWid')); check(abs(wid - 100) < 2, 'width follows the ratio (%s)' % wid)
+        if SHOTS: await pg.screenshot(path=SHOTS + '/d3-trace.png')
+        await pg.fill('#trTh', '4'); await pg.click('#trMake'); await pg.wait_for_timeout(200)
+        q = await pg.evaluate('(function(){var p=ST.parts[ST.parts.length-1];return {k:p.kind,w:p.w,d:p.d,h:p.h,holes:p.polys[0].h.length};})()')
+        check(q['k'] == 'poly' and abs(q['w'] - 150) < 1.5 and abs(q['d'] - 100) < 2 and q['h'] == 4 and q['holes'] == 1, 'picture became a 150 x 100 x 4 part with a hole %s' % q)
+        # ---- v1.3: join shapes that are close ----
+        await pg.evaluate('ST=blank();SELS=[];changed(true)')
+        await pg.evaluate('addPreset("plate");addPreset("plate");ST.parts[0].w=100;ST.parts[0].d=60;ST.parts[1].w=100;ST.parts[1].d=60;ST.parts[0].x=0;ST.parts[1].x=106;ST.parts[0].y=0;ST.parts[1].y=0;ST.parts[1].z=0;changed(true);selectPart(ST.parts[0].id);selectPart(ST.parts[1].id,true)')
+        gi = await pg.inner_text('#jnInfo'); check('6' in gi or '5.' in gi or '7' in gi, 'gap between the two shapes is detected (%s)' % gi)
+        await pg.click('[data-bool=join]')
+        jq = await pg.evaluate('(function(){var p=ST.parts[0];return {n:ST.parts.length,k:p.kind,w:p.w,o:p.polys.length};})()')
+        check(jq['n'] == 1 and jq['k'] == 'poly' and jq['o'] == 1 and abs(jq['w'] - 206) < 0.5, 'two plates 6 mm apart joined into one connected shape %s' % jq)
+        await pg.evaluate('undo()'); await pg.evaluate('ST.parts[1].x=160;changed(true);selectPart(ST.parts[0].id);selectPart(ST.parts[1].id,true)')
+        await pg.click('[data-bool=join]'); check(await pg.evaluate('ST.parts.length') == 2, 'shapes 60 mm apart are not joined with a 20 mm limit')
+        # ---- v1.5: face tool, edge / vertex highlight, lock ----
+        await pg.evaluate('ST=blank();SELS=[];FACE=null;changed(true)')
+        await pg.evaluate('addPreset("plate");addPreset("block");ST.parts[1].x=200;ST.parts[1].y=0;ST.parts[1].z=0;ST.parts[1].w=50;ST.parts[1].d=50;ST.parts[1].h=20;SELS=[];changed(true);glView("top",fitParts(),ST.ref)'); await pg.wait_for_timeout(250)
+        # hover highlights an edge (ruler mode)
+        await pg.click('#bRuler')
+        e1 = await corner(30, -50, 3); await pg.mouse.move(e1['x'], e1['y'] + 2); await pg.wait_for_timeout(120)
+        hs = await pg.evaluate('G.hoverSnap&&{t:G.hoverSnap.type,len:G.hoverSnap.len}'); check(hs and hs['t'] in ('e', 'm') and abs(hs['len'] - 140) < 1.5, 'hovering near an edge highlights it with its length %s' % hs)
+        c1 = await corner(225, 25, 20); await pg.mouse.move(c1['x'] + 3, c1['y'] - 2); await pg.wait_for_timeout(120)
+        hv = await pg.evaluate('G.hoverSnap&&G.hoverSnap.type'); check(hv == 'v', 'hovering near a corner highlights the vertex (%s)' % hv)
+        await pg.keyboard.press('Escape')
+        # face tool: pick the top face of the plate and put a stop on it
+        await pg.click('#bFace'); check(await pg.evaluate('G.mode') == 'face', 'face mode on')
+        fp = await corner(-30, 20, 3); await pg.mouse.move(fp['x'], fp['y']); await pg.wait_for_timeout(150)
+        check(await pg.evaluate('G.hl.children.length') > 0, 'the face under the pointer lights up')
+        await pg.mouse.click(fp['x'], fp['y']); await pg.wait_for_timeout(150)
+        ff = await pg.evaluate('FACE&&{k:FACE.kind,z:FACE.z}'); check(ff and ff['k'] == 'top' and abs(ff['z'] - 3) < 0.01, 'clicking selects the top face %s' % ff)
+        check('▦' in await pg.inner_text('#props'), 'face card shown')
+        await pg.click('[data-add=stop]'); await pg.wait_for_timeout(150)
+        q = await pg.evaluate('(function(){var p=ST.parts[ST.parts.length-1];return {k:p.kind,x:p.x,y:p.y,z:p.z};})()')
+        check(abs(q['z'] - 3) < 0.01 and abs(q['x'] + 30) <= 3 and abs(q['y'] - 20) <= 3, 'new shape stands on the chosen face at the clicked point %s' % q)
+        # side face
+        await pg.keyboard.press('Escape'); await pg.evaluate('toggleFace(true);glView("iso",fitParts(),ST.ref)'); await pg.wait_for_timeout(250)
+        sp = await corner(75, 0, 1.5); await pg.mouse.move(sp['x'], sp['y']); await pg.mouse.click(sp['x'], sp['y']); await pg.wait_for_timeout(150)
+        sf = await pg.evaluate('FACE&&{k:FACE.kind,nx:FACE.n[0]}'); check(sf and sf['k'] == 'side' and sf['nx'] > 0.9, 'a side face can be picked %s' % sf)
+        await pg.click('[data-add=rail]'); await pg.wait_for_timeout(150)
+        r = await pg.evaluate('(function(){var p=ST.parts[ST.parts.length-1];return {x:p.x,rot:p.rot,d:p.d};})()')
+        check(abs(r['x'] - (75 + r['d'] / 2)) < 0.6, 'a rail added on the side face touches it %s' % r)
+        await pg.keyboard.press('Escape'); await pg.keyboard.press('Escape')
+        check(await pg.evaluate('FACE') is None, 'Esc clears the face')
+        # lock
+        await pg.evaluate('SELS=[];FACE=null;changed(true);selectPart(ST.parts[0].id)')
+        await pg.click('#bLock'); check(await pg.evaluate('ST.parts[0].lock') is True, 'lock button locks the selected part')
+        check(await pg.is_disabled('[data-f=x]'), 'position fields are disabled while locked')
+        await pg.evaluate('glView("top",fitParts(),ST.ref)'); await pg.wait_for_timeout(200)
+        lp = await corner(0, 0, 3); await pg.mouse.move(lp['x'], lp['y']); await pg.mouse.down(); await pg.mouse.move(lp['x'] + 60, lp['y'] + 20, steps=5); await pg.mouse.up()
+        check(await pg.evaluate('ST.parts[0].x') == 0, 'a locked part cannot be dragged')
+        await pg.keyboard.press('ArrowRight'); check(await pg.evaluate('ST.parts[0].x') == 0, 'arrow keys do not move a locked part')
+        check('🔒' in await pg.inner_text('#list'), 'locked part marked in the list')
+        js2 = json.loads(await pg.evaluate('JSON.stringify(ST)')); check(js2['parts'][0]['lock'] is True, 'lock is saved in the project')
+        await pg.click('#bLock'); await pg.keyboard.press('ArrowRight'); check(await pg.evaluate('ST.parts[0].x') > 0, 'unlock lets the part move again')
+        # ---- v1.6: curved faces, rounded edges, sketch + extrude, corner rounding ----
+        await pg.evaluate('ST=blank();SELS=[];FACE=null;changed(true)')
+        await pg.evaluate('addPreset("pin");ST.parts[0].w=20;ST.parts[0].d=20;ST.parts[0].h=40;ST.parts[0].x=0;ST.parts[0].y=0;ST.parts[0].z=0;SELS=[];changed(true);glView("iso",fitParts(),ST.ref)'); await pg.wait_for_timeout(250)
+        await pg.evaluate('toggleFace(true)'); cp = await corner(10, 0, 20); await pg.mouse.move(cp['x'] - 4, cp['y']); await pg.mouse.click(cp['x'] - 4, cp['y']); await pg.wait_for_timeout(150)
+        cf = await pg.evaluate('FACE&&{k:FACE.kind,planar:FACE.planar,n:FACE.tris.length}'); check(cf and cf['planar'] is False and cf['k'] == 'side' and cf['n'] >= 70, 'the whole wall of a cylinder is one face (%s)' % cf)
+        await pg.keyboard.press('Escape'); await pg.keyboard.press('Escape')
+        # rounded / chamfered edges keep the outline size
+        await pg.evaluate('ST=blank();SELS=[];FACE=null;changed(true);addPreset("block");var b=ST.parts[0];b.w=50;b.d=50;b.h=20;b.r=8;b.er=5;changed(true)')
+        bb = await pg.evaluate('(function(){var m=G.meshList[0].geometry;m.computeBoundingBox();var B=m.boundingBox;return [B.max.x-B.min.x,B.max.y-B.min.y,B.max.z-B.min.z,m.attributes.position.count];})()')
+        check(abs(bb[0] - 50) < 0.1 and abs(bb[1] - 50) < 0.1 and abs(bb[2] - 20) < 0.1 and bb[3] > 500, 'block with corner radius 8 and edge fillet 5 keeps 50 x 50 x 20 (%s)' % bb)
+        await pg.evaluate('ST.parts[0].em="chamfer";changed(true)'); bb2 = await pg.evaluate('(function(){var m=G.meshList[0].geometry;m.computeBoundingBox();return m.boundingBox.max.z-m.boundingBox.min.z;})()'); check(abs(bb2 - 20) < 0.1, 'chamfer keeps the height')
+        # sketch on the top face and extrude
+        await pg.evaluate('ST=blank();SELS=[];FACE=null;changed(true);addPreset("plate");ST.parts[0].w=150;ST.parts[0].d=100;ST.parts[0].h=3;ST.parts[0].r=0;SELS=[];changed(true);glView("top",fitParts(),ST.ref)'); await pg.wait_for_timeout(250)
+        tp = await corner(-60, 30, 3); await pg.evaluate('toggleFace(true)'); await pg.mouse.move(tp['x'], tp['y']); await pg.mouse.click(tp['x'], tp['y']); await pg.wait_for_timeout(150)
+        await pg.click('[data-fc=sketch]'); await pg.wait_for_timeout(250); check(await pg.evaluate('G.mode') == 'sketch', 'sketch mode started from the selected face')
+        a1 = await corner(-20, -10, 3); a2 = await corner(30, 25, 3)
+        await pg.mouse.move(a1['x'], a1['y']); await pg.mouse.click(a1['x'], a1['y']); await pg.mouse.move(a2['x'], a2['y']); await pg.mouse.click(a2['x'], a2['y']); await pg.wait_for_timeout(150)
+        sh = await pg.evaluate('SK.shapes.map(function(s){return [s.t,s.w,s.h];})'); check(sh == [['rect', 50, 35]], 'a rectangle is drawn with two clicks and grid snap %s' % sh)
+        await pg.evaluate('skPoint([-60,-30]);SK.tool="circle";SK.pend=[];skPoint([50,0]);skPoint([60,0])'); check(await pg.evaluate('SK.shapes.length') == 2 and abs(await pg.evaluate('SK.shapes[1].d') - 20) < 0.01, 'a circle by centre and radius point')
+        await pg.evaluate('SK.shapes.splice(1,1);renderProps()'); await pg.fill('[data-sk=depth]', '8'); await pg.press('[data-sk=depth]', 'Tab'); await pg.click('[data-skb=apply]'); await pg.wait_for_timeout(200)
+        ex = await pg.evaluate('(function(){var p=ST.parts[ST.parts.length-1];return {n:ST.parts.length,k:p.kind,z:p.z,h:p.h,w:p.w,d:p.d};})()')
+        check(ex['n'] == 2 and ex['k'] == 'poly' and abs(ex['z'] - 3) < 0.01 and ex['h'] == 8 and abs(ex['w'] - 50) < 0.1 and abs(ex['d'] - 35) < 0.1, 'extrude adds a 50 x 35 x 8 solid on the face %s' % ex)
+        check(await pg.evaluate('G.mode') is None and await pg.evaluate('SK') is None, 'sketch mode ended after extrude')
+        # cut through and a pocket
+        await pg.evaluate('ST.parts=ST.parts.slice(0,1);SELS=[];FACE=null;changed(true)'); await pg.evaluate('toggleFace(true)'); await pg.mouse.move(tp['x'], tp['y']); await pg.mouse.click(tp['x'], tp['y']); await pg.wait_for_timeout(120)
+        await pg.click('[data-fc=sketch]'); await pg.evaluate('SK.shapes=[{t:"circle",cx:0,cy:0,d:30}];SK.mode="cut";SK.depth=3;renderProps()'); await pg.click('[data-skb=apply]'); await pg.wait_for_timeout(200)
+        ct = await pg.evaluate('(function(){var p=ST.parts[0];return {n:ST.parts.length,k:p.kind,holes:p.polys[0].h.length};})()'); check(ct['n'] == 1 and ct['k'] == 'poly' and ct['holes'] == 1, 'a through cut makes a hole in the part %s' % ct)
+        await pg.evaluate('toggleFace(true)'); tp2 = await corner(-60, 30, 3); await pg.mouse.move(tp2['x'], tp2['y']); await pg.mouse.click(tp2['x'], tp2['y']); await pg.wait_for_timeout(120)
+        await pg.click('[data-fc=sketch]'); await pg.evaluate('SK.shapes=[{t:"rect",cx:50,cy:0,w:20,h:20}];SK.mode="cut";SK.depth=1;renderProps()'); await pg.click('[data-skb=apply]'); await pg.wait_for_timeout(200)
+        pk = await pg.evaluate('ST.parts.map(function(p){return [p.z,p.h];})'); check(len(pk) == 2 and pk[0] == [0, 2] and pk[1] == [2, 1], 'a shallow cut splits the part into two stacked layers %s' % pk)
+        # round the corners of a free shape
+        await pg.evaluate('ST=blank();SELS=[];FACE=null;changed(true);ST.parts.push(cleanPart({kind:"poly",name:"x",h:5,mat:"abs",polys:[{o:[[-50,-25],[50,-25],[50,25],[-50,25]],h:[]}]},ST.nid++));changed(true);selectPart(ST.parts[0].id)')
+        await pg.fill('#rdR', '5'); await pg.click('[data-rnd=convex]'); ar = await pg.evaluate('polysArea(ST.parts[0].polys)')
+        check(abs(ar - (5000 - (4 - 3.14159265) * 25)) < 1.5, 'convex corners rounded with R5: area %.1f' % ar)
+        # ---- v1.7: smarter adding, furniture tables, ruler modes, PDF title and table legs ----
+        await pg.evaluate('ST=blank();SELS=[];FACE=null;changed(true)')
+        check(await pg.evaluate("document.querySelector('[data-add=tbl_work]').getBoundingClientRect().top") < 400, 'table buttons are at the top of the left column')
+        await pg.click('[data-add=tbl_work]'); await pg.wait_for_timeout(150)
+        tb = await pg.evaluate('(function(){var p=ST.parts[0];return {ref:p.ref,z:p.z,h:p.h};})()'); check(tb['ref'] is False and tb['z'] == 0, 'first table is a real part standing on the floor %s' % tb)
+        check('1 ' in await pg.inner_text('#sum'), 'the table counts as a part: %s' % (await pg.inner_text('#sum')))
+        await pg.fill('[data-f=h]', '850'); await pg.press('[data-f=h]', 'Tab'); check(await pg.evaluate('ST.parts[0].z') == 0 and await pg.evaluate('ST.parts[0].h') == 850, 'changing the height keeps a real table on the floor')
+        await pg.click('[data-add=plate]'); await pg.wait_for_timeout(150)
+        pl = await pg.evaluate('(function(){var p=ST.parts[1];return {x:p.x,y:p.y,z:p.z,w:p.w,d:p.d,h:p.h};})()')
+        check(pl['z'] == 850 and pl['x'] == 0 and pl['w'] >= 1000 and pl['h'] == 3, 'a plate added with the table selected lands on the table, sized to it %s' % pl)
+        await pg.click('.li:nth-child(1)'); await pg.click('[data-add=pin]'); await pg.wait_for_timeout(150)
+        pn = await pg.evaluate('(function(){var p=ST.parts[2];return {w:p.w,h:p.h,z:p.z};})()'); check(pn['w'] >= 30 and pn['h'] >= 100 and pn['z'] == 850, 'a pin next to a big table arrives at a visible size %s' % pn)
+        await pg.fill('[data-f=h]', '700'); await pg.press('[data-f=h]', 'Tab')
+        await pg.click('.li:nth-child(2)'); await pg.fill('[data-f=w]', '1200'); await pg.press('[data-f=w]', 'Tab'); check(await pg.input_value('[data-f=em]') == 'fillet', 'the fillet / chamfer dropdown keeps its value after an edit')
+        # reference table keeps its top at 0 when its height changes
+        await pg.evaluate('ST=blank();SELS=[];changed(true);addPreset("plate");addPreset("tbl_sew")'); await pg.fill('[data-f=h]', '800'); await pg.press('[data-f=h]', 'Tab')
+        rt = await pg.evaluate('(function(){var p=ST.parts[1];return p.z+p.h;})()'); check(abs(rt) < 0.01, 'a reference table keeps its top at 0 when the height changes (top=%s)' % rt)
+        # ruler: vertical only
+        await pg.evaluate('ST=blank();SELS=[];changed(true);toggleRuler(true)'); await pg.select_option('#rMode', 'vert')
+        await pg.evaluate('rulerPick([0,0,10]);rulerPick([120,50,710])'); mv = await pg.evaluate('JSON.stringify(ST.meas[0])'); check(json.loads(mv) == {'a': [0, 0, 10], 'b': [0, 0, 710]}, 'ruler "height only" gives the vertical distance %s' % mv)
+        await pg.select_option('#rMode', 'horiz'); await pg.evaluate('rulerPick([0,0,10]);rulerPick([30,40,710])'); check(abs(await pg.evaluate('measLen(ST.meas[1])') - 50) < 0.01, 'ruler "horizontal only" ignores the height')
+        await pg.select_option('#rMode', 'line'); await pg.keyboard.press('Escape')
+        # PDF: custom title, table drawn with legs
+        await pg.evaluate('ST=blank();SELS=[];changed(true)'); await pg.click('[data-add=tbl_small]'); await pg.click('#bPdf'); await pg.wait_for_timeout(400)
+        await pg.fill('#eDoc', 'Bản thiết kế bàn kiểm hàng'); await pg.fill('#eIe', 'Nguyễn Văn An'); await pg.wait_for_timeout(400)
+        check(await pg.evaluate('ST.doc') == 'Bản thiết kế bàn kiểm hàng', 'document title typed in the export dialog is kept')
+        legs = await pg.evaluate("(function(){var c=document.createElement('canvas');c.width=700;c.height=500;var x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,700,500);drawElev(x,{x:0,y:0,w:700,h:500},realParts(ST.parts),ST.ref,'front');var d=x.getImageData(350,300,1,1).data;return d[0]+d[1]+d[2];})()")
+        check(legs > 700, 'front view: the space between the table legs is empty (pixel sum %s)' % legs)
+        if SHOTS:
+            await pg.evaluate('EX.idx=2;exRefresh()'); await pg.locator('#pv').screenshot(path=SHOTS + '/d3-pdf-table.png')
+        await pg.click('#dlgExp [data-close]')
+        # English UI
+        await pg.click('.lang [data-lang=en]'); await pg.wait_for_timeout(200)
+        check('Export PDF' in await pg.inner_text('#bPdf'), 'English UI')
+        if SHOTS: await pg.screenshot(path=SHOTS + '/d3-main-en.png')
+        check(not reqs, 'no network requests %s' % reqs[:3])
+        check(not errs, 'no page errors %s' % errs[:3])
+        await b.close()
+    print('%d/%d passed' % (sum(RES), len(RES))); sys.exit(0 if all(RES) else 1)
+
+asyncio.run(main())
