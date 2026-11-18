@@ -84,7 +84,8 @@ function fld(id, lab, val, attrs) { return '<label class="f"><span>' + esc(lab) 
 function renderSel() {
   var its = selItems(), h = '';
   if (!its.length) {
-    h = '<div class="muted small">' + t('selNone') + '</div>';
+    var msel = selMeas();
+    h = msel.length ? '<div class="small">📏 ' + esc(t('selMeasN', [msel.length])) + '</div><div class="btns"><button data-cmd="del" class="danger">' + esc(t('bDel')) + '</button></div>' : '<div class="muted small">' + t('selNone') + '</div>';
   } else if (its.length === 1) {
     var it = its[0], d = itemDim(it);
     if (it.kind === 'mc') {
@@ -410,7 +411,9 @@ function onKey(e) {
   if (ctl && (k === 'z' || k === 'Z') && !e.shiftKey) { if (undo()) { renderAll(); } }
   else if (ctl && (k === 'y' || k === 'Y' || ((k === 'z' || k === 'Z') && e.shiftKey))) { if (redo()) { renderAll(); } }
   else if (ctl && (k === 'd' || k === 'D')) duplicateSel();
-  else if (ctl && (k === 'a' || k === 'A')) { SEL = ST.items.map(function (i) { return i.id; }); onSelChange(); render2d(); }
+  else if (ctl && (k === 'c' || k === 'C')) { if (!copySel()) done = false; }
+  else if (ctl && (k === 'v' || k === 'V')) { if (CLIP) pasteClip(); else done = false; }
+  else if (ctl && (k === 'a' || k === 'A')) { SEL = ST.items.map(function (i) { return i.id; }).concat(measOf().map(function (m) { return m.id; })); onSelChange(); render2d(); }
   else if (ctl && (k === 's' || k === 'S')) saveProject(false);
   else if (ctl) done = false;
   else if (k === 'r' || k === 'R') rotateSel(e.shiftKey ? -90 : 90);
@@ -524,7 +527,7 @@ function startApp() {
   requestAnimationFrame(function () { fitView(); firstRun(); });
   initSim(); initChanges();
   $('bMeas').onclick = function () { setMeasure(!MEAS.on); };
-  $('bMeasClr').onclick = function () { MEAS.list = []; measUi(); render2d(); };
+  $('bMeasClr').onclick = function () { ST.meas = []; SEL = SEL.filter(itemById); measUi(); changed(); onSelChange(); };
   // label text sizes (2D toolbar and 3D toolbar stay in step)
   var szs = [0.6, 0.8, 1, 1.25, 1.5, 2, 2.5];
   [['lblMc', 'mc'], ['lblOp', 'op'], ['lblMc3', 'mc'], ['lblOp3', 'op']].forEach(function (p) {
