@@ -290,6 +290,8 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;paddi
       <label class="f"><span data-t="lsFinL">Bàn QC / PCK dài (cm)</span><input id="lsFinL" type="number" min="40" step="5"></label>
       <label class="f"><span data-t="lsFinW">Bàn QC / PCK rộng (cm)</span><input id="lsFinW" type="number" min="30" step="5"></label>
       <label class="f"><span data-t="lsBoxW">Thùng rộng (cm)</span><input id="lsBoxW" type="number" min="30" step="5"></label>
+      <label class="f"><span data-t="lsFinGap">Khu hoàn thiện cách cuối chuyền (cm)</span><input id="lsFinGap" type="number" min="0" step="5"></label>
+      <label class="f"><span data-t="lsFinLen">Khu hoàn thiện dài (cm)</span><input id="lsFinLen" type="number" min="0" step="10"></label>
     </div>
     <div class="calc" id="lsCalc"></div>
     <label class="ck" style="margin-top:10px"><input type="checkbox" id="lsBr"><b data-t="lsBr">Có chuyền nhánh (chuyền phụ bên cạnh, tùy mã hàng)</b></label>
@@ -366,6 +368,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 var LANG = 'vi';
 var I18N = {
   vi: {
+    lsFinGap: 'Khu hoàn thiện cách cuối chuyền (cm)', lsFinLen: 'Khu hoàn thiện dài (cm, để trống = vừa đủ)',
     fObjOpr: 'Có người đứng làm việc (phía cạnh dài; xoay bàn để đổi phía)',
     copied: 'Đã sao chép {0} đối tượng (Ctrl+V để dán).', selMeasN: '{0} thước đo đang chọn: kéo để di chuyển, kéo đầu tròn để đổi điểm đo, Delete để xóa, Ctrl+C / Ctrl+V để sao chép.',
     bMeas: '📏 Đo', bMeasTip: 'Thước đo khoảng cách trên mặt bằng 2D: kéo chuột giữa 2 điểm', bMeasClr: 'Xóa thước đo',
@@ -516,6 +519,7 @@ var I18N = {
     ocrIgnored: 'bỏ qua', ocrLegend: 'Viền xanh lá: đọc đúng mã · cam: đã sửa theo thư viện · đỏ: không có trong thư viện · xanh dương: số công đoạn · xám: bỏ qua. Đưa chuột vào ô để xem chữ đọc được.'
   },
   en: {
+    lsFinGap: 'Finishing area gap after the line (cm)', lsFinLen: 'Finishing area length (cm, empty = just fits)',
     fObjOpr: 'Standing operator (on the long side; turn the table to change the side)',
     copied: '{0} objects copied (Ctrl+V to paste).', selMeasN: '{0} measurements selected: drag to move, drag a round end to change it, Delete to remove, Ctrl+C / Ctrl+V to copy.',
     bMeas: '📏 Measure', bMeasTip: 'Measure distances on the 2D plan: drag between two points', bMeasClr: 'Clear measurements',
@@ -890,7 +894,7 @@ var ERG_DEF = {
   emptyPitch: 107,// width of an empty cell in the pasted grid
   snap: 5
 };
-var LINE_DEF = { units: 17, unit: 107, tableW: 30, start: 90, gap: 30, end: 30, finTL: 175, finTW: 75, boxW: 70 };   // start = length of the input area in front of the line
+var LINE_DEF = { units: 17, unit: 107, tableW: 30, start: 90, gap: 30, end: 30, finTL: 175, finTW: 75, boxW: 70, finGap: 30 };   // start = length of the input area in front of the line
 var ST = { line: { name: '', length: 2400, width: 600, fixed: false }, erg: Object.assign({}, ERG_DEF), items: [], seq: 1 };
 var SEL = [];            // selected ids (not saved)
 var UNDO = [], REDO = [];
@@ -1145,7 +1149,9 @@ function setupLine(o) {
   var fin = o.finish !== false, tL = Math.max(40, +o.finTL || LINE_DEF.finTL), tW = Math.max(30, +o.finTW || LINE_DEF.finTW), bxW = Math.max(30, +o.boxW || LINE_DEF.boxW);
   var oldF = zoneById('finish'), oldB = zoneById('boxes');
   if (fin) {
-    var fL = Math.round((ST.erg.standDepth || 80) + tW + tL), fx = mL + gap;   // QC operator, QC, packing tables and boxes side by side, touching
+    // QC operator, QC, packing tables and boxes side by side, touching; its own distance from the end of the line and its own length (empty = just fits)
+    var fGap = Math.max(0, Math.round(o.finGap != null && o.finGap !== '' ? +o.finGap : LINE_DEF.finGap)), fMin = Math.round((ST.erg.standDepth || 80) + tW + tL);
+    var fL = Math.max(fMin, Math.round(+o.finLen || 0)), fx = mL + fGap;
     zones.push({ id: 'finish', x: fx, y: mainY, L: fL, W: mW }, { id: 'boxes', x: fx + fL, y: mainY, L: Math.round(3 * bxW), W: mW });   // 3 box strips across the line width
   }
   if (inL > 0) zones.push({ id: 'input', x: inX, y: mainY, L: inL, W: mW });
@@ -1155,7 +1161,7 @@ function setupLine(o) {
     if (inL > 0) zones.push({ id: 'inputB', x: inX, y: brY, L: inL, W: bW });
   }
   ST.line = { name: o.name || '', length: Math.max(mL, bL), width: mW + (br ? walk + bW : 0), fixed: true, units: o.units, unit: o.unit, tableW: o.tableW, start: inL, gap: gap, end: o.end, hc: o.hc || 0,
-    finish: fin, finTL: tL, finTW: tW, boxW: bxW,
+    finish: fin, finTL: tL, finTW: tW, boxW: bxW, finGap: o.finGap != null && o.finGap !== '' ? Math.max(0, Math.round(+o.finGap)) : LINE_DEF.finGap, finLen: +o.finLen > 0 ? Math.round(+o.finLen) : 0,
     mainWidth: o.width || 0, zones: zones, branch: br || null, v: 2 };
   function center(zid, x, y, L, W) {
     var c = centerOf(zid), dx = 0, dy = 0;
@@ -1181,7 +1187,9 @@ function placeFinish(oldF, oldB) {
   });
   var cy = F.y + F.W / 2, tL = L.finTL, tW = L.finTW, sd = ST.erg.standDepth || 80;
   // areas made before the operators' places existed: built again
-  if (ST.items.some(function (it) { return it.zone === 'finish' && /^(QC|PCK)/.test(it.name || '') && !it.opr; })) ST.items = ST.items.filter(function (it) { return !isFinishObj(it); });
+  var stale = ST.items.some(function (it) { return it.zone === 'finish' && /^(QC|PCK)/.test(it.name || '') && (!it.opr || it.L !== tL || it.W !== tW); }) ||
+    ST.items.some(function (it) { return it.zone === 'boxes' && (it.L !== L.boxW || Math.abs(it.W - Bz.W) > 0.5); });
+  if (stale) ST.items = ST.items.filter(function (it) { return !isFinishObj(it); });
   if (!ST.items.some(function (it) { return it.zone === 'finish'; })) {
     var qx = F.x + sd + tW / 2, px = F.x + sd + tW + tL / 2;   // QC operator on the line side, packing tables touch the QC table
     ST.items.push({ id: uid(), kind: 'obj', zone: 'finish', name: 'QC', L: tL, W: tW, H: 75, x: n1(qx), y: n1(cy), rot: 90, color: '#9fd3a8', opr: true },   // QC table upright, operator on its left
@@ -4093,7 +4101,7 @@ function lineVals() {
   return { name: $('lsName').value.trim(), units: Math.max(1, Math.round(num($('lsUnits').value, L.units || LINE_DEF.units))), unit: Math.max(10, num($('lsUnit').value, LINE_DEF.unit)),
     tableW: Math.max(0, num($('lsTable').value, LINE_DEF.tableW)), start: Math.max(0, num($('lsStart').value, LINE_DEF.start)), gap: Math.max(0, num($('lsGap').value, LINE_DEF.gap)), end: Math.max(0, num($('lsEnd').value, LINE_DEF.end)),
     width: num($('lsWidth').value, 0), hc: Math.max(0, Math.round(num($('lsHC').value, 0))),
-    finish: $('lsFin').checked, finTL: Math.max(40, num($('lsFinL').value, LINE_DEF.finTL)), finTW: Math.max(30, num($('lsFinW').value, LINE_DEF.finTW)), boxW: Math.max(30, num($('lsBoxW').value, LINE_DEF.boxW)),
+    finish: $('lsFin').checked, finTL: Math.max(40, num($('lsFinL').value, LINE_DEF.finTL)), finTW: Math.max(30, num($('lsFinW').value, LINE_DEF.finTW)), boxW: Math.max(30, num($('lsBoxW').value, LINE_DEF.boxW)), finGap: $('lsFinGap').value === '' ? LINE_DEF.finGap : Math.max(0, num($('lsFinGap').value, LINE_DEF.finGap)), finLen: Math.max(0, num($('lsFinLen').value, 0)),
     branch: !$('lsBr').checked ? null : { units: Math.max(1, Math.round(num($('lsBUnits').value, 6))), unit: Math.max(10, num($('lsUnit').value, LINE_DEF.unit)), tableW: Math.max(0, num($('lsBTable').value, LINE_DEF.tableW)),
       end: 30, pos: $('lsBPos').value, walk: Math.max(0, num($('lsBWalk').value, 100)), width: num($('lsBWidth').value, 0) } };
 }
@@ -4109,7 +4117,7 @@ function openLineSetup() {
   $('lsName').value = L.name || ''; $('lsUnits').value = L.units || LINE_DEF.units; $('lsUnit').value = L.unit || LINE_DEF.unit;
   $('lsTable').value = ct ? ct.W : (L.tableW != null ? L.tableW : LINE_DEF.tableW); $('lsStart').value = L.v === 2 && L.start != null ? L.start : LINE_DEF.start; $('lsGap').value = L.gap != null ? L.gap : LINE_DEF.gap; $('lsEnd').value = L.end != null ? L.end : LINE_DEF.end;
   $('lsWidth').value = L.units ? (L.mainWidth || (L.zones ? zoneById('main').W : L.width)) : '';
-  $('lsFin').checked = L.finish !== false; $('lsFinL').value = L.finTL || LINE_DEF.finTL; $('lsFinW').value = L.finTW || LINE_DEF.finTW; $('lsBoxW').value = L.boxW || LINE_DEF.boxW;
+  $('lsFin').checked = L.finish !== false; $('lsFinL').value = L.finTL || LINE_DEF.finTL; $('lsFinW').value = L.finTW || LINE_DEF.finTW; $('lsBoxW').value = L.boxW || LINE_DEF.boxW; $('lsFinGap').value = L.finGap != null ? L.finGap : LINE_DEF.finGap; $('lsFinLen').value = L.finLen || ''; $('lsFinLen').placeholder = Math.round((ST.erg.standDepth || 80) + (L.finTW || LINE_DEF.finTW) + (L.finTL || LINE_DEF.finTL));
   $('lsHC').value = L.hc || ''; $('lsHC').placeholder = (ST.info || {}).optr || ST.items.filter(function (i) { return i.kind === 'mc' && !i.noOp; }).length || '';
   var B = L.branch, cb = centerOf('branch');
   $('lsBr').checked = !!B; $('lsBUnits').value = B ? B.units : 6; $('lsBTable').value = cb ? cb.W : (B ? B.tableW : LINE_DEF.tableW); $('lsBPos').value = B ? B.pos : 'top';

@@ -14,7 +14,7 @@ var ERG_DEF = {
   emptyPitch: 107,// width of an empty cell in the pasted grid
   snap: 5
 };
-var LINE_DEF = { units: 17, unit: 107, tableW: 30, start: 90, gap: 30, end: 30, finTL: 175, finTW: 75, boxW: 70 };   // start = length of the input area in front of the line
+var LINE_DEF = { units: 17, unit: 107, tableW: 30, start: 90, gap: 30, end: 30, finTL: 175, finTW: 75, boxW: 70, finGap: 30 };   // start = length of the input area in front of the line
 var ST = { line: { name: '', length: 2400, width: 600, fixed: false }, erg: Object.assign({}, ERG_DEF), items: [], seq: 1 };
 var SEL = [];            // selected ids (not saved)
 var UNDO = [], REDO = [];
@@ -269,7 +269,9 @@ function setupLine(o) {
   var fin = o.finish !== false, tL = Math.max(40, +o.finTL || LINE_DEF.finTL), tW = Math.max(30, +o.finTW || LINE_DEF.finTW), bxW = Math.max(30, +o.boxW || LINE_DEF.boxW);
   var oldF = zoneById('finish'), oldB = zoneById('boxes');
   if (fin) {
-    var fL = Math.round((ST.erg.standDepth || 80) + tW + tL), fx = mL + gap;   // QC operator, QC, packing tables and boxes side by side, touching
+    // QC operator, QC, packing tables and boxes side by side, touching; its own distance from the end of the line and its own length (empty = just fits)
+    var fGap = Math.max(0, Math.round(o.finGap != null && o.finGap !== '' ? +o.finGap : LINE_DEF.finGap)), fMin = Math.round((ST.erg.standDepth || 80) + tW + tL);
+    var fL = Math.max(fMin, Math.round(+o.finLen || 0)), fx = mL + fGap;
     zones.push({ id: 'finish', x: fx, y: mainY, L: fL, W: mW }, { id: 'boxes', x: fx + fL, y: mainY, L: Math.round(3 * bxW), W: mW });   // 3 box strips across the line width
   }
   if (inL > 0) zones.push({ id: 'input', x: inX, y: mainY, L: inL, W: mW });
@@ -279,7 +281,7 @@ function setupLine(o) {
     if (inL > 0) zones.push({ id: 'inputB', x: inX, y: brY, L: inL, W: bW });
   }
   ST.line = { name: o.name || '', length: Math.max(mL, bL), width: mW + (br ? walk + bW : 0), fixed: true, units: o.units, unit: o.unit, tableW: o.tableW, start: inL, gap: gap, end: o.end, hc: o.hc || 0,
-    finish: fin, finTL: tL, finTW: tW, boxW: bxW,
+    finish: fin, finTL: tL, finTW: tW, boxW: bxW, finGap: o.finGap != null && o.finGap !== '' ? Math.max(0, Math.round(+o.finGap)) : LINE_DEF.finGap, finLen: +o.finLen > 0 ? Math.round(+o.finLen) : 0,
     mainWidth: o.width || 0, zones: zones, branch: br || null, v: 2 };
   function center(zid, x, y, L, W) {
     var c = centerOf(zid), dx = 0, dy = 0;
@@ -305,7 +307,9 @@ function placeFinish(oldF, oldB) {
   });
   var cy = F.y + F.W / 2, tL = L.finTL, tW = L.finTW, sd = ST.erg.standDepth || 80;
   // areas made before the operators' places existed: built again
-  if (ST.items.some(function (it) { return it.zone === 'finish' && /^(QC|PCK)/.test(it.name || '') && !it.opr; })) ST.items = ST.items.filter(function (it) { return !isFinishObj(it); });
+  var stale = ST.items.some(function (it) { return it.zone === 'finish' && /^(QC|PCK)/.test(it.name || '') && (!it.opr || it.L !== tL || it.W !== tW); }) ||
+    ST.items.some(function (it) { return it.zone === 'boxes' && (it.L !== L.boxW || Math.abs(it.W - Bz.W) > 0.5); });
+  if (stale) ST.items = ST.items.filter(function (it) { return !isFinishObj(it); });
   if (!ST.items.some(function (it) { return it.zone === 'finish'; })) {
     var qx = F.x + sd + tW / 2, px = F.x + sd + tW + tL / 2;   // QC operator on the line side, packing tables touch the QC table
     ST.items.push({ id: uid(), kind: 'obj', zone: 'finish', name: 'QC', L: tL, W: tW, H: 75, x: n1(qx), y: n1(cy), rot: 90, color: '#9fd3a8', opr: true },   // QC table upright, operator on its left

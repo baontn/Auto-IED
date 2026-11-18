@@ -149,6 +149,13 @@ async def main():
         r = await pg.evaluate('''()=>{const f=zoneById("finish"),b=zoneById("boxes"),m=zoneById("main");const it=ST.items.filter(i=>isFinishObj(i));const q=it.find(i=>i.name=="QC"),p=it.filter(i=>/^PCK/.test(i.name)),bx=it.filter(i=>i.zone=="boxes");
           return [f.x==m.x+m.L+30, f.W==m.W && b.W==m.W, q.rot, q.L+"x"+q.W, p.map(i=>i.rot).join(), Math.abs(p[0].y-p[1].y)==75, bx.map(i=>i.color).join(), bx.every(i=>i.L==70), ISSUES.length,
           Math.round(p[0].x-p[0].L/2-(q.x+q.W/2)), Math.round(bx[0].x-bx[0].L/2-(p[0].x+p[0].L/2)), Math.round(bx[1].x-bx[0].x), Math.round(bx[2].x-bx[1].x), bx.every(i=>i.W==m.W&&i.y==m.y+m.W/2), b.L==210]}''')
+        # input gap and finishing gap are separate; finishing area length and table size adjustable
+        await pg.click('#bLineSetup'); await pg.fill('#lsGap', '50'); await pg.click('#lsOk'); await pg.wait_for_timeout(100)
+        rg = await pg.evaluate("()=>{const m=zoneById('main'),i=zoneById('input'),f=zoneById('finish');return [m.x-(i.x+i.L), f.x-(m.x+m.L)]}")
+        await pg.click('#bLineSetup'); await pg.fill('#lsFinGap', '60'); await pg.fill('#lsFinLen', '500'); await pg.fill('#lsFinL', '160'); await pg.click('#lsOk'); await pg.wait_for_timeout(100)
+        rg2 = await pg.evaluate("()=>{const m=zoneById('main'),f=zoneById('finish'),b=zoneById('boxes'),q=ST.items.find(i=>i.name=='QC');return [f.x-(m.x+m.L), f.L, b.x-(f.x+f.L), q.L, ISSUES.length]}")
+        check(rg == [50, 30] and rg2 == [60, 500, 0, 160, 0], 'input gap and finishing gap set separately; finishing area length and table length adjustable ' + str([rg, rg2]))
+        await pg.click('#bLineSetup'); await pg.fill('#lsGap', '30'); await pg.fill('#lsFinGap', '30'); await pg.fill('#lsFinLen', ''); await pg.fill('#lsFinL', '175'); await pg.click('#lsOk'); await pg.wait_for_timeout(100)
         ro = await pg.evaluate('''()=>{const it=ST.items.filter(i=>isFinishObj(i));const q=it.find(i=>i.name=="QC"),p=it.filter(i=>/^PCK/.test(i.name));const S=i=>shapes(i);
           return [q.opr&&p.every(i=>i.opr), S(q).chair.x<q.x-q.W/2, S(p[0]).chair.y<p[0].y-p[0].W/2, S(p[1]).chair.y>p[1].y+p[1].W/2, S(q).zone.cx>zoneById("finish").x, document.querySelectorAll('#plan [data-id="'+q.id+'"] ellipse').length]}''')
         check(ro == [True, True, True, True, True, 2], 'operators placed at the QC table (line side) and the two packing tables (facing each other), inside the finishing area ' + str(ro))
