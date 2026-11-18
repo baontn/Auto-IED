@@ -67,6 +67,19 @@ function renderSum() {
   $('sumBody').innerHTML = '<div>' + esc(t('sumMc', [n, nw])) + (multi ? ' (' + esc(t('sumMulti', [multi])) + ')' : '') + (nst ? ' · ' + esc(t('sumStand', [nst])) : '') + (fp.n > 1 && !seqParse(ST.seqText).lines.length ? ' · ' + esc(t('sumFlow', [(fp.dist / 100).toFixed(1)])) : '') + '</div><div class="chips">' +
     Object.keys(cnt).sort(function (a, b) { return cnt[b] - cnt[a] || (a < b ? -1 : 1); }).map(function (c) { return '<span class="chip" data-code="' + esc(c) + '" title="' + esc(codeName(c)) + '"><i style="background:' + FLOW_NONE + '"></i>' + esc(c) + ' <b>' + cnt[c] + '</b></span>'; }).join('') + '</div>';
 }
+/* colour of the selected machines: own colour (picker / swatches) or back to the colour of the flow */
+var MC_SWATCH = ['#e0457b', '#2a9d8f', '#e09a2b', '#3a7bd5', '#8e5bd6', '#5aa02c', '#d93636', '#f2c230', '#7d8590', '#ffffff'];
+function mcColorHtml(mcs) {
+  var cur = mcs[0].color || flowColOf(mcs[0]), own = mcs.some(function (i) { return i.color; });
+  return '<div class="mccol"><span class="small">' + esc(t('fMcColor')) + '</span><input type="color" id="fMcColor" value="' + esc(cur) + '" title="' + esc(t('fMcColorTip')) + '">' +
+    MC_SWATCH.map(function (c) { return '<button class="sw" data-mccol="' + c + '" style="background:' + c + '" title="' + c + '"></button>'; }).join('') +
+    '<button data-mccol="" class="small"' + (own ? '' : ' disabled') + ' title="' + esc(t('fMcColorFlowTip')) + '">' + esc(t('fMcColorFlow')) + '</button></div>';
+}
+function setMcColor(c) {
+  var mcs = selItems().filter(function (i) { return i.kind === 'mc'; }); if (!mcs.length) return;
+  mcs.forEach(function (i) { if (c) i.color = c; else delete i.color; });
+  changed(); renderSel();
+}
 function fld(id, lab, val, attrs) { return '<label class="f"><span>' + esc(lab) + '</span><input id="' + id + '" value="' + esc(val) + '" ' + (attrs || '') + '></label>'; }
 function renderSel() {
   var its = selItems(), h = '';
@@ -80,6 +93,7 @@ function renderSel() {
       h += '<div class="small">' + esc(codeName(it.code) || t('notInLib')) + '</div>';
       h += '<label class="ck" style="margin-top:4px"><input type="checkbox" id="fHasOp"' + (it.noOp ? '' : ' checked') + '> ' + esc(t('fHasOp')) + '</label>';
       h += '<label class="ck"><input type="checkbox" id="fStand"' + (isStanding(it) ? ' checked' : '') + '> ' + esc(t('fStand')) + '</label>';
+      h += mcColorHtml([it]);
       var hm = homeOf(it), sats = it.noOp ? [] : satellitesOf(it);
       if (it.noOp && hm) h += '<div class="small" style="color:#7c3aed">👤 ' + esc(t('runBy', [label(hm)])) + '</div>';
       if (sats.length) h += '<div class="small" style="color:#7c3aed">👤 ' + esc(t('alsoRuns', [sats.map(label).join(', ')])) + '</div>';
@@ -96,6 +110,7 @@ function renderSel() {
     h += '<div class="btns"><button data-cmd="rotL" title="Shift+R">⟲ 90°</button><button data-cmd="rotR" title="R">⟳ 90°</button><button data-cmd="flip" title="F">' + esc(t('bFlip')) + '</button><button data-cmd="dup" title="Ctrl+D">' + esc(t('bDup')) + '</button><button data-cmd="del" class="danger" title="Delete">' + esc(t('bDel')) + '</button></div>';
   } else {
     h += '<div><b>' + esc(t('selMany', [its.length])) + '</b></div>';
+    var mcs = its.filter(function (i) { return i.kind === 'mc'; }); if (mcs.length) h += mcColorHtml(mcs);
     h += '<div class="btns"><button data-cmd="rotL">⟲ 90°</button><button data-cmd="rotR">⟳ 90°</button><button data-cmd="flip">' + esc(t('bFlip')) + '</button><button data-cmd="op" title="W">👤 ' + esc(t(opGrouped(its) ? 'bOpSplit' : 'bOpShare')) + '</button></div>';
     h += '<div class="btns"><button data-cmd="grpR" title="' + esc(t('bGrpTip')) + '">' + esc(t('bGrp90')) + '</button><button data-cmd="grp180" title="' + esc(t('bGrpTip')) + '">' + esc(t('bGrp180')) + '</button></div>';
     h += '<div class="btns"><button data-cmd="align" title="' + esc(t('bAlignTip')) + '">' + esc(t('bAlign')) + '</button><button data-cmd="pack" title="' + esc(t('bPackTip')) + '">' + esc(t('bPack')) + '</button><button data-cmd="close" title="' + esc(t('ttClose')) + '">' + esc(t('bClose')) + '</button><button data-cmd="dup">' + esc(t('bDup')) + '</button><button data-cmd="del" class="danger">' + esc(t('bDel')) + '</button></div>';
@@ -104,6 +119,7 @@ function renderSel() {
 }
 function sideLive() { var its = selItems(); if (its.length === 1 && $('fX')) { $('fX').value = its[0].x; $('fY').value = its[0].y; } }
 function onSelField(e) {
+  if (e.target.id === 'fMcColor') { setMcColor(e.target.value); return; }
   var its = selItems(); if (its.length !== 1) return;
   var it = its[0], id = e.target.id, v = e.target.value;
   if (id === 'fCode') { var c = normCode(v); if (!c) return; it.code = c; }
@@ -405,7 +421,7 @@ function onKey(e) {
   else if (k === 'Delete' || k === 'Backspace') deleteSel();
   else if (k === 'ArrowLeft') nudgeSel(-st, 0); else if (k === 'ArrowRight') nudgeSel(st, 0);
   else if (k === 'ArrowUp') nudgeSel(0, -st); else if (k === 'ArrowDown') nudgeSel(0, st);
-  else if (k === 'Escape') { if (OPMODE) setOpMode(false); SEL = []; onSelChange(); render2d(); }
+  else if (k === 'Escape') { if (MEAS.on) setMeasure(false); if (OPMODE) setOpMode(false); SEL = []; onSelChange(); render2d(); }
   else done = false;
   if (done) { e.preventDefault(); renderSel(); }
 }
@@ -421,7 +437,7 @@ function startApp() {
   $('lang').value = LANG; $('lang').onchange = function () { LANG = this.value; localStorage.setItem('ls_lang', LANG); applyI18n(); fillCodeList(); renderAll(); };
   ['lnName', 'lnL', 'lnW'].forEach(function (id) { $(id).onchange = function () { ST.line.name = $('lnName').value.trim(); ST.line.length = Math.max(50, num($('lnL').value, ST.line.length)); ST.line.width = Math.max(50, num($('lnW').value, ST.line.width)); ST.line.fixed = true; changed(); }; });
   $('selBody').addEventListener('change', onSelField);
-  $('selBody').addEventListener('click', function (e) { var b = e.target.closest('button[data-cmd]'); if (b) cmd(b.dataset.cmd); });
+  $('selBody').addEventListener('click', function (e) { var sw = e.target.closest('[data-mccol]'); if (sw) { setMcColor(sw.dataset.mccol); return; } var b = e.target.closest('button[data-cmd]'); if (b) cmd(b.dataset.cmd); });
   $('issList').addEventListener('click', function (e) {
     var li = e.target.closest('li[data-i]'); if (!li) return; var x = ISSUES[+li.dataset.i]; if (!x) return;
     SEL = x.ids.slice(); var it = itemById(x.ids[0]);
@@ -507,6 +523,8 @@ function startApp() {
   runChecks(); renderSide();
   requestAnimationFrame(function () { fitView(); firstRun(); });
   initSim(); initChanges();
+  $('bMeas').onclick = function () { setMeasure(!MEAS.on); };
+  $('bMeasClr').onclick = function () { MEAS.list = []; measUi(); render2d(); };
   // label text sizes (2D toolbar and 3D toolbar stay in step)
   var szs = [0.6, 0.8, 1, 1.25, 1.5, 2, 2.5];
   [['lblMc', 'mc'], ['lblOp', 'op'], ['lblMc3', 'mc'], ['lblOp3', 'op']].forEach(function (p) {

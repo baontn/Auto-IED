@@ -2,6 +2,9 @@
 var LANG = 'vi';
 var I18N = {
   vi: {
+    bMeas: '📏 Đo', bMeasTip: 'Thước đo khoảng cách trên mặt bằng 2D: kéo chuột giữa 2 điểm', bMeasClr: 'Xóa thước đo',
+    measBar: 'Thước đo: kéo chuột từ điểm đầu đến điểm cuối (bám góc / cạnh bàn máy; Shift: chỉ ngang / dọc; Alt: không bám lưới). Esc hoặc bấm lại nút 📏 để thoát.',
+    fMcColor: 'Màu máy', fMcColorTip: 'Chọn màu cho các máy đang chọn', fMcColorFlow: 'Theo cụm', fMcColorFlowTip: 'Bỏ màu tự chọn, dùng màu của cụm (trình tự)',
     lsFin: 'Khu hoàn thiện (1 bàn QC đứng dọc + 2 bàn PCK nằm ngang đối diện nhau) và khu thùng (thùng vàng, đỏ, xanh) ở cuối chuyền chính', lsFinL: 'Bàn QC / PCK dài (cm)', lsFinW: 'Bàn QC / PCK rộng (cm)', lsBoxW: 'Thùng rộng (cm)',
     zoneFinish: 'Khu hoàn thiện', zoneBoxes: 'Khu thùng', boxY: 'Thùng vàng', boxR: 'Thùng đỏ', boxG: 'Thùng xanh',
     simLoadH: 'Tải', simCapTip: 'Số sản phẩm công đoạn làm được trong 1 giờ = số người × 60 × hiệu suất / SAM. Vạch nhỏ dưới số: so với công đoạn nhanh nhất; vạch đứng = sản lượng mục tiêu.',
@@ -101,7 +104,7 @@ var I18N = {
     bUndoTip: 'Hoàn tác (Ctrl+Z)', bRedoTip: 'Làm lại (Ctrl+Y)', bFit: 'Vừa màn hình', optFlow: 'Đường đi', optSnap: 'Bám lưới', optAisle: 'Lối đi sau lưng',
     bPng: 'Xuất ảnh', bPrint: 'In', b3Reset: 'Góc nhìn mặc định', b3Top: 'Nhìn từ trên', opt3People: 'Người vận hành', opt3Labels: 'Nhãn',
     hint3d: 'Kéo máy để dời máy · kéo nền: xoay · chuột phải/Shift: di chuyển · lăn chuột: phóng to · Ctrl+bấm: chọn thêm · R/F/W/S như mặt bằng 2D',
-    hint2d: 'Kéo máy để di chuyển · R / Shift+R xoay 90° · F quay đầu · Delete xóa · W bật/tắt người · S đứng/ngồi · K khép sát · Ctrl+D nhân bản · mũi tên dịch 1 cm (Shift 10 cm) · Shift+kéo chọn vùng · lăn chuột phóng to · kéo nền để di chuyển · giữ Alt khi kéo: bỏ bám lưới',
+    hint2d: 'Kéo máy để di chuyển · R / Shift+R xoay 90° · F quay đầu · Delete xóa · W bật/tắt người · S đứng/ngồi · K khép sát (cả bàn QC / PCK) · Ctrl+D nhân bản · mũi tên dịch 1 cm (Shift 10 cm) · Shift+kéo chọn vùng · lăn chuột phóng to · kéo nền để di chuyển · giữ Alt khi kéo: bỏ bám lưới',
     lnTitle: 'Chuyền', lnName: 'Tên chuyền', lnLen: 'Dài (cm)', lnWid: 'Rộng (cm)', bErg: 'Công thái học…', lnUsed: 'Layout chiếm: {0} × {1} cm (tính cả vùng người vận hành)', lineNoName: 'Chuyền chưa đặt tên',
     selTitle: 'Đang chọn', sumTitle: 'Tổng hợp', issTitle: 'Kiểm tra', issNone: 'Không có lỗi',
     selNone: 'Bấm vào một máy để xem và sửa; các nút xoay hiện ngay cạnh máy. Shift+bấm để chọn nhiều máy. Đường viền xanh nét đứt phía trước máy là vùng người vận hành (ghế + chỗ ngồi), chấm đỏ là vị trí kim.',
@@ -147,6 +150,9 @@ var I18N = {
     ocrIgnored: 'bỏ qua', ocrLegend: 'Viền xanh lá: đọc đúng mã · cam: đã sửa theo thư viện · đỏ: không có trong thư viện · xanh dương: số công đoạn · xám: bỏ qua. Đưa chuột vào ô để xem chữ đọc được.'
   },
   en: {
+    bMeas: '📏 Measure', bMeasTip: 'Measure distances on the 2D plan: drag between two points', bMeasClr: 'Clear measurements',
+    measBar: 'Measuring: drag from the first point to the second (snaps to table corners / edges; Shift: horizontal / vertical only; Alt: no grid). Esc or the 📏 button again to leave.',
+    fMcColor: 'Machine colour', fMcColorTip: 'Choose a colour for the selected machines', fMcColorFlow: 'By flow', fMcColorFlowTip: 'Remove the own colour, use the colour of the flow group',
     lsFin: 'Finishing area (1 upright QC table + 2 packing tables lying face to face) and box area (yellow, red, green boxes) at the end of the main line', lsFinL: 'QC / packing table length (cm)', lsFinW: 'QC / packing table width (cm)', lsBoxW: 'Box width (cm)',
     zoneFinish: 'Finishing area', zoneBoxes: 'Box area', boxY: 'Yellow box', boxR: 'Red box', boxG: 'Green box',
     simLoadH: 'Load', simCapTip: 'Pieces the operation makes per hour = people × 60 × efficiency / SAM. Thin bar: compared with the fastest operation; tick = target output.',
