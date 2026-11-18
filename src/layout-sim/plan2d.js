@@ -2,6 +2,7 @@
 var V = { x: -50, y: -80, s: 0.5 };           // world point at the top-left corner, pixels per cm
 var OPT = { flow: true, snap: true, aisles: false, wip: false };
 var DRAG = null, BOXR = null;
+var MEAS = { on: false, list: [], cur: null };   // distance measurements on the 2D plan (not saved)
 
 function pal(light) {
   if (light) return { bg: '#ffffff', floor: '#f7f7f5', grid: '#e3e3df', grid2: '#cfcfca', text: '#1d2330', muted: '#6b7280', accent: '#1f6feb', bad: '#c4202b', warn: '#c98a00', edge: '#3b4250', zone: 'rgba(31,111,235,.08)', zoneEdge: '#7aa3e6', chair: '#5b6474', aisle: 'rgba(201,138,0,.10)', flow: '#e0457b', tableEdge: '#1d2330', outFloor: '#ececea', walk: 'rgba(224,161,0,.12)', walkEdge: '#b07d00', standZone: 'rgba(22,160,133,.10)', standEdge: '#2a9d8f', mat: 'rgba(60,70,80,.18)' };
@@ -127,6 +128,14 @@ function planMarkup(o) {
       h.push('<g pointer-events="none"><rect x="' + n1(q.x - wd / 2) + '" y="' + n1(q.y - f * 0.8) + '" width="' + n1(wd) + '" height="' + n1(f * 1.4) + '" rx="' + n1(f * 0.4) + '" fill="' + col + '"/><text x="' + n1(q.x) + '" y="' + n1(q.y + f * 0.18) + '" font-size="' + f + '" font-weight="700" fill="#fff" text-anchor="middle">' + tx + '</text></g>');
     });
   }
+  if (!o.exp && (MEAS.list.length || MEAS.cur)) MEAS.list.concat(MEAS.cur ? [MEAS.cur] : []).forEach(function (m) {
+    var a = m.a, b = m.b, d = Math.hypot(b.x - a.x, b.y - a.y); if (d < 0.5) return;
+    var ux = (b.x - a.x) / d, uy = (b.y - a.y) / d, tk = 8 * sw, col = '#e8590c', f = Math.max(fs * 1.15, 14 * sw);
+    var tx = (d < 100 ? Math.round(d) + ' cm' : (d / 100).toFixed(2) + ' m'), sub = Math.abs(b.x - a.x) > 1 && Math.abs(b.y - a.y) > 1 ? ' (↔ ' + Math.round(Math.abs(b.x - a.x)) + ' · ↕ ' + Math.round(Math.abs(b.y - a.y)) + ' cm)' : '';
+    h.push('<g pointer-events="none"><line x1="' + n1(a.x) + '" y1="' + n1(a.y) + '" x2="' + n1(b.x) + '" y2="' + n1(b.y) + '" stroke="' + col + '" stroke-width="' + 2 * sw + '"/>' +
+      [a, b].map(function (q) { return '<line x1="' + n1(q.x - uy * tk) + '" y1="' + n1(q.y + ux * tk) + '" x2="' + n1(q.x + uy * tk) + '" y2="' + n1(q.y - ux * tk) + '" stroke="' + col + '" stroke-width="' + 2 * sw + '"/>'; }).join('') +
+      '<text x="' + n1((a.x + b.x) / 2 - uy * f * 0.9) + '" y="' + n1((a.y + b.y) / 2 + ux * f * 0.9 + f * 0.35) + '" font-size="' + f + '" font-weight="700" fill="' + col + '" stroke="rgba(255,255,255,.95)" stroke-width="' + f * 0.25 + '" paint-order="stroke" text-anchor="middle">' + esc(tx + sub) + '</text></g>');
+  });
   if (BOXR && !o.exp) {
     var bx = Math.min(BOXR.a.x, BOXR.b.x), by = Math.min(BOXR.a.y, BOXR.b.y);
     h.push('<rect x="' + bx + '" y="' + by + '" width="' + Math.abs(BOXR.a.x - BOXR.b.x) + '" height="' + Math.abs(BOXR.a.y - BOXR.b.y) + '" fill="rgba(31,111,235,.08)" stroke="' + P.accent + '" stroke-width="' + sw + '" stroke-dasharray="' + 4 * sw + '"/>');
@@ -159,6 +168,27 @@ function render2d() {
   var z = document.getElementById('zoomTxt'); if (z) z.textContent = Math.round(V.s * 100) / 100 + ' px/cm';
   placeSelTools();
 }
+/* measuring point: the nearest table corner / edge middle / centre within a few pixels, else the grid (snap on, Alt = free) */
+function measSnap(p, e) {
+  var best = null, bd = 10 / V.s;
+  ST.items.forEach(function (it) {
+    var c = corners(shapes(it).table), pts = c.concat(c.map(function (q, i) { var r = c[(i + 1) % 4]; return { x: (q.x + r.x) / 2, y: (q.y + r.y) / 2 }; }), [{ x: it.x, y: it.y }]);
+    pts.forEach(function (q) { var d = Math.hypot(q.x - p.x, q.y - p.y); if (d < bd) { bd = d; best = q; } });
+  });
+  if (best) return { x: n1(best.x), y: n1(best.y) };
+  if (OPT.snap && !(e && e.altKey)) { var s = ST.erg.snap || 5; return { x: Math.round(p.x / s) * s, y: Math.round(p.y / s) * s }; }
+  return { x: n1(p.x), y: n1(p.y) };
+}
+function setMeasure(on) {
+  MEAS.on = !!on; if (on && OPMODE) setOpMode(false);
+  document.body.classList.toggle('measmode', MEAS.on); measUi(); render2d();
+}
+function measUi() {
+  var b = document.getElementById('bMeas'), bar = document.getElementById('measBar'), c = document.getElementById('bMeasClr');
+  if (b) { b.classList.toggle('primary', MEAS.on); }
+  if (bar) bar.style.display = MEAS.on ? '' : 'none';
+  if (c) c.style.display = MEAS.list.length ? '' : 'none';
+}
 function toWorld(ev) { var r = svgEl().getBoundingClientRect(); return { x: V.x + (ev.clientX - r.left) / V.s, y: V.y + (ev.clientY - r.top) / V.s }; }
 function fitView() {
   var svg = svgEl(), w = svg.clientWidth, h = svg.clientHeight; if (!w) return;
@@ -177,6 +207,7 @@ function init2d() {
   svg.addEventListener('pointerdown', function (e) {
     svg.setPointerCapture(e.pointerId);
     var p = toWorld(e), g = e.target.closest ? e.target.closest('[data-id]') : null;
+    if (MEAS.on && e.button === 0) { var q = measSnap(p, e); MEAS.cur = { a: q, b: q }; DRAG = { mode: 'meas' }; render2d(); return; }
     if (g && e.button === 0 && OPMODE) {           // operator mode: a click toggles this machine's operator
       var ti = itemById(g.getAttribute('data-id'));
       if (ti && ti.kind === 'mc') { opToggleOne(ti); changed(); }
@@ -207,10 +238,16 @@ function init2d() {
       if (Math.abs(mx) + Math.abs(my) > 3) DRAG.moved = true;
       V.x = DRAG.v0.x - mx / V.s; V.y = DRAG.v0.y - my / V.s; render2d();
     } else if (DRAG.mode === 'box') { BOXR.b = toWorld(e); render2d(); }
+    else if (DRAG.mode === 'meas') {
+      var b = measSnap(toWorld(e), e), a = MEAS.cur.a;
+      if (e.shiftKey) { if (Math.abs(b.x - a.x) >= Math.abs(b.y - a.y)) b.y = a.y; else b.x = a.x; }   // Shift: horizontal / vertical only
+      MEAS.cur.b = b; render2d();
+    }
   });
   svg.addEventListener('pointerup', function () {
     if (!DRAG) return;
     var d = DRAG; DRAG = null;
+    if (d.mode === 'meas') { var m = MEAS.cur; MEAS.cur = null; if (m && Math.hypot(m.b.x - m.a.x, m.b.y - m.a.y) > 1) MEAS.list.push(m); measUi(); render2d(); return; }
     if (d.mode === 'move' && d.moved) changed();
     else if (d.mode === 'pan' && !d.moved) { if (SEL.length) { SEL = []; onSelChange(); } render2d(); }
     else if (d.mode === 'box') {
@@ -307,7 +344,9 @@ function packSel() {
    central table touches it with the edge facing it (rows further out move with it) */
 function tableExt(it) { var c = corners(shapes(it).table), xs = c.map(function (p) { return p.x; }), ys = c.map(function (p) { return p.y; }); return { x0: Math.min.apply(null, xs), x1: Math.max.apply(null, xs), y0: Math.min.apply(null, ys), y1: Math.max.apply(null, ys) }; }
 function closeSel() {
-  var its = selItems().filter(function (it) { return it.kind === 'mc' && !isLocked(it); }); if (!its.length) return;
+  var all = selItems().filter(function (it) { return !isLocked(it); });
+  closeObjs(all.filter(function (it) { return it.kind !== 'mc'; }));   // tables, QC / packing tables, boxes
+  var its = all.filter(function (it) { return it.kind === 'mc'; }); if (!its.length) { changed(); return; }
   var groups = {};
   its.forEach(function (it) {
     var ct = centerOf(it.zone === 'branch' ? 'branch' : 'main'), side = ct ? (it.y < ct.y ? 'top' : 'bot') : 'all', k = (it.zone || 'main') + '|' + side;
@@ -332,6 +371,25 @@ function closeSel() {
     });
   });
   changed();
+}
+/* close up tables and other objects: each one moves left against the selected objects on its left that face it (overlap in y),
+   then up against those above it (overlap in x); the left-most / top-most ones stay */
+function closeObjs(its) {
+  if (!its.length) return;
+  var ov = function (a0, a1, b0, b1) { return Math.min(a1, b1) - Math.max(a0, b0) > 0.5; };
+  var E = its.map(function (it) { return { it: it, e: tableExt(it) }; });
+  E.sort(function (a, b) { return a.e.x0 - b.e.x0; });
+  E.forEach(function (m, i) {
+    var lim = null;
+    E.slice(0, i).forEach(function (q) { if (ov(q.e.y0, q.e.y1, m.e.y0, m.e.y1) && q.e.x1 <= m.e.x0 + 1 + (m.e.x1 - m.e.x0) / 2) lim = lim == null ? q.e.x1 : Math.max(lim, q.e.x1); });
+    if (lim != null) { var dx = lim - m.e.x0; m.it.x = n1(m.it.x + dx); m.e.x0 += dx; m.e.x1 += dx; }
+  });
+  E.sort(function (a, b) { return a.e.y0 - b.e.y0; });
+  E.forEach(function (m, i) {
+    var lim = null;
+    E.slice(0, i).forEach(function (q) { if (ov(q.e.x0, q.e.x1, m.e.x0, m.e.x1) && q.e.y1 <= m.e.y0 + 1 + (m.e.y1 - m.e.y0) / 2) lim = lim == null ? q.e.y1 : Math.max(lim, q.e.y1); });
+    if (lim != null) { var dy = lim - m.e.y0; m.it.y = n1(m.it.y + dy); m.e.y0 += dy; m.e.y1 += dy; }
+  });
 }
 function addMachine(code) {
   code = normCode(code); if (!code) return;

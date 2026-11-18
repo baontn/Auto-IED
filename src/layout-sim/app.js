@@ -421,7 +421,7 @@ function onKey(e) {
   else if (k === 'Delete' || k === 'Backspace') deleteSel();
   else if (k === 'ArrowLeft') nudgeSel(-st, 0); else if (k === 'ArrowRight') nudgeSel(st, 0);
   else if (k === 'ArrowUp') nudgeSel(0, -st); else if (k === 'ArrowDown') nudgeSel(0, st);
-  else if (k === 'Escape') { if (OPMODE) setOpMode(false); SEL = []; onSelChange(); render2d(); }
+  else if (k === 'Escape') { if (MEAS.on) setMeasure(false); if (OPMODE) setOpMode(false); SEL = []; onSelChange(); render2d(); }
   else done = false;
   if (done) { e.preventDefault(); renderSel(); }
 }
@@ -523,6 +523,8 @@ function startApp() {
   runChecks(); renderSide();
   requestAnimationFrame(function () { fitView(); firstRun(); });
   initSim(); initChanges();
+  $('bMeas').onclick = function () { setMeasure(!MEAS.on); };
+  $('bMeasClr').onclick = function () { MEAS.list = []; measUi(); render2d(); };
   // label text sizes (2D toolbar and 3D toolbar stay in step)
   var szs = [0.6, 0.8, 1, 1.25, 1.5, 2, 2.5];
   [['lblMc', 'mc'], ['lblOp', 'op'], ['lblMc3', 'mc'], ['lblOp3', 'op']].forEach(function (p) {
