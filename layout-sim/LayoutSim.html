@@ -28,6 +28,7 @@ button.link{background:none;border:0;padding:0 2px;color:var(--accent);text-deco
 button.danger{color:var(--bad);border-color:var(--bad)}
 .lblsz{display:inline-flex;gap:4px;align-items:center;font-size:12.5px}.lblsz select{padding:2px 4px}
 input.effFile::placeholder{color:var(--info);font-weight:700;opacity:1}
+.mccol{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin:6px 0}.mccol input[type=color]{width:34px;height:24px;padding:0;border:1px solid var(--line);border-radius:5px}.mccol .sw{width:18px;height:18px;padding:0;border:1px solid var(--line);border-radius:4px}
 .chgtag{background:var(--badbg);color:var(--bad);border-color:var(--bad);font-weight:700}
 .rmop{padding:0 5px;font-size:11px;line-height:1.3;opacity:.55}.rmop:hover{opacity:1;background:var(--badbg);color:var(--bad)}
 header{background:var(--panel);border-bottom:1px solid var(--line);padding:7px 14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;flex:none}
@@ -362,6 +363,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 var LANG = 'vi';
 var I18N = {
   vi: {
+    fMcColor: 'Màu máy', fMcColorTip: 'Chọn màu cho các máy đang chọn', fMcColorFlow: 'Theo cụm', fMcColorFlowTip: 'Bỏ màu tự chọn, dùng màu của cụm (trình tự)',
     lsFin: 'Khu hoàn thiện (1 bàn QC đứng dọc + 2 bàn PCK nằm ngang đối diện nhau) và khu thùng (thùng vàng, đỏ, xanh) ở cuối chuyền chính', lsFinL: 'Bàn QC / PCK dài (cm)', lsFinW: 'Bàn QC / PCK rộng (cm)', lsBoxW: 'Thùng rộng (cm)',
     zoneFinish: 'Khu hoàn thiện', zoneBoxes: 'Khu thùng', boxY: 'Thùng vàng', boxR: 'Thùng đỏ', boxG: 'Thùng xanh',
     simLoadH: 'Tải', simCapTip: 'Số sản phẩm công đoạn làm được trong 1 giờ = số người × 60 × hiệu suất / SAM. Vạch nhỏ dưới số: so với công đoạn nhanh nhất; vạch đứng = sản lượng mục tiêu.',
@@ -507,6 +509,7 @@ var I18N = {
     ocrIgnored: 'bỏ qua', ocrLegend: 'Viền xanh lá: đọc đúng mã · cam: đã sửa theo thư viện · đỏ: không có trong thư viện · xanh dương: số công đoạn · xám: bỏ qua. Đưa chuột vào ô để xem chữ đọc được.'
   },
   en: {
+    fMcColor: 'Machine colour', fMcColorTip: 'Choose a colour for the selected machines', fMcColorFlow: 'By flow', fMcColorFlowTip: 'Remove the own colour, use the colour of the flow group',
     lsFin: 'Finishing area (1 upright QC table + 2 packing tables lying face to face) and box area (yellow, red, green boxes) at the end of the main line', lsFinL: 'QC / packing table length (cm)', lsFinW: 'QC / packing table width (cm)', lsBoxW: 'Box width (cm)',
     zoneFinish: 'Finishing area', zoneBoxes: 'Box area', boxY: 'Yellow box', boxR: 'Red box', boxG: 'Green box',
     simLoadH: 'Load', simCapTip: 'Pieces the operation makes per hour = people × 60 × efficiency / SAM. Thin bar: compared with the fastest operation; tick = target output.',
@@ -2895,6 +2898,8 @@ var FLOW_NONE = '#aeb7c4';   // machines outside every flow (or no sequence ente
 /* colour of a machine = colour of the flow (sequence group) of its operation, the same colour as the flow line */
 var FLOWC = { key: null, map: {} };
 function flowColOf(it) {
+  if (it.color && it.kind === 'mc') return it.color;   // colour chosen by the user
+
   if (FLOWC.key !== (ST.seqText || '') + '|' + (ST.opsOff || []).length) {
     var sq = seqParse(ST.seqText), m = {};
     sq.lines.forEach(function (ln, i) { ln.ops.forEach(function (o) { var k = String(o).trim().replace(/^0+(?=\d)/, '').toUpperCase(); if (m[k] == null) m[k] = i; }); });
@@ -3797,6 +3802,19 @@ function renderSum() {
   $('sumBody').innerHTML = '<div>' + esc(t('sumMc', [n, nw])) + (multi ? ' (' + esc(t('sumMulti', [multi])) + ')' : '') + (nst ? ' · ' + esc(t('sumStand', [nst])) : '') + (fp.n > 1 && !seqParse(ST.seqText).lines.length ? ' · ' + esc(t('sumFlow', [(fp.dist / 100).toFixed(1)])) : '') + '</div><div class="chips">' +
     Object.keys(cnt).sort(function (a, b) { return cnt[b] - cnt[a] || (a < b ? -1 : 1); }).map(function (c) { return '<span class="chip" data-code="' + esc(c) + '" title="' + esc(codeName(c)) + '"><i style="background:' + FLOW_NONE + '"></i>' + esc(c) + ' <b>' + cnt[c] + '</b></span>'; }).join('') + '</div>';
 }
+/* colour of the selected machines: own colour (picker / swatches) or back to the colour of the flow */
+var MC_SWATCH = ['#e0457b', '#2a9d8f', '#e09a2b', '#3a7bd5', '#8e5bd6', '#5aa02c', '#d93636', '#f2c230', '#7d8590', '#ffffff'];
+function mcColorHtml(mcs) {
+  var cur = mcs[0].color || flowColOf(mcs[0]), own = mcs.some(function (i) { return i.color; });
+  return '<div class="mccol"><span class="small">' + esc(t('fMcColor')) + '</span><input type="color" id="fMcColor" value="' + esc(cur) + '" title="' + esc(t('fMcColorTip')) + '">' +
+    MC_SWATCH.map(function (c) { return '<button class="sw" data-mccol="' + c + '" style="background:' + c + '" title="' + c + '"></button>'; }).join('') +
+    '<button data-mccol="" class="small"' + (own ? '' : ' disabled') + ' title="' + esc(t('fMcColorFlowTip')) + '">' + esc(t('fMcColorFlow')) + '</button></div>';
+}
+function setMcColor(c) {
+  var mcs = selItems().filter(function (i) { return i.kind === 'mc'; }); if (!mcs.length) return;
+  mcs.forEach(function (i) { if (c) i.color = c; else delete i.color; });
+  changed(); renderSel();
+}
 function fld(id, lab, val, attrs) { return '<label class="f"><span>' + esc(lab) + '</span><input id="' + id + '" value="' + esc(val) + '" ' + (attrs || '') + '></label>'; }
 function renderSel() {
   var its = selItems(), h = '';
@@ -3810,6 +3828,7 @@ function renderSel() {
       h += '<div class="small">' + esc(codeName(it.code) || t('notInLib')) + '</div>';
       h += '<label class="ck" style="margin-top:4px"><input type="checkbox" id="fHasOp"' + (it.noOp ? '' : ' checked') + '> ' + esc(t('fHasOp')) + '</label>';
       h += '<label class="ck"><input type="checkbox" id="fStand"' + (isStanding(it) ? ' checked' : '') + '> ' + esc(t('fStand')) + '</label>';
+      h += mcColorHtml([it]);
       var hm = homeOf(it), sats = it.noOp ? [] : satellitesOf(it);
       if (it.noOp && hm) h += '<div class="small" style="color:#7c3aed">👤 ' + esc(t('runBy', [label(hm)])) + '</div>';
       if (sats.length) h += '<div class="small" style="color:#7c3aed">👤 ' + esc(t('alsoRuns', [sats.map(label).join(', ')])) + '</div>';
@@ -3826,6 +3845,7 @@ function renderSel() {
     h += '<div class="btns"><button data-cmd="rotL" title="Shift+R">⟲ 90°</button><button data-cmd="rotR" title="R">⟳ 90°</button><button data-cmd="flip" title="F">' + esc(t('bFlip')) + '</button><button data-cmd="dup" title="Ctrl+D">' + esc(t('bDup')) + '</button><button data-cmd="del" class="danger" title="Delete">' + esc(t('bDel')) + '</button></div>';
   } else {
     h += '<div><b>' + esc(t('selMany', [its.length])) + '</b></div>';
+    var mcs = its.filter(function (i) { return i.kind === 'mc'; }); if (mcs.length) h += mcColorHtml(mcs);
     h += '<div class="btns"><button data-cmd="rotL">⟲ 90°</button><button data-cmd="rotR">⟳ 90°</button><button data-cmd="flip">' + esc(t('bFlip')) + '</button><button data-cmd="op" title="W">👤 ' + esc(t(opGrouped(its) ? 'bOpSplit' : 'bOpShare')) + '</button></div>';
     h += '<div class="btns"><button data-cmd="grpR" title="' + esc(t('bGrpTip')) + '">' + esc(t('bGrp90')) + '</button><button data-cmd="grp180" title="' + esc(t('bGrpTip')) + '">' + esc(t('bGrp180')) + '</button></div>';
     h += '<div class="btns"><button data-cmd="align" title="' + esc(t('bAlignTip')) + '">' + esc(t('bAlign')) + '</button><button data-cmd="pack" title="' + esc(t('bPackTip')) + '">' + esc(t('bPack')) + '</button><button data-cmd="close" title="' + esc(t('ttClose')) + '">' + esc(t('bClose')) + '</button><button data-cmd="dup">' + esc(t('bDup')) + '</button><button data-cmd="del" class="danger">' + esc(t('bDel')) + '</button></div>';
@@ -3834,6 +3854,7 @@ function renderSel() {
 }
 function sideLive() { var its = selItems(); if (its.length === 1 && $('fX')) { $('fX').value = its[0].x; $('fY').value = its[0].y; } }
 function onSelField(e) {
+  if (e.target.id === 'fMcColor') { setMcColor(e.target.value); return; }
   var its = selItems(); if (its.length !== 1) return;
   var it = its[0], id = e.target.id, v = e.target.value;
   if (id === 'fCode') { var c = normCode(v); if (!c) return; it.code = c; }
@@ -4151,7 +4172,7 @@ function startApp() {
   $('lang').value = LANG; $('lang').onchange = function () { LANG = this.value; localStorage.setItem('ls_lang', LANG); applyI18n(); fillCodeList(); renderAll(); };
   ['lnName', 'lnL', 'lnW'].forEach(function (id) { $(id).onchange = function () { ST.line.name = $('lnName').value.trim(); ST.line.length = Math.max(50, num($('lnL').value, ST.line.length)); ST.line.width = Math.max(50, num($('lnW').value, ST.line.width)); ST.line.fixed = true; changed(); }; });
   $('selBody').addEventListener('change', onSelField);
-  $('selBody').addEventListener('click', function (e) { var b = e.target.closest('button[data-cmd]'); if (b) cmd(b.dataset.cmd); });
+  $('selBody').addEventListener('click', function (e) { var sw = e.target.closest('[data-mccol]'); if (sw) { setMcColor(sw.dataset.mccol); return; } var b = e.target.closest('button[data-cmd]'); if (b) cmd(b.dataset.cmd); });
   $('issList').addEventListener('click', function (e) {
     var li = e.target.closest('li[data-i]'); if (!li) return; var x = ISSUES[+li.dataset.i]; if (!x) return;
     SEL = x.ids.slice(); var it = itemById(x.ids[0]);

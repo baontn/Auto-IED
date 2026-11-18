@@ -2,6 +2,7 @@
 var LANG = 'vi';
 var I18N = {
   vi: {
+    fMcColor: 'Màu máy', fMcColorTip: 'Chọn màu cho các máy đang chọn', fMcColorFlow: 'Theo cụm', fMcColorFlowTip: 'Bỏ màu tự chọn, dùng màu của cụm (trình tự)',
     lsFin: 'Khu hoàn thiện (1 bàn QC đứng dọc + 2 bàn PCK nằm ngang đối diện nhau) và khu thùng (thùng vàng, đỏ, xanh) ở cuối chuyền chính', lsFinL: 'Bàn QC / PCK dài (cm)', lsFinW: 'Bàn QC / PCK rộng (cm)', lsBoxW: 'Thùng rộng (cm)',
     zoneFinish: 'Khu hoàn thiện', zoneBoxes: 'Khu thùng', boxY: 'Thùng vàng', boxR: 'Thùng đỏ', boxG: 'Thùng xanh',
     simLoadH: 'Tải', simCapTip: 'Số sản phẩm công đoạn làm được trong 1 giờ = số người × 60 × hiệu suất / SAM. Vạch nhỏ dưới số: so với công đoạn nhanh nhất; vạch đứng = sản lượng mục tiêu.',
@@ -147,6 +148,7 @@ var I18N = {
     ocrIgnored: 'bỏ qua', ocrLegend: 'Viền xanh lá: đọc đúng mã · cam: đã sửa theo thư viện · đỏ: không có trong thư viện · xanh dương: số công đoạn · xám: bỏ qua. Đưa chuột vào ô để xem chữ đọc được.'
   },
   en: {
+    fMcColor: 'Machine colour', fMcColorTip: 'Choose a colour for the selected machines', fMcColorFlow: 'By flow', fMcColorFlowTip: 'Remove the own colour, use the colour of the flow group',
     lsFin: 'Finishing area (1 upright QC table + 2 packing tables lying face to face) and box area (yellow, red, green boxes) at the end of the main line', lsFinL: 'QC / packing table length (cm)', lsFinW: 'QC / packing table width (cm)', lsBoxW: 'Box width (cm)',
     zoneFinish: 'Finishing area', zoneBoxes: 'Box area', boxY: 'Yellow box', boxR: 'Red box', boxG: 'Green box',
     simLoadH: 'Load', simCapTip: 'Pieces the operation makes per hour = people × 60 × efficiency / SAM. Thin bar: compared with the fastest operation; tick = target output.',

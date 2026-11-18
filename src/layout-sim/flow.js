@@ -7,6 +7,8 @@ var FLOW_NONE = '#aeb7c4';   // machines outside every flow (or no sequence ente
 /* colour of a machine = colour of the flow (sequence group) of its operation, the same colour as the flow line */
 var FLOWC = { key: null, map: {} };
 function flowColOf(it) {
+  if (it.color && it.kind === 'mc') return it.color;   // colour chosen by the user
+
   if (FLOWC.key !== (ST.seqText || '') + '|' + (ST.opsOff || []).length) {
     var sq = seqParse(ST.seqText), m = {};
     sq.lines.forEach(function (ln, i) { ln.ops.forEach(function (o) { var k = String(o).trim().replace(/^0+(?=\d)/, '').toUpperCase(); if (m[k] == null) m[k] = i; }); });
