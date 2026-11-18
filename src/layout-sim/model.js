@@ -365,8 +365,8 @@ function opLinks() {
   return out;
 }
 /* ---------- undo / persistence ---------- */
-function snap() { return JSON.stringify({ line: ST.line, erg: ST.erg, items: ST.items, seq: ST.seq, seqText: ST.seqText || '', info: ST.info || {}, ops: ST.ops || {}, base: ST.base || null, opsOff: ST.opsOff || [] }); }
-function restore(s) { var o = JSON.parse(s); ST.line = o.line; ST.erg = Object.assign({}, ERG_DEF, o.erg || {}); ST.items = o.items || []; ST.seq = o.seq || 1; ST.seqText = o.seqText || ''; ST.info = o.info || {}; ST.ops = o.ops || {}; ST.base = o.base || null; ST.opsOff = o.opsOff || []; }
+function snap() { return JSON.stringify({ line: ST.line, erg: ST.erg, items: ST.items, seq: ST.seq, seqText: ST.seqText || '', info: ST.info || {}, ops: ST.ops || {}, base: ST.base || null, opsOff: ST.opsOff || [], meas: ST.meas || [] }); }
+function restore(s) { var o = JSON.parse(s); ST.line = o.line; ST.erg = Object.assign({}, ERG_DEF, o.erg || {}); ST.items = o.items || []; ST.seq = o.seq || 1; ST.seqText = o.seqText || ''; ST.info = o.info || {}; ST.ops = o.ops || {}; ST.base = o.base || null; ST.opsOff = o.opsOff || []; ST.meas = o.meas || []; }
 var LAST = null;
 function commit() {         // call after every finished change
   var s = snap();
@@ -374,17 +374,17 @@ function commit() {         // call after every finished change
   LAST = s;
   try { localStorage.setItem('ls_work', s); } catch (e) {}
 }
-function undo() { if (!UNDO.length) return false; REDO.push(LAST); LAST = UNDO.pop(); restore(LAST); SEL = SEL.filter(itemById); try { localStorage.setItem('ls_work', LAST); } catch (e) {} return true; }
-function redo() { if (!REDO.length) return false; UNDO.push(LAST); LAST = REDO.pop(); restore(LAST); SEL = SEL.filter(itemById); try { localStorage.setItem('ls_work', LAST); } catch (e) {} return true; }
+function undo() { if (!UNDO.length) return false; REDO.push(LAST); LAST = UNDO.pop(); restore(LAST); SEL = SEL.filter(function (id) { return itemById(id) || measById(id); }); try { localStorage.setItem('ls_work', LAST); } catch (e) {} return true; }
+function redo() { if (!REDO.length) return false; UNDO.push(LAST); LAST = REDO.pop(); restore(LAST); SEL = SEL.filter(function (id) { return itemById(id) || measById(id); }); try { localStorage.setItem('ls_work', LAST); } catch (e) {} return true; }
 function fileJson() {
   // the codes' sizes are written into the file so that it opens the same on a PC without the library
   var used = {}; ST.items.forEach(function (it) { if (it.kind === 'mc') { var d = dimOf(it.code); used[it.code] = { L: d.L, W: d.W, fam: famOf(it.code) }; } });
-  return JSON.stringify({ app: 'layoutsim', version: 1, savedAt: new Date().toISOString(), line: ST.line, erg: ST.erg, items: ST.items, seqText: ST.seqText || '', info: ST.info || {}, ops: ST.ops || {}, base: ST.base || null, opsOff: ST.opsOff || [], codes: used }, null, 1);
+  return JSON.stringify({ app: 'layoutsim', version: 1, savedAt: new Date().toISOString(), line: ST.line, erg: ST.erg, items: ST.items, seqText: ST.seqText || '', info: ST.info || {}, ops: ST.ops || {}, base: ST.base || null, opsOff: ST.opsOff || [], meas: ST.meas || [], codes: used }, null, 1);
 }
 function openJson(txt) {
   var o = JSON.parse(txt);
   if (o.app !== 'layoutsim') throw new Error('not a layout file');
-  ST.line = Object.assign({ name: '', length: 2400, width: 600, fixed: true }, o.line); ST.erg = Object.assign({}, ERG_DEF, o.erg || {}); ST.items = o.items || []; ST.seqText = o.seqText || ''; ST.info = o.info || {}; ST.ops = o.ops || {}; ST.base = o.base || null; ST.opsOff = o.opsOff || [];
+  ST.line = Object.assign({ name: '', length: 2400, width: 600, fixed: true }, o.line); ST.erg = Object.assign({}, ERG_DEF, o.erg || {}); ST.items = o.items || []; ST.seqText = o.seqText || ''; ST.info = o.info || {}; ST.ops = o.ops || {}; ST.base = o.base || null; ST.opsOff = o.opsOff || []; ST.meas = o.meas || [];
   ST.seq = 1; ST.items.forEach(function (it) { var n = parseInt(String(it.id).slice(1), 10); if (n >= ST.seq) ST.seq = n + 1; });
   var added = 0;   // codes unknown on this PC: take the size stored in the file
   Object.keys(o.codes || {}).forEach(function (c) { if (!LIB.codes[c]) { LIB.codes[c] = { code: c, en: '', vn: '', L: o.codes[c].L, W: o.codes[c].W, custom: true, fromFile: true }; added++; } });

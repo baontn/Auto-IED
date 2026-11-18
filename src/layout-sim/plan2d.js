@@ -2,7 +2,11 @@
 var V = { x: -50, y: -80, s: 0.5 };           // world point at the top-left corner, pixels per cm
 var OPT = { flow: true, snap: true, aisles: false, wip: false };
 var DRAG = null, BOXR = null;
-var MEAS = { on: false, list: [], cur: null };   // distance measurements on the 2D plan (not saved)
+var MEAS = { on: false, cur: null };   // measuring mode and the line being drawn; the measurements are objects ST.meas [{id, a, b}] (saved, selectable)
+var CLIP = null;                        // Ctrl+C / Ctrl+V
+function measOf() { return ST.meas || (ST.meas = []); }
+function measById(id) { return measOf().filter(function (m) { return m.id === id; })[0] || null; }
+function selMeas() { return measOf().filter(function (m) { return SEL.indexOf(m.id) >= 0; }); }
 
 function pal(light) {
   if (light) return { bg: '#ffffff', floor: '#f7f7f5', grid: '#e3e3df', grid2: '#cfcfca', text: '#1d2330', muted: '#6b7280', accent: '#1f6feb', bad: '#c4202b', warn: '#c98a00', edge: '#3b4250', zone: 'rgba(31,111,235,.08)', zoneEdge: '#7aa3e6', chair: '#5b6474', aisle: 'rgba(201,138,0,.10)', flow: '#e0457b', tableEdge: '#1d2330', outFloor: '#ececea', walk: 'rgba(224,161,0,.12)', walkEdge: '#b07d00', standZone: 'rgba(22,160,133,.10)', standEdge: '#2a9d8f', mat: 'rgba(60,70,80,.18)' };
@@ -128,11 +132,14 @@ function planMarkup(o) {
       h.push('<g pointer-events="none"><rect x="' + n1(q.x - wd / 2) + '" y="' + n1(q.y - f * 0.8) + '" width="' + n1(wd) + '" height="' + n1(f * 1.4) + '" rx="' + n1(f * 0.4) + '" fill="' + col + '"/><text x="' + n1(q.x) + '" y="' + n1(q.y + f * 0.18) + '" font-size="' + f + '" font-weight="700" fill="#fff" text-anchor="middle">' + tx + '</text></g>');
     });
   }
-  if (!o.exp && (MEAS.list.length || MEAS.cur)) MEAS.list.concat(MEAS.cur ? [MEAS.cur] : []).forEach(function (m) {
+  measOf().concat(MEAS.cur && !o.exp ? [MEAS.cur] : []).forEach(function (m) {
     var a = m.a, b = m.b, d = Math.hypot(b.x - a.x, b.y - a.y); if (d < 0.5) return;
-    var ux = (b.x - a.x) / d, uy = (b.y - a.y) / d, tk = 8 * sw, col = '#e8590c', f = Math.max(fs * 1.15, 14 * sw);
+    var sel = !o.exp && m.id && SEL.indexOf(m.id) >= 0;
+    var ux = (b.x - a.x) / d, uy = (b.y - a.y) / d, tk = 8 * sw, col = sel ? P.accent : '#e8590c', f = Math.max(fs * 1.15, 14 * sw);
     var tx = (d < 100 ? Math.round(d) + ' cm' : (d / 100).toFixed(2) + ' m'), sub = Math.abs(b.x - a.x) > 1 && Math.abs(b.y - a.y) > 1 ? ' (↔ ' + Math.round(Math.abs(b.x - a.x)) + ' · ↕ ' + Math.round(Math.abs(b.y - a.y)) + ' cm)' : '';
-    h.push('<g pointer-events="none"><line x1="' + n1(a.x) + '" y1="' + n1(a.y) + '" x2="' + n1(b.x) + '" y2="' + n1(b.y) + '" stroke="' + col + '" stroke-width="' + 2 * sw + '"/>' +
+    h.push('<g' + (m.id && !o.exp ? ' data-mid="' + m.id + '" style="cursor:move"' : ' pointer-events="none"') + '><line x1="' + n1(a.x) + '" y1="' + n1(a.y) + '" x2="' + n1(b.x) + '" y2="' + n1(b.y) + '" stroke="transparent" stroke-width="' + 14 * sw + '"/>' +   // wide invisible line: easy to click
+      '<line x1="' + n1(a.x) + '" y1="' + n1(a.y) + '" x2="' + n1(b.x) + '" y2="' + n1(b.y) + '" stroke="' + col + '" stroke-width="' + (sel ? 3 : 2) * sw + '"/>' +
+      (sel ? [['a', a], ['b', b]].map(function (q) { return '<circle data-mend="' + q[0] + '" cx="' + n1(q[1].x) + '" cy="' + n1(q[1].y) + '" r="' + 6 * sw + '" fill="#fff" stroke="' + col + '" stroke-width="' + 2 * sw + '" style="cursor:crosshair"/>'; }).join('') : '') +
       [a, b].map(function (q) { return '<line x1="' + n1(q.x - uy * tk) + '" y1="' + n1(q.y + ux * tk) + '" x2="' + n1(q.x + uy * tk) + '" y2="' + n1(q.y - ux * tk) + '" stroke="' + col + '" stroke-width="' + 2 * sw + '"/>'; }).join('') +
       '<text x="' + n1((a.x + b.x) / 2 - uy * f * 0.9) + '" y="' + n1((a.y + b.y) / 2 + ux * f * 0.9 + f * 0.35) + '" font-size="' + f + '" font-weight="700" fill="' + col + '" stroke="rgba(255,255,255,.95)" stroke-width="' + f * 0.25 + '" paint-order="stroke" text-anchor="middle">' + esc(tx + sub) + '</text></g>');
   });
@@ -187,7 +194,7 @@ function measUi() {
   var b = document.getElementById('bMeas'), bar = document.getElementById('measBar'), c = document.getElementById('bMeasClr');
   if (b) { b.classList.toggle('primary', MEAS.on); }
   if (bar) bar.style.display = MEAS.on ? '' : 'none';
-  if (c) c.style.display = MEAS.list.length ? '' : 'none';
+  if (c) c.style.display = measOf().length ? '' : 'none';
 }
 function toWorld(ev) { var r = svgEl().getBoundingClientRect(); return { x: V.x + (ev.clientX - r.left) / V.s, y: V.y + (ev.clientY - r.top) / V.s }; }
 function fitView() {
@@ -206,7 +213,15 @@ function init2d() {
   svg.addEventListener('contextmenu', function (e) { e.preventDefault(); });
   svg.addEventListener('pointerdown', function (e) {
     svg.setPointerCapture(e.pointerId);
-    var p = toWorld(e), g = e.target.closest ? e.target.closest('[data-id]') : null;
+    var p = toWorld(e), g = e.target.closest ? e.target.closest('[data-id]') : null, gm = e.target.closest ? e.target.closest('[data-mid]') : null;
+    if (gm && e.button === 0) {   // a measurement: select it, drag its end point, or move it (with the rest of the selection)
+      var mid = gm.getAttribute('data-mid'), end = e.target.getAttribute && e.target.getAttribute('data-mend');
+      if (end) { DRAG = { mode: 'mend', m: measById(mid), end: end, moved: false }; return; }
+      if (e.shiftKey || e.ctrlKey) { var km = SEL.indexOf(mid); if (km >= 0) SEL.splice(km, 1); else SEL.push(mid); }
+      else if (SEL.indexOf(mid) < 0) SEL = [mid];
+      DRAG = { mode: 'move', p0: p, orig: dragOrig(), moved: false };
+      onSelChange(); render2d(); return;
+    }
     if (MEAS.on && e.button === 0) { var q = measSnap(p, e); MEAS.cur = { a: q, b: q }; DRAG = { mode: 'meas' }; render2d(); return; }
     if (g && e.button === 0 && OPMODE) {           // operator mode: a click toggles this machine's operator
       var ti = itemById(g.getAttribute('data-id'));
@@ -217,7 +232,7 @@ function init2d() {
       var id = g.getAttribute('data-id');
       if (e.shiftKey || e.ctrlKey) { var k = SEL.indexOf(id); if (k >= 0) SEL.splice(k, 1); else SEL.push(id); }
       else if (SEL.indexOf(id) < 0) SEL = [id];
-      DRAG = { mode: 'move', p0: p, orig: selItems().filter(function (it) { return !isLocked(it); }).map(function (it) { return { it: it, x: it.x, y: it.y }; }), moved: false, noSnap: e.altKey };
+      DRAG = { mode: 'move', p0: p, orig: dragOrig(), moved: false, noSnap: e.altKey };
       onSelChange();
     } else if (e.button === 0 && e.shiftKey) { DRAG = { mode: 'box' }; BOXR = { a: p, b: p }; }
     else DRAG = { mode: 'pan', c0: { x: e.clientX, y: e.clientY }, v0: { x: V.x, y: V.y }, moved: false };
@@ -231,13 +246,21 @@ function init2d() {
       DRAG.moved = true;
       var o0 = DRAG.orig[0], useSnap = OPT.snap && !e.altKey;
       var ddx = (useSnap ? Math.round((o0.x + dx) / ST.erg.snap) * ST.erg.snap : o0.x + dx) - o0.x, ddy = (useSnap ? Math.round((o0.y + dy) / ST.erg.snap) * ST.erg.snap : o0.y + dy) - o0.y;
-      DRAG.orig.forEach(function (o) { o.it.x = n1(o.x + ddx); o.it.y = n1(o.y + ddy); });
+      DRAG.orig.forEach(function (o) {
+        if (o.m) { o.m.a = { x: n1(o.a.x + ddx), y: n1(o.a.y + ddy) }; o.m.b = { x: n1(o.b.x + ddx), y: n1(o.b.y + ddy) }; }
+        else { o.it.x = n1(o.x + ddx); o.it.y = n1(o.y + ddy); }
+      });
       render2d(); sideLive();
     } else if (DRAG.mode === 'pan') {
       var mx = e.clientX - DRAG.c0.x, my = e.clientY - DRAG.c0.y;
       if (Math.abs(mx) + Math.abs(my) > 3) DRAG.moved = true;
       V.x = DRAG.v0.x - mx / V.s; V.y = DRAG.v0.y - my / V.s; render2d();
     } else if (DRAG.mode === 'box') { BOXR.b = toWorld(e); render2d(); }
+    else if (DRAG.mode === 'mend' && DRAG.m) {   // one end of a measurement
+      var q2 = measSnap(toWorld(e), e), o2 = DRAG.m[DRAG.end === 'a' ? 'b' : 'a'];
+      if (e.shiftKey) { if (Math.abs(q2.x - o2.x) >= Math.abs(q2.y - o2.y)) q2.y = o2.y; else q2.x = o2.x; }
+      DRAG.m[DRAG.end] = q2; DRAG.moved = true; render2d();
+    }
     else if (DRAG.mode === 'meas') {
       var b = measSnap(toWorld(e), e), a = MEAS.cur.a;
       if (e.shiftKey) { if (Math.abs(b.x - a.x) >= Math.abs(b.y - a.y)) b.y = a.y; else b.x = a.x; }   // Shift: horizontal / vertical only
@@ -247,12 +270,14 @@ function init2d() {
   svg.addEventListener('pointerup', function () {
     if (!DRAG) return;
     var d = DRAG; DRAG = null;
-    if (d.mode === 'meas') { var m = MEAS.cur; MEAS.cur = null; if (m && Math.hypot(m.b.x - m.a.x, m.b.y - m.a.y) > 1) MEAS.list.push(m); measUi(); render2d(); return; }
+    if (d.mode === 'meas') { var m = MEAS.cur; MEAS.cur = null; if (m && Math.hypot(m.b.x - m.a.x, m.b.y - m.a.y) > 1) { m.id = uid(); measOf().push(m); SEL = [m.id]; changed(); onSelChange(); } measUi(); render2d(); return; }
+    if (d.mode === 'mend') { if (d.moved) changed(); return; }
     if (d.mode === 'move' && d.moved) changed();
     else if (d.mode === 'pan' && !d.moved) { if (SEL.length) { SEL = []; onSelChange(); } render2d(); }
     else if (d.mode === 'box') {
       var x0 = Math.min(BOXR.a.x, BOXR.b.x), x1 = Math.max(BOXR.a.x, BOXR.b.x), y0 = Math.min(BOXR.a.y, BOXR.b.y), y1 = Math.max(BOXR.a.y, BOXR.b.y);
       ST.items.forEach(function (it) { if (it.x >= x0 && it.x <= x1 && it.y >= y0 && it.y <= y1 && SEL.indexOf(it.id) < 0) SEL.push(it.id); });
+      measOf().forEach(function (m) { var cx = (m.a.x + m.b.x) / 2, cy = (m.a.y + m.b.y) / 2; if (cx >= x0 && cx <= x1 && cy >= y0 && cy <= y1 && SEL.indexOf(m.id) < 0) SEL.push(m.id); });
       BOXR = null; onSelChange(); render2d();
     }
   });
@@ -323,14 +348,42 @@ function rotateGroup(deg) {
   });
   changed();
 }
-function deleteSel() { if (!SEL.length) return; ST.items = ST.items.filter(function (it) { return SEL.indexOf(it.id) < 0; }); ST.items.forEach(function (i) { if (i.by && !itemById(i.by)) delete i.by; }); SEL = []; changed(); onSelChange(); }
+/* what a drag moves: the selected items (not locked) and the selected measurements */
+function dragOrig() {
+  return selItems().filter(function (it) { return !isLocked(it); }).map(function (it) { return { it: it, x: it.x, y: it.y }; })
+    .concat(selMeas().map(function (m) { return { m: m, a: { x: m.a.x, y: m.a.y }, b: { x: m.b.x, y: m.b.y }, x: m.a.x, y: m.a.y }; }));
+}
+function copySel() {
+  var its = selItems().filter(function (it) { return it.role !== 'center'; }), ms = selMeas();
+  if (!its.length && !ms.length) return false;
+  CLIP = { items: JSON.parse(JSON.stringify(its)), meas: JSON.parse(JSON.stringify(ms)), n: 0 };
+  toast(t('copied', [its.length + ms.length])); return true;
+}
+/* paste: a copy shifted a little each time (like Visio), selected */
+function pasteClip() {
+  if (!CLIP) return;
+  CLIP.n++; var d = 30 * CLIP.n, ids = [], map = {};
+  CLIP.items.forEach(function (it) { var c = JSON.parse(JSON.stringify(it)); map[it.id] = c.id = uid(); c.x = n1(c.x + d); c.y = n1(c.y + d); ST.items.push(c); ids.push(c.id); });
+  ST.items.forEach(function (c) { if (ids.indexOf(c.id) >= 0 && c.by) { if (map[c.by]) c.by = map[c.by]; else { delete c.by; delete c.noOp; } } });   // a shared operator stays inside the copy
+  CLIP.meas.forEach(function (m) { var c = { id: uid(), a: { x: n1(m.a.x + d), y: n1(m.a.y + d) }, b: { x: n1(m.b.x + d), y: n1(m.b.y + d) } }; measOf().push(c); ids.push(c.id); });
+  SEL = ids; changed(); onSelChange(); measUi();
+}
+function deleteSel() {
+  if (!SEL.length) return;
+  ST.meas = measOf().filter(function (m) { return SEL.indexOf(m.id) < 0; }); measUi();
+  ST.items = ST.items.filter(function (it) { return SEL.indexOf(it.id) < 0; }); ST.items.forEach(function (i) { if (i.by && !itemById(i.by)) delete i.by; }); SEL = []; changed(); onSelChange(); }
 function duplicateSel() {
-  var its = selItems(); if (!its.length) return;
-  var b = bbox(its), dy = b ? (b.y1 - b.y0) + 20 : 100, ids = [];
+  var its = selItems(), ms = selMeas(); if (!its.length && !ms.length) return;
+  var b = bbox(its), dy = b ? (b.y1 - b.y0) + 20 : 50, ids = [];
   its.forEach(function (it) { var c = JSON.parse(JSON.stringify(it)); c.id = uid(); c.y = n1(c.y + dy); delete c.by; ST.items.push(c); ids.push(c.id); });
+  ms.forEach(function (m) { var c = { id: uid(), a: { x: m.a.x, y: n1(m.a.y + dy) }, b: { x: m.b.x, y: n1(m.b.y + dy) } }; measOf().push(c); ids.push(c.id); });
   SEL = ids; changed(); onSelChange();
 }
-function nudgeSel(dx, dy) { selItems().filter(function (it) { return !isLocked(it); }).forEach(function (it) { it.x = n1(it.x + dx); it.y = n1(it.y + dy); }); if (SEL.length) changed(); }
+function nudgeSel(dx, dy) {
+  selItems().filter(function (it) { return !isLocked(it); }).forEach(function (it) { it.x = n1(it.x + dx); it.y = n1(it.y + dy); });
+  selMeas().forEach(function (m) { m.a = { x: n1(m.a.x + dx), y: n1(m.a.y + dy) }; m.b = { x: n1(m.b.x + dx), y: n1(m.b.y + dy) }; });
+  if (SEL.length) changed();
+}
 /* line up the selection on the first selected item's y */
 function alignSel() { var its = selItems(); if (its.length < 2) return; var y = its[0].y; its.forEach(function (it) { it.y = y; }); changed(); }
 /* place the selection side by side from left to right, edge to edge (+ gap) */
