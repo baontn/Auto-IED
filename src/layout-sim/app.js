@@ -105,6 +105,7 @@ function renderSel() {
     } else {
       h += '<div class="grid2">' + fld('fName', t('fName'), it.name || '') + '<label class="f"><span>' + esc(t('fColor')) + '</span><input id="fColor" type="color" value="' + esc(it.color || '#c9ccd3') + '"></label></div>';
       h += '<label class="ck"><input type="checkbox" id="fLock"' + (isLocked(it) ? ' checked' : '') + '> ' + esc(t('fLock')) + '</label>';
+      if (it.role !== 'center' && it.zone !== 'boxes') h += '<label class="ck"><input type="checkbox" id="fOpr"' + (it.opr ? ' checked' : '') + '> ' + esc(t('fObjOpr')) + '</label>';
       h += '<div class="grid3">' + fld('fL', t('fLen'), it.L, 'type="number" step="1"') + fld('fW', t('fWid'), it.W, 'type="number" step="1"') + fld('fH', t('fHei'), it.H || 75, 'type="number" step="1"') + '</div>';
     }
     h += '<div class="grid3">' + fld('fX', 'X (cm)', it.x, 'type="number" step="1"') + fld('fY', 'Y (cm)', it.y, 'type="number" step="1"') + fld('fRot', t('fRot'), it.rot || 0, 'type="number" step="15"') + '</div>';
@@ -128,6 +129,7 @@ function onSelField(e) {
   else if (id === 'fHasOp') { if (e.target.checked === !!it.noOp) opToggleOne(it); }
   else if (id === 'fStand') it.stand = e.target.checked;
   else if (id === 'fLock') it.lock = e.target.checked;
+  else if (id === 'fOpr') { if (e.target.checked) it.opr = true; else delete it.opr; }
   else if (id === 'fName') it.name = v;
   else if (id === 'fColor') it.color = v;
   else if (id === 'fX') it.x = num(v, it.x);
@@ -226,7 +228,7 @@ function lineVals() {
   return { name: $('lsName').value.trim(), units: Math.max(1, Math.round(num($('lsUnits').value, L.units || LINE_DEF.units))), unit: Math.max(10, num($('lsUnit').value, LINE_DEF.unit)),
     tableW: Math.max(0, num($('lsTable').value, LINE_DEF.tableW)), start: Math.max(0, num($('lsStart').value, LINE_DEF.start)), gap: Math.max(0, num($('lsGap').value, LINE_DEF.gap)), end: Math.max(0, num($('lsEnd').value, LINE_DEF.end)),
     width: num($('lsWidth').value, 0), hc: Math.max(0, Math.round(num($('lsHC').value, 0))),
-    finish: $('lsFin').checked, finTL: Math.max(40, num($('lsFinL').value, LINE_DEF.finTL)), finTW: Math.max(30, num($('lsFinW').value, LINE_DEF.finTW)), boxW: Math.max(30, num($('lsBoxW').value, LINE_DEF.boxW)),
+    finish: $('lsFin').checked, finTL: Math.max(40, num($('lsFinL').value, LINE_DEF.finTL)), finTW: Math.max(30, num($('lsFinW').value, LINE_DEF.finTW)), boxW: Math.max(30, num($('lsBoxW').value, LINE_DEF.boxW)), finGap: $('lsFinGap').value === '' ? LINE_DEF.finGap : Math.max(0, num($('lsFinGap').value, LINE_DEF.finGap)), finLen: Math.max(0, num($('lsFinLen').value, 0)),
     branch: !$('lsBr').checked ? null : { units: Math.max(1, Math.round(num($('lsBUnits').value, 6))), unit: Math.max(10, num($('lsUnit').value, LINE_DEF.unit)), tableW: Math.max(0, num($('lsBTable').value, LINE_DEF.tableW)),
       end: 30, pos: $('lsBPos').value, walk: Math.max(0, num($('lsBWalk').value, 100)), width: num($('lsBWidth').value, 0) } };
 }
@@ -242,7 +244,7 @@ function openLineSetup() {
   $('lsName').value = L.name || ''; $('lsUnits').value = L.units || LINE_DEF.units; $('lsUnit').value = L.unit || LINE_DEF.unit;
   $('lsTable').value = ct ? ct.W : (L.tableW != null ? L.tableW : LINE_DEF.tableW); $('lsStart').value = L.v === 2 && L.start != null ? L.start : LINE_DEF.start; $('lsGap').value = L.gap != null ? L.gap : LINE_DEF.gap; $('lsEnd').value = L.end != null ? L.end : LINE_DEF.end;
   $('lsWidth').value = L.units ? (L.mainWidth || (L.zones ? zoneById('main').W : L.width)) : '';
-  $('lsFin').checked = L.finish !== false; $('lsFinL').value = L.finTL || LINE_DEF.finTL; $('lsFinW').value = L.finTW || LINE_DEF.finTW; $('lsBoxW').value = L.boxW || LINE_DEF.boxW;
+  $('lsFin').checked = L.finish !== false; $('lsFinL').value = L.finTL || LINE_DEF.finTL; $('lsFinW').value = L.finTW || LINE_DEF.finTW; $('lsBoxW').value = L.boxW || LINE_DEF.boxW; $('lsFinGap').value = L.finGap != null ? L.finGap : LINE_DEF.finGap; $('lsFinLen').value = L.finLen || ''; $('lsFinLen').placeholder = Math.round((ST.erg.standDepth || 80) + (L.finTW || LINE_DEF.finTW) + (L.finTL || LINE_DEF.finTL));
   $('lsHC').value = L.hc || ''; $('lsHC').placeholder = (ST.info || {}).optr || ST.items.filter(function (i) { return i.kind === 'mc' && !i.noOp; }).length || '';
   var B = L.branch, cb = centerOf('branch');
   $('lsBr').checked = !!B; $('lsBUnits').value = B ? B.units : 6; $('lsBTable').value = cb ? cb.W : (B ? B.tableW : LINE_DEF.tableW); $('lsBPos').value = B ? B.pos : 'top';

@@ -322,6 +322,7 @@ function rebuild3d() {
       }
     } else {
       g = buildObject(it);
+      if (it.opr) buildStanding(g, 0, d.W, e, V3.people);   // QC / packing operator
       if (V3.labels && it.name && it.zone !== 'boxes') { var sp2 = machineLabel(it.name, ''); sp2.position.set(0, (it.H || 75) + 45, 0); g.add(sp2); }
     }
     var sel = SEL.indexOf(it.id) >= 0;

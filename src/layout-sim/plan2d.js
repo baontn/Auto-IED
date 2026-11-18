@@ -52,7 +52,7 @@ function planMarkup(o) {
     var S = shapes(it), d = { L: S.L, W: S.W }, sel = !o.exp && SEL.indexOf(it.id) >= 0;
     var stroke = sel ? P.accent : bad[it.id] ? P.bad : warn[it.id] ? P.warn : P.edge, wd = (sel || bad[it.id] || warn[it.id] ? 2.5 : 1) * sw;
     var g = ['<g data-id="' + it.id + '" transform="translate(' + n1(it.x) + ' ' + n1(it.y) + ') rotate(' + (it.rot || 0) + ')" style="cursor:move">'];
-    if (it.kind === 'mc' && S.zone) {
+    if ((it.kind === 'mc' || it.opr) && S.zone) {
       var sx = S.seatX;
       var zw = S.zw, zd = S.zd;
       if (OPT.aisles || sel) g.push('<rect x="' + (sx - zw / 2) + '" y="' + (d.W / 2 + zd) + '" width="' + zw + '" height="' + e.aisle + '" fill="' + P.aisle + '" stroke="' + P.warn + '" stroke-width="' + sw + '" stroke-dasharray="' + 3 * sw + ' ' + 3 * sw + '"/>');
