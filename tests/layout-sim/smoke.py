@@ -149,6 +149,9 @@ async def main():
         r = await pg.evaluate('''()=>{const f=zoneById("finish"),b=zoneById("boxes"),m=zoneById("main");const it=ST.items.filter(i=>isFinishObj(i));const q=it.find(i=>i.name=="QC"),p=it.filter(i=>/^PCK/.test(i.name)),bx=it.filter(i=>i.zone=="boxes");
           return [f.x==m.x+m.L+30, f.W==m.W && b.W==m.W, q.rot, q.L+"x"+q.W, p.map(i=>i.rot).join(), Math.abs(p[0].y-p[1].y)==75, bx.map(i=>i.color).join(), bx.every(i=>i.L==70), ISSUES.length,
           Math.round(p[0].x-p[0].L/2-(q.x+q.W/2)), Math.round(bx[0].x-bx[0].L/2-(p[0].x+p[0].L/2)), Math.round(bx[1].x-bx[0].x), Math.round(bx[2].x-bx[1].x), bx.every(i=>i.W==m.W&&i.y==m.y+m.W/2), b.L==210]}''')
+        ro = await pg.evaluate('''()=>{const it=ST.items.filter(i=>isFinishObj(i));const q=it.find(i=>i.name=="QC"),p=it.filter(i=>/^PCK/.test(i.name));const S=i=>shapes(i);
+          return [q.opr&&p.every(i=>i.opr), S(q).chair.x<q.x-q.W/2, S(p[0]).chair.y<p[0].y-p[0].W/2, S(p[1]).chair.y>p[1].y+p[1].W/2, S(q).zone.cx>zoneById("finish").x, document.querySelectorAll('#plan [data-id="'+q.id+'"] ellipse').length]}''')
+        check(ro == [True, True, True, True, True, 2], 'operators placed at the QC table (line side) and the two packing tables (facing each other), inside the finishing area ' + str(ro))
         # K on the finishing tables: spread them, close up -> touching again
         await pg.evaluate("()=>{const it=ST.items.filter(i=>isFinishObj(i));it.forEach((i,k)=>{i.x+=15+k*9;i.y+=(k%2?12:-7)});SEL=it.map(i=>i.id);onSelChange();changed()}")
         await pg.keyboard.press('k'); await pg.wait_for_timeout(100)
@@ -182,7 +185,7 @@ async def main():
         check(await pg.evaluate("()=>ST.items.filter(i=>i.name=='QC').length") == 2, 'Ctrl+C / Ctrl+V copies a table as well')
         await pg.keyboard.press('Control+z'); await pg.click('#bMeasClr')
         check(await pg.evaluate("()=>[MEAS.on, ST.meas.length]") == [False, 0], 'Esc leaves the measuring mode, measurements cleared')
-        check(r == [True, True, 90, '175x75', '0,0', True, '#f2c230,#e04848,#3fae6a', True, 0, 0, 0, 70, 70, True, True], 'finishing area (QC upright, 2 PCK face to face, touching QC) and box area: yellow, red, green strips 70 cm wide, as long as the line is wide, side by side after the PCK tables ' + str(r))
+        check(r == [True, True, 90, '175x75', '180,0', True, '#f2c230,#e04848,#3fae6a', True, 0, 0, 0, 70, 70, True, True], 'finishing area (QC upright, 2 PCK face to face, touching QC) and box area: yellow, red, green strips 70 cm wide, as long as the line is wide, side by side after the PCK tables ' + str(r))
         check(await pg.is_visible('#libBanner'), 'banner without library')
         await pg.set_input_files('#fileLib', lib); await pg.wait_for_timeout(800)
         check(await pg.evaluate('()=>[Object.keys(LIB.codes).length, LIB.models.length]') == [len(CODES), len(MODELS)], 'library read')

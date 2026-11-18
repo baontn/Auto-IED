@@ -366,6 +366,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 var LANG = 'vi';
 var I18N = {
   vi: {
+    fObjOpr: 'Có người đứng làm việc (phía cạnh dài; xoay bàn để đổi phía)',
     copied: 'Đã sao chép {0} đối tượng (Ctrl+V để dán).', selMeasN: '{0} thước đo đang chọn: kéo để di chuyển, kéo đầu tròn để đổi điểm đo, Delete để xóa, Ctrl+C / Ctrl+V để sao chép.',
     bMeas: '📏 Đo', bMeasTip: 'Thước đo khoảng cách trên mặt bằng 2D: kéo chuột giữa 2 điểm', bMeasClr: 'Xóa thước đo',
     measBar: 'Thước đo: kéo chuột từ điểm đầu đến điểm cuối (bám góc / cạnh bàn máy; Shift: chỉ ngang / dọc; Alt: không bám lưới). Thước đo là đối tượng: bấm để chọn, kéo để di chuyển, Delete xóa, Ctrl+C / Ctrl+V sao chép. Esc hoặc bấm lại nút 📏 để thoát.',
@@ -515,6 +516,7 @@ var I18N = {
     ocrIgnored: 'bỏ qua', ocrLegend: 'Viền xanh lá: đọc đúng mã · cam: đã sửa theo thư viện · đỏ: không có trong thư viện · xanh dương: số công đoạn · xám: bỏ qua. Đưa chuột vào ô để xem chữ đọc được.'
   },
   en: {
+    fObjOpr: 'Standing operator (on the long side; turn the table to change the side)',
     copied: '{0} objects copied (Ctrl+V to paste).', selMeasN: '{0} measurements selected: drag to move, drag a round end to change it, Delete to remove, Ctrl+C / Ctrl+V to copy.',
     bMeas: '📏 Measure', bMeasTip: 'Measure distances on the 2D plan: drag between two points', bMeasClr: 'Clear measurements',
     measBar: 'Measuring: drag from the first point to the second (snaps to table corners / edges; Shift: horizontal / vertical only; Alt: no grid). A measurement is an object: click to select, drag to move, Delete to remove, Ctrl+C / Ctrl+V to copy. Esc or the 📏 button again to leave.',
@@ -931,6 +933,11 @@ function shapes(it) {
     r.zone = obb(it, sx, d.W / 2 + zd / 2, zw / 2, zd / 2);
     r.chair = rotPt(it, sx, d.W / 2 + (st ? e.standGap : e.chairGap + e.chairD / 2));   // operator position (seat centre or standing spot)
     r.aisle = e.aisle > 0 && (it.rot || 0) % 180 === 0 ? obb(it, sx, d.W / 2 + zd + e.aisle / 2, zw / 2, e.aisle / 2) : null;   // a machine turned across the row: the operator sits between machines, no aisle behind
+  } else if (it.opr) {   // a table with a standing operator on its long side (QC, packing): local +y, like a machine
+    r.seatX = 0; r.stand = true; r.zw = Math.min(e.standW, d.L); r.zd = e.standDepth;
+    r.front = rotPt(it, 0, d.W / 2);
+    r.zone = obb(it, 0, d.W / 2 + r.zd / 2, r.zw / 2, r.zd / 2);
+    r.chair = rotPt(it, 0, d.W / 2 + e.standGap);
   }
   return r;
 }
@@ -1138,7 +1145,7 @@ function setupLine(o) {
   var fin = o.finish !== false, tL = Math.max(40, +o.finTL || LINE_DEF.finTL), tW = Math.max(30, +o.finTW || LINE_DEF.finTW), bxW = Math.max(30, +o.boxW || LINE_DEF.boxW);
   var oldF = zoneById('finish'), oldB = zoneById('boxes');
   if (fin) {
-    var fL = Math.round(20 + tW + tL), fx = mL + gap;   // QC, packing tables and boxes side by side, touching
+    var fL = Math.round((ST.erg.standDepth || 80) + tW + tL), fx = mL + gap;   // QC operator, QC, packing tables and boxes side by side, touching
     zones.push({ id: 'finish', x: fx, y: mainY, L: fL, W: mW }, { id: 'boxes', x: fx + fL, y: mainY, L: Math.round(3 * bxW), W: mW });   // 3 box strips across the line width
   }
   if (inL > 0) zones.push({ id: 'input', x: inX, y: mainY, L: inL, W: mW });
@@ -1172,12 +1179,14 @@ function placeFinish(oldF, oldB) {
     var dx = p[1].x - p[0].x, dy = p[1].y - p[0].y;
     ST.items.forEach(function (it) { if (it.zone === p[2]) { it.x = n1(it.x + dx); it.y = n1(it.y + dy); } });
   });
-  var cy = F.y + F.W / 2, tL = L.finTL, tW = L.finTW;
+  var cy = F.y + F.W / 2, tL = L.finTL, tW = L.finTW, sd = ST.erg.standDepth || 80;
+  // areas made before the operators' places existed: built again
+  if (ST.items.some(function (it) { return it.zone === 'finish' && /^(QC|PCK)/.test(it.name || '') && !it.opr; })) ST.items = ST.items.filter(function (it) { return !isFinishObj(it); });
   if (!ST.items.some(function (it) { return it.zone === 'finish'; })) {
-    var px = F.x + 20 + tW + tL / 2;   // packing tables touch the QC table
-    ST.items.push({ id: uid(), kind: 'obj', zone: 'finish', name: 'QC', L: tL, W: tW, H: 75, x: n1(F.x + 20 + tW / 2), y: n1(cy), rot: 90, color: '#9fd3a8' },   // QC table upright
-      { id: uid(), kind: 'obj', zone: 'finish', name: 'PCK 1', L: tL, W: tW, H: 75, x: n1(px), y: n1(cy - tW / 2), rot: 0, color: '#f2cf8d' },   // two packing tables face to face
-      { id: uid(), kind: 'obj', zone: 'finish', name: 'PCK 2', L: tL, W: tW, H: 75, x: n1(px), y: n1(cy + tW / 2), rot: 0, color: '#f2cf8d' });
+    var qx = F.x + sd + tW / 2, px = F.x + sd + tW + tL / 2;   // QC operator on the line side, packing tables touch the QC table
+    ST.items.push({ id: uid(), kind: 'obj', zone: 'finish', name: 'QC', L: tL, W: tW, H: 75, x: n1(qx), y: n1(cy), rot: 90, color: '#9fd3a8', opr: true },   // QC table upright, operator on its left
+      { id: uid(), kind: 'obj', zone: 'finish', name: 'PCK 1', L: tL, W: tW, H: 75, x: n1(px), y: n1(cy - tW / 2), rot: 180, color: '#f2cf8d', opr: true },   // two packing tables face to face: operators above and below
+      { id: uid(), kind: 'obj', zone: 'finish', name: 'PCK 2', L: tL, W: tW, H: 75, x: n1(px), y: n1(cy + tW / 2), rot: 0, color: '#f2cf8d', opr: true });
   }
   if (!ST.items.some(function (it) { return it.zone === 'boxes'; })) {
     var bw = L.boxW;
@@ -1320,7 +1329,7 @@ function planMarkup(o) {
     var S = shapes(it), d = { L: S.L, W: S.W }, sel = !o.exp && SEL.indexOf(it.id) >= 0;
     var stroke = sel ? P.accent : bad[it.id] ? P.bad : warn[it.id] ? P.warn : P.edge, wd = (sel || bad[it.id] || warn[it.id] ? 2.5 : 1) * sw;
     var g = ['<g data-id="' + it.id + '" transform="translate(' + n1(it.x) + ' ' + n1(it.y) + ') rotate(' + (it.rot || 0) + ')" style="cursor:move">'];
-    if (it.kind === 'mc' && S.zone) {
+    if ((it.kind === 'mc' || it.opr) && S.zone) {
       var sx = S.seatX;
       var zw = S.zw, zd = S.zd;
       if (OPT.aisles || sel) g.push('<rect x="' + (sx - zw / 2) + '" y="' + (d.W / 2 + zd) + '" width="' + zw + '" height="' + e.aisle + '" fill="' + P.aisle + '" stroke="' + P.warn + '" stroke-width="' + sw + '" stroke-dasharray="' + 3 * sw + ' ' + 3 * sw + '"/>');
@@ -2068,6 +2077,7 @@ function rebuild3d() {
       }
     } else {
       g = buildObject(it);
+      if (it.opr) buildStanding(g, 0, d.W, e, V3.people);   // QC / packing operator
       if (V3.labels && it.name && it.zone !== 'boxes') { var sp2 = machineLabel(it.name, ''); sp2.position.set(0, (it.H || 75) + 45, 0); g.add(sp2); }
     }
     var sel = SEL.indexOf(it.id) >= 0;
@@ -3960,6 +3970,7 @@ function renderSel() {
     } else {
       h += '<div class="grid2">' + fld('fName', t('fName'), it.name || '') + '<label class="f"><span>' + esc(t('fColor')) + '</span><input id="fColor" type="color" value="' + esc(it.color || '#c9ccd3') + '"></label></div>';
       h += '<label class="ck"><input type="checkbox" id="fLock"' + (isLocked(it) ? ' checked' : '') + '> ' + esc(t('fLock')) + '</label>';
+      if (it.role !== 'center' && it.zone !== 'boxes') h += '<label class="ck"><input type="checkbox" id="fOpr"' + (it.opr ? ' checked' : '') + '> ' + esc(t('fObjOpr')) + '</label>';
       h += '<div class="grid3">' + fld('fL', t('fLen'), it.L, 'type="number" step="1"') + fld('fW', t('fWid'), it.W, 'type="number" step="1"') + fld('fH', t('fHei'), it.H || 75, 'type="number" step="1"') + '</div>';
     }
     h += '<div class="grid3">' + fld('fX', 'X (cm)', it.x, 'type="number" step="1"') + fld('fY', 'Y (cm)', it.y, 'type="number" step="1"') + fld('fRot', t('fRot'), it.rot || 0, 'type="number" step="15"') + '</div>';
@@ -3983,6 +3994,7 @@ function onSelField(e) {
   else if (id === 'fHasOp') { if (e.target.checked === !!it.noOp) opToggleOne(it); }
   else if (id === 'fStand') it.stand = e.target.checked;
   else if (id === 'fLock') it.lock = e.target.checked;
+  else if (id === 'fOpr') { if (e.target.checked) it.opr = true; else delete it.opr; }
   else if (id === 'fName') it.name = v;
   else if (id === 'fColor') it.color = v;
   else if (id === 'fX') it.x = num(v, it.x);

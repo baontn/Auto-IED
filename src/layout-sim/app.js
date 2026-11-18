@@ -105,6 +105,7 @@ function renderSel() {
     } else {
       h += '<div class="grid2">' + fld('fName', t('fName'), it.name || '') + '<label class="f"><span>' + esc(t('fColor')) + '</span><input id="fColor" type="color" value="' + esc(it.color || '#c9ccd3') + '"></label></div>';
       h += '<label class="ck"><input type="checkbox" id="fLock"' + (isLocked(it) ? ' checked' : '') + '> ' + esc(t('fLock')) + '</label>';
+      if (it.role !== 'center' && it.zone !== 'boxes') h += '<label class="ck"><input type="checkbox" id="fOpr"' + (it.opr ? ' checked' : '') + '> ' + esc(t('fObjOpr')) + '</label>';
       h += '<div class="grid3">' + fld('fL', t('fLen'), it.L, 'type="number" step="1"') + fld('fW', t('fWid'), it.W, 'type="number" step="1"') + fld('fH', t('fHei'), it.H || 75, 'type="number" step="1"') + '</div>';
     }
     h += '<div class="grid3">' + fld('fX', 'X (cm)', it.x, 'type="number" step="1"') + fld('fY', 'Y (cm)', it.y, 'type="number" step="1"') + fld('fRot', t('fRot'), it.rot || 0, 'type="number" step="15"') + '</div>';
@@ -128,6 +129,7 @@ function onSelField(e) {
   else if (id === 'fHasOp') { if (e.target.checked === !!it.noOp) opToggleOne(it); }
   else if (id === 'fStand') it.stand = e.target.checked;
   else if (id === 'fLock') it.lock = e.target.checked;
+  else if (id === 'fOpr') { if (e.target.checked) it.opr = true; else delete it.opr; }
   else if (id === 'fName') it.name = v;
   else if (id === 'fColor') it.color = v;
   else if (id === 'fX') it.x = num(v, it.x);

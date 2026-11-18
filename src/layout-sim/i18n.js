@@ -2,6 +2,7 @@
 var LANG = 'vi';
 var I18N = {
   vi: {
+    fObjOpr: 'Có người đứng làm việc (phía cạnh dài; xoay bàn để đổi phía)',
     copied: 'Đã sao chép {0} đối tượng (Ctrl+V để dán).', selMeasN: '{0} thước đo đang chọn: kéo để di chuyển, kéo đầu tròn để đổi điểm đo, Delete để xóa, Ctrl+C / Ctrl+V để sao chép.',
     bMeas: '📏 Đo', bMeasTip: 'Thước đo khoảng cách trên mặt bằng 2D: kéo chuột giữa 2 điểm', bMeasClr: 'Xóa thước đo',
     measBar: 'Thước đo: kéo chuột từ điểm đầu đến điểm cuối (bám góc / cạnh bàn máy; Shift: chỉ ngang / dọc; Alt: không bám lưới). Thước đo là đối tượng: bấm để chọn, kéo để di chuyển, Delete xóa, Ctrl+C / Ctrl+V sao chép. Esc hoặc bấm lại nút 📏 để thoát.',
@@ -151,6 +152,7 @@ var I18N = {
     ocrIgnored: 'bỏ qua', ocrLegend: 'Viền xanh lá: đọc đúng mã · cam: đã sửa theo thư viện · đỏ: không có trong thư viện · xanh dương: số công đoạn · xám: bỏ qua. Đưa chuột vào ô để xem chữ đọc được.'
   },
   en: {
+    fObjOpr: 'Standing operator (on the long side; turn the table to change the side)',
     copied: '{0} objects copied (Ctrl+V to paste).', selMeasN: '{0} measurements selected: drag to move, drag a round end to change it, Delete to remove, Ctrl+C / Ctrl+V to copy.',
     bMeas: '📏 Measure', bMeasTip: 'Measure distances on the 2D plan: drag between two points', bMeasClr: 'Clear measurements',
     measBar: 'Measuring: drag from the first point to the second (snaps to table corners / edges; Shift: horizontal / vertical only; Alt: no grid). A measurement is an object: click to select, drag to move, Delete to remove, Ctrl+C / Ctrl+V to copy. Esc or the 📏 button again to leave.',
