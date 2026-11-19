@@ -259,9 +259,26 @@ function renderSource() {
     ch.slice(0, 600).map(function (c) { return '<tr><td><b>' + esc(c.line) + '</b></td><td>' + pDay(c.from, true) + '</td><td>' + pDay(c.to, true) + '</td><td>' + esc(c.old || t('srcEmpty')) + '</td><td>' + esc(c.now || t('srcEmpty')) + '</td></tr>'; }).join('');
   if (SRCVIEW === 'miss') $('srcTable').innerHTML = '<tr><th class="l">' + t('pgStyle') + '</th><th>' + t('srcThFirst') + '</th><th class="l">' + t('srcThLines') + '</th></tr>' +
     miss.slice().sort(function (a, b) { return (a.first || 0) - (b.first || 0); }).map(function (m) { return '<tr><td><b>' + esc(m.style) + '</b></td><td>' + (m.first ? fmtDate(m.first) : '') + '</td><td>' + esc(m.lines.slice(0, 6).join(', ')) + '</td></tr>'; }).join('');
-  $('srcBox').hidden = !SRCVIEW;
+  $('srcBox').hidden = !SRCVIEW; $('srcExport').hidden = !(ch.length || miss.length);
 }
 $('srcShowDiff').onclick = function () { SRCVIEW = SRCVIEW === 'diff' ? null : 'diff'; renderSource(); };
+// Excel of the demand source check: every change against the MC Report (the screen shows only the first 600) and every style with no machine data
+async function srcExportXlsx() {
+  var M = SRC(), miss = (M && M.missing) || [], ch = (REF.mbl && REF.demand ? PS.changes : null) || [];
+  var wb = new ExcelJS.Workbook(), hdr = function (ws) { var r = ws.getRow(1); r.font = { bold: true, color: { argb: 'FFFFFFFF' } }; r.eachCell(function (c) { c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F3A5F' } }; c.alignment = { vertical: 'middle', wrapText: true }; }); r.height = 24; ws.views = [{ state: 'frozen', ySplit: 1 }]; ws.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: ws.columnCount } }; };
+  var s0 = wb.addWorksheet('INFO'); s0.getColumn(1).width = 34; s0.getColumn(2).width = 90;
+  s0.addRows([[t('srcTitle'), $('srcInfo').textContent], [t('srcThLine') + ' / ' + t('srcDiff', [ch.length, Object.keys(ch.reduce(function (a, c) { a[c.line] = 1; return a; }, {})).length]), ''], [t('srcMiss', [miss.length]), ''], ['', new Date().toLocaleString()]]); s0.getRow(1).font = { bold: true };
+  var s1 = wb.addWorksheet('CHANGES vs MC REPORT'); s1.addRow([t('srcThLine'), t('srcThFrom'), t('srcThTo'), t('srcThOld'), t('srcThNew')]);
+  ch.forEach(function (c) { s1.addRow([c.line, new Date(c.from), new Date(c.to), c.old || '', c.now || '']); });
+  [1, 2, 3].forEach(function (i) { s1.getColumn(i).width = i === 1 ? 12 : 13; }); s1.getColumn(2).numFmt = s1.getColumn(3).numFmt = 'dd/mm/yyyy'; s1.getColumn(4).width = s1.getColumn(5).width = 50; hdr(s1);
+  var s2 = wb.addWorksheet('MISSING STYLES'); s2.addRow([t('pgStyle'), t('srcThFirst'), t('srcThLines')]);
+  miss.slice().sort(function (a, b) { return (a.first || 0) - (b.first || 0); }).forEach(function (m) { s2.addRow([m.style, m.first instanceof Date ? m.first : '', m.lines.join(', ')]); });
+  s2.getColumn(1).width = 34; s2.getColumn(2).width = 14; s2.getColumn(2).numFmt = 'dd/mm/yyyy'; s2.getColumn(3).width = 60; hdr(s2);
+  var buf = await wb.xlsx.writeBuffer(), a = document.createElement('a'), d0 = new Date(), p = function (x) { return String(x).padStart(2, '0'); };
+  a.href = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+  a.download = 'DEMAND_SOURCE_CHECK_' + d0.getFullYear() + p(d0.getMonth() + 1) + p(d0.getDate()) + '.xlsx'; document.body.appendChild(a); a.click(); a.remove();
+}
+$('srcExport').onclick = function () { srcExportXlsx().catch(function (e) { alert(e.message); }); };
 $('srcShowMiss').onclick = function () { SRCVIEW = SRCVIEW === 'miss' ? null : 'miss'; renderSource(); };
 
 // which IE Tech completed their review (latest per person + scope)

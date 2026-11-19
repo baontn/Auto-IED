@@ -1,6 +1,7 @@
 // ===================== TEXTS (VI / EN) =====================
 var I18N = {
   vi: {
+    srcXl: '⬇ Xuất Excel',
     rsExpAll: 'Hiện tất cả mã hàng', rsCollapse: 'Ẩn mã hàng', rsLoadsOn: 'vào chuyền {0}', rsPrepOf: 'chuẩn bị {0}', rsPuxTip: 'Bấm để hiện / ẩn các chuyền và mã hàng của PU',
     rsAtAREA: 'Thu hồi từ khu vực', rsFArea: 'Khu vực (số máy đang giữ)', rsErrArea: 'Chọn khu vực và số máy thu hồi không vượt quá số máy khu vực đang giữ.', rsAreaHdr: 'Khu vực đang giữ máy (đã trừ khỏi "Máy có sẵn")', rsAreaTake: 'Thu hồi',
     rsCardPUs: 'Thiếu theo PU (máy dùng ngày tệ nhất {0}) — bấm vào PU để xem chi tiết', rsPuUse: 'Máy PU dùng ngày tệ nhất', rsPuLines: 'Chuyền và mã hàng của PU ngày {0}', rsPuLine: 'Chuyền', thStyleLbl: 'Mã hàng', rsPuDays: 'Máy PU dùng theo từng ngày thiếu',
@@ -190,6 +191,7 @@ var I18N = {
     c_Added: 'Mới', c_Changed: 'Thay đổi', c_Unchanged: 'Không đổi'
   },
   en: {
+    srcXl: '⬇ Export Excel',
     rsExpAll: 'Show all styles', rsCollapse: 'Hide styles', rsLoadsOn: 'loads {0}', rsPrepOf: 'prepare {0}', rsPuxTip: 'Click to show / hide the lines and styles of the PU',
     rsAtAREA: 'Take back from area', rsFArea: 'Area (machines held)', rsErrArea: 'Choose an area and a quantity not above the machines the area holds.', rsAreaHdr: 'Areas holding machines (already taken off "Available")', rsAreaTake: 'Take back',
     rsCardPUs: 'Shortage by PU (machines used on the worst day {0}) — click a PU for details', rsPuUse: 'Machines the PU uses on the worst day', rsPuLines: 'Lines and styles of the PU on {0}', rsPuLine: 'Line', thStyleLbl: 'Style', rsPuDays: 'Machines the PU uses on each short day',
