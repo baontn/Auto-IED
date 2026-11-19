@@ -160,7 +160,7 @@ tr.tot td{font-weight:700;border-top:2px solid var(--text);border-bottom:none;ba
 
 <!-- ============ TOP BAR ============ -->
 <header>
-  <h1 data-i18n="appTitle"></h1><span class="tag t-info" id="verTag" title="Version">V4.3.4</span>
+  <h1 data-i18n="appTitle"></h1><span class="tag t-info" id="verTag" title="Version">V4.4.0</span>
   <nav class="tabs">
     <button data-tab="check" data-i18n="tabCheck"></button>
     <button data-tab="variation" data-i18n="tabVar"></button>
@@ -353,7 +353,7 @@ const I18N = {
     verifyAllOk: '✅ {0}: all variations closed — variation = 0.', verifySome: '⚠ {0}: {1} variation(s) still different:\n{2}',
     askLayoutNote: 'What must the IE change in the layout?', sentBack: '{0} sent back to IE to fix the layout.',
     thFoundAt: 'Found at', thFoundBy: 'Found by', thType: 'Type', thClosedBy: 'Closed by', thClosedAt: 'Closed at', thLastAction: 'Last action',
-    lineFilter: 'My lines:', allLines: 'All lines', linesN: '{0} lines', pickLines: 'Tick the lines you are in charge of', searchLine: 'Search line… (e.g. J, K)', searchStyle: 'Search style…', homeLink: 'All tools', homeTip: 'Back to the home page with all tools', openIbm: 'Open IE Báo cáo máy', noMatch: 'No style matches the search.',
+    lineFilter: 'My lines:', allLines: 'All lines', linesN: '{0} lines', pickLines: 'Tick the lines you are in charge of', searchLine: 'Search line… (e.g. J, K)', searchStyle: 'Search style…', homeLink: 'All tools', homeTip: 'Back to the home page with all tools', openIbm: 'Open IE Báo cáo máy', noMatch: 'No style matches the search.', reBtn: '🔍 Open and re-check', reTip: 'Open this style in the check screen (everyone can). Use it when the wrong layout was chosen.', reNote: 'Opened from the Variation log for a re-check. Anyone can save Pass / Accept / Fail here; the new result replaces the earlier check of this style.', reBack: 'Back to the Variation log',
     selectAll: '✓ Tick all shown', selectNone: 'Clear (show all lines)', done: 'Done', toCheckOf: 'To check ({0} of {1})',
     noLinesForPU: 'No line of this PU in the plan.', aSET_LINES: 'Set my lines',
     layoutFolder: 'Layout folder', layoutFolderOpt: 'optional — the big folder where IEs save layouts', notSetOpt: 'not set (optional)',
@@ -452,7 +452,7 @@ const I18N = {
     verifyAllOk: '✅ {0}: tất cả sai lệch đã đóng — sai lệch = 0.', verifySome: '⚠ {0}: còn {1} sai lệch:\n{2}',
     askLayoutNote: 'IE cần sửa gì trên layout?', sentBack: '{0} đã trả lại IE để sửa layout.',
     thFoundAt: 'Ngày phát hiện', thFoundBy: 'Người phát hiện', thType: 'Loại', thClosedBy: 'Người đóng', thClosedAt: 'Ngày đóng', thLastAction: 'Thao tác cuối',
-    lineFilter: 'Chuyền phụ trách:', allLines: 'Tất cả chuyền', linesN: '{0} chuyền', pickLines: 'Chọn các chuyền bạn phụ trách', searchLine: 'Tìm chuyền… (vd: J, K)', searchStyle: 'Tìm mã hàng…', homeLink: 'Trang chủ', homeTip: 'Về trang chủ có tất cả công cụ', openIbm: 'Mở IE Báo cáo máy', noMatch: 'Không có mã hàng nào khớp.',
+    lineFilter: 'Chuyền phụ trách:', allLines: 'Tất cả chuyền', linesN: '{0} chuyền', pickLines: 'Chọn các chuyền bạn phụ trách', searchLine: 'Tìm chuyền… (vd: J, K)', searchStyle: 'Tìm mã hàng…', homeLink: 'Trang chủ', homeTip: 'Về trang chủ có tất cả công cụ', openIbm: 'Mở IE Báo cáo máy', noMatch: 'Không có mã hàng nào khớp.', reBtn: '🔍 Mở để kiểm tra lại', reTip: 'Mở mã hàng này ở màn hình kiểm tra (ai cũng mở được). Dùng khi IE chọn nhầm layout.', reNote: 'Mở từ Nhật ký sai lệch để kiểm tra lại. Ai cũng có thể lưu Đạt / Chấp nhận / Không đạt tại đây; kết quả mới thay cho lần kiểm tra trước của mã hàng này.', reBack: 'Về Nhật ký sai lệch',
     selectAll: '✓ Chọn tất cả đang hiển thị', selectNone: 'Bỏ lọc (hiện tất cả chuyền)', done: 'Xong', toCheckOf: 'Cần kiểm tra ({0}/{1})',
     noLinesForPU: 'Không có chuyền nào của PU này trong kế hoạch.', aSET_LINES: 'Chọn chuyền phụ trách',
     layoutFolder: 'Thư mục layout', layoutFolderOpt: 'không bắt buộc — thư mục chung nơi IE lưu layout', notSetOpt: 'chưa chọn (không bắt buộc)',
@@ -1292,6 +1292,19 @@ async function freshDb() {
     toast(t('dbReloaded', new Date(f.lastModified).toLocaleString()), 'ok'); return true;
   } catch (e) { if (!S.dbWarn) { S.dbWarn = true; toast(t('dbBusy'), 'warn'); } return false; }
 }
+// open any style of the Variation log in the check screen, whoever you are and whatever stage it is in (for example when the wrong layout was chosen)
+function rowForKey(sk, v0) {
+  const r = S.sp && S.sp.styles && S.sp.styles[sk], vIdx = indexValidations(S.vals);
+  const base = r ? { key: sk, style: r.style, firstDate: r.firstDate, firstLines: r.firstLines, pus: pusOf(S.lineMap, r.firstLines), otherLines: r.otherLines, baseline: r.baseline, cat: r.baseline ? 'Baseline' : (r.firstDate >= S.wkS ? 'New' : 'Carry-over') }
+    : { key: sk, style: v0.style, firstDate: 0, firstLines: String(v0.firstLines || '').split(',').map(x => x.trim()).filter(Boolean), pus: [v0.pu].filter(Boolean), otherLines: [], baseline: false, cat: 'Carry-over' };
+  return Object.assign(base, { last: vIdx.last[sk] || '', stg: S.stages[sk] || { stage: 'CHECK' }, reopen: true });
+}
+function openForRecheck(valId) {
+  const v0 = S.vars.find(v => v.valId === valId) || S.vals.find(v => v.valId === valId); if (!v0) return;
+  const sk = v0.styleKey || K(v0.style), r = rowForKey(sk, v0), pu = (r.pus || []).find(p => p && [...$('pu').options].some(o => o.value === p));
+  if (pu && $('pu').value !== pu) { $('pu').value = pu; loadMyLines(); }
+  S.fromVar = true; setTab('check'); selectStyle(r);
+}
 function selectStyle(r) {
   closePdfPane();
   S.sel = r; S.layouts = []; S.cmp = null; S.onlyDiff = true; S.showSuggest = true; S.laySearch = '';
@@ -1300,7 +1313,7 @@ function selectStyle(r) {
   renderList(); renderWork();
   freshDb().then(ch => { if (ch) { renderList(); renderWork(); } });
   const g = r.stg || {};
-  if ((g.stage === 'RECHECK' || g.stage === 'TECH') && g.check) guard(() => autoOpenLayouts(r, g));
+  if (!r.reopen && (g.stage === 'RECHECK' || g.stage === 'TECH') && g.check) guard(() => autoOpenLayouts(r, g));
 }
 // re-open the file(s) used last time (IE Tech's fixed file first), with the same sheets ticked
 async function autoOpenLayouts(r, g) {
@@ -1319,6 +1332,7 @@ async function autoOpenLayouts(r, g) {
 }
 function workNotes(r) {
   const g = r.stg || {}, l = g.last; let h = '';
+  if (r.reopen) h += '<div class="note" style="background:var(--okbg);color:var(--ok)">🔍 ' + esc(t('reNote')) + ' <button id="btnBackVar" style="margin-left:8px">' + esc(t('reBack')) + '</button></div>';
   if (g.stage === 'RECHECK') h += '<div class="note" style="background:var(--okbg);color:var(--ok)">' + esc(t('recheckNote', l ? (l.by + ' · ' + dt(l.at)) : '')) + '</div>';
   if (g.stage === 'TECH') {
     const ask = (S.rawActs.filter(a => a.valId === g.check.valId && a.action === 'LAYOUT_TO_FIX').slice(-1)[0]) || { by: g.check.user, at: g.check.savedAt, note: g.check.comment };
@@ -1426,7 +1440,7 @@ function renderWork() {
     // step 4: decision (IE Tech has its own buttons)
     const pdfOk = S.layouts.every(l => !l.pdf || l.confirmed);
     const canPass = grpOk && pdfOk;           // the layout self-check is a warning only (split layouts); a PDF layout needs the manual confirmation
-    if (S.user.role === 'Tech' || (r.stg && r.stg.stage === 'TECH' && canTech())) h += '<div class="card"><h3><span class="num">4</span> ' + t('techStep4') + '</h3>' +
+    if (!r.reopen && (S.user.role === 'Tech' || (r.stg && r.stg.stage === 'TECH' && canTech()))) h += '<div class="card"><h3><span class="num">4</span> ' + t('techStep4') + '</h3>' +
       '<textarea id="comment" rows="2" style="width:100%" placeholder="' + esc(t('commentPh')) + '"></textarea><div class="decide">' +
       '<button class="a" id="tDbWrong"><b>' + t('techDbWrong') + '</b><span class="small muted">' + t('techDbWrongSub') + '</span></button>' +
       '<button class="p" id="tFixed"><b>' + t('techFixed') + '</b><span class="small muted">' + t('techFixedSub') + '</span></button></div></div>';
@@ -1440,6 +1454,7 @@ function renderWork() {
   }
   w.innerHTML = h;
 
+  if ($('btnBackVar')) $('btnBackVar').onclick = () => { S.sel = null; S.layouts = []; S.cmp = null; closePdfPane(); renderAll(); setTab('variation'); };
   $('btnOpenLayout').onclick = () => guard(addLayouts); $('btnOpenLayout').title = t('pdfBrowseTip');
   wirePdf(w);
   if ($('btnAllowLay')) $('btnAllowLay').onclick = () => guard(allowLayRoot);
@@ -1594,9 +1609,10 @@ async function save(status) {
   await act('SAVE_' + status, rec.style, rec.diffCount + ' diff' + (comment ? ' · ' + comment : ''));
   toast((status === 'FAIL' ? '❌ ' : '✅ ') + t('savedMsg', rec.style, t(status)), status === 'FAIL' ? 'warn' : 'ok');
   if (rec.groupDiffCount) toast('🛠 ' + t('varsSent', rec.groupDiffCount));
-  const idx = S.list.findIndex(x => x.key === S.sel.key);
+  const idx = S.list.findIndex(x => x.key === S.sel.key), reopened = !!S.sel.reopen;
   closePdfPane(); S.sel = null; S.layouts = []; S.cmp = null;
   renderList();
+  if (reopened) { S.fromVar = false; renderAll(); setTab('variation'); return; }          // opened from the Variation log: go back there
   const next = S.list[Math.min(idx, S.list.length - 1)];
   if (next && status !== 'FAIL') selectStyle(next); else renderWork();
 }
@@ -1647,6 +1663,7 @@ function renderVariations() {
     if (active.length || sg.stage === 'RECHECK') h += '<div class="small" style="margin-top:4px"><span class="tag ' + (sg.stage === 'CONS' ? 't-bad' : 't-warn') + '">' + esc(t('withWho', t(OWN[sg.stage] || 'ownIE'))) + '</span>' +
       (sg.escalate ? ' <span class="tag t-bad">' + esc(t('tagRounds', sg.rounds)) + '</span>' : '') + '</div>';
     if (la && /^TECH_/.test(la.action) && la.valId === v0.valId) h += '<div class="note">🔧 ' + esc(la.by) + ' · ' + dt(la.at) + ': ' + esc(la.note || '') + '</div>';
+    h += '<div style="margin-top:6px"><button data-recheck="' + v0.valId + '" title="' + esc(t('reTip')) + '">' + t('reBtn') + '</button></div>';
     h += '<table style="margin-top:6px"><thead><tr><th>' + t('thMachine') + '</th><th>' + t('thGroup') + '</th><th>' + t('thType') + '</th><th class="n">' + t('thDbCheck') + '</th><th class="n">' + t('thLayout') +
       '</th><th class="n">' + t('thDbNow') + '</th><th class="n">' + t('thToFix') + '</th><th>' + t('thStatus') + '</th></tr></thead><tbody>' +
       g.map(v => '<tr><td><b>' + esc(v.machine) + '</b></td><td>' + esc(v.group) + '</td><td>' + RES_TXT(v.type) + '</td><td class="n">' + v.dbAtCheck + '</td><td class="n">' + v.layout + '</td><td class="n">' + (v.dbNow ?? '') +
@@ -1658,6 +1675,7 @@ function renderVariations() {
       (waiting ? '<button data-reopen="' + v0.valId + '">' + t('reopen') + '</button>' : '<button data-fixlayout="' + v0.valId + '">' + t('layoutFix') + '</button>') + '</div>';
     return h + '</div>';
   }).join('');
+  $('vBody').querySelectorAll('[data-recheck]').forEach(b => b.onclick = () => guard(() => openForRecheck(b.dataset.recheck)));
   $('vBody').querySelectorAll('[data-copy]').forEach(b => b.onclick = () => guard(() => copyCorrection(b.dataset.copy)));
   $('vBody').querySelectorAll('[data-verify]').forEach(b => b.onclick = () => guard(() => verifyDb(b.dataset.verify)));
   $('vBody').querySelectorAll('[data-fixlayout]').forEach(b => b.onclick = () => guard(() => sendBack(b.dataset.fixlayout)));

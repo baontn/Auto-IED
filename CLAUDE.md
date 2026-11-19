@@ -8,7 +8,7 @@ Two **static, offline, single-file web tools** (Chrome/Edge only, File System Ac
 
 | Tool | File | Version | Who uses it |
 |---|---|---|---|
-| **Layout Check** (LC) | `layout-check/LayoutCheck.html` (+ `xlsx.full.min.js` next to it) | V4.3.4 | IE officers check a style's layout machine list against the MACHINE DATABASE; IE Báo cáo máy (consolidator) fixes the database; IE Tech fixes layouts; Supervisor tracks |
+| **Layout Check** (LC) | `layout-check/LayoutCheck.html` (+ `xlsx.full.min.js` next to it) | V4.4.0 | IE officers check a style's layout machine list against the MACHINE DATABASE; IE Báo cáo máy (consolidator) fixes the database; IE Tech fixes layouts; Supervisor tracks |
 | **IE Báo cáo máy** (IBM) | `ie-bao-cao-may/IE_BaoCaoMay.html` (built from `src/ie-bao-cao-may`) | v7.10 | (a) updates MACHINE DATABASE from scanned layouts + costing, (b) machine shortage analysis by day, (c) prep (changeover) machines: proposal -> IE Tech review -> close report, activity log |
 
 Weekly process: layouts sit in share folders; `MC_report.xlsx` runs Power Query over `TransformedMasterPlan.xlsx` (sheet `MasterPlan-Full`) plus the MACHINE DATABASE (an Excel table that **must stay named `Table1`**) via MACHINE GROUP, producing MACHINE BY LINE and MISSING STYLES. Costing is used for styles with no layout. Only D lines run 48HC (the suffix is part of the style name).
@@ -65,7 +65,7 @@ Browser-side state: IBM keeps folder/file handles in IndexedDB `iebaocaomay` (KV
 - Only the rows with the LATEST DATE per style in MACHINE DATABASE are used (both tools).
 - "Giữ dữ liệu hiện tại" in Cập nhật CSDL can be **confirmed** (✓ then "Xác nhận giữ", or ticked when pressing Lưu): the style moves to the card "Đã xác nhận giữ" and comes back under "Cần duyệt" **only when the content (machines and quantities) of its layout/costing options changes, or its database data (`current` set) changes** (new modified time or formatting alone does not); the old confirmation is then cleared (also from keeps.json) and a note says who confirmed and when. "Hủy xác nhận" undoes it. Not possible for a style with no current data; not applied to Layout Check driven items (`fromLc`, hold).
 - Layout vs database is decided **by machine group** (database lists groups, layouts list machine codes). Matching group totals may be saved Đạt. Layout whose bottom machine list differs from its operation table (big layout split into small ones) is a warning only.
-- A style is confirmed only when an IE officer saves Đạt/Chấp nhận in LC. IBM never writes Đạt; it writes "Đã duyệt" notes. Fail loop: IE Fail -> IE Báo cáo máy (database or layout?) -> IE Tech (layout to fix) -> IE re-check; after 2 rounds flagged to Supervisor. Existing "Đạt" records are never rewritten.
+- **Any role** can open a style of the Variation log in the check screen ("🔍 Mở để kiểm tra lại", e.g. when the wrong layout was chosen) and save Đạt / Chấp nhận / Không đạt there (decided with the user, V4.4.0; the record keeps the saver's name and role; the normal IE Tech buttons are not shown in this mode; afterwards the user goes back to the Variation log). Otherwise a style is confirmed only when an IE officer saves Đạt/Chấp nhận in LC. IBM never writes Đạt; it writes "Đã duyệt" notes. Fail loop: IE Fail -> IE Báo cáo máy (database or layout?) -> IE Tech (layout to fix) -> IE re-check; after 2 rounds flagged to Supervisor. Existing "Đạt" records are never rewritten.
 - PDF-only layouts: typed/pasted list + mandatory tick "đã đối chiếu từng dòng" for Đạt/Chấp nhận.
 - Prep (changeover) machines: only for machine groups the Consolidator picks as potentially short; prep = ROUNDUP(ratio x next style's machines of that group) on the N working days (default 3, Sundays skipped) before loading; default ratios BT1M 50 %, others 0; no prep when both styles share a layout file, the pair is in the "same layout" list, or IE Tech removes it; first plan day of a line = already running (no prep). Grids and totals show working days only (no Sundays); export writes removed prep as 0 (no strikethrough).
 - After "Lưu MACHINE DATABASE" the shortage report **counts the approved changes at once** (overlay `REF.dbOver` / `effDb()`, not written anywhere; label "gồm N thay đổi vừa duyệt"); a proposal sent meanwhile records `dbBasis` and IE Tech sees a note. The overlay disappears when the MC Report (pasted Table1 + Refresh All) is loaded again.
@@ -99,7 +99,7 @@ Browser-side state: IBM keeps folder/file handles in IndexedDB `iebaocaomay` (KV
 2. Alias table for non-standard style names (83 files had no parsable style).
 3. IE Tech loading-date edits are stored per row (machine group); end-date edits are per line/style. Consider making loading date per changeover. The planned end date shown comes from the machine group being viewed.
 4. IBM re-reading a PDF-based LC check shows a "file not found" note when a scanned candidate exists for that style.
-5. Manuals describe v7.10 / V4.3.4. After UI changes retake the screenshots (tools/manual_shots/README.md) and update the text in manual/*.html.
+5. Manuals describe v7.10 / V4.4.0. After UI changes retake the screenshots (tools/manual_shots/README.md) and update the text in manual/*.html.
 6. Consider backing up the shared `data` folder (check history lives only there).
 7. Deferred by the user: consistency of IE Tech approvals after a mid-week plan change (Consolidator screen shows "Đã giữ, ngày thay đổi" while IE Tech's screen shows pending/overdue; "Hoàn tất duyệt" is not re-opened when a proposal is re-sent; close report counts differ). See the week simulation notes in the conversation history.
 8. Optional: automated version display on `index.html` and a CI smoke test (page loads without errors, `node --check` on sources).
@@ -107,5 +107,5 @@ Browser-side state: IBM keeps folder/file handles in IndexedDB `iebaocaomay` (KV
 ## 10. First steps in Claude Code
 
 1. `python3 tools/build_ie_bao_cao_may.py` and confirm it reproduces `ie-bao-cao-may/IE_BaoCaoMay.html` without a diff.
-2. Open both HTML files in Chrome (from the repo folder) and check the version tags (`v7.10`, `V4.3.4`).
+2. Open both HTML files in Chrome (from the repo folder) and check the version tags (`v7.10`, `V4.4.0`).
 3. Ask the user for the sample data and set up the test harness paths before changing behaviour.
