@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Layout Check: User guide</title><link rel="icon" href="../icon.png"><link rel="stylesheet" href="manual.css"></head><body>
-<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>Layout Check V4.3.4: User guide</b><a href="layout-check.html" title="Tiếng Việt" onclick="try{localStorage.setItem('ie_site_lang','vi')}catch(e){}">VI</a><a href="ie-bao-cao-may.en.html">IE Báo cáo máy ›</a><a href="../index.html">‹ Home</a></header>
+<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>Layout Check V4.4.0: User guide</b><a href="layout-check.html" title="Tiếng Việt" onclick="try{localStorage.setItem('ie_site_lang','vi')}catch(e){}">VI</a><a href="ie-bao-cao-may.en.html">IE Báo cáo máy ›</a><a href="../index.html">‹ Home</a></header>
 <div class="wrap">
 <nav class="toc"><b>Contents</b>
 <a href="#intro">1. Introduction</a>
@@ -100,6 +100,7 @@
 <ol>
 <li><b>Database is wrong</b> (layout is right): fix the database in the <b>IE Báo cáo máy</b> tool (see the guide of that tool), or click <span class="btn">📋 Copy corrected machine list</span>, open the Machine Database file, paste at the end of the <code>Machine Database</code> sheet, save and <b>close</b> the Excel file; then click <span class="btn">✅ Database updated — verify</span>. When the database matches the layout (difference = 0) the style moves to the IE re-check step automatically.</li>
 <li><b>Layout is wrong</b>: click <span class="btn">↩ Layout must be fixed</span> and write what must be fixed. The style goes to IE Tech.</li></ol>
+<div class="ok"><b>Open and re-check (V4.4.0):</b> every card in the Variation log has the button <span class="btn">🔍 Open and re-check</span>, and <b>everyone can click it</b> (IE officer, Consolidator, IE Tech, Supervisor). It opens that style in the check screen exactly as when an IE officer checks it (database step, choose the layout, result, decision) and does not reopen the old layout by itself. Use it when the wrong layout was chosen: pick the right layout and save Pass / Accept / Fail; the new result replaces the earlier one (the name and role of the person who saved it are recorded) and you are taken back to the Variation log. "Back to the Variation log" returns without saving.</div>
 <div class="warn">Always <b>close the Machine Database file</b> before clicking "verify". Do not rename or delete the folders inside <code>data</code> (activity, validations, variations).</div>
 </section>
 
