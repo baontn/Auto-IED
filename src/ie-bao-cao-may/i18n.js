@@ -1,6 +1,7 @@
 // ===================== TEXTS (VI / EN) =====================
 var I18N = {
   vi: {
+    srcXl: '⬇ Xuất Excel',
     rsExpAll: 'Hiện tất cả mã hàng', rsCollapse: 'Ẩn mã hàng', rsLoadsOn: 'vào chuyền {0}', rsPrepOf: 'chuẩn bị {0}', rsPuxTip: 'Bấm để hiện / ẩn các chuyền và mã hàng của PU',
     rsAtAREA: 'Thu hồi từ khu vực', rsFArea: 'Khu vực (số máy đang giữ)', rsErrArea: 'Chọn khu vực và số máy thu hồi không vượt quá số máy khu vực đang giữ.', rsAreaHdr: 'Khu vực đang giữ máy (đã trừ khỏi "Máy có sẵn")', rsAreaTake: 'Thu hồi',
     rsCardPUs: 'Thiếu theo PU (máy dùng ngày tệ nhất {0}) — bấm vào PU để xem chi tiết', rsPuUse: 'Máy PU dùng ngày tệ nhất', rsPuLines: 'Chuyền và mã hàng của PU ngày {0}', rsPuLine: 'Chuyền', thStyleLbl: 'Mã hàng', rsPuDays: 'Máy PU dùng theo từng ngày thiếu',
@@ -135,7 +136,7 @@ var I18N = {
     colConfirm: 'Ghi Đã duyệt', confirmAll: 'Đánh dấu tất cả mục đang hiển thị',
     vSameHintLc: 'Layout trùng khớp database. Đánh dấu để ghi chú "Đã duyệt" sang Layout Check; IE vẫn kiểm tra.',
     k_hold: 'Chờ sửa layout',
-    n_lcDone: 'Layout Check: {0} bởi {1} ngày {2}', n_lcOk: 'IE đã xác nhận layout này ({0}, {1}, {2}) — database cần cập nhật theo layout',
+    n_lcDone: 'Layout Check: {0} bởi {1} ngày {2}', n_lcOk: 'Nhân viên IE đã kiểm tra và xác nhận LAYOUT này là đúng ({0} bởi {1}, {2}). Database đang khác layout, nên cần cập nhật database theo layout',
     n_lcLayoutFix: 'Layout Check: người tổng hợp yêu cầu sửa layout ({0}): {1} — không cập nhật database',
     n_lcFail: 'Layout Check: Không đạt ({0}, {1}): {2}', n_lcChanged: 'Layout đã thay đổi sau lần kiểm tra ngày {0} — IE cần kiểm tra lại',
     i_oldVer: 'Phiên bản cũ trong database', a_oldVer: 'Chỉ dòng của ngày mới nhất được dùng. Đánh dấu để xóa các dòng cũ',
@@ -175,7 +176,7 @@ var I18N = {
     showing: 'Hiển thị {0} / {1}', rows: '{0} dòng',
     // notes
     n_varPlan: 'Biến thể {0} lấy theo kế hoạch', n_alsoPlanned: 'Kế hoạch còn có biến thể {0}', n_checkVariant: 'Kế hoạch có {0} — kiểm tra biến thể',
-    n_nFiles: '{0} file layout cho mã này', n_manualData: 'Dữ liệu hiện tại nhập tay ({0}) — chỉ thay khi bạn chọn',
+    n_nFiles: '{0} file layout cho mã này', n_manualData: 'Database đang là dữ liệu nhập tay ({0}); chỉ bị thay nếu bạn chọn một layout ở cột Nguồn dữ liệu',
     n_unknownCode: 'Mã máy chưa có trong MACHINE GROUP: {0}', n_costingStatus: 'Costing lỗi: {0}', n_factor: 'Hệ số {0}',
     n_mmIgnored: 'File Man-Machine: bỏ qua bảng máy ở {0} để tránh tính trùng', n_noTable: 'Không tìm thấy bảng máy', n_readErr: 'Không đọc được: {0}',
     n_resaved: 'File được lưu lại, nội dung không đổi', n_noCosting: 'Chưa có costing', n_sameFile: 'Cùng file layout với {0}',
@@ -190,6 +191,7 @@ var I18N = {
     c_Added: 'Mới', c_Changed: 'Thay đổi', c_Unchanged: 'Không đổi'
   },
   en: {
+    srcXl: '⬇ Export Excel',
     rsExpAll: 'Show all styles', rsCollapse: 'Hide styles', rsLoadsOn: 'loads {0}', rsPrepOf: 'prepare {0}', rsPuxTip: 'Click to show / hide the lines and styles of the PU',
     rsAtAREA: 'Take back from area', rsFArea: 'Area (machines held)', rsErrArea: 'Choose an area and a quantity not above the machines the area holds.', rsAreaHdr: 'Areas holding machines (already taken off "Available")', rsAreaTake: 'Take back',
     rsCardPUs: 'Shortage by PU (machines used on the worst day {0}) — click a PU for details', rsPuUse: 'Machines the PU uses on the worst day', rsPuLines: 'Lines and styles of the PU on {0}', rsPuLine: 'Line', thStyleLbl: 'Style', rsPuDays: 'Machines the PU uses on each short day',
@@ -324,7 +326,7 @@ var I18N = {
     colConfirm: 'Write Approved', confirmAll: 'Tick all shown',
     vSameHintLc: 'Layout matches the database. Tick to write an "Approved" note to Layout Check; IE still checks.',
     k_hold: 'Layout to fix',
-    n_lcDone: 'Layout Check: {0} by {1} on {2}', n_lcOk: 'IE confirmed the layout ({0}, {1}, {2}) — database needs updating',
+    n_lcDone: 'Layout Check: {0} by {1} on {2}', n_lcOk: 'An IE officer checked and confirmed that this LAYOUT is correct ({0} by {1}, {2}). The database differs from the layout, so the database needs updating to match the layout',
     n_lcLayoutFix: 'Layout Check: consolidator asked to fix the layout ({0}): {1} — database not updated',
     n_lcFail: 'Layout Check: Fail ({0}, {1}): {2}', n_lcChanged: 'Layout changed after the check on {0} — IE must re-check',
     i_oldVer: 'Older versions in database', a_oldVer: 'Only the latest date is used. Tick to remove the older rows',
@@ -363,7 +365,7 @@ var I18N = {
     nextSteps: 'Next: open the MC Report, paste the MACHINE DATABASE sheet of the saved file into Table1 (replace all), then Refresh All. Keep this file and choose it next time as "last saved file".',
     showing: 'Showing {0} of {1}', rows: '{0} rows',
     n_varPlan: 'Variant {0} taken from plan', n_alsoPlanned: 'Also planned as {0}', n_checkVariant: 'Planned as {0} — check variant',
-    n_nFiles: '{0} layout files for this style', n_manualData: 'Current data is manual ({0}) — replaced only if you choose',
+    n_nFiles: '{0} layout files for this style', n_manualData: 'The database holds manually entered data ({0}); it is replaced only if you choose a layout in the Source column',
     n_unknownCode: 'Machine code not in MACHINE GROUP: {0}', n_costingStatus: 'Costing error: {0}', n_factor: 'Factor {0}',
     n_mmIgnored: 'Man-Machine file: machine tables in {0} ignored to avoid double counting', n_noTable: 'No machine table found', n_readErr: 'Cannot read: {0}',
     n_resaved: 'File re-saved, content unchanged', n_noCosting: 'No costing', n_sameFile: 'Same layout file as {0}',
