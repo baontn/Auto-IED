@@ -59,7 +59,10 @@ with sync_playwright() as pw:
     # shortage: BARTACK available 8. Old plan (16/11->23/11 transition): demand 6 -> enough. New plan: line B style4 (+6) on offsets 8..12 while line C style4 (6) still runs = 12 for 5 days, peak 14 on offsets 8-9 (line A style1 adds BT1M 2) -> short 6
     sh = pg.evaluate("(()=>{const x=PC.state().RES.tr[0].gs.BARTACK;return [x.av,x.shA,x.shB,x.shDB]})()")
     print(sh); assert sh == [8, 0, 6, 5], sh
-    for tab in ['over', 'dem', 'short', 'chg', 'freq']:
+    fa = pg.evaluate("(()=>{const r=PC.state().RES.tr;return [r[0].rows[0].f,r[1].rows.map(x=>x.f)]})()"); print(fa)
+    # transition 1: line B gets style4 that exists in the old plan only on line C -> 'line'; transition 2: styles only change order/date on their line -> 'move'
+    assert fa[0] == 'line' and set(fa[1]) <= {'move', 'line'}, fa
+    for tab in ['over', 'dem', 'short', 'why', 'chg', 'freq']:
         pg.click('[data-tab=%s]' % tab); pg.wait_for_timeout(200)
         if shots: pg.screenshot(path=os.path.join(shots, 'pc-%s.png' % tab))
     html = pg.inner_text('#out'); assert 'Σ' in html or 'Σ' in pg.content()
