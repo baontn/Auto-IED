@@ -34,6 +34,10 @@ ul{margin:8px 0 0 18px;padding:0}a{color:var(--accent)}
 <div class="muted" data-t="ibmDesc">Cập nhật MACHINE DATABASE, phân tích thiếu máy, chuẩn bị máy, IE Tech duyệt, chốt báo cáo, nhật ký.</div>
 <a class="btn" href="ie-bao-cao-may/IE_BaoCaoMay.html" data-t="openIbm">Mở IE Báo cáo máy</a><a class="btn sec" id="manIbm" href="manual/ie-bao-cao-may.html" data-t="manual">📖 Hướng dẫn sử dụng</a></div>
 
+<div class="card"><h2>Plan Compare <span class="tag">V1.3.0</span></h2>
+<div class="muted" data-t="pcDesc">So sánh TransformedMasterPlan của nhiều tuần: chuyền nào, mã hàng nào bị đổi, bao nhiêu máy của loại máy đã chọn bị tăng/giảm, đổi bao nhiêu lần và có báo trước kịp không.</div>
+<a class="btn" href="plan-compare/PlanCompare.html" data-t="openPc">Mở Plan Compare</a><a class="btn sec" id="manPc" href="manual/plan-compare.html" data-t="manual">📖 Hướng dẫn sử dụng</a></div>
+
 <div class="card"><h2>Layout Sim <span class="tag">v2.10</span></h2>
 <div class="muted" data-t="lsDesc">Mô phỏng bố trí chuyền theo tỷ lệ: mở layout Excel (hình vẽ hoặc ô) hoặc dán ảnh, kéo, xoay máy, chuyền nhánh, trình tự và quãng đường di chuyển, xem 3D, lưu dự án, mô phỏng WIP theo SAM, hiệu suất và số người của chuyền.</div>
 <a class="btn" href="layout-sim/LayoutSim.html" data-t="openLs">Mở Layout Sim</a><a class="btn sec" id="manLs" href="manual/layout-sim.html" data-t="manual">📖 Hướng dẫn sử dụng</a></div>
@@ -48,6 +52,7 @@ ul{margin:8px 0 0 18px;padding:0}a{color:var(--accent)}
 var T={vi:{},en:{hdr:'IE tools · Crystal',h1:'IE tools',intro:'Open in Chrome or Edge. Your data (layouts, the data folder, check results) stays on your computer and shared folder; this page only provides the programs.',
 lcDesc:'Check layouts against the machine database by machine group: IE officer, Consolidator, IE Tech, Supervisor.',openLc:'Open Layout Check',manual:'📖 User guide',
 ibmDesc:'Update the MACHINE DATABASE, analyse machine shortage, prep machines, IE Tech review, close the report, activity log.',openIbm:'Open IE Báo cáo máy',
+pcDesc:'Compare TransformedMasterPlan files of several weeks: which lines and styles changed, how many machines of the chosen machine types go up or down, how often, and whether the notice was early enough.',openPc:'Open Plan Compare',
 lsDesc:'Line layout to scale: open a layout Excel file (shapes or cells) or paste a picture, drag and rotate machines, branch line, sequence and flow distance, 3D view, projects, WIP simulation from SAM, efficiency and line headcount.',openLs:'Open Layout Sim',
 d3Desc:'Design jigs, templates, seam guides and sewing aids in 3D (no 3D knowledge needed), with ready examples, with merge / cut, offset, wheels, handles, sample tables, a ruler and picture-to-3D; export a PDF with the Crystal Martin Vietnam logo and the IE name, or STL, OBJ, DXF files for CAD.',openD3:'Open 3D fixtures & sewing tools',
 foot:'The first time you open it from this address, choose the folders again (the browser remembers per page address). After an update, press Ctrl+F5 to get the new version.',
@@ -56,7 +61,7 @@ var els=[].slice.call(document.querySelectorAll('[data-t]')); els.forEach(functi
 function lang(){try{var l=localStorage.getItem('ie_site_lang');if(l==='vi'||l==='en')return l;}catch(e){}return 'vi';}
 function setLang(l){try{localStorage.setItem('ie_site_lang',l);}catch(e){}
   els.forEach(function(e){e.innerHTML=T[l][e.dataset.t];}); document.title=T[l].title; document.documentElement.lang=l;
-  document.getElementById('manLc').href='manual/layout-check'+(l==='en'?'.en':'')+'.html'; document.getElementById('manIbm').href='manual/ie-bao-cao-may'+(l==='en'?'.en':'')+'.html'; document.getElementById('manLs').href='manual/layout-sim'+(l==='en'?'.en':'')+'.html'; document.getElementById('manD3').href='manual/design3d'+(l==='en'?'.en':'')+'.html';
+  document.getElementById('manLc').href='manual/layout-check'+(l==='en'?'.en':'')+'.html'; document.getElementById('manIbm').href='manual/ie-bao-cao-may'+(l==='en'?'.en':'')+'.html'; document.getElementById('manPc').href='manual/plan-compare'+(l==='en'?'.en':'')+'.html'; document.getElementById('manLs').href='manual/layout-sim'+(l==='en'?'.en':'')+'.html'; document.getElementById('manD3').href='manual/design3d'+(l==='en'?'.en':'')+'.html';
   [].forEach.call(document.querySelectorAll('.lang button'),function(b){b.classList.toggle('on',b.dataset.lang===l);});}
 [].forEach.call(document.querySelectorAll('.lang button'),function(b){b.onclick=function(){setLang(b.dataset.lang);};}); setLang(lang());
 </script></body></html>

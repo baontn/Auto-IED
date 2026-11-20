@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plan Compare</title>
+<!-- SheetJS: local copy (xlsx.full.min.js next to this file). No network access. -->
+<script src="xlsx.full.min.js"></script>
+<style>
+:root{--bg:#f3f4f6;--panel:#fff;--text:#1d2330;--muted:#6b7280;--line:#e2e5ea;--accent:#1f6feb;--accent-tx:#fff;
+--ok:#15803d;--okbg:#e7f6ec;--warn:#9a6700;--warnbg:#fff5d6;--bad:#c4202b;--badbg:#fde8e8;--info:#0b5cad;--infobg:#e6f0ff;--sel:#eaf1ff;--band:rgba(196,32,43,.12);--heat:196,32,43}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1218;--panel:#181c24;--text:#e6e9ef;--muted:#9aa3b2;--line:#2b313d;--accent:#4c8dff;--accent-tx:#0b0f17;
+--ok:#56d364;--okbg:#12301b;--warn:#e3b341;--warnbg:#3a2d0b;--bad:#ff7b72;--badbg:#3d1416;--info:#79b8ff;--infobg:#132a46;--sel:#1c2a40;--band:rgba(255,123,114,.16);--heat:255,123,114;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 "Segoe UI",Roboto,Arial,sans-serif}
+button{font:inherit;padding:6px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--text);cursor:pointer}
+button:hover:not(:disabled){border-color:var(--accent)}
+button.primary{background:var(--accent);color:var(--accent-tx);border-color:var(--accent)}
+input,select{font:inherit;padding:5px 8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--text)}
+.muted{color:var(--muted)}.small{font-size:12px}
+.tag{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;white-space:nowrap}
+.t-ok{background:var(--okbg);color:var(--ok)}.t-warn{background:var(--warnbg);color:var(--warn)}
+.t-bad{background:var(--badbg);color:var(--bad)}.t-info{background:var(--infobg);color:var(--info)}
+table{border-collapse:collapse;width:100%}
+th,td{border-bottom:1px solid var(--line);padding:5px 8px;text-align:left;vertical-align:top}
+th{position:sticky;top:0;background:var(--panel);color:var(--muted);font-weight:600;font-size:12px}
+td.n,th.n{text-align:right}
+header{background:var(--panel);border-bottom:1px solid var(--line);padding:8px 16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;position:sticky;top:0;z-index:5}
+header h1{font-size:16px;margin:0 8px 0 0}
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tabs button{border:none;border-radius:8px}
+.tabs button.on{background:var(--sel);color:var(--accent);font-weight:600}
+main{padding:14px 16px;max-width:1500px;margin:0 auto}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:12px}
+.card h2{font-size:14px;margin:0 0 8px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:12px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.kpi b{display:block;font-size:24px;line-height:1.2}.kpi.bad b{color:var(--bad)}.kpi.warn b{color:var(--warn)}.kpi.ok b{color:var(--ok)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;max-height:150px;overflow:auto}
+.chip{border:1px solid var(--line);border-radius:16px;padding:2px 10px;cursor:pointer;background:var(--panel);user-select:none}
+.chip.on{background:var(--accent);color:var(--accent-tx);border-color:var(--accent)}
+.chip i{font-style:normal;opacity:.7;font-size:11px;margin-left:4px}
+.scroll{overflow:auto;max-height:70vh}
+.heat td.h{text-align:center;min-width:64px}
+.mv{display:inline-block;min-width:56px;text-align:center;border-radius:6px;padding:0 4px;margin-right:3px;font-size:12px;border:1px solid var(--line)}
+.mv.chg{background:var(--badbg);color:var(--bad);border-color:transparent}.mv.none{color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;margin:4px 0}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:4px}
+svg text{fill:var(--muted);font-size:11px}
+#toast{position:fixed;right:14px;bottom:14px;background:var(--text);color:var(--bg);padding:8px 14px;border-radius:8px;display:none;z-index:9}
+.empty{padding:30px;text-align:center;color:var(--muted)}
+</style>
+</head>
+<body>
+<header>
+  <h1 data-t="title">So sánh kế hoạch theo tuần</h1>
+  <span class="tag t-info" id="verTag">V1.3.0</span>
+  <div class="tabs" id="tabs"></div>
+  <span style="margin-left:auto" class="row"><button id="bLang">EN</button><button id="bExport" class="primary" data-t="export">Xuất Excel</button></span>
+</header>
+<main>
+  <div class="grid2">
+    <div class="card"><h2 data-t="s1">1. MC Report (CSDL máy + nhóm máy)</h2>
+      <div class="row"><input type="file" id="fMc" accept=".xlsx,.xlsm"><span id="mcInfo" class="muted small"></span></div>
+      <div class="small muted" data-t="s1h">Đọc sheet MACHINE DATABASE, MACHINE GROUP và PU LIST. Chỉ đọc, không ghi.</div></div>
+    <div class="card"><h2 data-t="s2">2. TransformedMasterPlan của nhiều tuần</h2>
+      <div class="row"><input type="file" id="fPlans" accept=".xlsx,.xlsm" multiple><span id="planInfo" class="muted small"></span></div>
+      <div class="small muted" data-t="s2h">Chọn nhiều file cùng lúc (mỗi tuần một file, sheet MasterPlan-Full). Ngày của kế hoạch lấy từ tên file hoặc ngày sửa file, có thể sửa lại.</div></div>
+  </div>
+  <div class="card" id="cSnaps" hidden><h2 data-t="snaps">Các bản kế hoạch</h2><div id="snapTbl"></div></div>
+  <div class="card" id="cSet" hidden>
+    <div class="row">
+      <label><span data-t="from">Từ ngày</span> <input type="date" id="iFrom"></label>
+      <label><span data-t="days">Số ngày xét</span> <input type="number" id="iDays" min="3" max="120" style="width:70px"></label>
+      <label><span data-t="thr">Ngưỡng biến động (máy/ngày)</span> <input type="number" id="iThr" min="1" max="200" style="width:70px"></label>
+      <label><span data-t="late">Đổi gần sát (≤ ngày)</span> <input type="number" id="iLate" min="0" max="30" style="width:60px"></label>
+    </div>
+    <div class="small muted" data-t="setH" style="margin:4px 0 8px">Chỉ so sánh các ngày từ "Từ ngày" trở đi (phần đã chạy không tính là thay đổi kế hoạch).</div>
+    <h2 data-t="pick">Loại máy cần xem (chọn nhiều)</h2>
+    <div class="row" style="margin-bottom:6px"><input id="iGf" placeholder="…" style="width:160px"><button id="bTop" data-t="top">Chọn 3 nhóm biến động nhất</button><button id="bNone" data-t="none">Bỏ chọn</button></div>
+    <div class="chips" id="chips"></div>
+  </div>
+  <div id="out"></div>
+  <div id="empty" class="empty">Chọn MC Report và ít nhất 2 file kế hoạch để bắt đầu.</div>
+</main>
+<div id="toast"></div>
+<script>
+// ===================== i18n =====================
+var I18N = {
+vi: { title:'So sánh kế hoạch theo tuần', export:'Xuất Excel', s1:'1. MC Report (CSDL máy + nhóm máy)', s1h:'Đọc sheet MACHINE DATABASE, MACHINE GROUP và PU LIST. Chỉ đọc, không ghi.',
+ s2:'2. TransformedMasterPlan của nhiều tuần', s2h:'Chọn nhiều file cùng lúc (mỗi tuần một file, sheet MasterPlan-Full). Ngày của kế hoạch lấy từ tên file hoặc ngày sửa file, có thể sửa lại.',
+ snaps:'Các bản kế hoạch', colName:'File', colDate:'Ngày kế hoạch', colRows:'Dòng', colLines:'Chuyền', colStyles:'Mã hàng', colMiss:'Mã chưa có CSDL máy', from:'Từ ngày', days:'Số ngày xét', thr:'Ngưỡng biến động (máy/ngày)', late:'Đổi gần sát (≤ ngày)',
+ setH:'Chỉ so sánh các ngày từ "Từ ngày" trở đi (phần đã chạy không tính là thay đổi kế hoạch).', pick:'Loại máy cần xem (chọn nhiều)', top:'Chọn 3 nhóm biến động nhất', none:'Bỏ chọn',
+ tShort:'Thiếu máy', tWhy:'Nguyên nhân', colWhy:'Lý do (ghi chú)', notePh:'Ghi chú…', r_order:'Đơn hàng đổi', r_material:'Thiếu / chậm vật tư', r_customer:'Khách hàng yêu cầu', r_capacity:'Năng lực chuyền', r_quality:'Chất lượng', r_machine:'Máy / thiết bị', r_other:'Khác', r_none:'Chưa ghi lý do', wReason:'Theo lý do đã ghi', wCover:'Đã ghi lý do', notesSave:'Lưu ghi chú ra file', notesLoad:'Nạp file ghi chú', notesInfo:'Ghi chú lưu trên máy này (trình duyệt) và trong file Excel. Dùng "Lưu ghi chú ra file" để chia sẻ với người khác.', notesLoaded:'Đã nạp ghi chú:', colFac:'Nguyên nhân', f_new:'Mã mới vào kế hoạch', f_drop:'Mã bị bỏ khỏi kế hoạch', f_line:'Chuyển sang chuyền khác', f_move:'Dời lịch trong cùng chuyền', f_other:'Khác', wTitle:'Yếu tố chính làm kế hoạch đổi', wNote:'Mỗi thay đổi được gán một nguyên nhân: mã mới vào kế hoạch / mã bị bỏ / chuyển chuyền / dời lịch trong chuyền. Tác động = Σ máy-ngày thay đổi của các nhóm máy đã chọn (nếu chưa chọn: tất cả nhóm).', wFac:'Theo nguyên nhân', wStyle:'Mã hàng gây biến động nhiều nhất', wLead:'Theo thời gian báo trước', wPu:'Theo PU', wMore:'Tăng máy', wLess:'Giảm máy', wShare:'Tỷ trọng', wChg:'Số thay đổi', wDays:'Chuyền-ngày', wLines:'Chuyền', wBy:'Nguyên nhân × lần so sánh', wTop:'Yếu tố chính', lb0:'≤ ngưỡng gần sát', lb1:'tới 7 ngày', lb2:'8–14 ngày', lb3:'> 14 ngày', shiftE:'sớm', shiftL:'muộn', days_:'ngày', avail:'Có sẵn', noAvail:'MC Report không có sheet MC STATUS (cột "MC used for PDN"): không tính được thiếu máy.', shTitle:'Đủ máy ở bản cũ, thiếu máy ở bản mới', shNote:'Có sẵn = cột "MC used for PDN" của MC STATUS. Thiếu = nhu cầu theo bản kế hoạch − có sẵn, tính trên các ngày từ ngày của bản mới.', shOld:'Bản cũ', shNew:'Bản mới', shPeak:'Thiếu tối đa', shDays:'Ngày thiếu', shDem:'Đỉnh cần', shFlip:'Đủ → Thiếu', shWorse:'Thiếu thêm', shBetter:'Bớt thiếu', shSame:'Như cũ', shDrv:'Chuyền gây ra thiếu máy vào ngày', shDelta:'Δ máy', shTrend:'Thiếu tối đa theo từng bản kế hoạch', kFlip:'Nhóm máy từ đủ → thiếu', hi5:'Đủ máy ở bản cũ nhưng thiếu ở bản mới', need2:'cần', have:'có', short:'thiếu', emptyMsg:'Chọn MC Report và ít nhất 2 file kế hoạch để bắt đầu.', tOver:'Tổng quan', tDem:'Nhu cầu máy theo tuần', tChg:'Danh sách thay đổi', tFreq:'Tần suất đổi kế hoạch',
+ kSnaps:'Bản kế hoạch', kTrans:'Lần so sánh', kLines:'Chuyền bị đổi (trung bình / lần)', kStab:'Độ ổn định kế hoạch', kSwing:'Biến động máy đã chọn (máy-ngày)', kFreq:'Mã hàng đổi ≥ 2 lần', kLate:'Thay đổi gần sát ngày chạy',
+ hiTitle:'Điểm nổi bật', trans:'Lần so sánh', colLine:'Chuyền', colPu:'PU', colRange:'Ngày', colWas:'Trước', colNow:'Sau', colLead:'Báo trước (ngày)', colImp:'Ảnh hưởng máy đã chọn', colTot:'Tổng |Δ|',
+ swingTbl:'Biến động theo nhóm máy', gGroup:'Nhóm máy', gSwing:'Máy-ngày đổi (Σ|Δ|)', gNet:'Tăng/giảm ròng', gMax:'Lệch lớn nhất/ngày', gBig:'Số ngày ≥ ngưỡng', gPeak:'Đỉnh nhu cầu',
+ snapTbl:'Nhu cầu mỗi bản kế hoạch', sPeak:'Đỉnh', sPeakDay:'Ngày đỉnh', sMd:'Máy-ngày', sD:'Δ so với bản trước', sSw:'Biến động',
+ noSel:'Chưa chọn loại máy: bảng chỉ tính theo số ngày bị đổi.', chgOnly:'Chỉ các thay đổi có ảnh hưởng tới máy đã chọn', noChg:'Không có thay đổi trong khoảng đã chọn.',
+ lineMat:'Chuyền × lần so sánh (số ngày bị đổi)', styleMov:'Mã hàng bị dời / thêm / bỏ', stStyle:'Mã hàng', stMach:'Máy đã chọn / chuyền', stMoves:'Số lần đổi', stShift:'Tổng ngày dời', stPath:'Ngày bắt đầu → kết thúc theo từng bản', frq:'Tần suất',
+ added:'thêm', dropped:'bỏ', same:'giữ', outOf:'trong', need:'Cần ít nhất 2 bản kế hoạch có ngày khác nhau.', loadErr:'Không đọc được file:', mcMissing:'Thiếu sheet MACHINE DATABASE / MACHINE GROUP.', planMissing:'Không tìm thấy cột Style No / Date / Line trong:',
+ idle:'(trống)', remove:'Bỏ', swingH:'Σ|Δ| theo ngày: số máy phải chuyển / chuẩn bị lại khi kế hoạch đổi.', warnMiss:'mã chưa có CSDL máy (nhu cầu = 0)',
+ hi1:'Chuyền đổi nhiều nhất', hi2:'Nhóm máy biến động nhất', hi3:'Mã hàng bị dời nhiều nhất', hi4:'Đổi sát ngày chạy nhất', times:'lần', md:'máy-ngày', lead0:'ngày trước khi chạy', peakRise:'Đỉnh nhu cầu', legend:'Vùng đỏ = ngày có biến động ≥ ngưỡng giữa hai bản liên tiếp.', unit:'máy' },
+en: { title:'Weekly plan comparison', export:'Export Excel', s1:'1. MC Report (machine DB + groups)', s1h:'Reads sheets MACHINE DATABASE, MACHINE GROUP and PU LIST. Read only, nothing is written.',
+ s2:'2. TransformedMasterPlan of several weeks', s2h:'Pick several files at once (one per week, sheet MasterPlan-Full). The plan date comes from the file name or modified date and can be edited.',
+ snaps:'Plan versions', colName:'File', colDate:'Plan date', colRows:'Rows', colLines:'Lines', colStyles:'Styles', colMiss:'Styles without machine data', from:'From date', days:'Days to compare', thr:'Swing threshold (machines/day)', late:'Late change (≤ days)',
+ setH:'Only days from "From date" onward are compared (days already run are not a plan change).', pick:'Machine types to watch (multi-select)', top:'Pick the 3 most volatile groups', none:'Clear',
+ tShort:'Shortage', tWhy:'Root causes', colWhy:'Reason (note)', notePh:'Note…', r_order:'Order change', r_material:'Material shortage / delay', r_customer:'Customer request', r_capacity:'Line capacity', r_quality:'Quality', r_machine:'Machine / equipment', r_other:'Other', r_none:'No reason recorded', wReason:'By recorded reason', wCover:'Reason recorded', notesSave:'Save notes to file', notesLoad:'Load notes file', notesInfo:'Notes are kept on this computer (browser) and in the Excel export. Use "Save notes to file" to share them.', notesLoaded:'Notes loaded:', colFac:'Cause', f_new:'New style entered the plan', f_drop:'Style dropped from the plan', f_line:'Moved to another line', f_move:'Rescheduled on the same line', f_other:'Other', wTitle:'Key factors behind the plan changes', wNote:'Every change gets a cause: new style / dropped style / moved to another line / rescheduled on the same line. Impact = Σ machine-days changed of the selected machine groups (all groups if none selected).', wFac:'By cause', wStyle:'Styles causing the most swing', wLead:'By notice given', wPu:'By PU', wMore:'More machines', wLess:'Fewer machines', wShare:'Share', wChg:'Changes', wDays:'Line-days', wLines:'Lines', wBy:'Cause × comparison', wTop:'Key factors', lb0:'≤ late threshold', lb1:'up to 7 days', lb2:'8–14 days', lb3:'> 14 days', shiftE:'earlier', shiftL:'later', days_:'days', avail:'Available', noAvail:'The MC Report has no MC STATUS sheet (column "MC used for PDN"): shortage cannot be calculated.', shTitle:'Enough machines in the old plan, short in the new plan', shNote:'Available = column "MC used for PDN" of MC STATUS. Short = demand of the plan version − available, over the days from the date of the new version.', shOld:'Old plan', shNew:'New plan', shPeak:'Max short', shDays:'Days short', shDem:'Peak need', shFlip:'OK → Short', shWorse:'Shorter', shBetter:'Less short', shSame:'Same', shDrv:'Lines causing the shortage on', shDelta:'Δ machines', shTrend:'Max shortage in each plan version', kFlip:'Groups turned OK → short', hi5:'Enough machines in the old plan but short in the new plan', need2:'need', have:'have', short:'short', emptyMsg:'Pick the MC Report and at least 2 plan files to start.', tOver:'Overview', tDem:'Machine demand by week', tChg:'Change list', tFreq:'Change frequency',
+ kSnaps:'Plan versions', kTrans:'Comparisons', kLines:'Lines changed (average / comparison)', kStab:'Plan stability', kSwing:'Swing on selected machines (machine-days)', kFreq:'Styles changed ≥ 2 times', kLate:'Changes close to run date',
+ hiTitle:'Highlights', trans:'Comparison', colLine:'Line', colPu:'PU', colRange:'Dates', colWas:'Before', colNow:'After', colLead:'Notice (days)', colImp:'Impact on selected machines', colTot:'Total |Δ|',
+ swingTbl:'Swing by machine group', gGroup:'Machine group', gSwing:'Machine-days moved (Σ|Δ|)', gNet:'Net change', gMax:'Largest gap/day', gBig:'Days ≥ threshold', gPeak:'Peak demand',
+ snapTbl:'Demand of each plan version', sPeak:'Peak', sPeakDay:'Peak day', sMd:'Machine-days', sD:'Δ vs previous', sSw:'Swing',
+ noSel:'No machine type selected: tables only count the days changed.', chgOnly:'Only changes that touch the selected machines', noChg:'No change in the chosen window.',
+ lineMat:'Line × comparison (days changed)', styleMov:'Styles moved / added / dropped', stStyle:'Style', stMach:'Selected machines / line', stMoves:'Times changed', stShift:'Total days moved', stPath:'Start → end date in each version', frq:'Frequency',
+ added:'added', dropped:'dropped', same:'kept', outOf:'of', need:'At least 2 plan versions with different dates are needed.', loadErr:'Cannot read file:', mcMissing:'Sheet MACHINE DATABASE / MACHINE GROUP is missing.', planMissing:'No Style No / Date / Line columns found in:',
+ idle:'(empty)', remove:'Remove', swingH:'Σ|Δ| per day: machines to move / re-prepare when the plan changes.', warnMiss:'styles without machine data (demand = 0)',
+ hi1:'Most changed line', hi2:'Most volatile machine group', hi3:'Style moved most often', hi4:'Latest change before run date', times:'times', md:'machine-days', lead0:'days before run', peakRise:'Peak demand', legend:'Red band = day with a swing ≥ threshold between two consecutive versions.', unit:'machines' }
+};
+var LANG = 'vi'; try { LANG = localStorage.getItem('ie_site_lang') || 'vi'; } catch (e) { }
+function t(k) { return (I18N[LANG] && I18N[LANG][k]) || I18N.vi[k] || k; }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function $(id) { return document.getElementById(id); }
+function toast(m) { var e = $('toast'); e.textContent = m; e.style.display = 'block'; clearTimeout(toast.h); toast.h = setTimeout(function () { e.style.display = 'none'; }, 5000); }
+
+// ===================== pure logic =====================
+var DAY = 864e5;
+function norm(v) { return String(v == null ? '' : v).toLowerCase().replace(/\s+/g, ''); }
+function skey(s) { return String(s == null ? '' : s).toUpperCase().replace(/\s+/g, ''); }
+function findCol(h, name) { var n = norm(name); for (var i = 0; i < h.length; i++) if (norm(h[i]) === n) return i; return -1; }
+function sheetAoa(ws) { return ws ? XLSX.utils.sheet_to_json(ws, { header: 1, defval: '', raw: true, blankrows: false }) : []; }
+function dk(v) { return v instanceof Date ? Date.UTC(v.getFullYear(), v.getMonth(), v.getDate()) : (typeof v === 'number' && v > 20000 && v < 80000 ? Math.round((v - 25569) * DAY) : null); }
+function fd(k) { if (k == null) return ''; var d = new Date(k), p = function (x) { return String(x).padStart(2, '0'); }; return p(d.getUTCDate()) + '/' + p(d.getUTCMonth() + 1); }
+function isoDate(k) { return new Date(k).toISOString().slice(0, 10); }
+function isoWeek(k) { var d = new Date(k); d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7)); var y0 = Date.UTC(d.getUTCFullYear(), 0, 1); return Math.ceil(((d - y0) / DAY + 1) / 7); }
+function isIdle(s) { return /^(not\s*set\s*up|n\/a|-)$/i.test(s); }
+function loadGroups(aoa) { var m = {}; aoa.slice(1).forEach(function (r) { var c = skey(r[0]); if (c) m[c] = String(r[1] == null ? '' : r[1]).trim(); }); return m; }
+// MACHINE DATABASE: only rows with the LATEST date per style count (same rule as the other tools)
+function loadDb(aoa) {
+  var h = aoa[0] || [], ix = { s: findCol(h, 'STYLE'), m: findCol(h, 'MACHINE'), q: findCol(h, 'QUANTITY'), d: findCol(h, 'DATE') }, by = {};
+  aoa.slice(1).forEach(function (r) {
+    var k = skey(r[ix.s]); if (!k) return; var e = by[k] = by[k] || { rows: [], latest: null }, d = ix.d >= 0 ? dk(r[ix.d]) : null;
+    e.rows.push([skey(r[ix.m]), +r[ix.q] || 0, d]); if (d != null && (e.latest == null || d > e.latest)) e.latest = d;
+  });
+  Object.keys(by).forEach(function (k) { var e = by[k]; e.set = {}; e.rows.forEach(function (x) { if (x[0] && (e.latest == null || x[2] === e.latest)) e.set[x[0]] = (e.set[x[0]] || 0) + x[1]; }); delete e.rows; });
+  return by;
+}
+function toGroups(set, G) { var g = {}; Object.keys(set || {}).forEach(function (c) { var k = (G && G[c]) || c; g[k] = (g[k] || 0) + (+set[c] || 0); }); return g; }
+function loadAvail(aoa, G) {
+  var hi = aoa.findIndex(function (r) { return r.some(function (x) { return norm(x) === 'machinecode'; }); }); if (hi < 0) return null;
+  var h = aoa[hi], ci = findCol(h, 'Machine code'), ui = h.findIndex(function (x) { return /^mcusedforpdn/.test(norm(x)); }), av = {}; if (ui < 0) return null;
+  aoa.slice(hi + 1).forEach(function (r) { var c = skey(r[ci]); if (!c) return; var g = G[c] || c; av[g] = (av[g] || 0) + (+r[ui] || 0); });
+  return av;
+}
+function loadPuList(aoa) { var m = {}, h = aoa[0] || [], li = findCol(h, 'Line'), pi = findCol(h, 'PU'); aoa.slice(1).forEach(function (r) { var l = String(r[li] || '').trim().toUpperCase(); if (l) m[l] = String(r[pi] || '').trim(); }); return m; }
+function puOf(m, line) { var k = String(line).trim().toUpperCase(); if (m[k]) return m[k]; var b = k.match(/^[^\-_ (]+/); return (b && m[b[0]]) || ''; }
+
+// one plan file -> snapshot. ld[line][day] = {sig, names, g:{group:qty}}; dem[group][day]
+function buildSnap(aoa, MC) {
+  var h = aoa[0] || [], li = findCol(h, 'Line'), di = findCol(h, 'Date'), si = findCol(h, 'Style No');
+  if (li < 0 || di < 0 || si < 0) return null;
+  var s = { ld: {}, dem: {}, days: {}, nRows: 0, styles: {}, missing: {}, ls: {}, lf: {} }, cache = {};
+  aoa.slice(1).forEach(function (r) {
+    var style = String(r[si] == null ? '' : r[si]).trim(), line = String(r[li] == null ? '' : r[li]).trim(), d = dk(r[di]);
+    if (!style || !line || d == null || isIdle(style)) return;
+    s.nRows++; s.days[d] = 1; s.styles[skey(style)] = style;
+    var LS = s.ls[line] = s.ls[line] || {}, LF = s.lf[line] = s.lf[line] || {}; LS[skey(style)] = 1; if (LF[skey(style)] == null || d < LF[skey(style)]) LF[skey(style)] = d;
+    var L = s.ld[line] = s.ld[line] || {}, e = L[d] = L[d] || { names: [], g: {} }, k = skey(style);
+    if (e.names.indexOf(style) < 0) e.names.push(style);
+    var db = MC.db[k]; if (!db) { s.missing[k] = style; return; }
+    var gs = cache[k] = cache[k] || toGroups(db.set, MC.G);
+    Object.keys(gs).forEach(function (g) { e.g[g] = (e.g[g] || 0) + gs[g]; });
+  });
+  Object.keys(s.ld).forEach(function (l) { Object.keys(s.ld[l]).forEach(function (d) {
+    var e = s.ld[l][d]; e.names.sort(); e.sig = e.names.map(skey).join('+');
+    Object.keys(e.g).forEach(function (g) { var D = s.dem[g] = s.dem[g] || {}; D[d] = (D[d] || 0) + e.g[g]; });
+  }); });
+  s.lines = Object.keys(s.ld).length;
+  return s;
+}
+function windowDays(SN, from, n) {
+  var out = [], to = from + n * DAY;
+  for (var d = from; d <= to; d += DAY) { var sun = new Date(d).getUTCDay() === 0; if (!sun || SN.some(function (s) { return s.days[d]; })) out.push(d); }
+  return out;
+}
+// why did this stretch of a line change? new style / dropped / moved between lines / rescheduled on the line
+function factorOf(l, wasN, nowN, A, B) {
+  var added = nowN.filter(function (n) { return wasN.indexOf(n) < 0; }), removed = wasN.filter(function (n) { return nowN.indexOf(n) < 0; }), k;
+  var shiftOf = function (n) { k = skey(n); var a = A.lf[l] && A.lf[l][k], b = B.lf[l] && B.lf[l][k]; return a != null && b != null ? Math.round((b - a) / DAY) : null; };
+  var x;
+  if (added.length) {
+    if ((x = added.filter(function (n) { return !A.styles[skey(n)]; })).length) return { f: 'new', st: x[0] };
+    if ((x = added.filter(function (n) { return !(A.ls[l] && A.ls[l][skey(n)]); })).length) return { f: 'line', st: x[0] };
+    return { f: 'move', st: added[0], shift: shiftOf(added[0]) };
+  }
+  if (removed.length) {
+    if ((x = removed.filter(function (n) { return !B.styles[skey(n)]; })).length) return { f: 'drop', st: x[0] };
+    if ((x = removed.filter(function (n) { return !(B.ls[l] && B.ls[l][skey(n)]); })).length) return { f: 'line', st: x[0] };
+    return { f: 'move', st: removed[0], shift: shiftOf(removed[0]) };
+  }
+  return { f: 'other', st: nowN[0] || wasN[0] || '' };
+}
+// compare every consecutive pair of snapshots over the window
+function compare(SN, DAYS, thr, MC) {
+  var R = { tr: [], groups: {}, lineSet: {} };
+  SN.forEach(function (s) { Object.keys(s.ld).forEach(function (l) { R.lineSet[l] = 1; }); Object.keys(s.dem).forEach(function (g) { R.groups[g] = { swing: 0 }; }); });
+  var lines = Object.keys(R.lineSet).sort(function (a, b) { return a.localeCompare(b, undefined, { numeric: true }); });
+  R.lines = lines;
+  for (var i = 1; i < SN.length; i++) {
+    var A = SN[i - 1], B = SN[i], T = { i: i, a: A, b: B, rows: [], gs: {}, lineChg: {}, bandDays: {}, totalLineDays: 0, chgLineDays: 0 };
+    lines.forEach(function (l) {
+      var LA = A.ld[l] || {}, LB = B.ld[l] || {}, cur = null, lc = T.lineChg[l] = { days: 0, byG: {}, tot: 0 };
+      DAYS.forEach(function (d) {
+        if (d < B.f.stamp) { cur = null; return; }          // days before the newer version's date are already run: not a plan change
+        var a = LA[d], b = LB[d], sa = a ? a.sig : '', sb = b ? b.sig : '';
+        if (a || b) T.totalLineDays++;
+        if (sa === sb) { cur = null; return; }
+        T.chgLineDays++; lc.days++;
+        var gA = a ? a.g : {}, gB = b ? b.g : {}, imp = {};
+        Object.keys(gA).concat(Object.keys(gB)).forEach(function (g) { var dl = (gB[g] || 0) - (gA[g] || 0); if (dl) imp[g] = dl; });
+        Object.keys(imp).forEach(function (g) { lc.byG[g] = (lc.byG[g] || 0) + Math.abs(imp[g]); });
+        if (cur && cur.sa === sa && cur.sb === sb && DAYS.indexOf(d) - cur.ix === 1) { cur.to = d; cur.days++; cur.ix++; Object.keys(imp).forEach(function (g) { var x = cur.imp[g] = cur.imp[g] || { md: 0, pk: 0 }; x.md += imp[g]; if (Math.abs(imp[g]) > Math.abs(x.pk)) x.pk = imp[g]; }); return; }
+        cur = { line: l, from: d, to: d, days: 1, sa: sa, sb: sb, ix: DAYS.indexOf(d), was: a ? a.names.join(' + ') : '', now: b ? b.names.join(' + ') : '', imp: {} };
+        Object.keys(imp).forEach(function (g) { cur.imp[g] = { md: imp[g], pk: imp[g] }; });
+        var fo = factorOf(l, a ? a.names : [], b ? b.names : [], A, B); cur.f = fo.f; cur.st = fo.st; cur.shift = fo.shift;
+        T.rows.push(cur);
+      });
+    });
+    Object.keys(R.groups).forEach(function (g) {
+      var av = MC.avail && MC.avail[g] != null ? MC.avail[g] : null, st = { swing: 0, net: 0, max: 0, big: 0, peakA: 0, peakB: 0, mdA: 0, mdB: 0, dayA: null, dayB: null, av: av, shA: 0, shB: 0, shDA: 0, shDB: 0, worstB: null };
+      DAYS.forEach(function (d) {
+        if (d < B.f.stamp) return;
+        var a = (A.dem[g] && A.dem[g][d]) || 0, b = (B.dem[g] && B.dem[g][d]) || 0, dl = b - a;
+        st.swing += Math.abs(dl); st.net += dl; st.mdA += a; st.mdB += b;
+        if (Math.abs(dl) > st.max) st.max = Math.abs(dl);
+        if (Math.abs(dl) >= thr) { st.big++; (T.bandDays[g] = T.bandDays[g] || {})[d] = 1; }
+        if (a > st.peakA) { st.peakA = a; st.dayA = d; } if (b > st.peakB) { st.peakB = b; st.dayB = d; }
+        if (av != null) { if (a > av) { st.shDA++; if (a - av > st.shA) st.shA = a - av; } if (b > av) { st.shDB++; if (b - av > st.shB) { st.shB = b - av; st.worstB = d; } } }
+      });
+      T.gs[g] = st; R.groups[g].swing += st.swing;
+    });
+    R.tr.push(T);
+  }
+  // shortage of every version on its own days (>= its date): R.sh[i][group] = {peak, days, md}
+  R.sh = SN.map(function (s) { var o = {}; if (!MC.avail) return o; Object.keys(R.groups).forEach(function (g) { var av = MC.avail[g]; if (av == null) return; var x = { peak: 0, days: 0, md: 0, dem: 0 };
+    DAYS.forEach(function (d) { if (d < s.f.stamp) return; var v = (s.dem[g] && s.dem[g][d]) || 0; if (v > x.dem) x.dem = v; if (v > av) { x.days++; x.md += v - av; if (v - av > x.peak) x.peak = v - av; } }); o[g] = x; }); return o; });
+  // style movement across versions (first / last day and number of days inside the window)
+  var inWin = {}; DAYS.forEach(function (d) { inWin[d] = 1; });
+  var styles = {};
+  SN.forEach(function (s, si) {
+    var per = {};
+    Object.keys(s.ld).forEach(function (l) { Object.keys(s.ld[l]).forEach(function (d) { d = +d; if (!inWin[d]) return; s.ld[l][d].names.forEach(function (nm) {
+      var k = skey(nm), p = per[k] = per[k] || { first: d, last: d, n: 0, lines: {} }; if (d < p.first) p.first = d; if (d > p.last) p.last = d; p.n++; p.lines[l] = 1; styles[k] = styles[k] || nm; }); }); });
+    s.per = per;
+  });
+  R.styles = Object.keys(styles).map(function (k) {
+    var row = { key: k, name: styles[k], per: [], moves: 0, shift: 0, added: 0, dropped: 0 };
+    SN.forEach(function (s, si) { row.per.push(s.per[k] || null); });
+    for (var i = 1; i < SN.length; i++) { var a = row.per[i - 1], b = row.per[i];
+      if (a && b) { if (a.first !== b.first || a.last !== b.last || a.n !== b.n) { row.moves++; row.shift += Math.abs(b.first - a.first) / DAY; } }
+      else if (a && !b) { row.moves++; row.dropped++; } else if (!a && b) { row.moves++; row.added++; } }
+    var g = toGroups((MC.db[k] || {}).set || {}, MC.G); row.g = g;
+    return row;
+  });
+  return R;
+}
+// which lines make the demand of a group on one day differ between two versions
+function drivers(T, g, d) {
+  var out = [];
+  RES.lines.forEach(function (l) { var a = T.a.ld[l] && T.a.ld[l][d], b = T.b.ld[l] && T.b.ld[l][d], qa = (a && a.g[g]) || 0, qb = (b && b.g[g]) || 0;
+    if (qa === qb) return;
+    var fo = factorOf(l, a ? a.names : [], b ? b.names : [], T.a, T.b); out.push({ line: l, was: a ? a.names.join(' + ') : '', now: b ? b.names.join(' + ') : '', qa: qa, qb: qb, dl: qb - qa, f: fo.f }); });
+  return out.sort(function (x, y) { return y.dl - x.dl; });
+}
+function shStatus(x) { return x.shA === 0 && x.shB > 0 ? 'flip' : x.shB > x.shA ? 'worse' : x.shB < x.shA ? 'better' : 'same'; }
+function selImpact(imp, SELG) { var t = 0, any = false; Object.keys(SELG).forEach(function (g) { if (imp[g]) { t += Math.abs(imp[g].md); any = true; } }); return any ? t : 0; }
+
+// ===================== state =====================
+var MC = null, SN = [], SELG = {}, TABV = 'over', DAYS = [], RES = null, GF = '', CHGONLY = false, TRSEL = 'all';
+var CFGV = { from: null, days: 28, thr: 5, late: 3 };
+var PAL = ['#8e9aaf', '#c28f2c', '#5aa469', '#b05fb0', '#d9663f', '#3aa7b8', '#2f6fdd', '#c4202b'];
+function snapColor(i, n) { return i === n - 1 ? 'var(--accent)' : PAL[i % PAL.length]; }
+
+function readWb(file, opts) { return file.arrayBuffer().then(function (b) { return XLSX.read(new Uint8Array(b), Object.assign({ type: 'array', cellDates: true }, opts || {})); }); }
+function guessStamp(file) {
+  var n = file.name, m = n.match(/(20\d{2})[-_.]?(\d{2})[-_.]?(\d{2})/);
+  if (m && +m[2] >= 1 && +m[2] <= 12 && +m[3] >= 1 && +m[3] <= 31) return Date.UTC(+m[1], +m[2] - 1, +m[3]);
+  m = n.match(/(\d{1,2})[-_.](\d{1,2})[-_.](20\d{2})/); if (m && +m[2] >= 1 && +m[2] <= 12) return Date.UTC(+m[3], +m[2] - 1, +m[1]);
+  var d = new Date(file.lastModified || Date.now()); return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+}
+$('fMc').onchange = function () {
+  var f = this.files[0]; if (!f) return;
+  readWb(f, { sheets: ['MACHINE DATABASE', 'MACHINE GROUP', 'PU LIST', 'MC STATUS'] }).then(function (wb) {
+    if (!wb.Sheets['MACHINE DATABASE'] || !wb.Sheets['MACHINE GROUP']) { toast(t('mcMissing')); return; }
+    MC = { name: f.name, G: loadGroups(sheetAoa(wb.Sheets['MACHINE GROUP'])), db: loadDb(sheetAoa(wb.Sheets['MACHINE DATABASE'])), pu: loadPuList(sheetAoa(wb.Sheets['PU LIST'])) }; MC.avail = loadAvail(sheetAoa(wb.Sheets['MC STATUS']), MC.G); if (!MC.avail) toast(t('noAvail'));
+    $('mcInfo').textContent = f.name + ' · ' + Object.keys(MC.db).length + ' styles · ' + Object.keys(MC.G).length + ' codes';
+    SN.forEach(function (s) { s.rebuild = true; }); reloadSnaps();
+  }).catch(function (e) { toast(t('loadErr') + ' ' + f.name + ' (' + (e && e.message) + ')'); });
+};
+var FILES = [];
+$('fPlans').onchange = function () {
+  var fs = [].slice.call(this.files); if (!fs.length) return;
+  Promise.all(fs.map(function (f) {
+    return readWb(f).then(function (wb) {
+      var name = wb.SheetNames.indexOf('MasterPlan-Full') >= 0 ? 'MasterPlan-Full' : wb.SheetNames.filter(function (n) { return findCol(sheetAoa(wb.Sheets[n])[0] || [], 'Style No') >= 0; })[0];
+      if (!name) { toast(t('planMissing') + ' ' + f.name); return null; }
+      var aoa = sheetAoa(wb.Sheets[name]); if (findCol(aoa[0] || [], 'Date') < 0 || findCol(aoa[0] || [], 'Line') < 0) { toast(t('planMissing') + ' ' + f.name); return null; }
+      return { name: f.name, stamp: guessStamp(f), mod: f.lastModified || 0, aoa: aoa };
+    }).catch(function (e) { toast(t('loadErr') + ' ' + f.name + ' (' + (e && e.message) + ')'); return null; });
+  })).then(function (arr) { arr.forEach(function (x) { if (x) FILES.push(x); }); $('fPlans').value = ''; reloadSnaps(); });
+};
+function reloadSnaps() {
+  SN = []; if (MC) FILES.forEach(function (f) { var s = buildSnap(f.aoa, MC); if (s) { s.f = f; SN.push(s); } });
+  SN.sort(function (a, b) { return a.f.stamp - b.f.stamp || a.f.mod - b.f.mod; });
+  $('planInfo').textContent = FILES.length ? FILES.length + ' file' : '';
+  if (SN.length && CFGV.from == null) CFGV.from = SN[SN.length - 1].f.stamp;
+  recompute(true);
+}
+function recompute(autoSel) {
+  RES = null; DAYS = [];
+  var ok = MC && SN.length >= 2;
+  if (ok) { DAYS = windowDays(SN, CFGV.from, CFGV.days); RES = compare(SN, DAYS, CFGV.thr, MC); if (autoSel && !Object.keys(SELG).some(function (g) { return RES.groups[g]; })) pickTop(); }
+  render();
+}
+function pickTop() { SELG = {}; if (!RES) return; Object.keys(RES.groups).sort(function (a, b) { return RES.groups[b].swing - RES.groups[a].swing; }).slice(0, 3).forEach(function (g) { if (RES.groups[g].swing > 0) SELG[g] = 1; }); }
+
+// ===================== render =====================
+function labelOf(s) { return 'W' + isoWeek(s.f.stamp) + ' · ' + fd(s.f.stamp); }
+function renderSnaps() {
+  var h = '<table><tr><th>#</th><th>' + t('colName') + '</th><th>' + t('colDate') + '</th><th class="n">' + t('colRows') + '</th><th class="n">' + t('colLines') + '</th><th class="n">' + t('colStyles') + '</th><th>' + t('colMiss') + '</th><th></th></tr>';
+  SN.forEach(function (s, i) {
+    var miss = Object.keys(s.missing).length;
+    h += '<tr><td>' + (i + 1) + '</td><td>' + esc(s.f.name) + '</td><td><input type="date" data-snap="' + i + '" value="' + isoDate(s.f.stamp) + '"> <span class="muted small">' + labelOf(s) + '</span></td><td class="n">' + s.nRows + '</td><td class="n">' + s.lines + '</td><td class="n">' + Object.keys(s.styles).length +
+      '</td><td>' + (miss ? '<span class="tag t-warn" title="' + esc(Object.keys(s.missing).map(function (k) { return s.missing[k]; }).slice(0, 40).join(', ')) + '">' + miss + '</span>' : '<span class="tag t-ok">0</span>') + '</td><td><button data-rm="' + i + '">' + t('remove') + '</button></td></tr>';
+  });
+  $('snapTbl').innerHTML = h + '</table>';
+}
+function renderChips() {
+  if (!RES) { $('chips').innerHTML = ''; return; }
+  var gs = Object.keys(RES.groups).sort(function (a, b) { return RES.groups[b].swing - RES.groups[a].swing || a.localeCompare(b); }), f = GF.toLowerCase();
+  $('chips').innerHTML = gs.filter(function (g) { return !f || g.toLowerCase().indexOf(f) >= 0; }).map(function (g) { return '<span class="chip' + (SELG[g] ? ' on' : '') + '" data-g="' + esc(g) + '">' + esc(g) + '<i>' + RES.groups[g].swing + '</i></span>'; }).join('');
+}
+function selList() { return Object.keys(SELG).filter(function (g) { return RES && RES.groups[g]; }); }
+function trLabel(T) { return labelOf(T.a) + ' → ' + labelOf(T.b); }
+function trRows(T) {   // rows of a transition with the selected-machine impact
+  var sel = selList(), SG = {}; sel.forEach(function (g) { SG[g] = 1; });
+  return T.rows.map(function (r) { return { r: r, T: T, tot: selImpact(r.imp, SG), lead: Math.round((r.from - T.b.f.stamp) / DAY) }; });
+}
+function stats() {
+  var sel = selList(), S = { lines: 0, stab: 0, swing: 0, late: 0, nTr: RES.tr.length, topLine: null, topG: null, topStyle: null, lateRow: null }, lc = {}, tl = 0, cl = 0, SG = {}; sel.forEach(function (g) { SG[g] = 1; });
+  RES.tr.forEach(function (T) {
+    var n = 0; RES.lines.forEach(function (l) { var x = T.lineChg[l]; if (x.days) { n++; lc[l] = (lc[l] || 0) + 1; } }); S.lines += n; tl += T.totalLineDays; cl += T.chgLineDays;
+    sel.forEach(function (g) { S.swing += T.gs[g].swing; });
+    trRows(T).forEach(function (x) { if (x.lead <= CFGV.late && (sel.length ? x.tot > 0 : true)) { S.late++; if (!S.lateRow || x.lead < S.lateRow.lead || (x.lead === S.lateRow.lead && x.tot > S.lateRow.tot)) S.lateRow = x; } });
+  });
+  S.lines = S.nTr ? Math.round(S.lines / S.nTr * 10) / 10 : 0; S.stab = tl ? Math.round((1 - cl / tl) * 100) : 100;
+  Object.keys(lc).forEach(function (l) { if (!S.topLine || lc[l] > lc[S.topLine]) S.topLine = l; }); S.lc = lc;
+  Object.keys(RES.groups).forEach(function (g) { if (!S.topG || RES.groups[g].swing > RES.groups[S.topG].swing) S.topG = g; });
+  RES.styles.forEach(function (s) { if (!S.topStyle || s.moves > S.topStyle.moves) S.topStyle = s; });
+  S.flip = []; if (MC.avail && RES.tr.length) { var LT = RES.tr[RES.tr.length - 1]; Object.keys(LT.gs).forEach(function (g) { if (LT.gs[g].av != null && shStatus(LT.gs[g]) === 'flip') S.flip.push(g); }); }
+  S.freq = RES.styles.filter(function (s) { return s.moves >= 2; }).length;
+  return S;
+}
+function chart(g) {
+  var W = 900, H = 230, ml = 40, mr = 10, mt = 10, mb = 28, n = DAYS.length, max = 1;
+  var av = MC.avail && MC.avail[g] != null ? MC.avail[g] : null; if (av != null) max = Math.max(max, av);
+  SN.forEach(function (s) { DAYS.forEach(function (d) { var v = (s.dem[g] && s.dem[g][d]) || 0; if (v > max) max = v; }); });
+  var X = function (i) { return ml + (n > 1 ? i * (W - ml - mr) / (n - 1) : 0); }, Y = function (v) { return mt + (H - mt - mb) * (1 - v / max); };
+  var sv = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" role="img">';
+  var band = {}; RES.tr.forEach(function (T) { Object.keys(T.bandDays[g] || {}).forEach(function (d) { band[d] = 1; }); });
+  var bw = n > 1 ? (W - ml - mr) / (n - 1) : 10;
+  DAYS.forEach(function (d, i) { if (band[d]) sv += '<rect x="' + (X(i) - bw / 2) + '" y="' + mt + '" width="' + bw + '" height="' + (H - mt - mb) + '" fill="var(--band)"/>'; });
+  for (var k = 0; k <= 4; k++) { var v = max * k / 4; sv += '<line x1="' + ml + '" x2="' + (W - mr) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" stroke="var(--line)"/><text x="' + (ml - 5) + '" y="' + (Y(v) + 4) + '" text-anchor="end">' + Math.round(v) + '</text>'; }
+  DAYS.forEach(function (d, i) { if (i % Math.ceil(n / 14) === 0) sv += '<text x="' + X(i) + '" y="' + (H - 8) + '" text-anchor="middle">' + fd(d) + '</text>'; });
+  if (av != null) { var last = SN[SN.length - 1];
+    DAYS.forEach(function (d, i) { var v = d < last.f.stamp ? 0 : (last.dem[g] && last.dem[g][d]) || 0; if (v > av) sv += '<rect x="' + (X(i) - bw / 2) + '" y="' + Y(v) + '" width="' + bw + '" height="' + (Y(av) - Y(v)) + '" fill="var(--bad)" opacity=".35"/>'; });
+    sv += '<line x1="' + ml + '" x2="' + (W - mr) + '" y1="' + Y(av) + '" y2="' + Y(av) + '" stroke="var(--bad)" stroke-width="2" stroke-dasharray="7 4"/><text x="' + (W - mr) + '" y="' + (Y(av) - 4) + '" text-anchor="end" style="fill:var(--bad);font-weight:600">' + t('avail') + ' ' + av + '</text>'; }
+  SN.forEach(function (s, si) {
+    var pts = DAYS.map(function (d, i) { return d < s.f.stamp ? null : X(i).toFixed(1) + ',' + Y((s.dem[g] && s.dem[g][d]) || 0).toFixed(1); }).filter(Boolean).join(' ');
+    sv += '<polyline fill="none" stroke="' + snapColor(si, SN.length) + '" stroke-width="' + (si === SN.length - 1 ? 2.6 : 1.5) + '" stroke-linejoin="round"' + (si === SN.length - 1 ? '' : ' stroke-dasharray="' + (si % 2 ? '5 3' : '0') + '"') + ' points="' + pts + '"><title>' + esc(labelOf(s)) + '</title></polyline>';
+  });
+  return sv + '</svg>';
+}
+function legend() { return '<div class="legend">' + SN.map(function (s, i) { return '<span><i style="background:' + snapColor(i, SN.length) + '"></i>' + esc(labelOf(s)) + '</span>'; }).join('') + '</div>'; }
+function heatCell(n, max) { if (!n) return '<td class="h muted">·</td>'; var a = Math.min(.75, .15 + .6 * n / (max || 1)); return '<td class="h" style="background:rgba(var(--heat),' + a.toFixed(2) + ')"><b>' + n + '</b></td>'; }
+
+function renderOver() {
+  var S = stats(), sel = selList(), h = '';
+  h += '<div class="kpis">' +
+    '<div class="kpi"><span class="muted small">' + t('kSnaps') + '</span><b>' + SN.length + '</b><span class="small muted">' + t('kTrans') + ': ' + S.nTr + '</span></div>' +
+    '<div class="kpi ' + (S.stab < 85 ? 'bad' : S.stab < 95 ? 'warn' : 'ok') + '"><span class="muted small">' + t('kStab') + '</span><b>' + S.stab + '%</b></div>' +
+    '<div class="kpi ' + (S.lines >= 3 ? 'bad' : '') + '"><span class="muted small">' + t('kLines') + '</span><b>' + S.lines + '</b><span class="small muted">' + t('outOf') + ' ' + RES.lines.length + '</span></div>' +
+    '<div class="kpi ' + (S.swing ? 'warn' : '') + '"><span class="muted small">' + t('kSwing') + '</span><b>' + (sel.length ? S.swing : '–') + '</b></div>' +
+    '<div class="kpi ' + (S.freq ? 'bad' : 'ok') + '"><span class="muted small">' + t('kFreq') + '</span><b>' + S.freq + '</b><span class="small muted">' + t('outOf') + ' ' + RES.styles.length + '</span></div>' +
+    (MC.avail ? '<div class="kpi ' + (S.flip.length ? 'bad' : 'ok') + '"><span class="muted small">' + t('kFlip') + '</span><b>' + S.flip.length + '</b><span class="small muted">' + esc(S.flip.slice(0, 3).join(', ')) + '</span></div>' : '') +
+    '<div class="kpi ' + (S.late ? 'bad' : 'ok') + '"><span class="muted small">' + t('kLate') + ' (≤ ' + CFGV.late + ')</span><b>' + S.late + '</b></div></div>';
+  var hl = '';
+  if (S.topLine) hl += '<li><b>' + t('hi1') + ':</b> ' + esc(S.topLine) + ' — ' + S.lc[S.topLine] + ' ' + t('outOf') + ' ' + S.nTr + ' ' + t('times') + '</li>';
+  if (S.topG && RES.groups[S.topG].swing) hl += '<li><b>' + t('hi2') + ':</b> ' + esc(S.topG) + ' — ' + RES.groups[S.topG].swing + ' ' + t('md') + '</li>';
+  if (S.topStyle && S.topStyle.moves) hl += '<li><b>' + t('hi3') + ':</b> ' + esc(S.topStyle.name) + ' — ' + S.topStyle.moves + ' ' + t('times') + '</li>';
+  if (S.flip.length) hl += '<li><b>' + t('hi5') + ' (' + trLabel(RES.tr[RES.tr.length - 1]) + '):</b> ' + esc(S.flip.join(', ')) + '</li>';
+  if (S.lateRow) hl += '<li><b>' + t('hi4') + ':</b> ' + esc(S.lateRow.r.line) + ' ' + fd(S.lateRow.r.from) + ' (' + esc(S.lateRow.r.was || t('idle')) + ' → ' + esc(S.lateRow.r.now || t('idle')) + '), ' + S.lateRow.lead + ' ' + t('lead0') + '</li>';
+  h += '<div class="card"><h2>' + t('hiTitle') + '</h2><ul style="margin:0;padding-left:18px">' + (hl || '<li class="muted">' + t('noChg') + '</li>') + '</ul></div>';
+  // swing per group and comparison
+  var gs = Object.keys(RES.groups).sort(function (a, b) { return RES.groups[b].swing - RES.groups[a].swing; }).filter(function (g) { return RES.groups[g].swing > 0; }).slice(0, 25);
+  h += '<div class="card"><h2>' + t('swingTbl') + '</h2><div class="small muted">' + t('swingH') + '</div><div class="scroll"><table><tr><th>' + t('gGroup') + '</th>' + RES.tr.map(function (T) { return '<th class="n">' + trLabel(T) + '</th>'; }).join('') + '<th class="n">Σ</th></tr>';
+  gs.forEach(function (g) {
+    h += '<tr' + (SELG[g] ? ' style="background:var(--sel)"' : '') + '><td>' + esc(g) + '</td>' + RES.tr.map(function (T) { var x = T.gs[g]; return '<td class="n">' + (x.swing ? (x.big ? '<span class="tag t-bad">' + x.swing + '</span>' : x.swing) : '·') + '</td>'; }).join('') + '<td class="n"><b>' + RES.groups[g].swing + '</b></td></tr>';
+  });
+  return h + '</table></div></div>';
+}
+function renderDem() {
+  var sel = selList(); if (!sel.length) return '<div class="card muted">' + t('noSel') + '</div>';
+  var h = '<div class="small muted" style="margin-bottom:6px">' + t('legend') + '</div>';
+  sel.forEach(function (g) {
+    h += '<div class="card"><h2>' + esc(g) + '</h2>' + legend() + chart(g) + '<div class="scroll"><table><tr><th>' + t('colDate') + '</th><th class="n">' + t('sPeak') + '</th><th>' + t('sPeakDay') + '</th><th class="n">' + t('sMd') + '</th><th class="n">' + t('sD') + '</th><th class="n">' + t('sSw') + '</th><th class="n">' + t('gBig') + '</th></tr>';
+    SN.forEach(function (s, i) {
+      var pk = 0, pd = null, md = 0; DAYS.forEach(function (d) { var v = (s.dem[g] && s.dem[g][d]) || 0; md += v; if (v > pk) { pk = v; pd = d; } });
+      var T = i ? RES.tr[i - 1] : null, st = T ? T.gs[g] : null;
+      h += '<tr><td><span style="color:' + snapColor(i, SN.length) + '">■</span> ' + esc(labelOf(s)) + '</td><td class="n">' + pk + '</td><td>' + fd(pd) + '</td><td class="n">' + md + '</td><td class="n">' + (st ? (st.net > 0 ? '+' : '') + st.net : '') + '</td><td class="n">' + (st ? st.swing : '') + '</td><td class="n">' + (st ? (st.big ? '<span class="tag t-bad">' + st.big + '</span>' : 0) : '') + '</td></tr>';
+    });
+    h += '</table></div></div>';
+  });
+  return h;
+}
+function allChanges() { var out = []; RES.tr.forEach(function (T, i) { if (TRSEL !== 'all' && +TRSEL !== i) return; trRows(T).forEach(function (x) { out.push(x); }); }); return out; }
+function renderChg() {
+  KEYS = []; var sel = selList(), rows = allChanges();
+  if (CHGONLY && sel.length) rows = rows.filter(function (x) { return x.tot > 0; });
+  rows.sort(function (a, b) { return b.tot - a.tot || a.lead - b.lead || a.r.line.localeCompare(b.r.line); });
+  var h = '<div class="card"><div class="row" style="margin-bottom:8px"><label>' + t('trans') + ' <select id="selTr"><option value="all">—</option>' + RES.tr.map(function (T, i) { return '<option value="' + i + '"' + (String(TRSEL) === String(i) ? ' selected' : '') + '>' + esc(trLabel(T)) + '</option>'; }).join('') + '</select></label>' +
+    '<label><input type="checkbox" id="chOnly"' + (CHGONLY ? ' checked' : '') + '> ' + t('chgOnly') + '</label><span class="muted small">' + rows.length + '</span><span style="margin-left:auto" class="row"><button id="bNSave">' + t('notesSave') + '</button><button id="bNLoad">' + t('notesLoad') + '</button><input type="file" id="fNotes" accept=".json" hidden></span></div><div class="small muted" style="margin-bottom:6px">' + t('notesInfo') + '</div>';
+  if (!rows.length) return h + '<div class="muted">' + t('noChg') + '</div></div>';
+  h += '<div class="scroll"><table><tr><th>' + t('trans') + '</th><th>' + t('colLine') + '</th><th>' + t('colPu') + '</th><th>' + t('colRange') + '</th><th>' + t('colWas') + '</th><th>' + t('colNow') + '</th><th>' + t('colFac') + '</th><th>' + t('colWhy') + '</th><th class="n">' + t('colLead') + '</th>' + sel.map(function (g) { return '<th class="n">' + esc(g) + '</th>'; }).join('') + '<th class="n">' + t('colTot') + '</th></tr>';
+  rows.slice(0, 600).forEach(function (x) {
+    var r = x.r; h += '<tr><td class="small">' + esc(trLabel(x.T)) + '</td><td>' + esc(r.line) + '</td><td>' + esc(puOf(MC.pu, r.line)) + '</td><td>' + fd(r.from) + (r.to !== r.from ? '–' + fd(r.to) : '') + ' <span class="muted small">(' + r.days + ')</span></td><td>' + esc(r.was || t('idle')) + '</td><td>' + esc(r.now || t('idle')) + '</td><td class="small">' + facText(r) + '</td><td style="white-space:nowrap">' + noteCell(r) + '</td><td class="n">' + (x.lead <= CFGV.late ? '<span class="tag t-bad">' + x.lead + '</span>' : x.lead) + '</td>' +
+      sel.map(function (g) { var i = r.imp[g]; return '<td class="n">' + (i ? '<span class="' + (i.md > 0 ? 'tag t-warn' : 'tag t-info') + '" title="' + t('colImp') + ': peak ' + (i.pk > 0 ? '+' : '') + i.pk + '">' + (i.md > 0 ? '+' : '') + i.md + '</span>' : '·') + '</td>'; }).join('') + '<td class="n">' + (x.tot || '') + '</td></tr>';
+  });
+  return h + '</table></div>' + (rows.length > 600 ? '<div class="muted small">600 / ' + rows.length + ' (Excel)</div>' : '') + '</div>';
+}
+function facText(r) { return t('f_' + r.f) + (r.f === 'move' && r.shift ? ' <span class="muted">(' + Math.abs(r.shift) + ' ' + t('days_') + ' ' + (r.shift < 0 ? t('shiftE') : t('shiftL')) + ')</span>' : ''); }
+var FACS = ['new', 'drop', 'line', 'move', 'other'];
+function bar(v, max, col) { return '<div style="height:8px;border-radius:4px;background:' + (col || 'var(--accent)') + ';width:' + Math.max(2, Math.round(100 * v / (max || 1))) + '%"></div>'; }
+function renderWhy() {
+  var sel = selList(), GS = sel.length ? sel : Object.keys(RES.groups), all = [];
+  RES.tr.forEach(function (T, i) { trRows(T).forEach(function (x) { var pos = 0, neg = 0; GS.forEach(function (g) { var m = x.r.imp[g] && x.r.imp[g].md || 0; if (m > 0) pos += m; else neg -= m; }); x.pos = pos; x.neg = neg; x.sw = pos + neg; x.ti = i; all.push(x); }); });
+  var tot = all.reduce(function (a, x) { return a + x.sw; }, 0) || 1, F = {};
+  FACS.forEach(function (f) { F[f] = { n: 0, days: 0, pos: 0, neg: 0, sw: 0, byT: RES.tr.map(function () { return 0; }) }; });
+  all.forEach(function (x) { var o = F[x.r.f]; o.n++; o.days += x.r.days; o.pos += x.pos; o.neg += x.neg; o.sw += x.sw; o.byT[x.ti] += x.sw; });
+  var order = FACS.filter(function (f) { return F[f].n; }).sort(function (a, b) { return F[b].sw - F[a].sw || F[b].n - F[a].n; }), maxSw = order.length ? Math.max(F[order[0]].sw, 1) : 1;
+  var h = '<div class="card"><h2>' + t('wTitle') + '</h2><div class="small muted" style="margin-bottom:6px">' + t('wNote') + '</div>';
+  if (!all.length) return h + '<div class="muted">' + t('noChg') + '</div></div>';
+  h += '<ul style="margin:0 0 8px;padding-left:18px">' + order.slice(0, 3).map(function (f) { return '<li><b>' + t('f_' + f) + '</b> — ' + Math.round(100 * F[f].sw / tot) + '% (' + F[f].sw + ' ' + t('md') + ', ' + F[f].n + ' ' + t('wChg').toLowerCase() + ')</li>'; }).join('') + '</ul></div>';
+  h += '<div class="card"><h2>' + t('wFac') + '</h2><div class="scroll"><table><tr><th>' + t('colFac') + '</th><th class="n">' + t('wChg') + '</th><th class="n">' + t('wDays') + '</th><th class="n">' + t('wMore') + '</th><th class="n">' + t('wLess') + '</th><th style="width:30%">' + t('wShare') + '</th></tr>' +
+    order.map(function (f) { var o = F[f]; return '<tr><td>' + t('f_' + f) + '</td><td class="n">' + o.n + '</td><td class="n">' + o.days + '</td><td class="n"><span class="tag t-warn">+' + o.pos + '</span></td><td class="n"><span class="tag t-info">−' + o.neg + '</span></td><td>' + bar(o.sw, maxSw) + '<span class="small muted">' + Math.round(100 * o.sw / tot) + '%</span></td></tr>'; }).join('') + '</table></div></div>';
+  h += '<div class="card"><h2>' + t('wBy') + '</h2><div class="scroll"><table><tr><th>' + t('colFac') + '</th>' + RES.tr.map(function (T) { return '<th class="n">' + trLabel(T) + '</th>'; }).join('') + '</tr>' +
+    order.map(function (f) { return '<tr><td>' + t('f_' + f) + '</td>' + F[f].byT.map(function (v) { return '<td class="n">' + (v ? v : '·') + '</td>'; }).join('') + '</tr>'; }).join('') + '</table></div></div>';
+  // styles
+  var S = {}; all.forEach(function (x) { var k = skey(x.r.st) + '|' + x.r.f; var o = S[k] = S[k] || { st: x.r.st, f: x.r.f, n: 0, days: 0, sw: 0, lines: {}, sh: 0 }; o.n++; o.days += x.r.days; o.sw += x.sw; o.lines[x.r.line] = 1; if (x.r.shift) o.sh = x.r.shift; });
+  var sl = Object.keys(S).map(function (k) { return S[k]; }).sort(function (a, b) { return b.sw - a.sw || b.n - a.n; }).slice(0, 15), ms = sl.length ? Math.max(sl[0].sw, 1) : 1;
+  h += '<div class="card"><h2>' + t('wStyle') + '</h2><div class="scroll"><table><tr><th>' + t('stStyle') + '</th><th>' + t('colFac') + '</th><th>' + t('wLines') + '</th><th class="n">' + t('wChg') + '</th><th class="n">' + t('wDays') + '</th><th style="width:25%">' + t('colTot') + '</th></tr>' +
+    sl.map(function (o) { return '<tr><td>' + esc(o.st) + '</td><td class="small">' + t('f_' + o.f) + '</td><td>' + esc(Object.keys(o.lines).join(', ')) + '</td><td class="n">' + o.n + '</td><td class="n">' + o.days + '</td><td>' + bar(o.sw, ms, 'var(--warn)') + '<span class="small muted">' + o.sw + '</span></td></tr>'; }).join('') + '</table></div></div>';
+  var RR = {}, cov = 0, covN = 0; all.forEach(function (x) { var n = NOTES[noteKey(x.r)], k = n && (n.c || n.t) ? (n.c || 'other') : 'none'; var o = RR[k] = RR[k] || { n: 0, sw: 0 }; o.n++; o.sw += x.sw; if (k !== 'none') { cov += x.sw; covN++; } });
+  var rk = Object.keys(RR).sort(function (a, b) { return a === 'none' ? 1 : b === 'none' ? -1 : RR[b].sw - RR[a].sw; }), mr = Math.max.apply(null, rk.map(function (k) { return RR[k].sw; }).concat([1]));
+  h += '<div class="card"><h2>' + t('wReason') + '</h2><div class="small muted" style="margin-bottom:6px">' + t('wCover') + ': ' + covN + ' / ' + all.length + ' (' + Math.round(100 * cov / tot) + '% ' + t('wShare').toLowerCase() + ')</div><table><tr><th></th><th class="n">' + t('wChg') + '</th><th style="width:45%">' + t('colTot') + '</th></tr>' +
+    rk.map(function (k) { return '<tr><td>' + t('r_' + k) + '</td><td class="n">' + RR[k].n + '</td><td>' + bar(RR[k].sw, mr, k === 'none' ? 'var(--muted)' : 'var(--accent)') + '<span class="small muted">' + RR[k].sw + '</span></td></tr>'; }).join('') + '</table></div>';
+  // lead time + PU
+  var B = [{ l: 'lb0', n: 0, sw: 0 }, { l: 'lb1', n: 0, sw: 0 }, { l: 'lb2', n: 0, sw: 0 }, { l: 'lb3', n: 0, sw: 0 }], P = {};
+  all.forEach(function (x) { var b = x.lead <= CFGV.late ? 0 : x.lead <= 7 ? 1 : x.lead <= 14 ? 2 : 3; B[b].n++; B[b].sw += x.sw; var pu = puOf(MC.pu, x.r.line) || '?'; var o = P[pu] = P[pu] || { n: 0, sw: 0 }; o.n++; o.sw += x.sw; });
+  var mb = Math.max.apply(null, B.map(function (b) { return b.sw; }).concat([1])), pk = Object.keys(P).sort(function (a, b) { return P[b].sw - P[a].sw; }), mp = pk.length ? Math.max(P[pk[0]].sw, 1) : 1;
+  h += '<div class="grid2"><div class="card"><h2>' + t('wLead') + '</h2><table><tr><th></th><th class="n">' + t('wChg') + '</th><th style="width:45%">' + t('colTot') + '</th></tr>' + B.map(function (b, i) { return '<tr><td>' + (i === 0 ? t('lb0') + ' (≤ ' + CFGV.late + ')' : t(b.l)) + '</td><td class="n">' + b.n + '</td><td>' + bar(b.sw, mb, i === 0 ? 'var(--bad)' : 'var(--accent)') + '<span class="small muted">' + b.sw + '</span></td></tr>'; }).join('') + '</table></div>' +
+    '<div class="card"><h2>' + t('wPu') + '</h2><table><tr><th>PU</th><th class="n">' + t('wChg') + '</th><th style="width:45%">' + t('colTot') + '</th></tr>' + pk.map(function (k) { return '<tr><td>' + esc(k) + '</td><td class="n">' + P[k].n + '</td><td>' + bar(P[k].sw, mp) + '<span class="small muted">' + P[k].sw + '</span></td></tr>'; }).join('') + '</table></div></div>';
+  return h;
+}
+var RSN = ['order', 'material', 'customer', 'capacity', 'quality', 'machine', 'other'], NOTES = {}, KEYS = [];
+try { NOTES = JSON.parse(localStorage.getItem('pc_notes') || '{}') || {}; } catch (e) { NOTES = {}; }
+function saveNotes() { try { localStorage.setItem('pc_notes', JSON.stringify(NOTES)); } catch (e) { } }
+function noteKey(r) { return r.line + '|' + r.sa + '|' + r.sb + '|' + isoDate(r.from); }     // same stretch of the same line = same note in later comparisons too
+function noteCell(r) {
+  var k = noteKey(r), n = NOTES[k] || {}, i = KEYS.push(k) - 1;
+  return '<select data-ni="' + i + '" class="rs"><option value="">—</option>' + RSN.map(function (c) { return '<option value="' + c + '"' + (n.c === c ? ' selected' : '') + '>' + t('r_' + c) + '</option>'; }).join('') + '</select> <input data-ni="' + i + '" class="rt" placeholder="' + t('notePh') + '" value="' + esc(n.t || '') + '" style="width:230px">';
+}
+var STR = null;
+function renderShort() {
+  if (!MC.avail) return '<div class="card muted">' + t('noAvail') + '</div>';
+  var ti = STR != null && RES.tr[STR] ? STR : RES.tr.length - 1, T = RES.tr[ti];
+  var rows = Object.keys(T.gs).filter(function (g) { var x = T.gs[g]; return x.av != null && (x.shA > 0 || x.shB > 0); }).map(function (g) { var x = T.gs[g]; return { g: g, x: x, st: shStatus(x) }; });
+  var ord = { flip: 0, worse: 1, same: 2, better: 3 }; rows.sort(function (a, b) { return ord[a.st] - ord[b.st] || b.x.shB - a.x.shB; });
+  var tag = { flip: '<span class="tag t-bad">' + t('shFlip') + '</span>', worse: '<span class="tag t-warn">' + t('shWorse') + '</span>', better: '<span class="tag t-ok">' + t('shBetter') + '</span>', same: '<span class="tag t-info">' + t('shSame') + '</span>' };
+  var h = '<div class="card"><div class="row"><h2 style="margin:0">' + t('shTitle') + '</h2><label>' + t('trans') + ' <select id="selSh">' + RES.tr.map(function (U, i) { return '<option value="' + i + '"' + (i === ti ? ' selected' : '') + '>' + esc(trLabel(U)) + '</option>'; }).join('') + '</select></label></div><div class="small muted" style="margin:4px 0 8px">' + t('shNote') + '</div>';
+  if (!rows.length) h += '<div class="muted">' + t('noChg') + '</div>';
+  else {
+    h += '<div class="scroll"><table><tr><th rowspan="2">' + t('gGroup') + '</th><th class="n" rowspan="2">' + t('avail') + '</th><th class="n" colspan="2">' + t('shOld') + ' (' + labelOf(T.a) + ')</th><th class="n" colspan="2">' + t('shNew') + ' (' + labelOf(T.b) + ')</th><th rowspan="2"></th></tr><tr><th class="n">' + t('shPeak') + '</th><th class="n">' + t('shDays') + '</th><th class="n">' + t('shPeak') + '</th><th class="n">' + t('shDays') + '</th></tr>';
+    rows.forEach(function (r) { var x = r.x; h += '<tr' + (SELG[r.g] ? ' style="background:var(--sel)"' : '') + '><td>' + esc(r.g) + '</td><td class="n">' + x.av + '</td><td class="n">' + (x.shA || '·') + '</td><td class="n">' + (x.shDA || '·') + '</td><td class="n">' + (x.shB ? '<b style="color:var(--bad)">' + x.shB + '</b>' : '·') + '</td><td class="n">' + (x.shDB ? '<b style="color:var(--bad)">' + x.shDB + '</b>' : '·') + '</td><td>' + tag[r.st] + '</td></tr>'; });
+    h += '</table></div>';
+  }
+  h += '</div>';
+  rows.filter(function (r) { return r.st === 'flip' || r.st === 'worse'; }).slice(0, 8).forEach(function (r) {
+    var x = r.x, dv = drivers(T, r.g, x.worstB).slice(0, 8);
+    h += '<div class="card"><h2>' + esc(r.g) + ' — ' + t('shDrv') + ' ' + fd(x.worstB) + ' <span class="muted small">(' + t('need2') + ' ' + (x.av + x.shB) + ', ' + t('have') + ' ' + x.av + ', ' + t('short') + ' ' + x.shB + ')</span></h2>' +
+      '<table><tr><th>' + t('colLine') + '</th><th>' + t('colPu') + '</th><th>' + t('colWas') + '</th><th>' + t('colNow') + '</th><th>' + t('colFac') + '</th><th class="n">' + t('shDelta') + '</th></tr>' +
+      dv.map(function (d) { return '<tr><td>' + esc(d.line) + '</td><td>' + esc(puOf(MC.pu, d.line)) + '</td><td>' + esc(d.was || t('idle')) + ' <span class="muted small">(' + d.qa + ')</span></td><td>' + esc(d.now || t('idle')) + ' <span class="muted small">(' + d.qb + ')</span></td><td>' + t('f_' + d.f) + '</td><td class="n"><span class="tag ' + (d.dl > 0 ? 't-bad' : 't-ok') + '">' + (d.dl > 0 ? '+' : '') + d.dl + '</span></td></tr>'; }).join('') + '</table></div>';
+  });
+  // trend: max shortage of every version
+  var gs = Object.keys(RES.groups).filter(function (g) { return RES.sh.some(function (o) { return o[g] && o[g].peak > 0; }); }).sort(function (a, b) { var la = RES.sh[SN.length - 1][a], lb = RES.sh[SN.length - 1][b]; return ((lb && lb.peak) || 0) - ((la && la.peak) || 0); });
+  h += '<div class="card"><h2>' + t('shTrend') + '</h2><div class="scroll"><table><tr><th>' + t('gGroup') + '</th><th class="n">' + t('avail') + '</th>' + SN.map(function (s) { return '<th class="n">' + esc(labelOf(s)) + '</th>'; }).join('') + '</tr>' +
+    gs.map(function (g) { return '<tr><td>' + esc(g) + '</td><td class="n">' + MC.avail[g] + '</td>' + SN.map(function (s, i) { var x = RES.sh[i][g]; return x && x.peak ? '<td class="n" style="background:rgba(var(--heat),' + Math.min(.7, .15 + x.peak / (MC.avail[g] || 1)).toFixed(2) + ')"><b>' + x.peak + '</b> <span class="muted small">/' + x.days + 'd</span></td>' : '<td class="n muted">·</td>'; }).join('') + '</tr>'; }).join('') + (gs.length ? '' : '<tr><td colspan="' + (SN.length + 2) + '" class="muted">' + t('noChg') + '</td></tr>') + '</table></div></div>';
+  return h;
+}
+function renderFreq() {
+  var S = stats(), sel = selList(), h = '<div class="card"><h2>' + t('lineMat') + '</h2><div class="scroll heat"><table><tr><th>' + t('colLine') + '</th><th>' + t('colPu') + '</th>' + RES.tr.map(function (T) { return '<th class="n">' + trLabel(T) + '</th>'; }).join('') + '<th class="n">' + t('frq') + '</th>' + (sel.length ? '<th class="n">' + t('colImp') + '</th>' : '') + '</tr>';
+  var max = 1; RES.tr.forEach(function (T) { RES.lines.forEach(function (l) { if (T.lineChg[l].days > max) max = T.lineChg[l].days; }); });
+  var lines = RES.lines.slice().sort(function (a, b) { return (S.lc[b] || 0) - (S.lc[a] || 0) || a.localeCompare(b, undefined, { numeric: true }); });
+  lines.forEach(function (l) {
+    var f = S.lc[l] || 0, imp = 0; RES.tr.forEach(function (T) { sel.forEach(function (g) { imp += T.lineChg[l].byG[g] || 0; }); });
+    h += '<tr><td>' + esc(l) + '</td><td>' + esc(puOf(MC.pu, l)) + '</td>' + RES.tr.map(function (T) { return heatCell(T.lineChg[l].days, max); }).join('') + '<td class="n">' + (f >= 2 ? '<span class="tag t-bad">' + f + '/' + S.nTr + '</span>' : f + '/' + S.nTr) + '</td>' + (sel.length ? '<td class="n">' + (imp || '·') + '</td>' : '') + '</tr>';
+  });
+  h += '</table></div></div>';
+  var sts = RES.styles.filter(function (s) { return s.moves > 0; }).sort(function (a, b) { return b.moves - a.moves || b.shift - a.shift; }).slice(0, 80);
+  h += '<div class="card"><h2>' + t('styleMov') + '</h2><div class="scroll"><table><tr><th>' + t('stStyle') + '</th><th>' + t('stMach') + '</th><th class="n">' + t('stMoves') + '</th><th class="n">' + t('stShift') + '</th><th>' + t('stPath') + '</th></tr>';
+  sts.forEach(function (s) {
+    var path = s.per.map(function (p, i) { var prev = i ? s.per[i - 1] : null, chg = i && ((!!p !== !!prev) || (p && prev && (p.first !== prev.first || p.last !== prev.last || p.n !== prev.n)));
+      return '<span class="mv ' + (chg ? 'chg' : p ? '' : 'none') + '" title="' + esc(labelOf(SN[i])) + '">' + (p ? fd(p.first) + '→' + fd(p.last) : '—') + '</span>'; }).join('');
+    h += '<tr><td>' + esc(s.name) + '</td><td class="small">' + (sel.map(function (g) { return s.g[g] ? esc(g) + ' ' + s.g[g] : ''; }).filter(Boolean).join(', ') || '·') + '</td><td class="n">' + (s.moves >= 2 ? '<span class="tag t-bad">' + s.moves + '</span>' : s.moves) + '</td><td class="n">' + Math.round(s.shift) + '</td><td>' + path + '</td></tr>';
+  });
+  if (!sts.length) h += '<tr><td colspan="5" class="muted">' + t('noChg') + '</td></tr>';
+  return h + '</table></div></div>';
+}
+function render() {
+  var ready = MC && SN.length >= 2 && RES;
+  $('cSnaps').hidden = !SN.length; $('cSet').hidden = !ready; $('empty').hidden = !!ready;
+  $('empty').textContent = (MC && FILES.length && SN.length < 2) ? t('need') : t('emptyMsg');
+  [].forEach.call(document.querySelectorAll('[data-t]'), function (e) { e.textContent = t(e.dataset.t); });
+  var tabsHtml = [['over', 'tOver'], ['dem', 'tDem'], ['short', 'tShort'], ['why', 'tWhy'], ['chg', 'tChg'], ['freq', 'tFreq']].map(function (x) { return '<button data-tab="' + x[0] + '"' + (TABV === x[0] ? ' class="on"' : '') + '>' + t(x[1]) + '</button>'; }).join('');
+  if ($('tabs').dataset.h !== tabsHtml) { $('tabs').innerHTML = tabsHtml; $('tabs').dataset.h = tabsHtml; }
+  $('bLang').textContent = LANG === 'vi' ? 'EN' : 'VI'; $('iGf').placeholder = t('gGroup');
+  if (SN.length) renderSnaps();
+  if (!ready) { $('out').innerHTML = ''; return; }
+  $('iFrom').value = isoDate(CFGV.from); $('iDays').value = CFGV.days; $('iThr').value = CFGV.thr; $('iLate').value = CFGV.late;
+  renderChips();
+  $('out').innerHTML = TABV === 'over' ? renderOver() : TABV === 'dem' ? renderDem() : TABV === 'short' ? renderShort() : TABV === 'why' ? renderWhy() : TABV === 'chg' ? renderChg() : renderFreq();
+}
+
+// ===================== events =====================
+$('tabs').onclick = function (e) { var b = e.target.closest('[data-tab]'); if (b) { TABV = b.dataset.tab; render(); } };
+$('bLang').onclick = function () { LANG = LANG === 'vi' ? 'en' : 'vi'; try { localStorage.setItem('ie_site_lang', LANG); } catch (e) { } document.documentElement.lang = LANG; render(); };
+$('chips').onclick = function (e) { var c = e.target.closest('[data-g]'); if (!c) return; var g = c.dataset.g; if (SELG[g]) delete SELG[g]; else SELG[g] = 1; render(); };
+$('iGf').oninput = function () { GF = this.value; renderChips(); };
+$('bTop').onclick = function () { pickTop(); render(); };
+$('bNone').onclick = function () { SELG = {}; render(); };
+$('snapTbl').onchange = function (e) { var i = e.target.dataset.snap; if (i == null || !e.target.value) return; var p = e.target.value.split('-'); SN[+i].f.stamp = Date.UTC(+p[0], +p[1] - 1, +p[2]); reloadSnaps(); };
+$('snapTbl').onclick = function (e) { var i = e.target.dataset.rm; if (i == null) return; FILES.splice(FILES.indexOf(SN[+i].f), 1); reloadSnaps(); };
+function readCfg() {
+  var p = $('iFrom').value.split('-'), n = { from: CFGV.from, days: Math.max(3, Math.min(120, +$('iDays').value || 28)), thr: Math.max(1, +$('iThr').value || 5), late: Math.max(0, +$('iLate').value || 0) };
+  if (p.length === 3) n.from = Date.UTC(+p[0], +p[1] - 1, +p[2]);
+  if (n.from === CFGV.from && n.days === CFGV.days && n.thr === CFGV.thr && n.late === CFGV.late) return;      // nothing changed: do not rebuild the page (a click on a tab right after editing would be lost)
+  CFGV = n; recompute(false);
+}
+var cfgTimer = null;
+['iFrom', 'iDays', 'iThr', 'iLate'].forEach(function (id) { $(id).onchange = readCfg; $(id).oninput = function () { clearTimeout(cfgTimer); cfgTimer = setTimeout(readCfg, 600); }; });
+$('out').onchange = function (e) {
+  if (e.target.dataset && e.target.dataset.ni != null) {
+    var tr = e.target.closest('tr'), k = KEYS[+e.target.dataset.ni], c = tr.querySelector('select.rs').value, tx = tr.querySelector('input.rt').value.trim();
+    if (c || tx) NOTES[k] = { c: c, t: tx, at: new Date().toISOString().slice(0, 10) }; else delete NOTES[k]; saveNotes(); return;
+  }
+  if (e.target.id === 'fNotes') {
+    var f = e.target.files[0]; if (!f) return; var fr = new FileReader();
+    fr.onload = function () { try { var o = JSON.parse(fr.result), n = 0; Object.keys(o).forEach(function (k) { if (o[k] && (o[k].c || o[k].t)) { NOTES[k] = o[k]; n++; } }); saveNotes(); toast(t('notesLoaded') + ' ' + n); render(); } catch (x) { toast(t('loadErr') + ' ' + f.name); } };
+    fr.readAsText(f); return;
+  } if (e.target.id === 'selSh') { STR = +e.target.value; render(); } if (e.target.id === 'selTr') { TRSEL = e.target.value; render(); } if (e.target.id === 'chOnly') { CHGONLY = e.target.checked; render(); } };
+
+$('out').onclick = function (e) {
+  if (e.target.id === 'bNLoad') $('fNotes').click();
+  if (e.target.id === 'bNSave') { var b = new Blob([JSON.stringify(NOTES, null, 1)], { type: 'application/json' }), a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'PlanCompare_notes.json'; a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000); }
+};
+
+// ===================== Excel export =====================
+$('bExport').onclick = function () {
+  if (!RES) { toast(t('emptyMsg')); return; }
+  var sel = selList(), wb = XLSX.utils.book_new();
+  var A = [['Comparison', 'Line', 'PU', 'From', 'To', 'Days', 'Before', 'After', 'Cause', 'Reason', 'Note', 'Notice (days)'].concat(sel.map(function (g) { return g + ' Δ machine-days'; })).concat(['Total |Δ| selected'])];
+  RES.tr.forEach(function (T) { trRows(T).forEach(function (x) { var r = x.r; A.push([trLabel(T), r.line, puOf(MC.pu, r.line), isoDate(r.from), isoDate(r.to), r.days, r.was, r.now, t('f_' + r.f), NOTES[noteKey(r)] && NOTES[noteKey(r)].c ? t('r_' + NOTES[noteKey(r)].c) : '', NOTES[noteKey(r)] ? NOTES[noteKey(r)].t : '', x.lead].concat(sel.map(function (g) { return r.imp[g] ? r.imp[g].md : 0; })).concat([x.tot])); }); });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(A), 'Changes');
+  var B = [['Machine group'].concat(RES.tr.map(function (T) { return trLabel(T) + ' swing'; })).concat(['Total swing'])];
+  Object.keys(RES.groups).sort(function (a, b) { return RES.groups[b].swing - RES.groups[a].swing; }).forEach(function (g) { B.push([g].concat(RES.tr.map(function (T) { return T.gs[g].swing; })).concat([RES.groups[g].swing])); });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(B), 'Group swing');
+  var C = [['Line', 'PU'].concat(RES.tr.map(function (T) { return trLabel(T) + ' days changed'; }))];
+  RES.lines.forEach(function (l) { C.push([l, puOf(MC.pu, l)].concat(RES.tr.map(function (T) { return T.lineChg[l].days; }))); });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(C), 'Lines');
+  var D = [['Style', 'Times changed', 'Days moved', 'Added', 'Dropped'].concat(SN.map(function (s) { return labelOf(s) + ' first-last'; }))];
+  RES.styles.filter(function (s) { return s.moves; }).sort(function (a, b) { return b.moves - a.moves; }).forEach(function (s) { D.push([s.name, s.moves, Math.round(s.shift), s.added, s.dropped].concat(s.per.map(function (p) { return p ? isoDate(p.first) + ' - ' + isoDate(p.last) : ''; }))); });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(D), 'Styles');
+  XLSX.writeFile(wb, 'PlanCompare.xlsx');
+};
+document.documentElement.lang = LANG;
+if (!window.XLSX) toast('xlsx.full.min.js ?');
+render();
+window.PC = { buildSnap: buildSnap, compare: compare, windowDays: windowDays, state: function () { return { SN: SN, RES: RES, MC: MC, SELG: SELG }; } };
+</script>
+</body>
+</html>

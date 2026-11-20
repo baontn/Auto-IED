@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Plan Compare: User guide</title><link rel="icon" href="../icon.png"><link rel="stylesheet" href="manual.css"></head><body>
+<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>Plan Compare V1.0.0: User guide</b><a href="plan-compare.html" title="Tiếng Việt" onclick="try{localStorage.setItem('ie_site_lang','vi')}catch(e){}">VI</a></header>
+<div class="wrap"><main>
+<section id="intro"><h1>Plan Compare</h1>
+<p class="lead">Compare the plan (TransformedMasterPlan) of several weeks to see how much the plan changed and how those changes raise or lower the demand of the machine types you pick. Runs in Chrome or Edge and sends no data anywhere.</p></section>
+<section id="use"><h2>1. How to use</h2>
+<ol>
+<li>Pick the <b>MC Report</b> (the file with sheets MACHINE DATABASE, MACHINE GROUP, PU LIST, MC STATUS). The tool only reads it.</li>
+<li>Pick <b>several TransformedMasterPlan files at once</b>, one per week (sheet MasterPlan-Full). The plan date comes from the file name (for example 20261123) or the modified date; correct it in the "Plan versions" table if it is wrong.</li>
+<li>Set <b>From date</b> and <b>Days to compare</b>. Only days from this date are compared (days already run are not a plan change).</li>
+<li>Pick the <b>machine types to watch</b> (machine groups). The 3 most volatile groups are selected by default.</li>
+</ol>
+<p>Every pair of consecutive versions is compared line by line and day by day: a different style is a change; machines per group come from the MACHINE DATABASE (rows with the latest date of the style).</p></section>
+<section id="tabs"><h2>2. Tabs</h2>
+<ul>
+<li><b>Overview</b>: plan stability (% of line-days unchanged), lines changed per comparison, styles changed 2+ times, changes close to the run date; highlights; swing per machine group (Σ|Δ| machine-days, red when a day passes the threshold).</li>
+<li><b>Machine demand by week</b>: one chart per selected machine group, one line per plan version (newest is bold). The red band marks days where two consecutive versions differ by the threshold or more. The table gives peak, peak day, machine-days and the difference to the previous version.</li>
+<li><b>Shortage</b>: every plan version against the machines you have (column "MC used for PDN" of sheet MC STATUS). The table "Enough machines in the old plan, short in the new plan" lets you pick the pair of weeks: max shortage and days short of the old and the new version, labelled <i>OK → Short</i> / <i>Shorter</i>. Below it are the lines causing the shortage on the worst day (style before / after, Δ machines) and a table of the max shortage of each version. The charts of the demand tab show the "Available" line (red dashed) and a red area on the days the newest version is short.</li>
+<li><b>Root causes</b>: every change gets a cause: <i>new style entered the plan</i>, <i>style dropped from the plan</i>, <i>moved to another line</i>, <i>rescheduled on the same line</i> (with the days earlier / later). The tab ranks the causes by machine-days affected on the selected machine groups (more / fewer machines), shows the causes per comparison, the styles causing the most swing, the swing by notice given (changes close to the run date in red) and by PU. The "Cause" column is also in the Change list and in the shortage tables.</li>
+<li><b>Change list</b>: each change (line, date range, style before / after), notice in days, and the Δ machine-days of every selected group. A red notice cell = changed too close to the run date. You can keep only the changes that touch the selected machines.</li>
+<li><b>Reason per change</b>: in the Change list every row has a reason category (order change, material shortage / delay, customer request, line capacity, quality, machine / equipment, other) and a free note. Notes are kept on this computer (browser) and in the Excel export; use "Save notes to file" / "Load notes file" to share them. The Root causes tab has the card "By recorded reason" showing how much of the swing already has a reason.</li>
+<li><b>Change frequency</b>: line × comparison table (days changed, darker = more) with "2/3" in red = changed in 2 of 3 comparisons, and the table of styles moved / added / dropped with start → end date in each version.</li>
+</ul>
+<p><b>Export Excel</b> writes 4 sheets: Changes, Group swing, Lines, Styles.</p></section>
+<section id="notes"><h2>3. Notes</h2>
+<ul>
+<li>The plan file has no quantities, so "plan throughput" here means the line-days scheduled.</li>
+<li>A style missing from the MACHINE DATABASE has zero machine demand (a warning shows in the versions table); its changes still count in the days changed.</li>
+<li>Nothing is stored; reload the page and pick the files again.</li>
+</ul></section>
+</main></div></body></html>
