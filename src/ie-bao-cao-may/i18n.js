@@ -1,6 +1,8 @@
 // ===================== TEXTS (VI / EN) =====================
 var I18N = {
   vi: {
+    errStrip: 'Lỗi trang (gửi nội dung này cho IE):',
+    xlErr: 'Không xuất được file Excel: {0}',
     srcXl: '⬇ Xuất Excel',
     rsExpAll: 'Hiện tất cả mã hàng', rsCollapse: 'Ẩn mã hàng', rsLoadsOn: 'vào chuyền {0}', rsPrepOf: 'chuẩn bị {0}', rsPuxTip: 'Bấm để hiện / ẩn các chuyền và mã hàng của PU',
     rsAtAREA: 'Thu hồi từ khu vực', rsFArea: 'Khu vực (số máy đang giữ)', rsErrArea: 'Chọn khu vực và số máy thu hồi không vượt quá số máy khu vực đang giữ.', rsAreaHdr: 'Khu vực đang giữ máy (đã trừ khỏi "Máy có sẵn")', rsAreaTake: 'Thu hồi',
@@ -191,6 +193,8 @@ var I18N = {
     c_Added: 'Mới', c_Changed: 'Thay đổi', c_Unchanged: 'Không đổi'
   },
   en: {
+    errStrip: 'Page error (send this text to the IE team):',
+    xlErr: 'Could not export the Excel file: {0}',
     srcXl: '⬇ Export Excel',
     rsExpAll: 'Show all styles', rsCollapse: 'Hide styles', rsLoadsOn: 'loads {0}', rsPrepOf: 'prepare {0}', rsPuxTip: 'Click to show / hide the lines and styles of the PU',
     rsAtAREA: 'Take back from area', rsFArea: 'Area (machines held)', rsErrArea: 'Choose an area and a quantity not above the machines the area holds.', rsAreaHdr: 'Areas holding machines (already taken off "Available")', rsAreaTake: 'Take back',

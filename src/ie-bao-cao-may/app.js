@@ -141,7 +141,7 @@ async function reconnect(ask) {
   if (miss.length && !ask && !RECON_ARMED) {                                         // ask once on the first click (a permission prompt needs a click)
     RECON_ARMED = true;
     document.addEventListener('pointerdown', function onFirst(ev) {
-      if (ev.target.closest && ev.target.closest('.pick,#bReconnect,#bMc,#bDir,#bLc,#bFiles,#tConnect,#tLayConnect,#sConnect,input,select,textarea')) return;
+      if (ev.target.closest && ev.target.closest('button,a,label,summary,input,select,textarea,.pick')) return;       // never on a control: a permission prompt must not swallow the click (export, save...)
       document.removeEventListener('pointerdown', onFirst, true); RECON_ARMED = false; reconnect(true);
     }, true);
   }
@@ -443,7 +443,8 @@ $('tbl').addEventListener('click', function (e) {
   persistKeeps().then(function () { it.bucket = it.bucketBefore || 'review'; it.keptRec = null; KEEPMSG = ''; VIEW = it.bucket === 'kept' ? 'review' : (RV.items.some(function (x) { return x.bucket === 'kept'; }) ? 'kept' : 'review'); renderAll(); })
     .catch(function (err) { if (old) KEEPS[it.key] = old; alert(t('keepErr', [err.message])); });
 });
-$('save').onclick = function () {
+$('save').onclick = function () { try { saveDatabase(); } catch (e) { alert(t('xlErr', [e.message])); } };
+function saveDatabase() {
   var d = new Date(), today = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   var ex = buildExport(RV, REF, DONE, today), wb = XLSX.utils.book_new();
   [['db', 'MACHINE DATABASE'], ['changes', 'CHANGES'], ['exc', 'EXCEPTIONS'], ['layout', 'LAYOUT DATA'], ['newChanged', 'NEW CHANGED'], ['scanState', 'SCAN STATE']].forEach(function (s) {

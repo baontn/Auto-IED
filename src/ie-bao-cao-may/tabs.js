@@ -37,3 +37,17 @@ setRole = function (r) { _setRole(r); $('mainTabs').hidden = r === 'tech' || r =
 setRole(ROLE);
 
 if (window.paintRemember) paintRemember().then(function () { return reconnect(false); });
+
+// any script error is shown in a red strip (so a failing export / save is never silent) and can be copied to the IE team
+(function () {
+  var shown = {};
+  function show(msg) {
+    msg = String(msg || '').slice(0, 300); if (!msg || shown[msg]) return; shown[msg] = 1;
+    var b = document.getElementById('errBar');
+    if (!b) { b = document.createElement('div'); b.id = 'errBar'; b.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:99;background:#b91c1c;color:#fff;padding:6px 14px;font-size:13px;display:flex;gap:10px;align-items:center'; document.body.appendChild(b); }
+    b.innerHTML = ''; var sp = document.createElement('span'); sp.textContent = '⚠ ' + t('errStrip') + ' ' + msg; sp.style.flex = '1'; b.appendChild(sp);
+    var x = document.createElement('button'); x.textContent = '✕'; x.onclick = function () { b.remove(); shown = {}; }; b.appendChild(x);
+  }
+  window.addEventListener('error', function (e) { show(e.message); });
+  window.addEventListener('unhandledrejection', function (e) { show(e.reason && e.reason.message ? e.reason.message : e.reason); });
+})();

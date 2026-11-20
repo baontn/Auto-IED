@@ -8,7 +8,7 @@ function rzKey(tb) {
   var all = id ? [].slice.call(document.querySelectorAll('#' + id + ' table, table#' + id)) : [];
   return (id || 'page') + '#' + Math.max(0, all.indexOf(tb));
 }
-function rzHeadRow(tb) { return tb.querySelector('tr:has(th)') || null; }
+function rzHeadRow(tb) { var r = tb.rows; for (var i = 0; i < r.length && i < 3; i++) { if (r[i].querySelector('th')) return r[i]; } return null; }       // no :has() (older Chrome / Edge)
 function rzApply(tb) {
   var row = rzHeadRow(tb); if (!row) return;
   var key = rzKey(tb), ws = RZ.w[key]; if (!ws) return;
@@ -17,16 +17,16 @@ function rzApply(tb) {
   if (set) { tb.classList.add('rzw'); tb.style.tableLayout = 'fixed'; tb.style.width = ths.reduce(function (s, th, i) { return s + (ws[i] || th.offsetWidth); }, 0) + 'px'; }
 }
 function rzDecorate(tb) {
-  if (tb.dataset.rz || tb.closest('[data-norz]')) return;
+  if (tb.closest('[data-norz]')) return;
   var row = rzHeadRow(tb); if (!row) return;
   tb.dataset.rz = '1';
   [].forEach.call(row.children, function (th, i) {
-    if (th.tagName !== 'TH') return;
+    if (th.tagName !== 'TH' || th.querySelector('.rzh')) return;
     var h = document.createElement('span'); h.className = 'rzh'; h.title = t('rzHint'); h.dataset.i = i; th.appendChild(h);
   });
   rzApply(tb);
 }
-function rzScan() { [].forEach.call(document.querySelectorAll('table'), rzDecorate); }
+function rzScan() { [].forEach.call(document.querySelectorAll('table'), function (tb) { try { rzDecorate(tb); } catch (e) { } }); }
 document.addEventListener('mousedown', function (e) {
   var h = e.target.closest && e.target.closest('.rzh'); if (!h) return;
   var tb = h.closest('table'), row = rzHeadRow(tb), ths = [].slice.call(row.children), key = rzKey(tb);
