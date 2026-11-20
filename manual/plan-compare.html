@@ -7,7 +7,7 @@
 <p class="lead">So sánh kế hoạch (TransformedMasterPlan) của nhiều tuần để thấy kế hoạch đổi bao nhiêu và việc đổi đó làm nhu cầu của loại máy đã chọn tăng/giảm ra sao. Chạy bằng Chrome hoặc Edge, không gửi dữ liệu đi đâu.</p></section>
 <section id="use"><h2>1. Cách dùng</h2>
 <ol>
-<li>Chọn <b>MC Report</b> (file có sheet MACHINE DATABASE, MACHINE GROUP, PU LIST). Công cụ chỉ đọc.</li>
+<li>Chọn <b>MC Report</b> (file có sheet MACHINE DATABASE, MACHINE GROUP, PU LIST, MC STATUS). Công cụ chỉ đọc.</li>
 <li>Chọn <b>nhiều file TransformedMasterPlan cùng lúc</b>, mỗi tuần một file (sheet MasterPlan-Full). Ngày của bản kế hoạch lấy từ tên file (ví dụ 20261123) hoặc ngày sửa file; sửa lại trong bảng "Các bản kế hoạch" nếu sai.</li>
 <li>Chọn <b>Từ ngày</b> và <b>Số ngày xét</b>. Chỉ các ngày từ mốc này được so sánh (phần đã chạy không phải là thay đổi kế hoạch).</li>
 <li>Chọn <b>loại máy cần xem</b> (nhóm máy). Mặc định là 3 nhóm biến động nhất.</li>
@@ -17,6 +17,7 @@
 <ul>
 <li><b>Tổng quan</b>: độ ổn định kế hoạch (% chuyền-ngày không đổi), số chuyền bị đổi mỗi lần, mã hàng đổi từ 2 lần, số thay đổi gần sát ngày chạy; các điểm nổi bật; bảng biến động theo nhóm máy (Σ|Δ| máy-ngày, ô đỏ khi có ngày vượt ngưỡng).</li>
 <li><b>Nhu cầu máy theo tuần</b>: mỗi nhóm máy đã chọn một biểu đồ, mỗi bản kế hoạch một đường (bản mới nhất đậm). Vùng đỏ là ngày lệch từ ngưỡng trở lên giữa hai bản liên tiếp. Bảng dưới: đỉnh, ngày đỉnh, máy-ngày, chênh lệch so với bản trước.</li>
+<li><b>Thiếu máy</b>: so từng bản kế hoạch với số máy đang có (cột "MC used for PDN" của sheet MC STATUS). Bảng "Đủ máy ở bản cũ, thiếu máy ở bản mới" chọn được cặp tuần so sánh: thiếu tối đa và số ngày thiếu của bản cũ và bản mới, nhãn <i>Đủ → Thiếu</i> / <i>Thiếu thêm</i>. Dưới đó là các chuyền gây ra thiếu máy vào ngày tệ nhất (mã hàng trước / sau, Δ máy) và bảng thiếu tối đa của từng bản. Biểu đồ ở tab Nhu cầu máy có đường "Có sẵn" (đỏ đứt nét) và vùng đỏ là ngày bản mới nhất thiếu máy.</li>
 <li><b>Danh sách thay đổi</b>: từng thay đổi (chuyền, khoảng ngày, mã hàng trước / sau), số ngày báo trước, và Δ máy-ngày của từng nhóm máy đã chọn. Ô báo trước màu đỏ = đổi quá sát ngày chạy. Có thể chỉ giữ thay đổi ảnh hưởng tới máy đã chọn.</li>
 <li><b>Tần suất đổi kế hoạch</b>: bảng chuyền × lần so sánh (số ngày bị đổi, màu đậm = đổi nhiều; "2/3" đỏ = đổi ở 2 trong 3 lần), và bảng mã hàng bị dời / thêm / bỏ với ngày bắt đầu → kết thúc ở từng bản.</li>
 </ul>

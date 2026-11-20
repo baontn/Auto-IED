@@ -19,6 +19,8 @@ for s, m in styles.items():
 g = wb.create_sheet('MACHINE GROUP'); g.append(['Code', 'Group'])
 for c, gr in {'DNLS': 'LOCKSTITCH', 'FLAT': 'FLATLOCK', 'BT1M': 'BARTACK'}.items(): g.append([c, gr])
 p = wb.create_sheet('PU LIST'); p.append(['Line', 'PU']); [p.append([l, 'PU1']) for l in 'ABC']
+st_ = wb.create_sheet('MC STATUS'); st_.append(['Machine code', 'Machine in house', 'MC used for PDN'])
+for c, v in {'DNLS': 20, 'FLAT': 12, 'BT1M': 8}.items(): st_.append([c, v, v])
 wb.save(tmp / 'MC_report.xlsx')
 
 # --- plan weeks: line -> list of (style, start offset days, length)
@@ -54,7 +56,10 @@ with sync_playwright() as pw:
     # plan A had style3 until offset 20 (non-Sunday days only listed) so changed days = 11
     assert st[0]['gs']['FLATLOCK'] == 8 * 11 and st[0]['gs']['LOCKSTITCH'] == 3 * 11 and st[0]['gs']['BARTACK'] == 6 * 11, st[0]
     assert st[0]['chg'] == 11
-    for tab in ['over', 'dem', 'chg', 'freq']:
+    # shortage: BARTACK available 8. Old plan (16/11->23/11 transition): demand 6 -> enough. New plan: line B style4 (+6) on offsets 8..12 while line C style4 (6) still runs = 12 for 5 days, peak 14 on offsets 8-9 (line A style1 adds BT1M 2) -> short 6
+    sh = pg.evaluate("(()=>{const x=PC.state().RES.tr[0].gs.BARTACK;return [x.av,x.shA,x.shB,x.shDB]})()")
+    print(sh); assert sh == [8, 0, 6, 5], sh
+    for tab in ['over', 'dem', 'short', 'chg', 'freq']:
         pg.click('[data-tab=%s]' % tab); pg.wait_for_timeout(200)
         if shots: pg.screenshot(path=os.path.join(shots, 'pc-%s.png' % tab))
     html = pg.inner_text('#out'); assert 'Σ' in html or 'Σ' in pg.content()

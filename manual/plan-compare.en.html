@@ -7,7 +7,7 @@
 <p class="lead">Compare the plan (TransformedMasterPlan) of several weeks to see how much the plan changed and how those changes raise or lower the demand of the machine types you pick. Runs in Chrome or Edge and sends no data anywhere.</p></section>
 <section id="use"><h2>1. How to use</h2>
 <ol>
-<li>Pick the <b>MC Report</b> (the file with sheets MACHINE DATABASE, MACHINE GROUP, PU LIST). The tool only reads it.</li>
+<li>Pick the <b>MC Report</b> (the file with sheets MACHINE DATABASE, MACHINE GROUP, PU LIST, MC STATUS). The tool only reads it.</li>
 <li>Pick <b>several TransformedMasterPlan files at once</b>, one per week (sheet MasterPlan-Full). The plan date comes from the file name (for example 20261123) or the modified date; correct it in the "Plan versions" table if it is wrong.</li>
 <li>Set <b>From date</b> and <b>Days to compare</b>. Only days from this date are compared (days already run are not a plan change).</li>
 <li>Pick the <b>machine types to watch</b> (machine groups). The 3 most volatile groups are selected by default.</li>
@@ -17,6 +17,7 @@
 <ul>
 <li><b>Overview</b>: plan stability (% of line-days unchanged), lines changed per comparison, styles changed 2+ times, changes close to the run date; highlights; swing per machine group (Σ|Δ| machine-days, red when a day passes the threshold).</li>
 <li><b>Machine demand by week</b>: one chart per selected machine group, one line per plan version (newest is bold). The red band marks days where two consecutive versions differ by the threshold or more. The table gives peak, peak day, machine-days and the difference to the previous version.</li>
+<li><b>Shortage</b>: every plan version against the machines you have (column "MC used for PDN" of sheet MC STATUS). The table "Enough machines in the old plan, short in the new plan" lets you pick the pair of weeks: max shortage and days short of the old and the new version, labelled <i>OK → Short</i> / <i>Shorter</i>. Below it are the lines causing the shortage on the worst day (style before / after, Δ machines) and a table of the max shortage of each version. The charts of the demand tab show the "Available" line (red dashed) and a red area on the days the newest version is short.</li>
 <li><b>Change list</b>: each change (line, date range, style before / after), notice in days, and the Δ machine-days of every selected group. A red notice cell = changed too close to the run date. You can keep only the changes that touch the selected machines.</li>
 <li><b>Change frequency</b>: line × comparison table (days changed, darker = more) with "2/3" in red = changed in 2 of 3 comparisons, and the table of styles moved / added / dropped with start → end date in each version.</li>
 </ul>

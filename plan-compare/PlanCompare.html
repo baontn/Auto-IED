@@ -57,7 +57,7 @@ svg text{fill:var(--muted);font-size:11px}
 <body>
 <header>
   <h1 data-t="title">So sánh kế hoạch theo tuần</h1>
-  <span class="tag t-info" id="verTag">V1.0.0</span>
+  <span class="tag t-info" id="verTag">V1.1.0</span>
   <div class="tabs" id="tabs"></div>
   <span style="margin-left:auto" class="row"><button id="bLang">EN</button><button id="bExport" class="primary" data-t="export">Xuất Excel</button></span>
 </header>
@@ -94,7 +94,7 @@ vi: { title:'So sánh kế hoạch theo tuần', export:'Xuất Excel', s1:'1. M
  s2:'2. TransformedMasterPlan của nhiều tuần', s2h:'Chọn nhiều file cùng lúc (mỗi tuần một file, sheet MasterPlan-Full). Ngày của kế hoạch lấy từ tên file hoặc ngày sửa file, có thể sửa lại.',
  snaps:'Các bản kế hoạch', colName:'File', colDate:'Ngày kế hoạch', colRows:'Dòng', colLines:'Chuyền', colStyles:'Mã hàng', colMiss:'Mã chưa có CSDL máy', from:'Từ ngày', days:'Số ngày xét', thr:'Ngưỡng biến động (máy/ngày)', late:'Đổi gần sát (≤ ngày)',
  setH:'Chỉ so sánh các ngày từ "Từ ngày" trở đi (phần đã chạy không tính là thay đổi kế hoạch).', pick:'Loại máy cần xem (chọn nhiều)', top:'Chọn 3 nhóm biến động nhất', none:'Bỏ chọn',
- emptyMsg:'Chọn MC Report và ít nhất 2 file kế hoạch để bắt đầu.', tOver:'Tổng quan', tDem:'Nhu cầu máy theo tuần', tChg:'Danh sách thay đổi', tFreq:'Tần suất đổi kế hoạch',
+ tShort:'Thiếu máy', avail:'Có sẵn', noAvail:'MC Report không có sheet MC STATUS (cột "MC used for PDN"): không tính được thiếu máy.', shTitle:'Đủ máy ở bản cũ, thiếu máy ở bản mới', shNote:'Có sẵn = cột "MC used for PDN" của MC STATUS. Thiếu = nhu cầu theo bản kế hoạch − có sẵn, tính trên các ngày từ ngày của bản mới.', shOld:'Bản cũ', shNew:'Bản mới', shPeak:'Thiếu tối đa', shDays:'Ngày thiếu', shDem:'Đỉnh cần', shFlip:'Đủ → Thiếu', shWorse:'Thiếu thêm', shBetter:'Bớt thiếu', shSame:'Như cũ', shDrv:'Chuyền gây ra thiếu máy vào ngày', shDelta:'Δ máy', shTrend:'Thiếu tối đa theo từng bản kế hoạch', kFlip:'Nhóm máy từ đủ → thiếu', hi5:'Đủ máy ở bản cũ nhưng thiếu ở bản mới', need2:'cần', have:'có', short:'thiếu', emptyMsg:'Chọn MC Report và ít nhất 2 file kế hoạch để bắt đầu.', tOver:'Tổng quan', tDem:'Nhu cầu máy theo tuần', tChg:'Danh sách thay đổi', tFreq:'Tần suất đổi kế hoạch',
  kSnaps:'Bản kế hoạch', kTrans:'Lần so sánh', kLines:'Chuyền bị đổi (trung bình / lần)', kStab:'Độ ổn định kế hoạch', kSwing:'Biến động máy đã chọn (máy-ngày)', kFreq:'Mã hàng đổi ≥ 2 lần', kLate:'Thay đổi gần sát ngày chạy',
  hiTitle:'Điểm nổi bật', trans:'Lần so sánh', colLine:'Chuyền', colPu:'PU', colRange:'Ngày', colWas:'Trước', colNow:'Sau', colLead:'Báo trước (ngày)', colImp:'Ảnh hưởng máy đã chọn', colTot:'Tổng |Δ|',
  swingTbl:'Biến động theo nhóm máy', gGroup:'Nhóm máy', gSwing:'Máy-ngày đổi (Σ|Δ|)', gNet:'Tăng/giảm ròng', gMax:'Lệch lớn nhất/ngày', gBig:'Số ngày ≥ ngưỡng', gPeak:'Đỉnh nhu cầu',
@@ -108,7 +108,7 @@ en: { title:'Weekly plan comparison', export:'Export Excel', s1:'1. MC Report (m
  s2:'2. TransformedMasterPlan of several weeks', s2h:'Pick several files at once (one per week, sheet MasterPlan-Full). The plan date comes from the file name or modified date and can be edited.',
  snaps:'Plan versions', colName:'File', colDate:'Plan date', colRows:'Rows', colLines:'Lines', colStyles:'Styles', colMiss:'Styles without machine data', from:'From date', days:'Days to compare', thr:'Swing threshold (machines/day)', late:'Late change (≤ days)',
  setH:'Only days from "From date" onward are compared (days already run are not a plan change).', pick:'Machine types to watch (multi-select)', top:'Pick the 3 most volatile groups', none:'Clear',
- emptyMsg:'Pick the MC Report and at least 2 plan files to start.', tOver:'Overview', tDem:'Machine demand by week', tChg:'Change list', tFreq:'Change frequency',
+ tShort:'Shortage', avail:'Available', noAvail:'The MC Report has no MC STATUS sheet (column "MC used for PDN"): shortage cannot be calculated.', shTitle:'Enough machines in the old plan, short in the new plan', shNote:'Available = column "MC used for PDN" of MC STATUS. Short = demand of the plan version − available, over the days from the date of the new version.', shOld:'Old plan', shNew:'New plan', shPeak:'Max short', shDays:'Days short', shDem:'Peak need', shFlip:'OK → Short', shWorse:'Shorter', shBetter:'Less short', shSame:'Same', shDrv:'Lines causing the shortage on', shDelta:'Δ machines', shTrend:'Max shortage in each plan version', kFlip:'Groups turned OK → short', hi5:'Enough machines in the old plan but short in the new plan', need2:'need', have:'have', short:'short', emptyMsg:'Pick the MC Report and at least 2 plan files to start.', tOver:'Overview', tDem:'Machine demand by week', tChg:'Change list', tFreq:'Change frequency',
  kSnaps:'Plan versions', kTrans:'Comparisons', kLines:'Lines changed (average / comparison)', kStab:'Plan stability', kSwing:'Swing on selected machines (machine-days)', kFreq:'Styles changed ≥ 2 times', kLate:'Changes close to run date',
  hiTitle:'Highlights', trans:'Comparison', colLine:'Line', colPu:'PU', colRange:'Dates', colWas:'Before', colNow:'After', colLead:'Notice (days)', colImp:'Impact on selected machines', colTot:'Total |Δ|',
  swingTbl:'Swing by machine group', gGroup:'Machine group', gSwing:'Machine-days moved (Σ|Δ|)', gNet:'Net change', gMax:'Largest gap/day', gBig:'Days ≥ threshold', gPeak:'Peak demand',
@@ -148,6 +148,12 @@ function loadDb(aoa) {
   return by;
 }
 function toGroups(set, G) { var g = {}; Object.keys(set || {}).forEach(function (c) { var k = (G && G[c]) || c; g[k] = (g[k] || 0) + (+set[c] || 0); }); return g; }
+function loadAvail(aoa, G) {
+  var hi = aoa.findIndex(function (r) { return r.some(function (x) { return norm(x) === 'machinecode'; }); }); if (hi < 0) return null;
+  var h = aoa[hi], ci = findCol(h, 'Machine code'), ui = h.findIndex(function (x) { return /^mcusedforpdn/.test(norm(x)); }), av = {}; if (ui < 0) return null;
+  aoa.slice(hi + 1).forEach(function (r) { var c = skey(r[ci]); if (!c) return; var g = G[c] || c; av[g] = (av[g] || 0) + (+r[ui] || 0); });
+  return av;
+}
 function loadPuList(aoa) { var m = {}, h = aoa[0] || [], li = findCol(h, 'Line'), pi = findCol(h, 'PU'); aoa.slice(1).forEach(function (r) { var l = String(r[li] || '').trim().toUpperCase(); if (l) m[l] = String(r[pi] || '').trim(); }); return m; }
 function puOf(m, line) { var k = String(line).trim().toUpperCase(); if (m[k]) return m[k]; var b = k.match(/^[^\-_ (]+/); return (b && m[b[0]]) || ''; }
 
@@ -204,7 +210,7 @@ function compare(SN, DAYS, thr, MC) {
       });
     });
     Object.keys(R.groups).forEach(function (g) {
-      var st = { swing: 0, net: 0, max: 0, big: 0, peakA: 0, peakB: 0, mdA: 0, mdB: 0, dayA: null, dayB: null };
+      var av = MC.avail && MC.avail[g] != null ? MC.avail[g] : null, st = { swing: 0, net: 0, max: 0, big: 0, peakA: 0, peakB: 0, mdA: 0, mdB: 0, dayA: null, dayB: null, av: av, shA: 0, shB: 0, shDA: 0, shDB: 0, worstB: null };
       DAYS.forEach(function (d) {
         if (d < B.f.stamp) return;
         var a = (A.dem[g] && A.dem[g][d]) || 0, b = (B.dem[g] && B.dem[g][d]) || 0, dl = b - a;
@@ -212,11 +218,15 @@ function compare(SN, DAYS, thr, MC) {
         if (Math.abs(dl) > st.max) st.max = Math.abs(dl);
         if (Math.abs(dl) >= thr) { st.big++; (T.bandDays[g] = T.bandDays[g] || {})[d] = 1; }
         if (a > st.peakA) { st.peakA = a; st.dayA = d; } if (b > st.peakB) { st.peakB = b; st.dayB = d; }
+        if (av != null) { if (a > av) { st.shDA++; if (a - av > st.shA) st.shA = a - av; } if (b > av) { st.shDB++; if (b - av > st.shB) { st.shB = b - av; st.worstB = d; } } }
       });
       T.gs[g] = st; R.groups[g].swing += st.swing;
     });
     R.tr.push(T);
   }
+  // shortage of every version on its own days (>= its date): R.sh[i][group] = {peak, days, md}
+  R.sh = SN.map(function (s) { var o = {}; if (!MC.avail) return o; Object.keys(R.groups).forEach(function (g) { var av = MC.avail[g]; if (av == null) return; var x = { peak: 0, days: 0, md: 0, dem: 0 };
+    DAYS.forEach(function (d) { if (d < s.f.stamp) return; var v = (s.dem[g] && s.dem[g][d]) || 0; if (v > x.dem) x.dem = v; if (v > av) { x.days++; x.md += v - av; if (v - av > x.peak) x.peak = v - av; } }); o[g] = x; }); return o; });
   // style movement across versions (first / last day and number of days inside the window)
   var inWin = {}; DAYS.forEach(function (d) { inWin[d] = 1; });
   var styles = {};
@@ -237,6 +247,14 @@ function compare(SN, DAYS, thr, MC) {
   });
   return R;
 }
+// which lines make the demand of a group on one day differ between two versions
+function drivers(T, g, d) {
+  var out = [];
+  RES.lines.forEach(function (l) { var a = T.a.ld[l] && T.a.ld[l][d], b = T.b.ld[l] && T.b.ld[l][d], qa = (a && a.g[g]) || 0, qb = (b && b.g[g]) || 0;
+    if (qa !== qb) out.push({ line: l, was: a ? a.names.join(' + ') : '', now: b ? b.names.join(' + ') : '', qa: qa, qb: qb, dl: qb - qa }); });
+  return out.sort(function (x, y) { return y.dl - x.dl; });
+}
+function shStatus(x) { return x.shA === 0 && x.shB > 0 ? 'flip' : x.shB > x.shA ? 'worse' : x.shB < x.shA ? 'better' : 'same'; }
 function selImpact(imp, SELG) { var t = 0, any = false; Object.keys(SELG).forEach(function (g) { if (imp[g]) { t += Math.abs(imp[g].md); any = true; } }); return any ? t : 0; }
 
 // ===================== state =====================
@@ -254,9 +272,9 @@ function guessStamp(file) {
 }
 $('fMc').onchange = function () {
   var f = this.files[0]; if (!f) return;
-  readWb(f, { sheets: ['MACHINE DATABASE', 'MACHINE GROUP', 'PU LIST'] }).then(function (wb) {
+  readWb(f, { sheets: ['MACHINE DATABASE', 'MACHINE GROUP', 'PU LIST', 'MC STATUS'] }).then(function (wb) {
     if (!wb.Sheets['MACHINE DATABASE'] || !wb.Sheets['MACHINE GROUP']) { toast(t('mcMissing')); return; }
-    MC = { name: f.name, G: loadGroups(sheetAoa(wb.Sheets['MACHINE GROUP'])), db: loadDb(sheetAoa(wb.Sheets['MACHINE DATABASE'])), pu: loadPuList(sheetAoa(wb.Sheets['PU LIST'])) };
+    MC = { name: f.name, G: loadGroups(sheetAoa(wb.Sheets['MACHINE GROUP'])), db: loadDb(sheetAoa(wb.Sheets['MACHINE DATABASE'])), pu: loadPuList(sheetAoa(wb.Sheets['PU LIST'])) }; MC.avail = loadAvail(sheetAoa(wb.Sheets['MC STATUS']), MC.G); if (!MC.avail) toast(t('noAvail'));
     $('mcInfo').textContent = f.name + ' · ' + Object.keys(MC.db).length + ' styles · ' + Object.keys(MC.G).length + ' codes';
     SN.forEach(function (s) { s.rebuild = true; }); reloadSnaps();
   }).catch(function (e) { toast(t('loadErr') + ' ' + f.name + ' (' + (e && e.message) + ')'); });
@@ -321,11 +339,13 @@ function stats() {
   Object.keys(lc).forEach(function (l) { if (!S.topLine || lc[l] > lc[S.topLine]) S.topLine = l; }); S.lc = lc;
   Object.keys(RES.groups).forEach(function (g) { if (!S.topG || RES.groups[g].swing > RES.groups[S.topG].swing) S.topG = g; });
   RES.styles.forEach(function (s) { if (!S.topStyle || s.moves > S.topStyle.moves) S.topStyle = s; });
+  S.flip = []; if (MC.avail && RES.tr.length) { var LT = RES.tr[RES.tr.length - 1]; Object.keys(LT.gs).forEach(function (g) { if (LT.gs[g].av != null && shStatus(LT.gs[g]) === 'flip') S.flip.push(g); }); }
   S.freq = RES.styles.filter(function (s) { return s.moves >= 2; }).length;
   return S;
 }
 function chart(g) {
   var W = 900, H = 230, ml = 40, mr = 10, mt = 10, mb = 28, n = DAYS.length, max = 1;
+  var av = MC.avail && MC.avail[g] != null ? MC.avail[g] : null; if (av != null) max = Math.max(max, av);
   SN.forEach(function (s) { DAYS.forEach(function (d) { var v = (s.dem[g] && s.dem[g][d]) || 0; if (v > max) max = v; }); });
   var X = function (i) { return ml + (n > 1 ? i * (W - ml - mr) / (n - 1) : 0); }, Y = function (v) { return mt + (H - mt - mb) * (1 - v / max); };
   var sv = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" role="img">';
@@ -334,6 +354,9 @@ function chart(g) {
   DAYS.forEach(function (d, i) { if (band[d]) sv += '<rect x="' + (X(i) - bw / 2) + '" y="' + mt + '" width="' + bw + '" height="' + (H - mt - mb) + '" fill="var(--band)"/>'; });
   for (var k = 0; k <= 4; k++) { var v = max * k / 4; sv += '<line x1="' + ml + '" x2="' + (W - mr) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" stroke="var(--line)"/><text x="' + (ml - 5) + '" y="' + (Y(v) + 4) + '" text-anchor="end">' + Math.round(v) + '</text>'; }
   DAYS.forEach(function (d, i) { if (i % Math.ceil(n / 14) === 0) sv += '<text x="' + X(i) + '" y="' + (H - 8) + '" text-anchor="middle">' + fd(d) + '</text>'; });
+  if (av != null) { var last = SN[SN.length - 1];
+    DAYS.forEach(function (d, i) { var v = d < last.f.stamp ? 0 : (last.dem[g] && last.dem[g][d]) || 0; if (v > av) sv += '<rect x="' + (X(i) - bw / 2) + '" y="' + Y(v) + '" width="' + bw + '" height="' + (Y(av) - Y(v)) + '" fill="var(--bad)" opacity=".35"/>'; });
+    sv += '<line x1="' + ml + '" x2="' + (W - mr) + '" y1="' + Y(av) + '" y2="' + Y(av) + '" stroke="var(--bad)" stroke-width="2" stroke-dasharray="7 4"/><text x="' + (W - mr) + '" y="' + (Y(av) - 4) + '" text-anchor="end" style="fill:var(--bad);font-weight:600">' + t('avail') + ' ' + av + '</text>'; }
   SN.forEach(function (s, si) {
     var pts = DAYS.map(function (d, i) { return d < s.f.stamp ? null : X(i).toFixed(1) + ',' + Y((s.dem[g] && s.dem[g][d]) || 0).toFixed(1); }).filter(Boolean).join(' ');
     sv += '<polyline fill="none" stroke="' + snapColor(si, SN.length) + '" stroke-width="' + (si === SN.length - 1 ? 2.6 : 1.5) + '" stroke-linejoin="round"' + (si === SN.length - 1 ? '' : ' stroke-dasharray="' + (si % 2 ? '5 3' : '0') + '"') + ' points="' + pts + '"><title>' + esc(labelOf(s)) + '</title></polyline>';
@@ -351,11 +374,13 @@ function renderOver() {
     '<div class="kpi ' + (S.lines >= 3 ? 'bad' : '') + '"><span class="muted small">' + t('kLines') + '</span><b>' + S.lines + '</b><span class="small muted">' + t('outOf') + ' ' + RES.lines.length + '</span></div>' +
     '<div class="kpi ' + (S.swing ? 'warn' : '') + '"><span class="muted small">' + t('kSwing') + '</span><b>' + (sel.length ? S.swing : '–') + '</b></div>' +
     '<div class="kpi ' + (S.freq ? 'bad' : 'ok') + '"><span class="muted small">' + t('kFreq') + '</span><b>' + S.freq + '</b><span class="small muted">' + t('outOf') + ' ' + RES.styles.length + '</span></div>' +
+    (MC.avail ? '<div class="kpi ' + (S.flip.length ? 'bad' : 'ok') + '"><span class="muted small">' + t('kFlip') + '</span><b>' + S.flip.length + '</b><span class="small muted">' + esc(S.flip.slice(0, 3).join(', ')) + '</span></div>' : '') +
     '<div class="kpi ' + (S.late ? 'bad' : 'ok') + '"><span class="muted small">' + t('kLate') + ' (≤ ' + CFGV.late + ')</span><b>' + S.late + '</b></div></div>';
   var hl = '';
   if (S.topLine) hl += '<li><b>' + t('hi1') + ':</b> ' + esc(S.topLine) + ' — ' + S.lc[S.topLine] + ' ' + t('outOf') + ' ' + S.nTr + ' ' + t('times') + '</li>';
   if (S.topG && RES.groups[S.topG].swing) hl += '<li><b>' + t('hi2') + ':</b> ' + esc(S.topG) + ' — ' + RES.groups[S.topG].swing + ' ' + t('md') + '</li>';
   if (S.topStyle && S.topStyle.moves) hl += '<li><b>' + t('hi3') + ':</b> ' + esc(S.topStyle.name) + ' — ' + S.topStyle.moves + ' ' + t('times') + '</li>';
+  if (S.flip.length) hl += '<li><b>' + t('hi5') + ' (' + trLabel(RES.tr[RES.tr.length - 1]) + '):</b> ' + esc(S.flip.join(', ')) + '</li>';
   if (S.lateRow) hl += '<li><b>' + t('hi4') + ':</b> ' + esc(S.lateRow.r.line) + ' ' + fd(S.lateRow.r.from) + ' (' + esc(S.lateRow.r.was || t('idle')) + ' → ' + esc(S.lateRow.r.now || t('idle')) + '), ' + S.lateRow.lead + ' ' + t('lead0') + '</li>';
   h += '<div class="card"><h2>' + t('hiTitle') + '</h2><ul style="margin:0;padding-left:18px">' + (hl || '<li class="muted">' + t('noChg') + '</li>') + '</ul></div>';
   // swing per group and comparison
@@ -395,6 +420,33 @@ function renderChg() {
   });
   return h + '</table></div>' + (rows.length > 600 ? '<div class="muted small">600 / ' + rows.length + ' (Excel)</div>' : '') + '</div>';
 }
+var STR = null;
+function renderShort() {
+  if (!MC.avail) return '<div class="card muted">' + t('noAvail') + '</div>';
+  var ti = STR != null && RES.tr[STR] ? STR : RES.tr.length - 1, T = RES.tr[ti];
+  var rows = Object.keys(T.gs).filter(function (g) { var x = T.gs[g]; return x.av != null && (x.shA > 0 || x.shB > 0); }).map(function (g) { var x = T.gs[g]; return { g: g, x: x, st: shStatus(x) }; });
+  var ord = { flip: 0, worse: 1, same: 2, better: 3 }; rows.sort(function (a, b) { return ord[a.st] - ord[b.st] || b.x.shB - a.x.shB; });
+  var tag = { flip: '<span class="tag t-bad">' + t('shFlip') + '</span>', worse: '<span class="tag t-warn">' + t('shWorse') + '</span>', better: '<span class="tag t-ok">' + t('shBetter') + '</span>', same: '<span class="tag t-info">' + t('shSame') + '</span>' };
+  var h = '<div class="card"><div class="row"><h2 style="margin:0">' + t('shTitle') + '</h2><label>' + t('trans') + ' <select id="selSh">' + RES.tr.map(function (U, i) { return '<option value="' + i + '"' + (i === ti ? ' selected' : '') + '>' + esc(trLabel(U)) + '</option>'; }).join('') + '</select></label></div><div class="small muted" style="margin:4px 0 8px">' + t('shNote') + '</div>';
+  if (!rows.length) h += '<div class="muted">' + t('noChg') + '</div>';
+  else {
+    h += '<div class="scroll"><table><tr><th rowspan="2">' + t('gGroup') + '</th><th class="n" rowspan="2">' + t('avail') + '</th><th class="n" colspan="2">' + t('shOld') + ' (' + labelOf(T.a) + ')</th><th class="n" colspan="2">' + t('shNew') + ' (' + labelOf(T.b) + ')</th><th rowspan="2"></th></tr><tr><th class="n">' + t('shPeak') + '</th><th class="n">' + t('shDays') + '</th><th class="n">' + t('shPeak') + '</th><th class="n">' + t('shDays') + '</th></tr>';
+    rows.forEach(function (r) { var x = r.x; h += '<tr' + (SELG[r.g] ? ' style="background:var(--sel)"' : '') + '><td>' + esc(r.g) + '</td><td class="n">' + x.av + '</td><td class="n">' + (x.shA || '·') + '</td><td class="n">' + (x.shDA || '·') + '</td><td class="n">' + (x.shB ? '<b style="color:var(--bad)">' + x.shB + '</b>' : '·') + '</td><td class="n">' + (x.shDB ? '<b style="color:var(--bad)">' + x.shDB + '</b>' : '·') + '</td><td>' + tag[r.st] + '</td></tr>'; });
+    h += '</table></div>';
+  }
+  h += '</div>';
+  rows.filter(function (r) { return r.st === 'flip' || r.st === 'worse'; }).slice(0, 8).forEach(function (r) {
+    var x = r.x, dv = drivers(T, r.g, x.worstB).slice(0, 8);
+    h += '<div class="card"><h2>' + esc(r.g) + ' — ' + t('shDrv') + ' ' + fd(x.worstB) + ' <span class="muted small">(' + t('need2') + ' ' + (x.av + x.shB) + ', ' + t('have') + ' ' + x.av + ', ' + t('short') + ' ' + x.shB + ')</span></h2>' +
+      '<table><tr><th>' + t('colLine') + '</th><th>' + t('colPu') + '</th><th>' + t('colWas') + '</th><th>' + t('colNow') + '</th><th class="n">' + t('shDelta') + '</th></tr>' +
+      dv.map(function (d) { return '<tr><td>' + esc(d.line) + '</td><td>' + esc(puOf(MC.pu, d.line)) + '</td><td>' + esc(d.was || t('idle')) + ' <span class="muted small">(' + d.qa + ')</span></td><td>' + esc(d.now || t('idle')) + ' <span class="muted small">(' + d.qb + ')</span></td><td class="n"><span class="tag ' + (d.dl > 0 ? 't-bad' : 't-ok') + '">' + (d.dl > 0 ? '+' : '') + d.dl + '</span></td></tr>'; }).join('') + '</table></div>';
+  });
+  // trend: max shortage of every version
+  var gs = Object.keys(RES.groups).filter(function (g) { return RES.sh.some(function (o) { return o[g] && o[g].peak > 0; }); }).sort(function (a, b) { var la = RES.sh[SN.length - 1][a], lb = RES.sh[SN.length - 1][b]; return ((lb && lb.peak) || 0) - ((la && la.peak) || 0); });
+  h += '<div class="card"><h2>' + t('shTrend') + '</h2><div class="scroll"><table><tr><th>' + t('gGroup') + '</th><th class="n">' + t('avail') + '</th>' + SN.map(function (s) { return '<th class="n">' + esc(labelOf(s)) + '</th>'; }).join('') + '</tr>' +
+    gs.map(function (g) { return '<tr><td>' + esc(g) + '</td><td class="n">' + MC.avail[g] + '</td>' + SN.map(function (s, i) { var x = RES.sh[i][g]; return x && x.peak ? '<td class="n" style="background:rgba(var(--heat),' + Math.min(.7, .15 + x.peak / (MC.avail[g] || 1)).toFixed(2) + ')"><b>' + x.peak + '</b> <span class="muted small">/' + x.days + 'd</span></td>' : '<td class="n muted">·</td>'; }).join('') + '</tr>'; }).join('') + (gs.length ? '' : '<tr><td colspan="' + (SN.length + 2) + '" class="muted">' + t('noChg') + '</td></tr>') + '</table></div></div>';
+  return h;
+}
 function renderFreq() {
   var S = stats(), sel = selList(), h = '<div class="card"><h2>' + t('lineMat') + '</h2><div class="scroll heat"><table><tr><th>' + t('colLine') + '</th><th>' + t('colPu') + '</th>' + RES.tr.map(function (T) { return '<th class="n">' + trLabel(T) + '</th>'; }).join('') + '<th class="n">' + t('frq') + '</th>' + (sel.length ? '<th class="n">' + t('colImp') + '</th>' : '') + '</tr>';
   var max = 1; RES.tr.forEach(function (T) { RES.lines.forEach(function (l) { if (T.lineChg[l].days > max) max = T.lineChg[l].days; }); });
@@ -419,13 +471,13 @@ function render() {
   $('cSnaps').hidden = !SN.length; $('cSet').hidden = !ready; $('empty').hidden = !!ready;
   $('empty').textContent = (MC && FILES.length && SN.length < 2) ? t('need') : t('emptyMsg');
   [].forEach.call(document.querySelectorAll('[data-t]'), function (e) { e.textContent = t(e.dataset.t); });
-  $('tabs').innerHTML = [['over', 'tOver'], ['dem', 'tDem'], ['chg', 'tChg'], ['freq', 'tFreq']].map(function (x) { return '<button data-tab="' + x[0] + '"' + (TABV === x[0] ? ' class="on"' : '') + '>' + t(x[1]) + '</button>'; }).join('');
+  $('tabs').innerHTML = [['over', 'tOver'], ['dem', 'tDem'], ['short', 'tShort'], ['chg', 'tChg'], ['freq', 'tFreq']].map(function (x) { return '<button data-tab="' + x[0] + '"' + (TABV === x[0] ? ' class="on"' : '') + '>' + t(x[1]) + '</button>'; }).join('');
   $('bLang').textContent = LANG === 'vi' ? 'EN' : 'VI'; $('iGf').placeholder = t('gGroup');
   if (SN.length) renderSnaps();
   if (!ready) { $('out').innerHTML = ''; return; }
   $('iFrom').value = isoDate(CFGV.from); $('iDays').value = CFGV.days; $('iThr').value = CFGV.thr; $('iLate').value = CFGV.late;
   renderChips();
-  $('out').innerHTML = TABV === 'over' ? renderOver() : TABV === 'dem' ? renderDem() : TABV === 'chg' ? renderChg() : renderFreq();
+  $('out').innerHTML = TABV === 'over' ? renderOver() : TABV === 'dem' ? renderDem() : TABV === 'short' ? renderShort() : TABV === 'chg' ? renderChg() : renderFreq();
 }
 
 // ===================== events =====================
@@ -442,7 +494,7 @@ function readCfg() {
   CFGV.days = Math.max(3, Math.min(120, +$('iDays').value || 28)); CFGV.thr = Math.max(1, +$('iThr').value || 5); CFGV.late = Math.max(0, +$('iLate').value || 0); recompute(false);
 }
 ['iFrom', 'iDays', 'iThr', 'iLate'].forEach(function (id) { $(id).onchange = readCfg; });
-$('out').onchange = function (e) { if (e.target.id === 'selTr') { TRSEL = e.target.value; render(); } if (e.target.id === 'chOnly') { CHGONLY = e.target.checked; render(); } };
+$('out').onchange = function (e) { if (e.target.id === 'selSh') { STR = +e.target.value; render(); } if (e.target.id === 'selTr') { TRSEL = e.target.value; render(); } if (e.target.id === 'chOnly') { CHGONLY = e.target.checked; render(); } };
 
 // ===================== Excel export =====================
 $('bExport').onclick = function () {
