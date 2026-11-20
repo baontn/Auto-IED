@@ -160,7 +160,11 @@ with sync_playwright() as p:
         check('Excel: LibreOffice recalculation of every formula gives the stored result', not bad, str(bad[:4]))
     hdr = wf2.cell(3, 1); check('Excel: header row is formatted and the panes are frozen', hdr.font.bold and hdr.fill.fgColor.rgb in ('FF1F3A5F', '001F3A5F') and wf2.freeze_panes == 'D4', f'{hdr.fill.fgColor.rgb} {wf2.freeze_panes}')
     check('Excel: negative balances get a conditional red format', len(wf2.conditional_formatting) >= 1)
-    check('Excel: style rows are grouped (collapsible)', any(wf2.row_dimensions[r].outlineLevel == 1 for r in range(4, wf2.max_row + 1)))
+    import zipfile, re as re_
+    xml = zipfile.ZipFile(xp).read('xl/worksheets/sheet1.xml').decode('utf-8')
+    prios = re_.findall(r'<cfRule[^>]*priority="(\d+)"', xml)
+    check('Excel XML is plain: no row outline / collapsed flags and no merged cells (they can make Excel repair the file)', not re_.search(r'<row [^>]*(outlineLevel|collapsed)', xml) and '<mergeCell' not in xml, '')
+    check('conditional formats have unique priorities', len(prios) == len(set(prios)) and len(prios) >= 1, str(prios))
     mp.click('#rsC [data-rs-ex="BT1M"]'); mp.wait_for_timeout(300)
     print('--- areas holding machines (MC STATUS columns): listed under the table, take back with an instant result')
     areas = mp.evaluate("[...document.querySelectorAll('#rsC table[data-rs-block=BT1M] tr[data-rs-r=area]')].map(r=>[r.dataset.area,[...r.children].slice(3).map(c=>c.textContent.trim())])"); print('  areas:', [(a_[0], a_[1][:3]) for a_ in areas])
