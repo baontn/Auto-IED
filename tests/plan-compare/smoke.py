@@ -62,6 +62,17 @@ with sync_playwright() as pw:
     fa = pg.evaluate("(()=>{const r=PC.state().RES.tr;return [r[0].rows[0].f,r[1].rows.map(x=>x.f)]})()"); print(fa)
     # transition 1: line B gets style4 that exists in the old plan only on line C -> 'line'; transition 2: styles only change order/date on their line -> 'move'
     assert fa[0] == 'line' and set(fa[1]) <= {'move', 'line'}, fa
+    # shortage tab with a real OK -> short case (BARTACK, transition 0): the drivers table must list line B with cause 'line'
+    errs0 = len(errs); pg.click('[data-tab=short]'); pg.select_option('#selSh', '0'); pg.wait_for_timeout(200)
+    txt = pg.inner_text('#out'); assert 'BARTACK' in txt and 'B' in txt and len(errs) == errs0, (txt[:300], errs)
+    assert pg.evaluate("PC.state().RES.tr[0].gs.BARTACK.worstB") is not None
+    # regression: after typing in a setting, ONE click on a tab must switch (the blur used to rebuild the page and swallow the click)
+    pg.fill('#iDays', '30'); pg.click('[data-tab=freq]'); pg.wait_for_timeout(200); assert pg.evaluate('TABV') == 'freq'
+    # reason note: pick a category + text on the first change row, it is saved in localStorage and read back by the Why tab
+    pg.click('[data-tab=chg]'); pg.wait_for_timeout(200)
+    pg.select_option('select.rs[data-ni="0"]', 'material'); pg.fill('input.rt[data-ni="0"]', 'fabric late'); pg.dispatch_event('input.rt[data-ni="0"]', 'change'); pg.wait_for_timeout(100)
+    nt = pg.evaluate("JSON.parse(localStorage.getItem('pc_notes'))"); print(nt); assert len(nt) == 1 and list(nt.values())[0]['c'] == 'material' and list(nt.values())[0]['t'] == 'fabric late'
+    pg.click('[data-tab=why]'); pg.wait_for_timeout(200); assert 'fabric' not in pg.inner_text('#out') and ('Thiếu / chậm vật tư' in pg.inner_text('#out'))
     for tab in ['over', 'dem', 'short', 'why', 'chg', 'freq']:
         pg.click('[data-tab=%s]' % tab); pg.wait_for_timeout(200)
         if shots: pg.screenshot(path=os.path.join(shots, 'pc-%s.png' % tab))
