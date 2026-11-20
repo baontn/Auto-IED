@@ -189,6 +189,7 @@ function compare(SN, DAYS, thr, MC) {
     lines.forEach(function (l) {
       var LA = A.ld[l] || {}, LB = B.ld[l] || {}, cur = null, lc = T.lineChg[l] = { days: 0, byG: {}, tot: 0 };
       DAYS.forEach(function (d) {
+        if (d < B.f.stamp) { cur = null; return; }          // days before the newer version's date are already run: not a plan change
         var a = LA[d], b = LB[d], sa = a ? a.sig : '', sb = b ? b.sig : '';
         if (a || b) T.totalLineDays++;
         if (sa === sb) { cur = null; return; }
@@ -205,6 +206,7 @@ function compare(SN, DAYS, thr, MC) {
     Object.keys(R.groups).forEach(function (g) {
       var st = { swing: 0, net: 0, max: 0, big: 0, peakA: 0, peakB: 0, mdA: 0, mdB: 0, dayA: null, dayB: null };
       DAYS.forEach(function (d) {
+        if (d < B.f.stamp) return;
         var a = (A.dem[g] && A.dem[g][d]) || 0, b = (B.dem[g] && B.dem[g][d]) || 0, dl = b - a;
         st.swing += Math.abs(dl); st.net += dl; st.mdA += a; st.mdB += b;
         if (Math.abs(dl) > st.max) st.max = Math.abs(dl);
@@ -333,7 +335,7 @@ function chart(g) {
   for (var k = 0; k <= 4; k++) { var v = max * k / 4; sv += '<line x1="' + ml + '" x2="' + (W - mr) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" stroke="var(--line)"/><text x="' + (ml - 5) + '" y="' + (Y(v) + 4) + '" text-anchor="end">' + Math.round(v) + '</text>'; }
   DAYS.forEach(function (d, i) { if (i % Math.ceil(n / 14) === 0) sv += '<text x="' + X(i) + '" y="' + (H - 8) + '" text-anchor="middle">' + fd(d) + '</text>'; });
   SN.forEach(function (s, si) {
-    var pts = DAYS.map(function (d, i) { return X(i).toFixed(1) + ',' + Y((s.dem[g] && s.dem[g][d]) || 0).toFixed(1); }).join(' ');
+    var pts = DAYS.map(function (d, i) { return d < s.f.stamp ? null : X(i).toFixed(1) + ',' + Y((s.dem[g] && s.dem[g][d]) || 0).toFixed(1); }).filter(Boolean).join(' ');
     sv += '<polyline fill="none" stroke="' + snapColor(si, SN.length) + '" stroke-width="' + (si === SN.length - 1 ? 2.6 : 1.5) + '" stroke-linejoin="round"' + (si === SN.length - 1 ? '' : ' stroke-dasharray="' + (si % 2 ? '5 3' : '0') + '"') + ' points="' + pts + '"><title>' + esc(labelOf(s)) + '</title></polyline>';
   });
   return sv + '</svg>';
