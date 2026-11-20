@@ -57,7 +57,7 @@ svg text{fill:var(--muted);font-size:11px}
 <body>
 <header>
   <h1 data-t="title">So sánh kế hoạch theo tuần</h1>
-  <span class="tag t-info" id="verTag">V1.3.0</span>
+  <span class="tag t-info" id="verTag">V1.4.0</span>
   <div class="tabs" id="tabs"></div>
   <span style="margin-left:auto" class="row"><button id="bLang">EN</button><button id="bExport" class="primary" data-t="export">Xuất Excel</button></span>
 </header>
@@ -68,6 +68,7 @@ svg text{fill:var(--muted);font-size:11px}
       <div class="small muted" data-t="s1h">Đọc sheet MACHINE DATABASE, MACHINE GROUP và PU LIST. Chỉ đọc, không ghi.</div></div>
     <div class="card"><h2 data-t="s2">2. TransformedMasterPlan của nhiều tuần</h2>
       <div class="row"><input type="file" id="fPlans" accept=".xlsx,.xlsm" multiple><span id="planInfo" class="muted small"></span></div>
+      <label class="small" id="mblRow" hidden><input type="checkbox" id="cMbl" checked> <span data-t="useMbl"></span></label>
       <div class="small muted" data-t="s2h">Chọn nhiều file cùng lúc (mỗi tuần một file, sheet MasterPlan-Full). Ngày của kế hoạch lấy từ tên file hoặc ngày sửa file, có thể sửa lại.</div></div>
   </div>
   <div class="card" id="cSnaps" hidden><h2 data-t="snaps">Các bản kế hoạch</h2><div id="snapTbl"></div></div>
@@ -94,7 +95,7 @@ vi: { title:'So sánh kế hoạch theo tuần', export:'Xuất Excel', s1:'1. M
  s2:'2. TransformedMasterPlan của nhiều tuần', s2h:'Chọn nhiều file cùng lúc (mỗi tuần một file, sheet MasterPlan-Full). Ngày của kế hoạch lấy từ tên file hoặc ngày sửa file, có thể sửa lại.',
  snaps:'Các bản kế hoạch', colName:'File', colDate:'Ngày kế hoạch', colRows:'Dòng', colLines:'Chuyền', colStyles:'Mã hàng', colMiss:'Mã chưa có CSDL máy', from:'Từ ngày', days:'Số ngày xét', thr:'Ngưỡng biến động (máy/ngày)', late:'Đổi gần sát (≤ ngày)',
  setH:'Chỉ so sánh các ngày từ "Từ ngày" trở đi (phần đã chạy không tính là thay đổi kế hoạch).', pick:'Loại máy cần xem (chọn nhiều)', top:'Chọn 3 nhóm biến động nhất', none:'Bỏ chọn',
- tShort:'Thiếu máy', tWhy:'Nguyên nhân', colWhy:'Lý do (ghi chú)', notePh:'Ghi chú…', r_order:'Đơn hàng đổi', r_material:'Thiếu / chậm vật tư', r_customer:'Khách hàng yêu cầu', r_capacity:'Năng lực chuyền', r_quality:'Chất lượng', r_machine:'Máy / thiết bị', r_other:'Khác', r_none:'Chưa ghi lý do', wReason:'Theo lý do đã ghi', wCover:'Đã ghi lý do', notesSave:'Lưu ghi chú ra file', notesLoad:'Nạp file ghi chú', notesInfo:'Ghi chú lưu trên máy này (trình duyệt) và trong file Excel. Dùng "Lưu ghi chú ra file" để chia sẻ với người khác.', notesLoaded:'Đã nạp ghi chú:', colFac:'Nguyên nhân', f_new:'Mã mới vào kế hoạch', f_drop:'Mã bị bỏ khỏi kế hoạch', f_line:'Chuyển sang chuyền khác', f_move:'Dời lịch trong cùng chuyền', f_other:'Khác', wTitle:'Yếu tố chính làm kế hoạch đổi', wNote:'Mỗi thay đổi được gán một nguyên nhân: mã mới vào kế hoạch / mã bị bỏ / chuyển chuyền / dời lịch trong chuyền. Tác động = Σ máy-ngày thay đổi của các nhóm máy đã chọn (nếu chưa chọn: tất cả nhóm).', wFac:'Theo nguyên nhân', wStyle:'Mã hàng gây biến động nhiều nhất', wLead:'Theo thời gian báo trước', wPu:'Theo PU', wMore:'Tăng máy', wLess:'Giảm máy', wShare:'Tỷ trọng', wChg:'Số thay đổi', wDays:'Chuyền-ngày', wLines:'Chuyền', wBy:'Nguyên nhân × lần so sánh', wTop:'Yếu tố chính', lb0:'≤ ngưỡng gần sát', lb1:'tới 7 ngày', lb2:'8–14 ngày', lb3:'> 14 ngày', shiftE:'sớm', shiftL:'muộn', days_:'ngày', avail:'Có sẵn', noAvail:'MC Report không có sheet MC STATUS (cột "MC used for PDN"): không tính được thiếu máy.', shTitle:'Đủ máy ở bản cũ, thiếu máy ở bản mới', shNote:'Có sẵn = cột "MC used for PDN" của MC STATUS. Thiếu = nhu cầu theo bản kế hoạch − có sẵn, tính trên các ngày từ ngày của bản mới.', shOld:'Bản cũ', shNew:'Bản mới', shPeak:'Thiếu tối đa', shDays:'Ngày thiếu', shDem:'Đỉnh cần', shFlip:'Đủ → Thiếu', shWorse:'Thiếu thêm', shBetter:'Bớt thiếu', shSame:'Như cũ', shDrv:'Chuyền gây ra thiếu máy vào ngày', shDelta:'Δ máy', shTrend:'Thiếu tối đa theo từng bản kế hoạch', kFlip:'Nhóm máy từ đủ → thiếu', hi5:'Đủ máy ở bản cũ nhưng thiếu ở bản mới', need2:'cần', have:'có', short:'thiếu', emptyMsg:'Chọn MC Report và ít nhất 2 file kế hoạch để bắt đầu.', tOver:'Tổng quan', tDem:'Nhu cầu máy theo tuần', tChg:'Danh sách thay đổi', tFreq:'Tần suất đổi kế hoạch',
+ tShort:'Thiếu máy', tWhy:'Nguyên nhân', useMbl:'Dùng thêm kế hoạch trong MC Report (sheet MACHINE BY LINE) làm bản mới nhất', mblName:'MC Report · MACHINE BY LINE (chỉ mã có dữ liệu máy)', colWhy:'Lý do (ghi chú)', notePh:'Ghi chú…', r_order:'Đơn hàng đổi', r_material:'Thiếu / chậm vật tư', r_customer:'Khách hàng yêu cầu', r_capacity:'Năng lực chuyền', r_quality:'Chất lượng', r_machine:'Máy / thiết bị', r_other:'Khác', r_none:'Chưa ghi lý do', wReason:'Theo lý do đã ghi', wCover:'Đã ghi lý do', notesSave:'Lưu ghi chú ra file', notesLoad:'Nạp file ghi chú', notesInfo:'Ghi chú lưu trên máy này (trình duyệt) và trong file Excel. Dùng "Lưu ghi chú ra file" để chia sẻ với người khác.', notesLoaded:'Đã nạp ghi chú:', colFac:'Nguyên nhân', f_new:'Mã mới vào kế hoạch', f_drop:'Mã bị bỏ khỏi kế hoạch', f_line:'Chuyển sang chuyền khác', f_move:'Dời lịch trong cùng chuyền', f_other:'Khác', wTitle:'Yếu tố chính làm kế hoạch đổi', wNote:'Mỗi thay đổi được gán một nguyên nhân: mã mới vào kế hoạch / mã bị bỏ / chuyển chuyền / dời lịch trong chuyền. Tác động = Σ máy-ngày thay đổi của các nhóm máy đã chọn (nếu chưa chọn: tất cả nhóm).', wFac:'Theo nguyên nhân', wStyle:'Mã hàng gây biến động nhiều nhất', wLead:'Theo thời gian báo trước', wPu:'Theo PU', wMore:'Tăng máy', wLess:'Giảm máy', wShare:'Tỷ trọng', wChg:'Số thay đổi', wDays:'Chuyền-ngày', wLines:'Chuyền', wBy:'Nguyên nhân × lần so sánh', wTop:'Yếu tố chính', lb0:'≤ ngưỡng gần sát', lb1:'tới 7 ngày', lb2:'8–14 ngày', lb3:'> 14 ngày', shiftE:'sớm', shiftL:'muộn', days_:'ngày', avail:'Có sẵn', noAvail:'MC Report không có sheet MC STATUS (cột "MC used for PDN"): không tính được thiếu máy.', shTitle:'Đủ máy ở bản cũ, thiếu máy ở bản mới', shNote:'Có sẵn = cột "MC used for PDN" của MC STATUS. Thiếu = nhu cầu theo bản kế hoạch − có sẵn, tính trên các ngày từ ngày của bản mới.', shOld:'Bản cũ', shNew:'Bản mới', shPeak:'Thiếu tối đa', shDays:'Ngày thiếu', shDem:'Đỉnh cần', shFlip:'Đủ → Thiếu', shWorse:'Thiếu thêm', shBetter:'Bớt thiếu', shSame:'Như cũ', shDrv:'Chuyền gây ra thiếu máy vào ngày', shDelta:'Δ máy', shTrend:'Thiếu tối đa theo từng bản kế hoạch', kFlip:'Nhóm máy từ đủ → thiếu', hi5:'Đủ máy ở bản cũ nhưng thiếu ở bản mới', need2:'cần', have:'có', short:'thiếu', emptyMsg:'Chọn MC Report và ít nhất 2 file kế hoạch để bắt đầu.', tOver:'Tổng quan', tDem:'Nhu cầu máy theo tuần', tChg:'Danh sách thay đổi', tFreq:'Tần suất đổi kế hoạch',
  kSnaps:'Bản kế hoạch', kTrans:'Lần so sánh', kLines:'Chuyền bị đổi (trung bình / lần)', kStab:'Độ ổn định kế hoạch', kSwing:'Biến động máy đã chọn (máy-ngày)', kFreq:'Mã hàng đổi ≥ 2 lần', kLate:'Thay đổi gần sát ngày chạy',
  hiTitle:'Điểm nổi bật', trans:'Lần so sánh', colLine:'Chuyền', colPu:'PU', colRange:'Ngày', colWas:'Trước', colNow:'Sau', colLead:'Báo trước (ngày)', colImp:'Ảnh hưởng máy đã chọn', colTot:'Tổng |Δ|',
  swingTbl:'Biến động theo nhóm máy', gGroup:'Nhóm máy', gSwing:'Máy-ngày đổi (Σ|Δ|)', gNet:'Tăng/giảm ròng', gMax:'Lệch lớn nhất/ngày', gBig:'Số ngày ≥ ngưỡng', gPeak:'Đỉnh nhu cầu',
@@ -108,7 +109,7 @@ en: { title:'Weekly plan comparison', export:'Export Excel', s1:'1. MC Report (m
  s2:'2. TransformedMasterPlan of several weeks', s2h:'Pick several files at once (one per week, sheet MasterPlan-Full). The plan date comes from the file name or modified date and can be edited.',
  snaps:'Plan versions', colName:'File', colDate:'Plan date', colRows:'Rows', colLines:'Lines', colStyles:'Styles', colMiss:'Styles without machine data', from:'From date', days:'Days to compare', thr:'Swing threshold (machines/day)', late:'Late change (≤ days)',
  setH:'Only days from "From date" onward are compared (days already run are not a plan change).', pick:'Machine types to watch (multi-select)', top:'Pick the 3 most volatile groups', none:'Clear',
- tShort:'Shortage', tWhy:'Root causes', colWhy:'Reason (note)', notePh:'Note…', r_order:'Order change', r_material:'Material shortage / delay', r_customer:'Customer request', r_capacity:'Line capacity', r_quality:'Quality', r_machine:'Machine / equipment', r_other:'Other', r_none:'No reason recorded', wReason:'By recorded reason', wCover:'Reason recorded', notesSave:'Save notes to file', notesLoad:'Load notes file', notesInfo:'Notes are kept on this computer (browser) and in the Excel export. Use "Save notes to file" to share them.', notesLoaded:'Notes loaded:', colFac:'Cause', f_new:'New style entered the plan', f_drop:'Style dropped from the plan', f_line:'Moved to another line', f_move:'Rescheduled on the same line', f_other:'Other', wTitle:'Key factors behind the plan changes', wNote:'Every change gets a cause: new style / dropped style / moved to another line / rescheduled on the same line. Impact = Σ machine-days changed of the selected machine groups (all groups if none selected).', wFac:'By cause', wStyle:'Styles causing the most swing', wLead:'By notice given', wPu:'By PU', wMore:'More machines', wLess:'Fewer machines', wShare:'Share', wChg:'Changes', wDays:'Line-days', wLines:'Lines', wBy:'Cause × comparison', wTop:'Key factors', lb0:'≤ late threshold', lb1:'up to 7 days', lb2:'8–14 days', lb3:'> 14 days', shiftE:'earlier', shiftL:'later', days_:'days', avail:'Available', noAvail:'The MC Report has no MC STATUS sheet (column "MC used for PDN"): shortage cannot be calculated.', shTitle:'Enough machines in the old plan, short in the new plan', shNote:'Available = column "MC used for PDN" of MC STATUS. Short = demand of the plan version − available, over the days from the date of the new version.', shOld:'Old plan', shNew:'New plan', shPeak:'Max short', shDays:'Days short', shDem:'Peak need', shFlip:'OK → Short', shWorse:'Shorter', shBetter:'Less short', shSame:'Same', shDrv:'Lines causing the shortage on', shDelta:'Δ machines', shTrend:'Max shortage in each plan version', kFlip:'Groups turned OK → short', hi5:'Enough machines in the old plan but short in the new plan', need2:'need', have:'have', short:'short', emptyMsg:'Pick the MC Report and at least 2 plan files to start.', tOver:'Overview', tDem:'Machine demand by week', tChg:'Change list', tFreq:'Change frequency',
+ tShort:'Shortage', tWhy:'Root causes', useMbl:'Also use the plan inside the MC Report (sheet MACHINE BY LINE) as the newest version', mblName:'MC Report · MACHINE BY LINE (styles with machine data only)', colWhy:'Reason (note)', notePh:'Note…', r_order:'Order change', r_material:'Material shortage / delay', r_customer:'Customer request', r_capacity:'Line capacity', r_quality:'Quality', r_machine:'Machine / equipment', r_other:'Other', r_none:'No reason recorded', wReason:'By recorded reason', wCover:'Reason recorded', notesSave:'Save notes to file', notesLoad:'Load notes file', notesInfo:'Notes are kept on this computer (browser) and in the Excel export. Use "Save notes to file" to share them.', notesLoaded:'Notes loaded:', colFac:'Cause', f_new:'New style entered the plan', f_drop:'Style dropped from the plan', f_line:'Moved to another line', f_move:'Rescheduled on the same line', f_other:'Other', wTitle:'Key factors behind the plan changes', wNote:'Every change gets a cause: new style / dropped style / moved to another line / rescheduled on the same line. Impact = Σ machine-days changed of the selected machine groups (all groups if none selected).', wFac:'By cause', wStyle:'Styles causing the most swing', wLead:'By notice given', wPu:'By PU', wMore:'More machines', wLess:'Fewer machines', wShare:'Share', wChg:'Changes', wDays:'Line-days', wLines:'Lines', wBy:'Cause × comparison', wTop:'Key factors', lb0:'≤ late threshold', lb1:'up to 7 days', lb2:'8–14 days', lb3:'> 14 days', shiftE:'earlier', shiftL:'later', days_:'days', avail:'Available', noAvail:'The MC Report has no MC STATUS sheet (column "MC used for PDN"): shortage cannot be calculated.', shTitle:'Enough machines in the old plan, short in the new plan', shNote:'Available = column "MC used for PDN" of MC STATUS. Short = demand of the plan version − available, over the days from the date of the new version.', shOld:'Old plan', shNew:'New plan', shPeak:'Max short', shDays:'Days short', shDem:'Peak need', shFlip:'OK → Short', shWorse:'Shorter', shBetter:'Less short', shSame:'Same', shDrv:'Lines causing the shortage on', shDelta:'Δ machines', shTrend:'Max shortage in each plan version', kFlip:'Groups turned OK → short', hi5:'Enough machines in the old plan but short in the new plan', need2:'need', have:'have', short:'short', emptyMsg:'Pick the MC Report and at least 2 plan files to start.', tOver:'Overview', tDem:'Machine demand by week', tChg:'Change list', tFreq:'Change frequency',
  kSnaps:'Plan versions', kTrans:'Comparisons', kLines:'Lines changed (average / comparison)', kStab:'Plan stability', kSwing:'Swing on selected machines (machine-days)', kFreq:'Styles changed ≥ 2 times', kLate:'Changes close to run date',
  hiTitle:'Highlights', trans:'Comparison', colLine:'Line', colPu:'PU', colRange:'Dates', colWas:'Before', colNow:'After', colLead:'Notice (days)', colImp:'Impact on selected machines', colTot:'Total |Δ|',
  swingTbl:'Swing by machine group', gGroup:'Machine group', gSwing:'Machine-days moved (Σ|Δ|)', gNet:'Net change', gMax:'Largest gap/day', gBig:'Days ≥ threshold', gPeak:'Peak demand',
@@ -130,7 +131,12 @@ var DAY = 864e5;
 function norm(v) { return String(v == null ? '' : v).toLowerCase().replace(/\s+/g, ''); }
 function skey(s) { return String(s == null ? '' : s).toUpperCase().replace(/\s+/g, ''); }
 function findCol(h, name) { var n = norm(name); for (var i = 0; i < h.length; i++) if (norm(h[i]) === n) return i; return -1; }
-function sheetAoa(ws) { return ws ? XLSX.utils.sheet_to_json(ws, { header: 1, defval: '', raw: true, blankrows: false }) : []; }
+function sheetAoa(ws) {     // trims the range to the last cell that really exists (the MACHINE DATABASE sheet of the MC Report claims 1,048,576 rows)
+  if (!ws || !ws['!ref']) return [];
+  var maxR = 0; Object.keys(ws).forEach(function (k) { if (k[0] !== '!') { var r = XLSX.utils.decode_cell(k).r; if (r > maxR) maxR = r; } });
+  var R = XLSX.utils.decode_range(ws['!ref']); R.e.r = maxR;
+  return XLSX.utils.sheet_to_json(ws, { header: 1, range: R, defval: '', raw: true, blankrows: false });
+}
 function dk(v) { return v instanceof Date ? Date.UTC(v.getFullYear(), v.getMonth(), v.getDate()) : (typeof v === 'number' && v > 20000 && v < 80000 ? Math.round((v - 25569) * DAY) : null); }
 function fd(k) { if (k == null) return ''; var d = new Date(k), p = function (x) { return String(x).padStart(2, '0'); }; return p(d.getUTCDate()) + '/' + p(d.getUTCMonth() + 1); }
 function isoDate(k) { return new Date(k).toISOString().slice(0, 10); }
@@ -175,6 +181,27 @@ function buildSnap(aoa, MC) {
   });
   Object.keys(s.ld).forEach(function (l) { Object.keys(s.ld[l]).forEach(function (d) {
     var e = s.ld[l][d]; e.names.sort(); e.sig = e.names.map(skey).join('+');
+    Object.keys(e.g).forEach(function (g) { var D = s.dem[g] = s.dem[g] || {}; D[d] = (D[d] || 0) + e.g[g]; });
+  }); });
+  s.lines = Object.keys(s.ld).length;
+  return s;
+}
+// the plan inside the MC Report: MACHINE BY LINE = Line | Date | GOP | Style No | MACHINE GROUP | Qty (only styles that have machine data)
+function buildSnapMbl(aoa) {
+  var h = aoa[0] || [], li = findCol(h, 'Line'), di = findCol(h, 'Date'), si = findCol(h, 'Style No'), gi = findCol(h, 'MACHINE GROUP'), qi = findCol(h, 'Qty');
+  if (li < 0 || di < 0 || si < 0 || gi < 0 || qi < 0) return null;
+  var s = { ld: {}, dem: {}, days: {}, nRows: 0, styles: {}, missing: {}, ls: {}, lf: {} };
+  aoa.slice(1).forEach(function (r) {
+    var style = String(r[si] == null ? '' : r[si]).trim(), line = String(r[li] == null ? '' : r[li]).trim(), d = dk(r[di]), g = String(r[gi] == null ? '' : r[gi]).trim(), q = +r[qi] || 0;
+    if (!style || !line || d == null || isIdle(style)) return;
+    var k = skey(style); s.days[d] = 1; s.styles[k] = style;
+    var LS = s.ls[line] = s.ls[line] || {}, LF = s.lf[line] = s.lf[line] || {}; LS[k] = 1; if (LF[k] == null || d < LF[k]) LF[k] = d;
+    var L = s.ld[line] = s.ld[line] || {}, e = L[d] = L[d] || { names: [], g: {} };
+    if (e.names.indexOf(style) < 0) e.names.push(style);
+    if (g && q) e.g[g] = (e.g[g] || 0) + q;
+  });
+  Object.keys(s.ld).forEach(function (l) { Object.keys(s.ld[l]).forEach(function (d) {
+    var e = s.ld[l][d]; s.nRows++; e.names.sort(); e.sig = e.names.map(skey).join('+');
     Object.keys(e.g).forEach(function (g) { var D = s.dem[g] = s.dem[g] || {}; D[d] = (D[d] || 0) + e.g[g]; });
   }); });
   s.lines = Object.keys(s.ld).length;
@@ -284,22 +311,29 @@ var PAL = ['#8e9aaf', '#c28f2c', '#5aa469', '#b05fb0', '#d9663f', '#3aa7b8', '#2
 function snapColor(i, n) { return i === n - 1 ? 'var(--accent)' : PAL[i % PAL.length]; }
 
 function readWb(file, opts) { return file.arrayBuffer().then(function (b) { return XLSX.read(new Uint8Array(b), Object.assign({ type: 'array', cellDates: true }, opts || {})); }); }
-function guessStamp(file) {
+function guessStamp(file, ref) {      // ref = first date inside the plan (gives the year of names like "...02.11.xlsx")
   var n = file.name, m = n.match(/(20\d{2})[-_.]?(\d{2})[-_.]?(\d{2})/);
   if (m && +m[2] >= 1 && +m[2] <= 12 && +m[3] >= 1 && +m[3] <= 31) return Date.UTC(+m[1], +m[2] - 1, +m[3]);
   m = n.match(/(\d{1,2})[-_.](\d{1,2})[-_.](20\d{2})/); if (m && +m[2] >= 1 && +m[2] <= 12) return Date.UTC(+m[3], +m[2] - 1, +m[1]);
+  m = n.replace(/\.[a-z]+$/i, '').match(/(\d{1,2})[._-](\d{1,2})(?!\d)/);
+  if (m && +m[1] >= 1 && +m[1] <= 31 && +m[2] >= 1 && +m[2] <= 12) {
+    var y0 = new Date(ref != null ? ref : (file.lastModified || Date.now())).getUTCFullYear(), best = null;
+    [y0 - 1, y0, y0 + 1].forEach(function (y) { var k = Date.UTC(y, +m[2] - 1, +m[1]); if (best == null || Math.abs(k - (ref != null ? ref : Date.now())) < Math.abs(best - (ref != null ? ref : Date.now()))) best = k; });
+    return best;
+  }
   var d = new Date(file.lastModified || Date.now()); return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
 }
 $('fMc').onchange = function () {
   var f = this.files[0]; if (!f) return;
-  readWb(f, { sheets: ['MACHINE DATABASE', 'MACHINE GROUP', 'PU LIST', 'MC STATUS'] }).then(function (wb) {
+  readWb(f, { sheets: ['MACHINE DATABASE', 'MACHINE GROUP', 'PU LIST', 'MC STATUS', 'MACHINE BY LINE'] }).then(function (wb) {
     if (!wb.Sheets['MACHINE DATABASE'] || !wb.Sheets['MACHINE GROUP']) { toast(t('mcMissing')); return; }
-    MC = { name: f.name, G: loadGroups(sheetAoa(wb.Sheets['MACHINE GROUP'])), db: loadDb(sheetAoa(wb.Sheets['MACHINE DATABASE'])), pu: loadPuList(sheetAoa(wb.Sheets['PU LIST'])) }; MC.avail = loadAvail(sheetAoa(wb.Sheets['MC STATUS']), MC.G); if (!MC.avail) toast(t('noAvail'));
+    MC = { name: f.name, G: loadGroups(sheetAoa(wb.Sheets['MACHINE GROUP'])), db: loadDb(sheetAoa(wb.Sheets['MACHINE DATABASE'])), pu: loadPuList(sheetAoa(wb.Sheets['PU LIST'])) }; MC.mbl = wb.Sheets['MACHINE BY LINE'] ? sheetAoa(wb.Sheets['MACHINE BY LINE']) : null; $('mblRow').hidden = !MC.mbl; MC.avail = loadAvail(sheetAoa(wb.Sheets['MC STATUS']), MC.G); if (!MC.avail) toast(t('noAvail'));
     $('mcInfo').textContent = f.name + ' · ' + Object.keys(MC.db).length + ' styles · ' + Object.keys(MC.G).length + ' codes';
     SN.forEach(function (s) { s.rebuild = true; }); reloadSnaps();
   }).catch(function (e) { toast(t('loadErr') + ' ' + f.name + ' (' + (e && e.message) + ')'); });
 };
-var FILES = [];
+var FILES = [], MBLSTAMP = null;
+$('cMbl').onchange = function () { reloadSnaps(); };
 $('fPlans').onchange = function () {
   var fs = [].slice.call(this.files); if (!fs.length) return;
   Promise.all(fs.map(function (f) {
@@ -307,12 +341,17 @@ $('fPlans').onchange = function () {
       var name = wb.SheetNames.indexOf('MasterPlan-Full') >= 0 ? 'MasterPlan-Full' : wb.SheetNames.filter(function (n) { return findCol(sheetAoa(wb.Sheets[n])[0] || [], 'Style No') >= 0; })[0];
       if (!name) { toast(t('planMissing') + ' ' + f.name); return null; }
       var aoa = sheetAoa(wb.Sheets[name]); if (findCol(aoa[0] || [], 'Date') < 0 || findCol(aoa[0] || [], 'Line') < 0) { toast(t('planMissing') + ' ' + f.name); return null; }
-      return { name: f.name, stamp: guessStamp(f), mod: f.lastModified || 0, aoa: aoa };
+      var di = findCol(aoa[0], 'Date'), ref = null; for (var q = 1; q < aoa.length; q++) { var kk = dk(aoa[q][di]); if (kk != null && (ref == null || kk < ref)) ref = kk; }
+      return { name: f.name, stamp: guessStamp(f, ref), mod: f.lastModified || 0, aoa: aoa };
     }).catch(function (e) { toast(t('loadErr') + ' ' + f.name + ' (' + (e && e.message) + ')'); return null; });
   })).then(function (arr) { arr.forEach(function (x) { if (x) FILES.push(x); }); $('fPlans').value = ''; reloadSnaps(); });
 };
 function reloadSnaps() {
   SN = []; if (MC) FILES.forEach(function (f) { var s = buildSnap(f.aoa, MC); if (s) { s.f = f; SN.push(s); } });
+  if (MC && MC.mbl && $('cMbl').checked) {
+    var sm = buildSnapMbl(MC.mbl), last = SN.reduce(function (m, x) { return Math.max(m, x.f.stamp); }, 0);
+    if (sm) { sm.f = { name: t('mblName'), label: 'MC Report', stamp: MBLSTAMP != null ? MBLSTAMP : (last || Date.UTC(2000, 0, 1)), mod: Infinity, mbl: true }; SN.push(sm); }
+  }
   SN.sort(function (a, b) { return a.f.stamp - b.f.stamp || a.f.mod - b.f.mod; });
   $('planInfo').textContent = FILES.length ? FILES.length + ' file' : '';
   if (SN.length && CFGV.from == null) CFGV.from = SN[SN.length - 1].f.stamp;
@@ -327,7 +366,7 @@ function recompute(autoSel) {
 function pickTop() { SELG = {}; if (!RES) return; Object.keys(RES.groups).sort(function (a, b) { return RES.groups[b].swing - RES.groups[a].swing; }).slice(0, 3).forEach(function (g) { if (RES.groups[g].swing > 0) SELG[g] = 1; }); }
 
 // ===================== render =====================
-function labelOf(s) { return 'W' + isoWeek(s.f.stamp) + ' · ' + fd(s.f.stamp); }
+function labelOf(s) { return s.f.label || 'W' + isoWeek(s.f.stamp) + ' · ' + fd(s.f.stamp); }
 function renderSnaps() {
   var h = '<table><tr><th>#</th><th>' + t('colName') + '</th><th>' + t('colDate') + '</th><th class="n">' + t('colRows') + '</th><th class="n">' + t('colLines') + '</th><th class="n">' + t('colStyles') + '</th><th>' + t('colMiss') + '</th><th></th></tr>';
   SN.forEach(function (s, i) {
@@ -550,8 +589,8 @@ $('chips').onclick = function (e) { var c = e.target.closest('[data-g]'); if (!c
 $('iGf').oninput = function () { GF = this.value; renderChips(); };
 $('bTop').onclick = function () { pickTop(); render(); };
 $('bNone').onclick = function () { SELG = {}; render(); };
-$('snapTbl').onchange = function (e) { var i = e.target.dataset.snap; if (i == null || !e.target.value) return; var p = e.target.value.split('-'); SN[+i].f.stamp = Date.UTC(+p[0], +p[1] - 1, +p[2]); reloadSnaps(); };
-$('snapTbl').onclick = function (e) { var i = e.target.dataset.rm; if (i == null) return; FILES.splice(FILES.indexOf(SN[+i].f), 1); reloadSnaps(); };
+$('snapTbl').onchange = function (e) { var i = e.target.dataset.snap; if (i == null || !e.target.value) return; var p = e.target.value.split('-'); SN[+i].f.stamp = Date.UTC(+p[0], +p[1] - 1, +p[2]); if (SN[+i].f.mbl) MBLSTAMP = SN[+i].f.stamp; reloadSnaps(); };
+$('snapTbl').onclick = function (e) { var i = e.target.dataset.rm; if (i == null) return; if (SN[+i].f.mbl) $('cMbl').checked = false; else FILES.splice(FILES.indexOf(SN[+i].f), 1); reloadSnaps(); };
 function readCfg() {
   var p = $('iFrom').value.split('-'), n = { from: CFGV.from, days: Math.max(3, Math.min(120, +$('iDays').value || 28)), thr: Math.max(1, +$('iThr').value || 5), late: Math.max(0, +$('iLate').value || 0) };
   if (p.length === 3) n.from = Date.UTC(+p[0], +p[1] - 1, +p[2]);
