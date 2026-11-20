@@ -285,10 +285,10 @@ function rsPuDetail(r, x) {
 async function rsExportTable(g) {
   var X = RS.cache.filter(function (x) { return x.g === g; })[0]; if (!X) return;
   var days = X.M.days, st = X.st, pus = rsPUs([X]), G = X.M.G, n = days.length, FC = 4;
-  var wb = new ExcelJS.Workbook(), ws = wb.addWorksheet(String(g).replace(/[\\\/?*\[\]:]/g, '_').slice(0, 28), { views: [{ state: 'frozen', xSplit: 3, ySplit: 3 }], pageSetup: { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0 } });
+  var wb = new ExcelJS.Workbook(), ws = wb.addWorksheet(String(g).replace(/[\\\/?*\[\]:]/g, '_').slice(0, 28), { views: [{ state: 'frozen', xSplit: 3, ySplit: 3 }]});
   var fill = function (argb) { return { type: 'pattern', pattern: 'solid', fgColor: { argb: argb } }; }, thin = { style: 'thin', color: { argb: 'FFBFC5D2' } };
   var L = function (i) { return ws.getColumn(FC + i).letter; }, lastL = L(n - 1);
-  ws.mergeCells(1, 1, 1, 3); ws.getCell(1, 1).value = g + ' · ' + t('rsRowAvail') + ' ' + (X.M.avail == null ? '' : X.M.avail) + ' · ' + t('rsThDays') + ' ' + X.s.n + '/' + X.s.of + ' · ' + t('rsThWorst') + ' ' + (X.s.gap ? '-' + X.s.gap : '0');
+  ws.getCell(1, 1).value = g + ' · ' + t('rsRowAvail') + ' ' + (X.M.avail == null ? '' : X.M.avail) + ' · ' + t('rsThDays') + ' ' + X.s.n + '/' + X.s.of + ' · ' + t('rsThWorst') + ' ' + (X.s.gap ? '-' + X.s.gap : '0');
   ws.getCell(1, 1).font = { bold: true, size: 13 };
   var hr = ws.getRow(3); hr.values = ['PU', t('rsPuLine'), t('rsThDay')].concat(days.map(function (d) { return dw(d); }));
   hr.eachCell(function (c) { c.fill = fill('FF1F3A5F'); c.font = { bold: true, color: { argb: 'FFFFFFFF' } }; c.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true }; }); hr.height = 30;
@@ -311,7 +311,7 @@ async function rsExportTable(g) {
     for (var k = 0; k < 2; k++) ws.getRow(r0 + k).eachCell({ includeEmpty: true }, function (c) { c.fill = fill('FFEAF2FF'); });
     ws.getRow(r0 + 2).eachCell({ includeEmpty: true }, function (c) { c.border = { top: thin }; c.font = { bold: true }; });
     totRows.push(r0 + 2);
-    styles.concat(preps).forEach(function (o, j) { var r = r0 + 3 + j, row = label(r, '', o.l, o.lab); row.outlineLevel = 1; row.font = { color: { argb: 'FF55606E' } }; o.v.forEach(function (v, i) { put(r, i, null, v || null); }); });
+    styles.concat(preps).forEach(function (o, j) { var r = r0 + 3 + j, row = label(r, '', o.l, o.lab); row.font = { color: { argb: 'FF55606E' } }; o.v.forEach(function (v, i) { put(r, i, null, v || null); }); });
   });
   var rU = rowAt(), rA = rU + 1, rB = rU + 2;
   label(rU, '', '', t('rsRowUse'), { bold: true }); label(rA, '', '', t('rsRowAvail'), { bold: true }); label(rB, '', '', t('rsRowBal'), { bold: true });
@@ -320,8 +320,8 @@ async function rsExportTable(g) {
     put(rB, i, X.M.avail == null ? null : L(i) + rA + '-' + L(i) + rU, X.M.bal[d]);
   });
   [rU, rA, rB].forEach(function (r) { ws.getRow(r).eachCell({ includeEmpty: true }, function (c) { c.font = { bold: true }; c.fill = fill('FFF3F4F6'); c.border = { top: r === rU ? thin : undefined }; }); });
-  var neg = [{ type: 'cellIs', operator: 'lessThan', formulae: [0], style: { fill: { type: 'pattern', pattern: 'solid', bgColor: { argb: 'FFFDE2E2' } }, font: { bold: true, color: { argb: 'FFB91C1C' } } } }];
-  ws.addConditionalFormatting({ ref: L(0) + rB + ':' + lastL + rB, rules: neg });
+  var cfN = 0, neg = function () { return [{ type: 'cellIs', operator: 'lessThan', priority: ++cfN, formulae: [0], style: { fill: { type: 'pattern', pattern: 'solid', bgColor: { argb: 'FFFDE2E2' } }, font: { bold: true, color: { argb: 'FFB91C1C' } } } }]; };
+  ws.addConditionalFormatting({ ref: L(0) + rB + ':' + lastL + rB, rules: neg() });
   var areas = rsAreas(X);
   if (areas.length) {
     var rh = rowAt(); label(rh, '', '', t('rsAreaHdr'), { bold: true }); ws.getRow(rh).font = { bold: true, italic: true, color: { argb: 'FF6B7280' } };
@@ -335,10 +335,9 @@ async function rsExportTable(g) {
     label(rC, '', '', t('rsRowBalC'), { bold: true }); label(rP, '', '', t('rsRowBalA'), { bold: true });
     days.forEach(function (d, i) { var c = L(i);
       put(rC, i, c + rB + '+SUMIF($B$' + a1 + ':$B$' + a2 + ',"' + sc + '",' + c + '$' + a1 + ':' + c + '$' + a2 + ')', st.balC[d]); put(rP, i, c + rB + '+SUM(' + c + '$' + a1 + ':' + c + '$' + a2 + ')', st.balA[d]); });
-    [rC, rP].forEach(function (r) { ws.getRow(r).eachCell({ includeEmpty: true }, function (c) { c.font = { bold: true }; c.fill = fill('FFF3F4F6'); }); ws.addConditionalFormatting({ ref: L(0) + r + ':' + lastL + r, rules: neg }); });
+    [rC, rP].forEach(function (r) { ws.getRow(r).eachCell({ includeEmpty: true }, function (c) { c.font = { bold: true }; c.fill = fill('FFF3F4F6'); }); ws.addConditionalFormatting({ ref: L(0) + r + ':' + lastL + r, rules: neg() }); });
   }
   ws.getColumn(1).width = 12; ws.getColumn(2).width = 14; ws.getColumn(3).width = 52; days.forEach(function (d, i) { ws.getColumn(FC + i).width = 8; });
-  ws.properties.outlineProperties = { summaryBelow: false };
   var buf = await wb.xlsx.writeBuffer(), a = document.createElement('a'), d0 = new Date(), p2 = function (x) { return String(x).padStart(2, '0'); };
   a.href = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
   a.download = 'SHORTAGE_' + g + '_' + d0.getFullYear() + p2(d0.getMonth() + 1) + p2(d0.getDate()) + '.xlsx'; document.body.appendChild(a); a.click(); a.remove();

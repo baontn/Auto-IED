@@ -635,6 +635,8 @@ table.rzw td,table.rzw th{white-space:normal!important;overflow-wrap:anywhere;wo
 <script>// ===================== TEXTS (VI / EN) =====================
 var I18N = {
   vi: {
+    errStrip: 'Lỗi trang (gửi nội dung này cho IE):',
+    xlErr: 'Không xuất được file Excel: {0}',
     srcXl: '⬇ Xuất Excel',
     rsExpAll: 'Hiện tất cả mã hàng', rsCollapse: 'Ẩn mã hàng', rsLoadsOn: 'vào chuyền {0}', rsPrepOf: 'chuẩn bị {0}', rsPuxTip: 'Bấm để hiện / ẩn các chuyền và mã hàng của PU',
     rsAtAREA: 'Thu hồi từ khu vực', rsFArea: 'Khu vực (số máy đang giữ)', rsErrArea: 'Chọn khu vực và số máy thu hồi không vượt quá số máy khu vực đang giữ.', rsAreaHdr: 'Khu vực đang giữ máy (đã trừ khỏi "Máy có sẵn")', rsAreaTake: 'Thu hồi',
@@ -825,6 +827,8 @@ var I18N = {
     c_Added: 'Mới', c_Changed: 'Thay đổi', c_Unchanged: 'Không đổi'
   },
   en: {
+    errStrip: 'Page error (send this text to the IE team):',
+    xlErr: 'Could not export the Excel file: {0}',
     srcXl: '⬇ Export Excel',
     rsExpAll: 'Show all styles', rsCollapse: 'Hide styles', rsLoadsOn: 'loads {0}', rsPrepOf: 'prepare {0}', rsPuxTip: 'Click to show / hide the lines and styles of the PU',
     rsAtAREA: 'Take back from area', rsFArea: 'Area (machines held)', rsErrArea: 'Choose an area and a quantity not above the machines the area holds.', rsAreaHdr: 'Areas holding machines (already taken off "Available")', rsAreaTake: 'Take back',
@@ -2015,7 +2019,7 @@ async function reconnect(ask) {
   if (miss.length && !ask && !RECON_ARMED) {                                         // ask once on the first click (a permission prompt needs a click)
     RECON_ARMED = true;
     document.addEventListener('pointerdown', function onFirst(ev) {
-      if (ev.target.closest && ev.target.closest('.pick,#bReconnect,#bMc,#bDir,#bLc,#bFiles,#tConnect,#tLayConnect,#sConnect,input,select,textarea')) return;
+      if (ev.target.closest && ev.target.closest('button,a,label,summary,input,select,textarea,.pick')) return;       // never on a control: a permission prompt must not swallow the click (export, save...)
       document.removeEventListener('pointerdown', onFirst, true); RECON_ARMED = false; reconnect(true);
     }, true);
   }
@@ -2317,7 +2321,8 @@ $('tbl').addEventListener('click', function (e) {
   persistKeeps().then(function () { it.bucket = it.bucketBefore || 'review'; it.keptRec = null; KEEPMSG = ''; VIEW = it.bucket === 'kept' ? 'review' : (RV.items.some(function (x) { return x.bucket === 'kept'; }) ? 'kept' : 'review'); renderAll(); })
     .catch(function (err) { if (old) KEEPS[it.key] = old; alert(t('keepErr', [err.message])); });
 });
-$('save').onclick = function () {
+$('save').onclick = function () { try { saveDatabase(); } catch (e) { alert(t('xlErr', [e.message])); } };
+function saveDatabase() {
   var d = new Date(), today = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   var ex = buildExport(RV, REF, DONE, today), wb = XLSX.utils.book_new();
   [['db', 'MACHINE DATABASE'], ['changes', 'CHANGES'], ['exc', 'EXCEPTIONS'], ['layout', 'LAYOUT DATA'], ['newChanged', 'NEW CHANGED'], ['scanState', 'SCAN STATE']].forEach(function (s) {
@@ -2525,7 +2530,7 @@ function renderDetail() {
   $('pDetail').innerHTML = html;
   $('pOnly').onchange = function (e) { PS.onlyPrep = e.target.checked; renderDetail(); };
   $('pSend').onclick = function () { prepSend().catch(function (e) { $('pMsg2').textContent = e.message; }); };
-  $('pExport').onclick = function () { prepExport().catch(function (e) { $('pMsg2').textContent = e.message; }); };
+  $('pExport').onclick = function () { prepExport().catch(function (e) { $('pMsg2').textContent = e.message; alert(t('xlErr', [e.message])); }); };
 }
 async function prepSend() {
   if (!LCDIR) { $('pMsg2').textContent = t('pNeedLc'); return; }
@@ -2592,7 +2597,7 @@ async function prepExport() {
   var nd = wb.addWorksheet('CHƯA DUYỆT');
   nd.addRow(['PU', 'Line', 'From', 'To', 'Group', 'Load date', 'Qty next style', 'Ratio', 'Prep', 'Prep days']).font = { bold: true };
   PS.rows.filter(function (x) { return x.status === 'PENDING'; }).forEach(function (x) { nd.addRow([x.pu, x.line, x.from || '(empty line)', x.to, x.group, pIso(x.load), x.qtyB, x.ratio, x.prep, x.days.map(function (d) { return pDay(d); }).join(', ')]); });
-  var cs = await closedState(), st = wb.addWorksheet(t('cStatusSheet'));         // closing status goes with every export
+  var cs = await closedState().catch(function () { return { rec: null, changes: 0, final: false }; }), st = wb.addWorksheet(t('cStatusSheet'));     // an unreadable data folder must not stop the export         // closing status goes with every export
   st.addRow([t('cStatus'), cs.rec ? (cs.final ? t('cStFinal') : t('cStChanged', [cs.changes])) : t('cNone')]).font = { bold: true };
   if (cs.rec) {
     st.addRow([t('cBy'), cs.rec.by]); st.addRow([t('cAt'), stamp16(cs.rec.at)]); st.addRow([t('cNoteLbl'), cs.rec.note || '']); st.addRow([]);
@@ -2649,7 +2654,7 @@ async function srcExportXlsx() {
   a.href = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
   a.download = 'DEMAND_SOURCE_CHECK_' + d0.getFullYear() + p(d0.getMonth() + 1) + p(d0.getDate()) + '.xlsx'; document.body.appendChild(a); a.click(); a.remove();
 }
-$('srcExport').onclick = function () { srcExportXlsx().catch(function (e) { alert(e.message); }); };
+$('srcExport').onclick = function () { srcExportXlsx().catch(function (e) { alert(t('xlErr', [e.message])); }); };
 $('srcShowMiss').onclick = function () { SRCVIEW = SRCVIEW === 'miss' ? null : 'miss'; renderSource(); };
 
 // which IE Tech completed their review (latest per person + scope)
@@ -3442,10 +3447,10 @@ function rsPuDetail(r, x) {
 async function rsExportTable(g) {
   var X = RS.cache.filter(function (x) { return x.g === g; })[0]; if (!X) return;
   var days = X.M.days, st = X.st, pus = rsPUs([X]), G = X.M.G, n = days.length, FC = 4;
-  var wb = new ExcelJS.Workbook(), ws = wb.addWorksheet(String(g).replace(/[\\\/?*\[\]:]/g, '_').slice(0, 28), { views: [{ state: 'frozen', xSplit: 3, ySplit: 3 }], pageSetup: { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0 } });
+  var wb = new ExcelJS.Workbook(), ws = wb.addWorksheet(String(g).replace(/[\\\/?*\[\]:]/g, '_').slice(0, 28), { views: [{ state: 'frozen', xSplit: 3, ySplit: 3 }]});
   var fill = function (argb) { return { type: 'pattern', pattern: 'solid', fgColor: { argb: argb } }; }, thin = { style: 'thin', color: { argb: 'FFBFC5D2' } };
   var L = function (i) { return ws.getColumn(FC + i).letter; }, lastL = L(n - 1);
-  ws.mergeCells(1, 1, 1, 3); ws.getCell(1, 1).value = g + ' · ' + t('rsRowAvail') + ' ' + (X.M.avail == null ? '' : X.M.avail) + ' · ' + t('rsThDays') + ' ' + X.s.n + '/' + X.s.of + ' · ' + t('rsThWorst') + ' ' + (X.s.gap ? '-' + X.s.gap : '0');
+  ws.getCell(1, 1).value = g + ' · ' + t('rsRowAvail') + ' ' + (X.M.avail == null ? '' : X.M.avail) + ' · ' + t('rsThDays') + ' ' + X.s.n + '/' + X.s.of + ' · ' + t('rsThWorst') + ' ' + (X.s.gap ? '-' + X.s.gap : '0');
   ws.getCell(1, 1).font = { bold: true, size: 13 };
   var hr = ws.getRow(3); hr.values = ['PU', t('rsPuLine'), t('rsThDay')].concat(days.map(function (d) { return dw(d); }));
   hr.eachCell(function (c) { c.fill = fill('FF1F3A5F'); c.font = { bold: true, color: { argb: 'FFFFFFFF' } }; c.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true }; }); hr.height = 30;
@@ -3468,7 +3473,7 @@ async function rsExportTable(g) {
     for (var k = 0; k < 2; k++) ws.getRow(r0 + k).eachCell({ includeEmpty: true }, function (c) { c.fill = fill('FFEAF2FF'); });
     ws.getRow(r0 + 2).eachCell({ includeEmpty: true }, function (c) { c.border = { top: thin }; c.font = { bold: true }; });
     totRows.push(r0 + 2);
-    styles.concat(preps).forEach(function (o, j) { var r = r0 + 3 + j, row = label(r, '', o.l, o.lab); row.outlineLevel = 1; row.font = { color: { argb: 'FF55606E' } }; o.v.forEach(function (v, i) { put(r, i, null, v || null); }); });
+    styles.concat(preps).forEach(function (o, j) { var r = r0 + 3 + j, row = label(r, '', o.l, o.lab); row.font = { color: { argb: 'FF55606E' } }; o.v.forEach(function (v, i) { put(r, i, null, v || null); }); });
   });
   var rU = rowAt(), rA = rU + 1, rB = rU + 2;
   label(rU, '', '', t('rsRowUse'), { bold: true }); label(rA, '', '', t('rsRowAvail'), { bold: true }); label(rB, '', '', t('rsRowBal'), { bold: true });
@@ -3477,8 +3482,8 @@ async function rsExportTable(g) {
     put(rB, i, X.M.avail == null ? null : L(i) + rA + '-' + L(i) + rU, X.M.bal[d]);
   });
   [rU, rA, rB].forEach(function (r) { ws.getRow(r).eachCell({ includeEmpty: true }, function (c) { c.font = { bold: true }; c.fill = fill('FFF3F4F6'); c.border = { top: r === rU ? thin : undefined }; }); });
-  var neg = [{ type: 'cellIs', operator: 'lessThan', formulae: [0], style: { fill: { type: 'pattern', pattern: 'solid', bgColor: { argb: 'FFFDE2E2' } }, font: { bold: true, color: { argb: 'FFB91C1C' } } } }];
-  ws.addConditionalFormatting({ ref: L(0) + rB + ':' + lastL + rB, rules: neg });
+  var cfN = 0, neg = function () { return [{ type: 'cellIs', operator: 'lessThan', priority: ++cfN, formulae: [0], style: { fill: { type: 'pattern', pattern: 'solid', bgColor: { argb: 'FFFDE2E2' } }, font: { bold: true, color: { argb: 'FFB91C1C' } } } }]; };
+  ws.addConditionalFormatting({ ref: L(0) + rB + ':' + lastL + rB, rules: neg() });
   var areas = rsAreas(X);
   if (areas.length) {
     var rh = rowAt(); label(rh, '', '', t('rsAreaHdr'), { bold: true }); ws.getRow(rh).font = { bold: true, italic: true, color: { argb: 'FF6B7280' } };
@@ -3492,10 +3497,9 @@ async function rsExportTable(g) {
     label(rC, '', '', t('rsRowBalC'), { bold: true }); label(rP, '', '', t('rsRowBalA'), { bold: true });
     days.forEach(function (d, i) { var c = L(i);
       put(rC, i, c + rB + '+SUMIF($B$' + a1 + ':$B$' + a2 + ',"' + sc + '",' + c + '$' + a1 + ':' + c + '$' + a2 + ')', st.balC[d]); put(rP, i, c + rB + '+SUM(' + c + '$' + a1 + ':' + c + '$' + a2 + ')', st.balA[d]); });
-    [rC, rP].forEach(function (r) { ws.getRow(r).eachCell({ includeEmpty: true }, function (c) { c.font = { bold: true }; c.fill = fill('FFF3F4F6'); }); ws.addConditionalFormatting({ ref: L(0) + r + ':' + lastL + r, rules: neg }); });
+    [rC, rP].forEach(function (r) { ws.getRow(r).eachCell({ includeEmpty: true }, function (c) { c.font = { bold: true }; c.fill = fill('FFF3F4F6'); }); ws.addConditionalFormatting({ ref: L(0) + r + ':' + lastL + r, rules: neg() }); });
   }
   ws.getColumn(1).width = 12; ws.getColumn(2).width = 14; ws.getColumn(3).width = 52; days.forEach(function (d, i) { ws.getColumn(FC + i).width = 8; });
-  ws.properties.outlineProperties = { summaryBelow: false };
   var buf = await wb.xlsx.writeBuffer(), a = document.createElement('a'), d0 = new Date(), p2 = function (x) { return String(x).padStart(2, '0'); };
   a.href = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
   a.download = 'SHORTAGE_' + g + '_' + d0.getFullYear() + p2(d0.getMonth() + 1) + p2(d0.getDate()) + '.xlsx'; document.body.appendChild(a); a.click(); a.remove();
@@ -3871,6 +3875,20 @@ setRole = function (r) { _setRole(r); $('mainTabs').hidden = r === 'tech' || r =
 setRole(ROLE);
 
 if (window.paintRemember) paintRemember().then(function () { return reconnect(false); });
+
+// any script error is shown in a red strip (so a failing export / save is never silent) and can be copied to the IE team
+(function () {
+  var shown = {};
+  function show(msg) {
+    msg = String(msg || '').slice(0, 300); if (!msg || shown[msg]) return; shown[msg] = 1;
+    var b = document.getElementById('errBar');
+    if (!b) { b = document.createElement('div'); b.id = 'errBar'; b.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:99;background:#b91c1c;color:#fff;padding:6px 14px;font-size:13px;display:flex;gap:10px;align-items:center'; document.body.appendChild(b); }
+    b.innerHTML = ''; var sp = document.createElement('span'); sp.textContent = '⚠ ' + t('errStrip') + ' ' + msg; sp.style.flex = '1'; b.appendChild(sp);
+    var x = document.createElement('button'); x.textContent = '✕'; x.onclick = function () { b.remove(); shown = {}; }; b.appendChild(x);
+  }
+  window.addEventListener('error', function (e) { show(e.message); });
+  window.addEventListener('unhandledrejection', function (e) { show(e.reason && e.reason.message ? e.reason.message : e.reason); });
+})();
 </script>
 <script>// ===================== RESIZABLE TABLE COLUMNS =====================
 // Drag the right edge of any column header to change the width; the text of that table then wraps inside the cells.
@@ -3882,7 +3900,7 @@ function rzKey(tb) {
   var all = id ? [].slice.call(document.querySelectorAll('#' + id + ' table, table#' + id)) : [];
   return (id || 'page') + '#' + Math.max(0, all.indexOf(tb));
 }
-function rzHeadRow(tb) { return tb.querySelector('tr:has(th)') || null; }
+function rzHeadRow(tb) { var r = tb.rows; for (var i = 0; i < r.length && i < 3; i++) { if (r[i].querySelector('th')) return r[i]; } return null; }       // no :has() (older Chrome / Edge)
 function rzApply(tb) {
   var row = rzHeadRow(tb); if (!row) return;
   var key = rzKey(tb), ws = RZ.w[key]; if (!ws) return;
@@ -3891,16 +3909,16 @@ function rzApply(tb) {
   if (set) { tb.classList.add('rzw'); tb.style.tableLayout = 'fixed'; tb.style.width = ths.reduce(function (s, th, i) { return s + (ws[i] || th.offsetWidth); }, 0) + 'px'; }
 }
 function rzDecorate(tb) {
-  if (tb.dataset.rz || tb.closest('[data-norz]')) return;
+  if (tb.closest('[data-norz]')) return;
   var row = rzHeadRow(tb); if (!row) return;
   tb.dataset.rz = '1';
   [].forEach.call(row.children, function (th, i) {
-    if (th.tagName !== 'TH') return;
+    if (th.tagName !== 'TH' || th.querySelector('.rzh')) return;
     var h = document.createElement('span'); h.className = 'rzh'; h.title = t('rzHint'); h.dataset.i = i; th.appendChild(h);
   });
   rzApply(tb);
 }
-function rzScan() { [].forEach.call(document.querySelectorAll('table'), rzDecorate); }
+function rzScan() { [].forEach.call(document.querySelectorAll('table'), function (tb) { try { rzDecorate(tb); } catch (e) { } }); }
 document.addEventListener('mousedown', function (e) {
   var h = e.target.closest && e.target.closest('.rzh'); if (!h) return;
   var tb = h.closest('table'), row = rzHeadRow(tb), ths = [].slice.call(row.children), key = rzKey(tb);

@@ -154,7 +154,7 @@ function renderDetail() {
   $('pDetail').innerHTML = html;
   $('pOnly').onchange = function (e) { PS.onlyPrep = e.target.checked; renderDetail(); };
   $('pSend').onclick = function () { prepSend().catch(function (e) { $('pMsg2').textContent = e.message; }); };
-  $('pExport').onclick = function () { prepExport().catch(function (e) { $('pMsg2').textContent = e.message; }); };
+  $('pExport').onclick = function () { prepExport().catch(function (e) { $('pMsg2').textContent = e.message; alert(t('xlErr', [e.message])); }); };
 }
 async function prepSend() {
   if (!LCDIR) { $('pMsg2').textContent = t('pNeedLc'); return; }
@@ -221,7 +221,7 @@ async function prepExport() {
   var nd = wb.addWorksheet('CHƯA DUYỆT');
   nd.addRow(['PU', 'Line', 'From', 'To', 'Group', 'Load date', 'Qty next style', 'Ratio', 'Prep', 'Prep days']).font = { bold: true };
   PS.rows.filter(function (x) { return x.status === 'PENDING'; }).forEach(function (x) { nd.addRow([x.pu, x.line, x.from || '(empty line)', x.to, x.group, pIso(x.load), x.qtyB, x.ratio, x.prep, x.days.map(function (d) { return pDay(d); }).join(', ')]); });
-  var cs = await closedState(), st = wb.addWorksheet(t('cStatusSheet'));         // closing status goes with every export
+  var cs = await closedState().catch(function () { return { rec: null, changes: 0, final: false }; }), st = wb.addWorksheet(t('cStatusSheet'));     // an unreadable data folder must not stop the export         // closing status goes with every export
   st.addRow([t('cStatus'), cs.rec ? (cs.final ? t('cStFinal') : t('cStChanged', [cs.changes])) : t('cNone')]).font = { bold: true };
   if (cs.rec) {
     st.addRow([t('cBy'), cs.rec.by]); st.addRow([t('cAt'), stamp16(cs.rec.at)]); st.addRow([t('cNoteLbl'), cs.rec.note || '']); st.addRow([]);
@@ -278,7 +278,7 @@ async function srcExportXlsx() {
   a.href = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
   a.download = 'DEMAND_SOURCE_CHECK_' + d0.getFullYear() + p(d0.getMonth() + 1) + p(d0.getDate()) + '.xlsx'; document.body.appendChild(a); a.click(); a.remove();
 }
-$('srcExport').onclick = function () { srcExportXlsx().catch(function (e) { alert(e.message); }); };
+$('srcExport').onclick = function () { srcExportXlsx().catch(function (e) { alert(t('xlErr', [e.message])); }); };
 $('srcShowMiss').onclick = function () { SRCVIEW = SRCVIEW === 'miss' ? null : 'miss'; renderSource(); };
 
 // which IE Tech completed their review (latest per person + scope)
