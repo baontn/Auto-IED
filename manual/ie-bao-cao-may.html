@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>IE Báo cáo máy: Hướng dẫn sử dụng</title><link rel="icon" href="../icon.png"><link rel="stylesheet" href="manual.css"></head><body>
-<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>IE Báo cáo máy v7.13: Hướng dẫn sử dụng</b><a href="ie-bao-cao-may.en.html" title="English" onclick="try{localStorage.setItem('ie_site_lang','en')}catch(e){}">EN</a><a href="layout-check.html">Layout Check ›</a><a href="../index.html">‹ Trang chủ</a></header>
+<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>IE Báo cáo máy v7.14: Hướng dẫn sử dụng</b><a href="ie-bao-cao-may.en.html" title="English" onclick="try{localStorage.setItem('ie_site_lang','en')}catch(e){}">EN</a><a href="layout-check.html">Layout Check ›</a><a href="../index.html">‹ Trang chủ</a></header>
 <div class="wrap">
 <nav class="toc"><b>Nội dung</b>
 <a href="#gioi-thieu">1. Giới thiệu</a>
@@ -229,7 +229,7 @@
 <li>Chốt <b>không khóa</b> dữ liệu. Nếu IE Tech hoặc IE Báo cáo máy thay đổi sau đó, dòng hiển thị “có N thay đổi sau khi chốt”; khi đó chốt lại.</li>
 <li>Bản ghi chốt lưu trong <code>data\prep\closed</code>.</li></ul>
 <h3>Xuất Excel</h3>
-<p>Bấm <span class="btn">Xuất Excel</span> (sau “Mở chi tiết”): mỗi loại máy một sheet có tô màu như sheet chi tiết hiện tại; sheet <code>PREP BY PU</code> đúng dạng TTL DEMAND BY PU (Combine.MACHINE | PU | ngày) để cộng vào báo cáo; sheet <code>CHƯA DUYỆT</code> liệt kê các dòng IE Tech chưa duyệt; sheet <code>TRẠNG THÁI</code> (người chốt, thời điểm, ghi chú, bảng theo PU). Tên file có <code>CHOT</code> (<code>PREP_DEMAND_CHOT_…</code>) chỉ khi đã chốt và chưa có thay đổi sau đó. Dòng chuẩn bị bị bỏ được xuất là 0.</p>
+<p>Bấm <span class="btn">Xuất Excel</span> (sau “Mở chi tiết”): mỗi loại máy một sheet có tô màu như sheet chi tiết hiện tại, <b>các dòng tổng là công thức Excel</b> (tổng sản xuất và chuẩn bị theo PU = SUMIFS theo cột PU và cột Loại <code>PROD</code>/<code>PREP</code>, Tổng = sản xuất + chuẩn bị, Máy sẵn có = tổng các dòng thành phần MC STATUS, Còn lại = Máy sẵn có − Tổng; sửa số ở dòng mã hàng hoặc dòng chuẩn bị thì các dòng tổng tự tính lại); sheet <code>PREP BY PU</code> đúng dạng TTL DEMAND BY PU (Combine.MACHINE | PU | ngày) để cộng vào báo cáo; sheet <code>CHƯA DUYỆT</code> liệt kê các dòng IE Tech chưa duyệt; sheet <code>TRẠNG THÁI</code> (người chốt, thời điểm, ghi chú, bảng theo PU). Tên file có <code>CHOT</code> (<code>PREP_DEMAND_CHOT_…</code>) chỉ khi đã chốt và chưa có thay đổi sau đó. Dòng chuẩn bị bị bỏ được xuất là 0.</p>
 </section>
 
 <section id="bao-sai-lech"><h2>8. Báo sai lệch và Nhật ký</h2>

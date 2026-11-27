@@ -416,7 +416,7 @@ table.rzw td,table.rzw th{white-space:normal!important;overflow-wrap:anywhere;wo
 </head>
 <body>
 <header>
-  <h1 data-t="title"></h1><span class="tag t-info" id="verTag" title="Version">v7.13</span><span class="sub" data-t="subtitle"></span>
+  <h1 data-t="title"></h1><span class="tag t-info" id="verTag" title="Version">v7.14</span><span class="sub" data-t="subtitle"></span>
   <div role="group" aria-label="Role" id="roleSeg" style="margin-left:auto;display:flex;gap:4px"><button data-role="cons" data-t="roleCons"></button><button data-role="tech" data-t="roleTech"></button><button data-role="sup" data-t="roleSup"></button></div>
   <button id="bRefresh" data-t="hdrRefresh" style="margin-left:8px"></button>
   <a class="homebtn" id="btnHome" href="../index.html" data-t="homeLink"></a>
@@ -2591,34 +2591,47 @@ async function prepExport() {
   var wb = new ExcelJS.Workbook(), Y = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF5D6' } }, R = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFDE8E8' } }, T = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF3F4F6' } };
   PS.open.forEach(function (g) {
     var G = gridOf(g), ws = wb.addWorksheet(g.replace(/[\\\/\?\*\[\]:]/g, '_').slice(0, 31));
-    ws.addRow(['PU', t('pgLine'), t('pgStyle')].concat(G.days.map(function (d) { return pDay(d, true); }))).font = { bold: true };
-    ws.views = [{ state: 'frozen', xSplit: 3, ySplit: 1 }];
+    // v7.14: the totals are live Excel formulas (SUMIFS on the PU / type columns, total = production + prep, balance = available - total); column D marks every row PROD or PREP
+    ws.addRow(['PU', t('pgLine'), t('pgStyle'), 'Type'].concat(G.days.map(function (d) { return pDay(d, true); }))).font = { bold: true };
+    ws.views = [{ state: 'frozen', xSplit: 4, ySplit: 1 }];
     G.order.forEach(function (line) {
       var L = G.lines[line], pu = puOf(REF.pu || {}, line);
       Object.keys(L.styles).forEach(function (s) {
         L.prep.filter(function (x) { return x.to === s; }).forEach(function (x) { addPrep(ws, G, pu, line, x); });
-        ws.addRow([pu, line, s].concat(G.days.map(function (d) { return L.styles[s][d] || null; })));
+        ws.addRow([pu, line, s, 'PROD'].concat(G.days.map(function (d) { return L.styles[s][d] || null; })));
       });
       L.prep.filter(function (x) { return !L.styles[x.to]; }).forEach(function (x) { addPrep(ws, G, pu, line, x); });
     });
-    var PT = puTotals(G), sumRows = [];
+    var first = 2, last = ws.rowCount, PT = puTotals(G), ent = [], FR = {}, q = function (x) { return '"' + String(x).replace(/"/g, '""') + '"'; };
+    var sif = function (c, type, pu) { return 'SUMIFS(' + c + '$' + first + ':' + c + '$' + last + ',$D$' + first + ':$D$' + last + ',' + q(type) + (pu != null ? ',$A$' + first + ':$A$' + last + ',' + q(pu) : '') + ')'; };
     Object.keys(PT).sort().forEach(function (p) { var o = PT[p];
-      sumRows.push([t('pgPuSum', [puNameC(p), t('pgProd')]), function (d) { return o.prod[d] || 0; }, 'part'], [t('pgPuSum', [puNameC(p), t('pgPrep')]), function (d) { return o.prep[d] || 0; }, 'part'],
-        [t('pgPuSum', [puNameC(p), t('pgTotal')]), function (d) { return (o.prod[d] || 0) + (o.prep[d] || 0); }]); });
-    sumRows = sumRows.concat([[t('pgProd'), function (d) { return G.prod[d] || 0; }], [t('pgPrep'), function (d) { return G.prep[d] || 0; }], [t('pgTotal'), function (d) { return G.total[d]; }], [t('pgAvail'), function () { return G.avail; }]]);
-    availParts(g).forEach(function (p) { sumRows.push(['   ' + (p.sign > 0 ? '+ ' : '− ') + p.name, function () { return p.sign * p.qty; }, 'part']); });
-    sumRows.push([t('pgBal'), function (d) { return G.bal[d]; }, 'bal']);
-    sumRows.forEach(function (x) {
-      var row = ws.addRow(['', '', x[0]].concat(G.days.map(x[1]))); row.font = x[2] === 'part' ? { italic: true, color: { argb: 'FF6B7280' } } : { bold: true };
-      row.eachCell(function (c, n) { c.fill = T; if (x[2] === 'bal' && n > 3 && c.value < 0) { c.fill = R; c.font = { bold: true, color: { argb: 'FFC4202B' } }; } });
+      ent.push([t('pgPuSum', [puNameC(p), t('pgProd')]), 'part', function (c) { return sif(c, 'PROD', p); }, function (d) { return o.prod[d] || 0; }, 'pp' + p],
+        [t('pgPuSum', [puNameC(p), t('pgPrep')]), 'part', function (c) { return sif(c, 'PREP', p); }, function (d) { return o.prep[d] || 0; }, 'pr' + p],
+        [t('pgPuSum', [puNameC(p), t('pgTotal')]), '', function (c) { return c + FR['pp' + p] + '+' + c + FR['pr' + p]; }, function (d) { return (o.prod[d] || 0) + (o.prep[d] || 0); }, 'pt' + p]); });
+    var parts = availParts(g), partSum = parts.reduce(function (n, x) { return n + x.sign * x.qty; }, 0), useParts = parts.length > 0 && partSum === G.avail;
+    ent.push([t('pgProd'), '', function (c) { return sif(c, 'PROD'); }, function (d) { return G.prod[d] || 0; }, 'prod'],
+      [t('pgPrep'), '', function (c) { return sif(c, 'PREP'); }, function (d) { return G.prep[d] || 0; }, 'prep'],
+      [t('pgTotal'), '', function (c) { return c + FR.prod + '+' + c + FR.prep; }, function (d) { return G.total[d]; }, 'total'],
+      [t('pgAvail'), '', useParts ? function (c) { return 'SUM(' + c + (FR.avail + 1) + ':' + c + (FR.avail + parts.length) + ')'; } : null, function () { return G.avail; }, 'avail']);
+    parts.forEach(function (pp) { ent.push(['   ' + (pp.sign > 0 ? '+ ' : '− ') + pp.name, 'part', null, function () { return pp.sign * pp.qty; }, 'x']); });
+    ent.push([t('pgBal'), 'bal', function (c) { return G.avail == null ? null : c + FR.avail + '-' + c + FR.total; }, function (d) { return G.bal[d]; }, 'bal']);
+    ent.forEach(function (x, i) { FR[x[4] === 'x' ? 'x' + i : x[4]] = last + 1 + i; });                 // row numbers are known before the rows are written
+    ent.forEach(function (x) {
+      var row = ws.addRow(['', '', x[0], ''].concat(G.days.map(function (d, i) {
+        var f = x[2] ? x[2](ws.getColumn(5 + i).letter) : null, v = x[3](d);
+        return f ? { formula: f, result: v == null ? 0 : v } : v;
+      })));
+      row.font = x[1] === 'part' ? { italic: true, color: { argb: 'FF6B7280' } } : { bold: true };
+      row.eachCell(function (c) { c.fill = T; });
     });
-    ws.getColumn(3).width = 34; ws.getColumn(2).width = 9;
+    if (G.days.length) ws.addConditionalFormatting({ ref: ws.getColumn(5).letter + FR.bal + ':' + ws.getColumn(4 + G.days.length).letter + FR.bal, rules: [{ type: 'cellIs', operator: 'lessThan', priority: 1, formulae: [0], style: { fill: { type: 'pattern', pattern: 'solid', bgColor: { argb: 'FFFDE8E8' } }, font: { bold: true, color: { argb: 'FFC4202B' } } } }] });
+    ws.getColumn(3).width = 34; ws.getColumn(2).width = 9; ws.getColumn(4).width = 7;
   });
   function addPrep(ws, G, pu, line, x) {
     var skip = x.status === 'AUTO_SKIP' || x.status === 'REMOVED';
     // skipped / removed prep = 0 in Excel (never a number that a SUM could pick up by mistake)
-    var row = ws.addRow([pu, line, t('pgPrepOf', [x.to]) + ' — ' + psLabel(x)].concat(G.days.map(function (d) { return x.days.indexOf(d) >= 0 ? (skip ? 0 : x.eff) : null; })));
-    row.eachCell(function (c, n) { if (n > 3 && c.value != null) { if (skip) c.font = { color: { argb: 'FF6B7280' } }; else { c.fill = Y; c.font = { bold: true, color: { argb: 'FF9A6700' } }; } } });
+    var row = ws.addRow([pu, line, t('pgPrepOf', [x.to]) + ' — ' + psLabel(x), 'PREP'].concat(G.days.map(function (d) { return x.days.indexOf(d) >= 0 ? (skip ? 0 : x.eff) : null; })));
+    row.eachCell(function (c, n) { if (n > 4 && c.value != null) { if (skip) c.font = { color: { argb: 'FF6B7280' } }; else { c.fill = Y; c.font = { bold: true, color: { argb: 'FF9A6700' } }; } } });
     row.getCell(3).font = { color: { argb: 'FF9A6700' } };
   }
   // PREP BY PU: same layout as TTL DEMAND BY PU (Combine.MACHINE | PU | dates)
@@ -2627,9 +2640,10 @@ async function prepExport() {
   var dl = Object.keys(allDays).map(Number).sort(function (a, b) { return a - b; }), pb = wb.addWorksheet('PREP BY PU');
   pb.addRow(['Combine.MACHINE ', 'PU'].concat(dl.map(function (d) { var x = new Date(d); return String(x.getUTCDate()).padStart(2, '0') + '/' + String(x.getUTCMonth() + 1).padStart(2, '0') + '/' + x.getUTCFullYear(); }))).font = { bold: true };
   Object.keys(agg).sort().forEach(function (k) { var p = k.split('|'); pb.addRow([p[0], p[1]].concat(dl.map(function (d) { return agg[k][d] || null; }))); });
+  if (Object.keys(agg).length) { var pr0 = pb.rowCount, tr = pb.addRow(['TOTAL', '']); tr.font = { bold: true }; dl.forEach(function (d, i) { var c = pb.getColumn(3 + i).letter, v = Object.keys(agg).reduce(function (n, k) { return n + (agg[k][d] || 0); }, 0); tr.getCell(3 + i).value = { formula: 'SUM(' + c + '2:' + c + pr0 + ')', result: v }; }); }
   var nd = wb.addWorksheet('CHƯA DUYỆT');
   nd.addRow(['PU', 'Line', 'From', 'To', 'Group', 'Load date', 'Qty next style', 'Ratio', 'Prep', 'Prep days']).font = { bold: true };
-  PS.rows.filter(function (x) { return x.status === 'PENDING'; }).forEach(function (x) { nd.addRow([x.pu, x.line, x.from || '(empty line)', x.to, x.group, pIso(x.load), x.qtyB, x.ratio, x.prep, x.days.map(function (d) { return pDay(d); }).join(', ')]); });
+  PS.rows.filter(function (x) { return x.status === 'PENDING'; }).forEach(function (x) { nd.addRow([x.pu, x.line, x.from || '(empty line)', x.to, x.group, pIso(x.load), x.qtyB, x.ratio, { formula: 'ROUNDUP(ROUND(G' + (nd.rowCount + 1) + '*H' + (nd.rowCount + 1) + ',6),0)', result: x.prep }, x.days.map(function (d) { return pDay(d); }).join(', ')]); });
   var cs = await closedState().catch(function () { return { rec: null, changes: 0, final: false }; }), st = wb.addWorksheet(t('cStatusSheet'));     // an unreadable data folder must not stop the export         // closing status goes with every export
   st.addRow([t('cStatus'), cs.rec ? (cs.final ? t('cStFinal') : t('cStChanged', [cs.changes])) : t('cNone')]).font = { bold: true };
   if (cs.rec) {
