@@ -1,6 +1,7 @@
 // ===================== TEXTS (VI / EN) =====================
 var I18N = {
   vi: {
+    hdrRefresh: '🔄 Làm mới', hdrRefreshNone: 'Chưa có file nào được ghi nhớ. Chọn MC Report / Master plan ở tab Dữ liệu trước.', hdrRefreshDone: '✓ Đã đọc lại các file đã chọn lúc {0}.',
     errStrip: 'Lỗi trang (gửi nội dung này cho IE):',
     xlErr: 'Không xuất được file Excel: {0}',
     srcXl: '⬇ Xuất Excel',
@@ -141,7 +142,7 @@ var I18N = {
     n_lcDone: 'Layout Check: {0} bởi {1} ngày {2}', n_lcOk: 'Nhân viên IE đã kiểm tra và xác nhận LAYOUT này là đúng ({0} bởi {1}, {2}). Database đang khác layout, nên cần cập nhật database theo layout',
     n_lcLayoutFix: 'Layout Check: người tổng hợp yêu cầu sửa layout ({0}): {1} — không cập nhật database',
     n_lcFail: 'Layout Check: Không đạt ({0}, {1}): {2}', n_lcChanged: 'Layout đã thay đổi sau lần kiểm tra ngày {0} — IE cần kiểm tra lại',
-    i_oldVer: 'Phiên bản cũ trong database', a_oldVer: 'Chỉ dòng của ngày mới nhất được dùng. Đánh dấu để xóa các dòng cũ',
+    i_oldVer: 'Phiên bản cũ trong database', a_oldVer: 'Mỗi máy chỉ dòng của ngày mới nhất của máy đó được dùng (máy chỉ có ở ngày cũ vẫn được giữ); đây là các dòng đã bị dòng mới thay thế. Đánh dấu để xóa các dòng cũ',
     lcSaved: 'Đã ghi {0} ghi chú "Đã duyệt" sang Layout Check.', lcErr: 'Không ghi được sang Layout Check: {0}',
     title: 'IE Báo cáo máy — Cập nhật MACHINE DATABASE',
     subtitle: 'Quét layout trước; mã hàng chưa có layout thì dùng costing. Chỉ thay đổi được duyệt mới được ghi. Mã hàng chỉ hoàn tất khi Nhân viên IE kiểm tra Đạt trong Layout Check.',
@@ -193,6 +194,7 @@ var I18N = {
     c_Added: 'Mới', c_Changed: 'Thay đổi', c_Unchanged: 'Không đổi'
   },
   en: {
+    hdrRefresh: '🔄 Refresh', hdrRefreshNone: 'No file remembered yet. Choose the MC Report / Master plan in the Data tab first.', hdrRefreshDone: '✓ The chosen files were read again at {0}.',
     errStrip: 'Page error (send this text to the IE team):',
     xlErr: 'Could not export the Excel file: {0}',
     srcXl: '⬇ Export Excel',
@@ -333,7 +335,7 @@ var I18N = {
     n_lcDone: 'Layout Check: {0} by {1} on {2}', n_lcOk: 'An IE officer checked and confirmed that this LAYOUT is correct ({0} by {1}, {2}). The database differs from the layout, so the database needs updating to match the layout',
     n_lcLayoutFix: 'Layout Check: consolidator asked to fix the layout ({0}): {1} — database not updated',
     n_lcFail: 'Layout Check: Fail ({0}, {1}): {2}', n_lcChanged: 'Layout changed after the check on {0} — IE must re-check',
-    i_oldVer: 'Older versions in database', a_oldVer: 'Only the latest date is used. Tick to remove the older rows',
+    i_oldVer: 'Older versions in database', a_oldVer: 'For each machine only its latest-dated row is used (machines found only on an older date are kept); these rows were replaced by newer ones. Tick to remove the older rows',
     lcSaved: '{0} "Approved" notes written to Layout Check.', lcErr: 'Could not write to Layout Check: {0}',
     title: 'Consolidator — MACHINE DATABASE update',
     subtitle: 'Layouts are scanned first. Styles without a layout use costing. Only approved changes are written.',

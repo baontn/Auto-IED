@@ -21,7 +21,7 @@ function fmtDate(d) { if (!(d instanceof Date)) return d ? String(d) : ''; var p
 // ---------- reference data ----------
 function loadGroups(aoa) { var m = {}; aoa.slice(1).forEach(function (r) { var c = skey(r[0]); if (c) m[c] = String(r[1] == null ? '' : r[1]).trim(); }); return m; }
 function dayKey(v) { return v instanceof Date ? Date.UTC(v.getFullYear(), v.getMonth(), v.getDate()) : (typeof v === 'number' ? Math.round((v - 25569) * 864e5) : null); }
-function loadDb(aoa) {               // per style only the rows of the LATEST date count (same rule as Layout Check)
+function loadDb(aoa) {               // v7.13: ALL dates are merged per machine: for every machine code of a style the rows of its LATEST date count; machines only found on an older date are kept (same rule as Layout Check)
   var header = aoa[0] || [], rows = aoa.slice(1).filter(function (r) { return String(r[0]).trim() !== ''; });
   var ix = { style: findCol(header, 'STYLE'), mc: findCol(header, 'MACHINE'), qty: findCol(header, 'QUANTITY'), rm: findCol(header, 'REMARK'), grp: findCol(header, 'MACHINE GROUP'), date: findCol(header, 'DATE') };
   var byKey = {};
@@ -29,12 +29,14 @@ function loadDb(aoa) {               // per style only the rows of the LATEST da
     var k = skey(r[ix.style]); if (!byKey[k]) byKey[k] = { name: String(r[ix.style]).trim(), idx: [], remarks: {}, set: {}, latest: null, cur: [], old: [] };
     var e = byKey[k], d = ix.date >= 0 ? dayKey(r[ix.date]) : null; e.idx.push(i);
     if (d != null && (e.latest == null || d > e.latest)) e.latest = d;
+    var c0 = skey(r[ix.mc]); if (d != null && c0) { e.mcLatest = e.mcLatest || {}; if (e.mcLatest[c0] == null || d > e.mcLatest[c0]) e.mcLatest[c0] = d; }
   });
   Object.keys(byKey).forEach(function (k) {
     var e = byKey[k];
     e.idx.forEach(function (i) {
-      var r = rows[i], d = ix.date >= 0 ? dayKey(r[ix.date]) : null;
-      if (e.latest != null && d !== e.latest) { e.old.push(i); return; }
+      var r = rows[i], d = ix.date >= 0 ? dayKey(r[ix.date]) : null, c1 = skey(r[ix.mc]);
+      var want = e.latest == null ? null : (c1 && e.mcLatest && e.mcLatest[c1] != null ? e.mcLatest[c1] : e.latest);    // this machine's own latest date
+      if (want != null && d !== want) { e.old.push(i); return; }
       e.cur.push(i); e.remarks[String(r[ix.rm]).trim().toLowerCase()] = 1;
       var q = +r[ix.qty] || 0, c = skey(r[ix.mc]); if (c) e.set[c] = (e.set[c] || 0) + q;
     });

@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>IE Báo cáo máy: Hướng dẫn sử dụng</title><link rel="icon" href="../icon.png"><link rel="stylesheet" href="manual.css"></head><body>
-<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>IE Báo cáo máy v7.12: Hướng dẫn sử dụng</b><a href="ie-bao-cao-may.en.html" title="English" onclick="try{localStorage.setItem('ie_site_lang','en')}catch(e){}">EN</a><a href="layout-check.html">Layout Check ›</a><a href="../index.html">‹ Trang chủ</a></header>
+<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>IE Báo cáo máy v7.13: Hướng dẫn sử dụng</b><a href="ie-bao-cao-may.en.html" title="English" onclick="try{localStorage.setItem('ie_site_lang','en')}catch(e){}">EN</a><a href="layout-check.html">Layout Check ›</a><a href="../index.html">‹ Trang chủ</a></header>
 <div class="wrap">
 <nav class="toc"><b>Nội dung</b>
 <a href="#gioi-thieu">1. Giới thiệu</a>
@@ -253,7 +253,7 @@
 <tr><td>Nhiều layout cho một mã</td><td>Bulk/Final &gt; Initial, rồi OBD cao hơn, rồi file mới hơn.</td></tr>
 <tr><td>Costing</td><td>Hệ số 48 cho mã có hậu tố 48HC, còn lại 24; công đoạn 31–97, 100, 103, 116; làm tròn: phần thập phân ≤ 0,20 xuống, ngược lại lên, tối thiểu 1.</td></tr>
 <tr><td>So sánh layout – CSDL</td><td><b>Theo nhóm máy</b> (nhóm lấy từ sheet MACHINE GROUP): tổng số máy mỗi nhóm bằng nhau là khớp; khác mã máy trong cùng nhóm không tạo đề xuất và không làm mất “Đã kiểm tra”. Mã máy chưa có nhóm được so sánh riêng.</td></tr>
-<tr><td>Dữ liệu CSDL</td><td>Chỉ dùng các dòng có <b>ngày mới nhất</b> của mỗi mã hàng.</td></tr>
+<tr><td>Dữ liệu CSDL</td><td>Gộp <b>mọi ngày</b> theo từng máy: với mỗi mã hàng và mỗi mã máy, dùng dòng có <b>ngày mới nhất của máy đó</b>; máy chỉ có ở ngày cũ vẫn được giữ (ví dụ ngày sau chỉ ghi 1SLM thì các máy khác của ngày trước vẫn tính). Muốn bỏ hẳn một máy thì ghi số lượng 0 ở ngày mới. Dòng cũ đã bị thay thế được báo ở mục “Phiên bản cũ trong database” để xóa.</td></tr>
 <tr><td>Quyết định mới nhất có hiệu lực</td><td>Công cụ đọc lại đúng file và sheet của bản ghi Layout Check: máy trong file = bản ghi và CSDL = bản ghi → “Đã kiểm tra”; file đã được sửa sau lần kiểm tra → “Cần duyệt”, IE kiểm tra lại; file khác file IE đã kiểm tra → “Lỗi dữ liệu: File layout khác file IE đã kiểm tra”.</td></tr>
 <tr><td>Thiếu máy còn lại</td><td>Tính bằng đúng cách tính của bảng IE Tech (đề xuất mới nhất của từng nhóm máy + quyết định IE Tech). Hành động Thuê/Mua/Mượn (và Khác có nhập số máy) cộng máy theo ngày, Dời kế hoạch dời cả chuyền từ mã hàng đã chọn (Đã chốt và Dự kiến tính riêng; dời đã vào kế hoạch mới thì không tính nữa); mỗi nhóm máy thiếu có khung hành động riêng với kết quả hiện ngay; chỉ IE Báo cáo máy ghi hành động, Giám sát chỉ thử. Thẻ tổng hợp tạo khi mọi hành động đã chốt.</td></tr>
 <tr><td>Số liệu ngay sau khi lưu</td><td>Báo cáo thiếu máy tính cả các thay đổi vừa duyệt (có nhãn), dù MC Report chưa cập nhật.</td></tr>
@@ -278,6 +278,7 @@
 <tr><td>Tab Thiếu máy báo thiếu dữ liệu</td><td>MC Report cần có <code>MACHINE BY LINE</code>, <code>MC STATUS</code>, <code>PU LIST</code> và đã nạp Master plan.</td></tr>
 <tr><td>IE Tech không thấy PU / dòng chuẩn bị</td><td>Kiểm tra đã kết nối đúng thư mục data, PU có trong PU LIST (tên giống <code>Linemapping.xlsx</code>), IE Báo cáo máy đã “Gửi IE Tech”.</td></tr>
 <tr><td>Trình duyệt hỏi lại quyền thư mục</td><td>Bấm “🔁 Kết nối lại” hoặc Cho phép / Allow.</td></tr>
+<tr><td>MC Report / Master plan vừa được lưu lại</td><td>Bấm <b>🔄 Làm mới</b> ở đầu trang (mọi tab, mọi vai trò): công cụ đọc lại MC Report, Master plan, thư mục layout và thư mục data đã chọn, không cần chọn lại, rồi vẽ lại tab đang mở.</td></tr>
 <tr><td>Sau khi cập nhật phiên bản trang web, giao diện cũ</td><td>Nhấn Ctrl+F5. Lần đầu mở bằng địa chỉ mới, chọn lại các thư mục (trình duyệt ghi nhớ theo địa chỉ trang).</td></tr></table>
 </section>
 </main></div></body></html>

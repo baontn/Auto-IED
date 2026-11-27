@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Layout Check: User guide</title><link rel="icon" href="../icon.png"><link rel="stylesheet" href="manual.css"></head><body>
-<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>Layout Check V4.4.1: User guide</b><a href="layout-check.html" title="Tiếng Việt" onclick="try{localStorage.setItem('ie_site_lang','vi')}catch(e){}">VI</a><a href="ie-bao-cao-may.en.html">IE Báo cáo máy ›</a><a href="../index.html">‹ Home</a></header>
+<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>Layout Check V4.5.0: User guide</b><a href="layout-check.html" title="Tiếng Việt" onclick="try{localStorage.setItem('ie_site_lang','vi')}catch(e){}">VI</a><a href="ie-bao-cao-may.en.html">IE Báo cáo máy ›</a><a href="../index.html">‹ Home</a></header>
 <div class="wrap">
 <nav class="toc"><b>Contents</b>
 <a href="#intro">1. Introduction</a>
@@ -138,7 +138,7 @@
 <section id="rules"><h2>9. Rules to remember</h2>
 <ul>
 <li>Only an IE officer saving Pass/Accept completes a style. The IE Báo cáo máy tool only writes an "Approved" note (it does not count as a check).</li>
-<li>The database uses only the rows with the <b>latest date</b> of each style.</li>
+<li>The database <b>merges all dates</b> per machine: each machine code uses the row with that machine's latest date, machines found only on an older date are kept (V4.5.0).</li>
 <li>A Pass already stored in <code>data\validations</code> is never rewritten.</li>
 <li>A computer using an older Layout Check keeps working (it just does not show the newer labels).</li>
 <li>Do not rename or delete the folders <code>activity</code>, <code>validations</code>, <code>variations</code>, <code>approvals</code> in <code>data</code>.</li></ul>

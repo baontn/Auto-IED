@@ -36,6 +36,14 @@ var _setRole = setRole;
 setRole = function (r) { _setRole(r); $('mainTabs').hidden = r === 'tech' || r === 'sup'; if (r !== 'tech' && r !== 'sup') setTab(TAB); };
 setRole(ROLE);
 
+// one button in the header: read again every remembered file (MC Report, Master plan, layout folder, data folder) without choosing anything again
+$('bRefresh').onclick = async function () {
+  var b = this, have = (await KV.get('cmc')) || (await KV.get('cfiles') || []).length || (await KV.get('cdata'));
+  if (!have) { alert(t('hdrRefreshNone')); return; }
+  b.disabled = true; var old = b.textContent; b.textContent = '⏳ …';
+  try { await reconnect(true); REF.demand = null; setTab(TAB); } finally { b.disabled = false; b.textContent = old; }
+  $('remMsg').textContent = t('hdrRefreshDone', [new Date().toLocaleTimeString()]);
+};
 if (window.paintRemember) paintRemember().then(function () { return reconnect(false); });
 
 // any script error is shown in a red strip (so a failing export / save is never silent) and can be copied to the IE team

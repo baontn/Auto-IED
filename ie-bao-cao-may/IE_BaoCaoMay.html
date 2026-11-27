@@ -416,8 +416,9 @@ table.rzw td,table.rzw th{white-space:normal!important;overflow-wrap:anywhere;wo
 </head>
 <body>
 <header>
-  <h1 data-t="title"></h1><span class="tag t-info" id="verTag" title="Version">v7.12</span><span class="sub" data-t="subtitle"></span>
+  <h1 data-t="title"></h1><span class="tag t-info" id="verTag" title="Version">v7.13</span><span class="sub" data-t="subtitle"></span>
   <div role="group" aria-label="Role" id="roleSeg" style="margin-left:auto;display:flex;gap:4px"><button data-role="cons" data-t="roleCons"></button><button data-role="tech" data-t="roleTech"></button><button data-role="sup" data-t="roleSup"></button></div>
+  <button id="bRefresh" data-t="hdrRefresh" style="margin-left:8px"></button>
   <a class="homebtn" id="btnHome" href="../index.html" data-t="homeLink"></a>
   <div class="lang" role="group" aria-label="Language" style="margin-left:8px"><button data-lang="vi">VI</button><button data-lang="en">EN</button></div>
 </header>
@@ -635,6 +636,7 @@ table.rzw td,table.rzw th{white-space:normal!important;overflow-wrap:anywhere;wo
 <script>// ===================== TEXTS (VI / EN) =====================
 var I18N = {
   vi: {
+    hdrRefresh: '🔄 Làm mới', hdrRefreshNone: 'Chưa có file nào được ghi nhớ. Chọn MC Report / Master plan ở tab Dữ liệu trước.', hdrRefreshDone: '✓ Đã đọc lại các file đã chọn lúc {0}.',
     errStrip: 'Lỗi trang (gửi nội dung này cho IE):',
     xlErr: 'Không xuất được file Excel: {0}',
     srcXl: '⬇ Xuất Excel',
@@ -775,7 +777,7 @@ var I18N = {
     n_lcDone: 'Layout Check: {0} bởi {1} ngày {2}', n_lcOk: 'Nhân viên IE đã kiểm tra và xác nhận LAYOUT này là đúng ({0} bởi {1}, {2}). Database đang khác layout, nên cần cập nhật database theo layout',
     n_lcLayoutFix: 'Layout Check: người tổng hợp yêu cầu sửa layout ({0}): {1} — không cập nhật database',
     n_lcFail: 'Layout Check: Không đạt ({0}, {1}): {2}', n_lcChanged: 'Layout đã thay đổi sau lần kiểm tra ngày {0} — IE cần kiểm tra lại',
-    i_oldVer: 'Phiên bản cũ trong database', a_oldVer: 'Chỉ dòng của ngày mới nhất được dùng. Đánh dấu để xóa các dòng cũ',
+    i_oldVer: 'Phiên bản cũ trong database', a_oldVer: 'Mỗi máy chỉ dòng của ngày mới nhất của máy đó được dùng (máy chỉ có ở ngày cũ vẫn được giữ); đây là các dòng đã bị dòng mới thay thế. Đánh dấu để xóa các dòng cũ',
     lcSaved: 'Đã ghi {0} ghi chú "Đã duyệt" sang Layout Check.', lcErr: 'Không ghi được sang Layout Check: {0}',
     title: 'IE Báo cáo máy — Cập nhật MACHINE DATABASE',
     subtitle: 'Quét layout trước; mã hàng chưa có layout thì dùng costing. Chỉ thay đổi được duyệt mới được ghi. Mã hàng chỉ hoàn tất khi Nhân viên IE kiểm tra Đạt trong Layout Check.',
@@ -827,6 +829,7 @@ var I18N = {
     c_Added: 'Mới', c_Changed: 'Thay đổi', c_Unchanged: 'Không đổi'
   },
   en: {
+    hdrRefresh: '🔄 Refresh', hdrRefreshNone: 'No file remembered yet. Choose the MC Report / Master plan in the Data tab first.', hdrRefreshDone: '✓ The chosen files were read again at {0}.',
     errStrip: 'Page error (send this text to the IE team):',
     xlErr: 'Could not export the Excel file: {0}',
     srcXl: '⬇ Export Excel',
@@ -967,7 +970,7 @@ var I18N = {
     n_lcDone: 'Layout Check: {0} by {1} on {2}', n_lcOk: 'An IE officer checked and confirmed that this LAYOUT is correct ({0} by {1}, {2}). The database differs from the layout, so the database needs updating to match the layout',
     n_lcLayoutFix: 'Layout Check: consolidator asked to fix the layout ({0}): {1} — database not updated',
     n_lcFail: 'Layout Check: Fail ({0}, {1}): {2}', n_lcChanged: 'Layout changed after the check on {0} — IE must re-check',
-    i_oldVer: 'Older versions in database', a_oldVer: 'Only the latest date is used. Tick to remove the older rows',
+    i_oldVer: 'Older versions in database', a_oldVer: 'For each machine only its latest-dated row is used (machines found only on an older date are kept); these rows were replaced by newer ones. Tick to remove the older rows',
     lcSaved: '{0} "Approved" notes written to Layout Check.', lcErr: 'Could not write to Layout Check: {0}',
     title: 'Consolidator — MACHINE DATABASE update',
     subtitle: 'Layouts are scanned first. Styles without a layout use costing. Only approved changes are written.',
@@ -1074,7 +1077,7 @@ function fmtDate(d) { if (!(d instanceof Date)) return d ? String(d) : ''; var p
 // ---------- reference data ----------
 function loadGroups(aoa) { var m = {}; aoa.slice(1).forEach(function (r) { var c = skey(r[0]); if (c) m[c] = String(r[1] == null ? '' : r[1]).trim(); }); return m; }
 function dayKey(v) { return v instanceof Date ? Date.UTC(v.getFullYear(), v.getMonth(), v.getDate()) : (typeof v === 'number' ? Math.round((v - 25569) * 864e5) : null); }
-function loadDb(aoa) {               // per style only the rows of the LATEST date count (same rule as Layout Check)
+function loadDb(aoa) {               // v7.13: ALL dates are merged per machine: for every machine code of a style the rows of its LATEST date count; machines only found on an older date are kept (same rule as Layout Check)
   var header = aoa[0] || [], rows = aoa.slice(1).filter(function (r) { return String(r[0]).trim() !== ''; });
   var ix = { style: findCol(header, 'STYLE'), mc: findCol(header, 'MACHINE'), qty: findCol(header, 'QUANTITY'), rm: findCol(header, 'REMARK'), grp: findCol(header, 'MACHINE GROUP'), date: findCol(header, 'DATE') };
   var byKey = {};
@@ -1082,12 +1085,14 @@ function loadDb(aoa) {               // per style only the rows of the LATEST da
     var k = skey(r[ix.style]); if (!byKey[k]) byKey[k] = { name: String(r[ix.style]).trim(), idx: [], remarks: {}, set: {}, latest: null, cur: [], old: [] };
     var e = byKey[k], d = ix.date >= 0 ? dayKey(r[ix.date]) : null; e.idx.push(i);
     if (d != null && (e.latest == null || d > e.latest)) e.latest = d;
+    var c0 = skey(r[ix.mc]); if (d != null && c0) { e.mcLatest = e.mcLatest || {}; if (e.mcLatest[c0] == null || d > e.mcLatest[c0]) e.mcLatest[c0] = d; }
   });
   Object.keys(byKey).forEach(function (k) {
     var e = byKey[k];
     e.idx.forEach(function (i) {
-      var r = rows[i], d = ix.date >= 0 ? dayKey(r[ix.date]) : null;
-      if (e.latest != null && d !== e.latest) { e.old.push(i); return; }
+      var r = rows[i], d = ix.date >= 0 ? dayKey(r[ix.date]) : null, c1 = skey(r[ix.mc]);
+      var want = e.latest == null ? null : (c1 && e.mcLatest && e.mcLatest[c1] != null ? e.mcLatest[c1] : e.latest);    // this machine's own latest date
+      if (want != null && d !== want) { e.old.push(i); return; }
       e.cur.push(i); e.remarks[String(r[ix.rm]).trim().toLowerCase()] = 1;
       var q = +r[ix.qty] || 0, c = skey(r[ix.mc]); if (c) e.set[c] = (e.set[c] || 0) + q;
     });
@@ -3903,6 +3908,14 @@ var _setRole = setRole;
 setRole = function (r) { _setRole(r); $('mainTabs').hidden = r === 'tech' || r === 'sup'; if (r !== 'tech' && r !== 'sup') setTab(TAB); };
 setRole(ROLE);
 
+// one button in the header: read again every remembered file (MC Report, Master plan, layout folder, data folder) without choosing anything again
+$('bRefresh').onclick = async function () {
+  var b = this, have = (await KV.get('cmc')) || (await KV.get('cfiles') || []).length || (await KV.get('cdata'));
+  if (!have) { alert(t('hdrRefreshNone')); return; }
+  b.disabled = true; var old = b.textContent; b.textContent = '⏳ …';
+  try { await reconnect(true); REF.demand = null; setTab(TAB); } finally { b.disabled = false; b.textContent = old; }
+  $('remMsg').textContent = t('hdrRefreshDone', [new Date().toLocaleTimeString()]);
+};
 if (window.paintRemember) paintRemember().then(function () { return reconnect(false); });
 
 // any script error is shown in a red strip (so a failing export / save is never silent) and can be copied to the IE team
