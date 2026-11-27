@@ -8,7 +8,7 @@ Two **static, offline, single-file web tools** (Chrome/Edge only, File System Ac
 
 | Tool | File | Version | Who uses it |
 |---|---|---|---|
-| **Layout Check** (LC) | `layout-check/LayoutCheck.html` (+ `xlsx.full.min.js` next to it) | V4.4.0 | IE officers check a style's layout machine list against the MACHINE DATABASE; IE Báo cáo máy (consolidator) fixes the database; IE Tech fixes layouts; Supervisor tracks |
+| **Layout Check** (LC) | `layout-check/LayoutCheck.html` (+ `xlsx.full.min.js` next to it) | V4.4.1 | IE officers check a style's layout machine list against the MACHINE DATABASE; IE Báo cáo máy (consolidator) fixes the database; IE Tech fixes layouts; Supervisor tracks |
 | **IE Báo cáo máy** (IBM) | `ie-bao-cao-may/IE_BaoCaoMay.html` (built from `src/ie-bao-cao-may`) | v7.10 | (a) updates MACHINE DATABASE from scanned layouts + costing, (b) machine shortage analysis by day, (c) prep (changeover) machines: proposal -> IE Tech review -> close report, activity log |
 
 Weekly process: layouts sit in share folders; `MC_report.xlsx` runs Power Query over `TransformedMasterPlan.xlsx` (sheet `MasterPlan-Full`) plus the MACHINE DATABASE (an Excel table that **must stay named `Table1`**) via MACHINE GROUP, producing MACHINE BY LINE and MISSING STYLES. Costing is used for styles with no layout. Only D lines run 48HC (the suffix is part of the style name).
@@ -108,5 +108,5 @@ Browser-side state: IBM keeps folder/file handles in IndexedDB `iebaocaomay` (KV
 ## 10. First steps in Claude Code
 
 1. `python3 tools/build_ie_bao_cao_may.py` and confirm it reproduces `ie-bao-cao-may/IE_BaoCaoMay.html` without a diff.
-2. Open both HTML files in Chrome (from the repo folder) and check the version tags (`v7.10`, `V4.4.0`).
+2. Open both HTML files in Chrome (from the repo folder) and check the version tags (`v7.10`, `V4.4.1`).
 3. Ask the user for the sample data and set up the test harness paths before changing behaviour.
