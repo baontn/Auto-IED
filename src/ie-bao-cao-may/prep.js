@@ -12,8 +12,21 @@ function loadMbl(aoa) {
     if (d == null || !l || !s || /^(not\s*set\s*up|n\/a|-)$/i.test(s)) return;           // idle line, not a style
     dates[d] = 1;
     var L = lines[l] = lines[l] || {}, D = L[d] = L[d] || {}, S = D[s] = D[s] || {};
-    if (g && q) { S[g] = (S[g] || 0) + q; var B = byGroup[g] = byGroup[g] || {}; B[d] = (B[d] || 0) + q; }
+    if (g && q) { S[g] = (S[g] || 0) + q; }
   });
+  // Sundays are not working days. A style that STARTS on a Sunday (not running the previous planned day, not already on the Monday) starts on the Monday instead,
+  // so it is never lost; Sunday days of styles that are already running are simply ignored. Prep is counted back from the Saturday before (see buildPrep).
+  Object.keys(lines).forEach(function (l) {
+    var L = lines[l], ds = Object.keys(L).map(Number).sort(function (x, y) { return x - y; });
+    ds.forEach(function (d, i) {
+      if (new Date(d).getUTCDay() !== 0) return;
+      var mon = d + 864e5, prev = i > 0 ? L[ds[i - 1]] : {};
+      Object.keys(L[d]).forEach(function (st) { if (!prev[st] && !(L[mon] && L[mon][st])) { (L[mon] = L[mon] || {})[st] = L[d][st]; dates[mon] = 1; } });
+      delete L[d];
+    });
+  });
+  Object.keys(dates).forEach(function (d) { if (new Date(+d).getUTCDay() === 0) delete dates[d]; });
+  Object.keys(lines).forEach(function (l) { Object.keys(lines[l]).forEach(function (d) { var D = lines[l][d]; Object.keys(D).forEach(function (st) { Object.keys(D[st]).forEach(function (g) { var B = byGroup[g] = byGroup[g] || {}; B[d] = (B[d] || 0) + D[st][g]; }); }); }); });
   return { lines: lines, byGroup: byGroup, dates: Object.keys(dates).map(Number).sort(function (a, b) { return a - b; }) };
 }
 // MC STATUS: "MC used for PDN" per machine group, plus every column of its formula with its sign
