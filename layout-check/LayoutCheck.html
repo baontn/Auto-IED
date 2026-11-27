@@ -160,7 +160,7 @@ tr.tot td{font-weight:700;border-top:2px solid var(--text);border-bottom:none;ba
 
 <!-- ============ TOP BAR ============ -->
 <header>
-  <h1 data-i18n="appTitle"></h1><span class="tag t-info" id="verTag" title="Version">V4.4.0</span>
+  <h1 data-i18n="appTitle"></h1><span class="tag t-info" id="verTag" title="Version">V4.4.1</span>
   <nav class="tabs">
     <button data-tab="check" data-i18n="tabCheck"></button>
     <button data-tab="variation" data-i18n="tabVar"></button>
@@ -937,21 +937,36 @@ async function appendLine(dir, name, line) {
   const w = await fh.createWritable({ keepExistingData: true });
   await w.seek(size); await w.write(line + '\n'); await w.close();
 }
+// many small files on a share are slow when read one by one: read 16 at a time, and keep the parsed content on this computer
+// (key = file name + modified time + size), so only new or changed files are really read again
 async function readJsonDir(name) {
-  const d = await S.dataDir.getDirectoryHandle(name, { create: true }), out = [];
-  for await (const [fn, h] of d.entries()) {
-    if (h.kind !== 'file' || !fn.toLowerCase().endsWith('.json')) continue;
-    try { out.push(JSON.parse(await (await h.getFile()).text())); } catch (e) { console.warn('bad file', fn); }
+  const d = await S.dataDir.getDirectoryHandle(name, { create: true }), hs = [];
+  for await (const [fn, h] of d.entries()) if (h.kind === 'file' && fn.toLowerCase().endsWith('.json')) hs.push([fn, h]);
+  const ck = 'jc1|' + S.dataDir.name + '|' + name; let cache = {};
+  try { cache = (await idb.get(ck)) || {}; } catch (e) { cache = {}; }
+  const out = new Array(hs.length), next = {}; let i = 0, changed = false;
+  async function worker() {
+    while (i < hs.length) {
+      const k = i++, fn = hs[k][0];
+      try {
+        const f = await hs[k][1].getFile(), c = cache[fn];
+        if (c && c.lm === f.lastModified && c.size === f.size) { out[k] = c.o; next[fn] = c; }
+        else { const o = JSON.parse(await f.text()); out[k] = o; next[fn] = { lm: f.lastModified, size: f.size, o }; changed = true; }
+      } catch (e) { console.warn('bad file', fn); }
+    }
   }
-  return out;
+  await Promise.all(Array.from({ length: Math.min(16, hs.length) }, worker));
+  if (changed || Object.keys(next).length !== Object.keys(cache).length) { try { await idb.set(ck, next); } catch (e) { console.warn('cache not saved', e); } }
+  return out.filter(x => x !== undefined);
 }
 // find a sheet by name, ignoring upper/lower case and extra spaces ("Machine Database" = "MACHINE DATABASE")
 async function readSheetCI(file, wanted) {
   const norm = s => K(s).replace(/\s+/g, ' ');
-  const names = (await readWb(file, { bookSheets: true })).SheetNames;
+  const buf = await file.arrayBuffer();                                   // read the file once (a big file on a share is slow to fetch twice)
+  const names = XLSX.read(buf, { type: 'array', bookSheets: true }).SheetNames;
   const name = names.find(n => norm(n) === norm(wanted));
   if (!name) throw new Error('Sheet "' + wanted + '" ? ' + file.name + ' → ' + names.join(', '));
-  return (await readWb(file, { sheets: [name] })).Sheets[name];
+  return XLSX.read(buf, { type: 'array', sheets: [name] }).Sheets[name];
 }
 async function readWb(file, opts) { return XLSX.read(await file.arrayBuffer(), Object.assign({ type: 'array' }, opts || {})); }
 async function copyText(text) {
@@ -1081,7 +1096,7 @@ async function initLayoutRoot(interactive) {
   const cache = await idb.get('layIndex');
   if (cache && cache.v === 2 && cache.root === S.layRoot.name && Array.isArray(cache.items)) { S.layIndex = cache.items; S.layIndexAt = cache.at; }
   const old = !S.layIndexAt || (Date.now() - new Date(S.layIndexAt).getTime()) > 8 * 3600e3;
-  if (S.layRootOk && old) scanLayouts();
+  if (S.layRootOk && old) setTimeout(scanLayouts, 5000);                   // the big folder scan starts after the login has finished reading
 }
 async function allowLayRoot() {
   S.layRootOk = await ensurePerm(S.layRoot, 'read', t('allowLayRoot'));
@@ -1123,7 +1138,8 @@ async function startSession() {
   if (!dir || !dbh) throw new Error(t('needFiles'));
   S.user = { name, role: S.role, pu: $('lgPU').value };
   localStorage.setItem('lcName', name); localStorage.setItem('lcRole', S.role); localStorage.setItem('lcPU', S.user.pu);
-  await connect();
+  const btn = $('lgStart'); btn.disabled = true; toast(t('reading', t('dataFolder')));
+  try { await connect(); } catch (e) { S.user = null; throw e; } finally { btn.disabled = false; }
   $('login').hidden = true;
   paintUserChip();
   $('btnPlan').hidden = !isSup();
@@ -1155,8 +1171,14 @@ async function connect() {
   await reloadData();
 }
 async function loadDb() {
-  const f = await S.dbHandle.getFile();
-  S.db = parseDb(sheetRows(await readSheetCI(f, CONFIG.dbSheet))); S.dbName = f.name; S.dbMeta = { lm: f.lastModified, size: f.size };     // remembered to notice a newer file later
+  const f = await S.dbHandle.getFile(), key = f.name + '|' + f.lastModified + '|' + f.size;
+  let db = null;                                                           // the parsed database is kept on this computer: the same file is not parsed again at every login
+  try { const c = await idb.get('dbCache'); if (c && c.v === 1 && c.key === key && c.db && c.db.byStyle) db = c.db; } catch (e) { db = null; }
+  if (!db) {
+    db = parseDb(sheetRows(await readSheetCI(f, CONFIG.dbSheet)));
+    try { await idb.set('dbCache', { v: 1, key, db }); } catch (e) { console.warn('db cache not saved', e); }
+  }
+  S.db = db; S.dbName = f.name; S.dbMeta = { lm: f.lastModified, size: f.size };     // remembered to notice a newer file later
 }
 async function loadChecks() {
   const all = await readJsonDir(CONFIG.validationDir), appr = await readJsonDir('approvals');
@@ -1169,9 +1191,9 @@ async function loadChecks() {
 }
 function computeVars() { S.vars = buildVariations(S.vals, S.db, S.varActs); S.stages = styleStages(S.vals, S.rawActs, S.db); }
 async function reloadData() {
-  const txt = await readText(S.dataDir, CONFIG.stylePlanFile);
+  const [txt] = await Promise.all([readText(S.dataDir, CONFIG.stylePlanFile), loadChecks(), loadDb()]);
   S.sp = txt ? JSON.parse(txt) : { styles: {}, loads: [] };
-  await loadChecks(); await loadDb(); computeVars();
+  computeVars();
   if (!S.sp.loads.length) toast(t('noPlan'), 'warn');
 }
 async function loadPlan() {
