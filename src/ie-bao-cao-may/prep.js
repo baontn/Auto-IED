@@ -12,8 +12,21 @@ function loadMbl(aoa) {
     if (d == null || !l || !s || /^(not\s*set\s*up|n\/a|-)$/i.test(s)) return;           // idle line, not a style
     dates[d] = 1;
     var L = lines[l] = lines[l] || {}, D = L[d] = L[d] || {}, S = D[s] = D[s] || {};
-    if (g && q) { S[g] = (S[g] || 0) + q; var B = byGroup[g] = byGroup[g] || {}; B[d] = (B[d] || 0) + q; }
+    if (g && q) { S[g] = (S[g] || 0) + q; }
   });
+  // Sundays are not working days. A style that STARTS on a Sunday (not running the previous planned day, not already on the Monday) starts on the Monday instead,
+  // so it is never lost; Sunday days of styles that are already running are simply ignored. Prep is counted back from the Saturday before (see buildPrep).
+  Object.keys(lines).forEach(function (l) {
+    var L = lines[l], ds = Object.keys(L).map(Number).sort(function (x, y) { return x - y; });
+    ds.forEach(function (d, i) {
+      if (new Date(d).getUTCDay() !== 0) return;
+      var mon = d + 864e5, prev = i > 0 ? L[ds[i - 1]] : {};
+      Object.keys(L[d]).forEach(function (st) { if (!prev[st] && !(L[mon] && L[mon][st])) { (L[mon] = L[mon] || {})[st] = L[d][st]; dates[mon] = 1; } });
+      delete L[d];
+    });
+  });
+  Object.keys(dates).forEach(function (d) { if (new Date(+d).getUTCDay() === 0) delete dates[d]; });
+  Object.keys(lines).forEach(function (l) { Object.keys(lines[l]).forEach(function (d) { var D = lines[l][d]; Object.keys(D).forEach(function (st) { Object.keys(D[st]).forEach(function (g) { var B = byGroup[g] = byGroup[g] || {}; B[d] = (B[d] || 0) + D[st][g]; }); }); }); });
   return { lines: lines, byGroup: byGroup, dates: Object.keys(dates).map(Number).sort(function (a, b) { return a - b; }) };
 }
 // MC STATUS: "MC used for PDN" per machine group, plus every column of its formula with its sign
@@ -153,12 +166,13 @@ function applyReviews(rows, reviews) {
     if (!r) { x.status = x.same ? 'AUTO_SKIP' : 'PENDING'; x.eff = x.same ? 0 : x.prep; return; }
     if (r.loadDate && r.loadDate !== new Date(x.load).toISOString().slice(0, 10)) x.flags.push('dateMoved');
     if (r.decision === 'REMOVE') { x.status = 'REMOVED'; x.eff = 0; x.sameRem = isSameRemoval(r); return; }
+    if (r.qtyBActual != null && r.qtyBActual !== x.qtyB && !(r.qtyB != null && r.qtyB !== x.qtyB)) { x.qtyAct = +r.qtyBActual; x.flags.push('layoutQty'); }     // the layout quantity also changes the production of the style on the line
     if (r.decision === 'ADJUST') {
       if (r.qtyB != null && r.qtyB !== x.qtyB) { x.status = 'PENDING'; x.eff = x.prep; x.flags.push('qtyChanged'); return; }
       x.status = 'ADJUSTED'; x.eff = +r.qty || 0; return;
     }
     x.status = 'KEPT'; x.eff = r.qtyBActual != null ? Math.ceil(x.ratio * r.qtyBActual - 1e-9) : x.prep;
-    if (r.qtyBActual != null) x.flags.push('layoutQty');
+    if (r.qtyBActual != null && x.flags.indexOf('layoutQty') < 0) x.flags.push('layoutQty');
   });
   return rows;
 }
@@ -228,6 +242,18 @@ function shiftProduction(styles, x, loadMs, newMs, days, keyOf) {
     });
   }
 }
+// IE Tech corrected the machines of style B per layout: production of B on the line follows from the loading day to the end of that run
+// (the machines were wrong in the database, so the loading line must use the corrected number too; it stops mattering once the database has the same number)
+function applyLayoutQty(styles, x, days, keyOf) {
+  var q = x.qtyAct, S = x.to && styles[x.to]; if (q == null || !S) return;
+  var ms = function (v) { return typeof v === 'number' ? v : Date.parse(v + 'T00:00:00Z'); }, L = ms(x.loadActual != null ? x.loadActual : x.load), on = false;
+  for (var i = 0; i < days.length; i++) {
+    var k = keyOf(days[i]);
+    if (!on) { if (days[i] >= L && S[k] != null) on = true; else continue; }
+    if (S[k] == null) break;
+    S[k] = q;
+  }
+}
 function groupGrid(mbl, group, prepRows, avail, fromKey, toKey, puMap, ends) {
   var days = mbl.dates.filter(function (d) { return d >= fromKey && d <= toKey && new Date(d).getUTCDay() !== 0; });   // working days only: Sundays are not shown or counted
   var lines = {}, prodTot = {}, prepTot = {};
@@ -236,6 +262,7 @@ function groupGrid(mbl, group, prepRows, avail, fromKey, toKey, puMap, ends) {
     days.forEach(function (d) { Object.keys(L[d] || {}).forEach(function (s) { var q = L[d][s][group] || 0; if (q) (styles[s] = styles[s] || {})[d] = q; }); });
     var run0 = ends ? runningStyle(styles, days) : null;
     prepRows.forEach(function (x) { if (x.group === group && x.line === line && x.loadActual) shiftProduction(styles, x, x.load, x.loadActual, days, function (d) { return d; }); });
+    prepRows.forEach(function (x) { if (x.group === group && x.line === line && x.qtyAct != null) applyLayoutQty(styles, x, days, function (d) { return d; }); });
     var e0 = run0 && ends[line + '|' + run0]; if (e0 && e0.endDate) adjustRunningEnd(styles, run0, Date.parse(e0.endDate + 'T00:00:00Z'), days, function (d) { return d; });
     if (Object.keys(styles).length) lines[line] = { styles: styles, prep: [] };
     Object.keys(styles).forEach(function (s) { Object.keys(styles[s]).forEach(function (d) { prodTot[d] = (prodTot[d] || 0) + styles[s][d]; }); });
@@ -259,6 +286,7 @@ function adjustLines(G0, rows, ends) {
   var days = G0.days, dms = days.map(isoMs), G = { lines: {} }, runInfo = {};
   Object.keys(G0.lines).forEach(function (l) { var st = {}; Object.keys(G0.lines[l].styles).forEach(function (s) { st[s] = Object.assign({}, G0.lines[l].styles[s]); }); G.lines[l] = Object.assign({}, G0.lines[l], { styles: st }); });
   rows.forEach(function (x) { if (x.loadActual && G.lines[x.line]) shiftProduction(G.lines[x.line].styles, x, isoMs(x.load), isoMs(x.loadActual), dms, msIso); });
+  rows.forEach(function (x) { if (x.qtyAct != null && G.lines[x.line]) applyLayoutQty(G.lines[x.line].styles, x, dms, msIso); });
   Object.keys(G0.lines).forEach(function (l) {
     var run = runningStyle(G0.lines[l].styles, days); if (!run) return;
     var pe = runEnd(G0.lines[l].styles, run, days), e = ends && ends[l + '|' + run];

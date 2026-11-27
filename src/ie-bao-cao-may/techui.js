@@ -111,7 +111,8 @@ function techRows() {
       if (r.qtyB != null && r.qtyB !== x.qtyB) { x.status = 'PENDING'; x.eff = x.prep; x.flags.push('qtyChanged'); }
       else if (r.decision === 'REMOVE') { x.status = 'REMOVED'; x.eff = 0; x.sameRem = isSameRemoval(r); }
       else if (r.decision === 'ADJUST') { x.status = 'ADJUSTED'; x.eff = +r.qty || 0; }
-      else { x.status = 'KEPT'; x.eff = r.qtyBActual != null ? Math.ceil(x.ratio * r.qtyBActual - 1e-9) : x.prep; if (r.qtyBActual != null) x.flags.push('layoutQty'); }
+      else { x.status = 'KEPT'; x.eff = r.qtyBActual != null ? Math.ceil(x.ratio * r.qtyBActual - 1e-9) : x.prep; }
+      if (r.decision !== 'REMOVE' && !(r.qtyB != null && r.qtyB !== x.qtyB) && r.qtyBActual != null) { x.flags.push('layoutQty'); if (r.qtyBActual !== x.qtyB) x.qtyAct = +r.qtyBActual; }     // production of the style on the line follows the layout quantity too
       if (r.loadDateActual || r.prepDays) {                                     // IE Tech's loading date / number of prep days move the prep days
         var L = Date.parse((r.loadDateActual || x.load) + 'T00:00:00Z');
         x.days = prepDaysBefore(L, r.prepDays || (x.days || []).length).map(function (d) { return new Date(d).toISOString().slice(0, 10); });
