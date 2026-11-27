@@ -160,7 +160,7 @@ tr.tot td{font-weight:700;border-top:2px solid var(--text);border-bottom:none;ba
 
 <!-- ============ TOP BAR ============ -->
 <header>
-  <h1 data-i18n="appTitle"></h1><span class="tag t-info" id="verTag" title="Version">V4.4.1</span>
+  <h1 data-i18n="appTitle"></h1><span class="tag t-info" id="verTag" title="Version">V4.5.0</span>
   <nav class="tabs">
     <button data-tab="check" data-i18n="tabCheck"></button>
     <button data-tab="variation" data-i18n="tabVar"></button>
@@ -297,7 +297,7 @@ const I18N = {
     how4: 'Read the result, then click <b>Pass</b>, <b>Accept with remark</b> or <b>Fail</b>.',
     howNote: 'A style disappears from the list once it is Passed or Accepted. A Failed style stays until it is fixed and checked again. Every difference is sent to the Consolidator in the Variation log.',
     lastCheck: 'last check', consAsks: 'Consolidator asks to correct the layout', step1: 'Machine Database',
-    dbFound: '✅ Found: <b>{0} machines</b> ({1} types)', updated: 'updated {0}', olderIgnored: '(older versions ignored)', showList: 'Show machine list',
+    dbFound: '✅ Found: <b>{0} machines</b> ({1} types)', updated: 'updated {0}', olderIgnored: '(some older rows were replaced by newer ones)', showList: 'Show machine list',
     thMachine: 'Machine', thGroup: 'Group', thQty: 'Qty', thRemark: 'Remark', notInDb: '❌ This style is not in the Machine Database.',
     similar: 'Similar styles in the database:', canStillFail: 'You can still open the layout and save FAIL with a comment.',
     step2: 'Layout file', openLayout: '📂 Open layout file', addFile: '📂 Add another file',
@@ -399,7 +399,7 @@ const I18N = {
     how4: 'Xem kết quả, sau đó bấm <b>Đạt</b>, <b>Chấp nhận có ghi chú</b> hoặc <b>Không đạt</b>.',
     howNote: 'Mã hàng Đạt hoặc Chấp nhận sẽ không còn trong danh sách. Mã hàng Không đạt vẫn giữ lại đến khi được sửa và kiểm tra lại. Mọi sai lệch được chuyển cho Người tổng hợp tại Nhật ký sai lệch.',
     lastCheck: 'lần kiểm tra trước', consAsks: 'Người tổng hợp yêu cầu sửa layout', step1: 'CSDL máy',
-    dbFound: '✅ Tìm thấy: <b>{0} máy</b> ({1} loại)', updated: 'cập nhật {0}', olderIgnored: '(bỏ qua phiên bản cũ)', showList: 'Xem danh sách máy',
+    dbFound: '✅ Tìm thấy: <b>{0} máy</b> ({1} loại)', updated: 'cập nhật {0}', olderIgnored: '(một số dòng cũ đã bị dòng mới thay thế)', showList: 'Xem danh sách máy',
     thMachine: 'Máy', thGroup: 'Nhóm máy', thQty: 'SL', thRemark: 'Ghi chú', notInDb: '❌ Mã hàng này chưa có trong CSDL máy.',
     similar: 'Mã hàng tương tự trong CSDL:', canStillFail: 'Vẫn có thể mở layout và lưu Không đạt kèm ghi chú.',
     step2: 'File layout', openLayout: '📂 Mở file layout', addFile: '📂 Thêm file khác',
@@ -659,13 +659,16 @@ function parseDb(rows) {
 function dbForStyle(db, sk) {
   const rows = db.byStyle[sk] || [];
   const dates = [...new Set(rows.map(r => r.date).filter(d => d !== null))].sort((a, b) => b - a);
-  const use = dates.length ? rows.filter(r => r.date === dates[0]) : rows;
+  // all dates are merged per machine: each machine uses the rows of ITS latest date; machines found only on an older date are kept (V4.5.0)
+  const mcLast = {}; rows.forEach(r => { if (r.date !== null && (mcLast[r.machine] == null || r.date > mcLast[r.machine])) mcLast[r.machine] = r.date; });
+  const use = dates.length ? rows.filter(r => r.date === (mcLast[r.machine] != null ? mcLast[r.machine] : dates[0])) : rows;
+  const replaced = [...new Set(rows.filter(r => !use.includes(r) && r.date !== null).map(r => r.date))].sort((a, b) => b - a);
   const machines = {};
   use.forEach(r => {
     const m = machines[r.machine] = machines[r.machine] || { qty: 0, group: r.group, remark: '' };
     m.qty += r.qty; if (r.remark) m.remark = String(r.remark);
   });
-  return { machines, date: dates.length ? dates[0] : null, otherDates: dates.slice(1), rowCount: rows.length };
+  return { machines, date: dates.length ? dates[0] : null, otherDates: replaced, rowCount: rows.length };
 }
 function dbSuggestions(db, sk) {
   const base = sk.slice(0, 11); if (base.length < 11) return [];
@@ -1173,10 +1176,10 @@ async function connect() {
 async function loadDb() {
   const f = await S.dbHandle.getFile(), key = f.name + '|' + f.lastModified + '|' + f.size;
   let db = null;                                                           // the parsed database is kept on this computer: the same file is not parsed again at every login
-  try { const c = await idb.get('dbCache'); if (c && c.v === 1 && c.key === key && c.db && c.db.byStyle) db = c.db; } catch (e) { db = null; }
+  try { const c = await idb.get('dbCache'); if (c && c.v === 2 && c.key === key && c.db && c.db.byStyle) db = c.db; } catch (e) { db = null; }
   if (!db) {
     db = parseDb(sheetRows(await readSheetCI(f, CONFIG.dbSheet)));
-    try { await idb.set('dbCache', { v: 1, key, db }); } catch (e) { console.warn('db cache not saved', e); }
+    try { await idb.set('dbCache', { v: 2, key, db }); } catch (e) { console.warn('db cache not saved', e); }
   }
   S.db = db; S.dbName = f.name; S.dbMeta = { lm: f.lastModified, size: f.size };     // remembered to notice a newer file later
 }

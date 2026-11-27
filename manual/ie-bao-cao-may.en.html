@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>IE Báo cáo máy: User guide</title><link rel="icon" href="../icon.png"><link rel="stylesheet" href="manual.css"></head><body>
-<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>IE Báo cáo máy v7.12: User guide</b><a href="ie-bao-cao-may.html" title="Tiếng Việt" onclick="try{localStorage.setItem('ie_site_lang','vi')}catch(e){}">VI</a><a href="layout-check.en.html">Layout Check ›</a><a href="../index.html">‹ Home</a></header>
+<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>IE Báo cáo máy v7.13: User guide</b><a href="ie-bao-cao-may.html" title="Tiếng Việt" onclick="try{localStorage.setItem('ie_site_lang','vi')}catch(e){}">VI</a><a href="layout-check.en.html">Layout Check ›</a><a href="../index.html">‹ Home</a></header>
 <div class="wrap">
 <nav class="toc"><b>Contents</b>
 <a href="#intro">1. Introduction</a>
@@ -253,7 +253,7 @@
 <tr><td>Several layouts for one style</td><td>Bulk/Final &gt; Initial, then higher OBD, then the newer file.</td></tr>
 <tr><td>Costing</td><td>Factor 48 for styles with the suffix 48HC, otherwise 24; operations 31–97, 100, 103, 116; rounding: decimal part ≤ 0.20 rounds down, otherwise up, minimum 1.</td></tr>
 <tr><td>Layout – database comparison</td><td><b>By machine group</b> (groups come from the MACHINE GROUP sheet): the same total machines in every group is a match; different machine codes inside the same group do not create a proposal and do not remove "Checked". Machine codes with no group are compared one by one.</td></tr>
-<tr><td>Database data</td><td>Only the rows with the <b>latest date</b> of each style are used.</td></tr>
+<tr><td>Database data</td><td><b>All dates are merged</b> per machine: for every style and machine code the row with <b>that machine's latest date</b> is used; machines found only on an older date are kept (for example if the newer date lists only 1SLM, the other machines of the older date still count). To remove a machine completely, enter quantity 0 on the new date. Older rows that were replaced are listed under "Older versions in database" so they can be removed.</td></tr>
 <tr><td>The latest decision applies</td><td>The tool reads again the exact file and sheet of the Layout Check record: machines in the file = record and database = record → "Checked"; the file was edited after the check → "To review", IE re-checks; a file different from the one the IE checked → "Data issue: the layout file differs from the file the IE checked".</td></tr>
 <tr><td>Remaining shortage</td><td>Calculated exactly like the IE Tech table (latest proposal of each machine group + IE Tech decisions). Rent/Buy/Borrow (and Other with machines) add machines by day, Take back adds machines held by an area, Delay plan moves the whole line from the chosen style (Confirmed and Planned counted separately; a delay already in the new plan is not counted any more); every short machine group has its own action box with an instant result; only the Consolidator records actions, the Supervisor can only try. The summary card is created when every action is confirmed.</td></tr>
 <tr><td>Numbers right after saving</td><td>The shortage report also counts the changes just approved (with a label), even if the MC Report is not updated yet.</td></tr>
@@ -278,6 +278,7 @@
 <tr><td>The Shortage tab says data is missing</td><td>The MC Report needs <code>MACHINE BY LINE</code>, <code>MC STATUS</code>, <code>PU LIST</code> and the Master plan must be loaded.</td></tr>
 <tr><td>IE Tech does not see the PU / prep rows</td><td>Check that the right data folder is connected, the PU is in PU LIST (same name as in <code>Linemapping.xlsx</code>), and the Consolidator has clicked "Send to IE Tech".</td></tr>
 <tr><td>The browser asks for the folder permission again</td><td>Click "🔁 Reconnect" or Allow.</td></tr>
+<tr><td>The MC Report / Master plan was just saved again</td><td>Click <b>🔄 Refresh</b> at the top of the page (any tab, any role): the tool reads the chosen MC Report, Master plan, layout folder and data folder again without choosing them again, then redraws the open tab.</td></tr>
 <tr><td>The old screen shows after the web page was updated</td><td>Press Ctrl+F5. The first time you open it from a new address, choose the folders again (the browser remembers per page address).</td></tr></table>
 </section>
 </main></div></body></html>
