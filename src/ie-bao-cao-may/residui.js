@@ -106,7 +106,7 @@ function rsLineRows(X, p, days) {
       h += rsRow(esc(s) + ' <span class="muted small">' + esc(t('rsLoadsOn', [d2(first(s))])) + '</span>', v, days, { cls: 'part', c2: esc(l), attr: ' data-rs-r="style" data-line="' + esc(l) + '"' });
     });
     X.rows.filter(function (x) { return x.line === l && x.eff; }).forEach(function (x) {
-      var v = {}; days.forEach(function (d) { v[d] = (x.days || []).indexOf(d) >= 0 ? x.eff : ''; });
+      var v = {}; days.forEach(function (d) { v[d] = (x.days || []).indexOf(d) >= 0 ? prepQtyOn(x, d) : ''; });
       h += rsRow('↳ ' + esc(t('rsPrepOf', [x.to])), v, days, { cls: 'part', cellCls: 'pr', c2: esc(l), attr: ' data-rs-r="prepline" data-line="' + esc(l) + '"' });
     });
   });
@@ -235,7 +235,7 @@ function rsPuRows(X, conf, left) {
     var acts = conf.filter(function (a) { return a.type === 'DELAY' ? (X.G0.lines[a.line] && X.G0.lines[a.line].pu === p) : (a.group === X.g && a.pu === p); });
     var ls = lines.filter(function (l) { return X.M.G.lines[l].pu === p; }).map(function (l) {
       var prod = 0, st = ''; Object.keys(X.M.G.lines[l].styles).forEach(function (s) { var q = X.M.G.lines[l].styles[s][w] || 0; if (q) { prod += q; st = s; } });
-      var prep = 0; X.rows.forEach(function (x) { if (x.line === l && x.eff && x.days && x.days.indexOf(w) >= 0) prep += x.eff; });
+      var prep = 0; X.rows.forEach(function (x) { if (x.line === l && x.eff && x.days && x.days.indexOf(w) >= 0) prep += prepQtyOn(x, w); });
       return { l: l, style: st, prod: prod, prep: prep };
     }).filter(function (r) { return r.prod || r.prep; });
     return { pu: p, n: n, pct: tot ? Math.round(100 * n / tot) : 0, acts: acts, lines: ls, days: days, series: days.map(use), w: w, more: left.gap > 0 && !acts.length };
@@ -300,7 +300,7 @@ async function rsExportTable(g) {
     Object.keys(G.lines).filter(function (l) { return G.lines[l].pu === p; }).sort().forEach(function (l) {
       var Ln = G.lines[l], first = function (x) { return Object.keys(Ln.styles[x]).sort()[0] || ''; };
       Object.keys(Ln.styles).sort(function (a, b) { return first(a).localeCompare(first(b)); }).forEach(function (x) { styles.push({ l: l, lab: x + ' (' + t('rsLoadsOn', [d2(first(x))]) + ')', v: days.map(function (d) { return Ln.styles[x][d] || 0; }) }); });
-      X.rows.filter(function (x) { return x.line === l && x.eff; }).forEach(function (x) { preps.push({ l: l, lab: '↳ ' + t('rsPrepOf', [x.to]), v: days.map(function (d) { return (x.days || []).indexOf(d) >= 0 ? x.eff : 0; }) }); });
+      X.rows.filter(function (x) { return x.line === l && x.eff; }).forEach(function (x) { preps.push({ l: l, lab: '↳ ' + t('rsPrepOf', [x.to]), v: days.map(function (d) { return (x.days || []).indexOf(d) >= 0 ? prepQtyOn(x, d) : 0; }) }); });
     });
     var r0 = rowAt(), s1 = r0 + 3, s2 = s1 + styles.length - 1, p1 = s2 + 1, p2 = p1 + preps.length - 1;
     label(r0, puName(p), '', t('pgPuSum', [puName(p), t('rsRowProd')]), { bold: true }); label(r0 + 1, '', '', t('pgPuSum', [puName(p), t('rsRowPrep')]), { bold: true }); label(r0 + 2, '', '', t('pgPuSum', [puName(p), t('rsRowTot')]), { bold: true });

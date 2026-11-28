@@ -105,7 +105,7 @@ function techRows() {
   TS.reviews.slice().sort(function (a, b) { return String(a.at).localeCompare(String(b.at)); }).forEach(function (r) { last[r.key] = r; });
   var chg = changeoverDates(TS.reviews); CHG_DATES = chg;
   var list = Object.keys(rows).map(function (k) {
-    var x = rows[k], r = last[x.key], ch = chgFor(chg, x, x.load, r); x.review = r || null; x.flags = []; x.dateAt = ch ? ch.at : null; x.ruleDays = (x.days || []).length;   // decision key = line|from|to|group (no date)
+    var x = rows[k], r = last[x.key], ch = chgFor(chg, x, x.load, r); x.pctRow = r && Array.isArray(r.prepPct) ? r.prepPct : null; x.review = r || null; x.flags = []; x.dateAt = ch ? ch.at : null; x.ruleDays = (x.days || []).length;   // decision key = line|from|to|group (no date)
     if (!r) { var listed = x.same || (tIsShared(x.from, x.to) ? 'list' : null); if (listed && !x.same) x.same = listed; x.status = listed ? 'AUTO_SKIP' : 'PENDING'; x.eff = listed ? 0 : x.prep; }
     else {
       if (r.loadDate && r.loadDate !== x.load) x.flags.push('dateMoved');
@@ -205,7 +205,7 @@ function techRender() {
           ' <span class="tag ' + psCls(x) + '">' + esc(psLabel(x)) + (x.status === 'ADJUSTED' || (x.status === 'KEPT' && x.eff !== x.prep) ? ' ' + x.prep + '→' + x.eff : '') + '</span>' +
           (x.flags.indexOf('dateSet') >= 0 || x.flags.indexOf('endSet') >= 0 ? ' <span class="tag t-info">' + esc(d2(x.load)) + '→' + esc(d2(x.loadActual)) + '</span>' : '') + (x.overdue ? ' <span class="tag t-bad">' + esc(t('prOVERDUE')) + '</span>' : '') +
           '<button class="qa" data-qe="' + esc(x.key) + '" title="' + esc(t('dOpenEdit')) + '">✎</button><button class="qa" data-qk="' + esc(x.key) + '" title="' + esc(t('prKeep')) + '">✔</button><button class="qa" data-qr="' + esc(x.key) + '" title="' + esc(t('prRemove')) + '">✖</button></td>' +
-          days.map(function (d) { return (x.days || []).indexOf(d) < 0 ? '<td></td>' : (skip ? '<td class="sk">' + x.prep + '</td>' : '<td class="pr">' + x.eff + '</td>'); }).join('') + '</tr>';
+          days.map(function (d) { return (x.days || []).indexOf(d) < 0 ? '<td></td>' : (skip ? '<td class="sk">' + x.prep + '</td>' : '<td class="pr">' + prepQtyOn(x, d) + '</td>'); }).join('') + '</tr>';
         shown = true;
       });
       if (!L.styles[s] && !(runInfo[l] && runInfo[l].style === s)) return;
@@ -295,7 +295,7 @@ function techSetEnd(line) {
 async function writeReview(x, patch) {
   var me = $('tName').value.trim(); if (!TS.dir || !me) throw new Error(t('prNeedConn'));
   var p = x.review || {};
-  var rec = Object.assign({ key: x.key, decision: 'KEEP', qty: p.qty != null ? p.qty : null, qtyBActual: p.qtyBActual != null ? p.qtyBActual : null, loadDateActual: p.loadDateActual || null, prepDays: p.prepDays || null,
+  var rec = Object.assign({ key: x.key, decision: 'KEEP', qty: p.qty != null ? p.qty : null, qtyBActual: p.qtyBActual != null ? p.qtyBActual : null, loadDateActual: p.loadDateActual || null, prepDays: p.prepDays || null, prepPct: p.prepPct || null,
     reason: '', by: me, role: 'Tech', at: new Date().toISOString(), loadDate: x.load, qtyB: x.qtyB, proposedQty: x.prep, line: x.line, group: x.group, to: x.to }, patch);
   await tWrite(TS.dir, 'prep/reviews', tStamp() + '_' + me.replace(/[^\w\-]+/g, '_') + '.json', rec); TS.reviews.push(rec);
   if (rec.qtyBActual != null && rec.qtyBActual !== x.qtyB) await techNotify(x, rec.qtyBActual);
@@ -313,7 +313,7 @@ function openDrawer(key) {
   $('dTitle').textContent = x.line + ' · ' + x.group;
   $('dInfo').textContent = t('dInfoTxt', [x.line, x.from || t('prEmpty'), x.to, d2(x.loadActual || x.load), x.group, x.qtyB, Math.round(x.ratio * 100), x.prep]);
   $('dQty').value = x.eff; $('dQty').dataset.touched = ''; $('dLay').value = x.review && x.review.qtyBActual != null ? x.review.qtyBActual : ''; $('dLay').placeholder = x.qtyB;
-  $('dDate').value = x.loadActual || x.load; $('dDays').value = (x.days || []).length; $('dLayView').innerHTML = ''; $('dLayMsg').textContent = ''; $('dLayQ').value = '';
+  $('dDate').value = x.loadActual || x.load; $('dDays').value = (x.days || []).length; pctDraw(x, (x.days || []).length, null); $('dLayView').innerHTML = ''; $('dLayMsg').textContent = ''; $('dLayQ').value = '';
   $('tDrawer').hidden = false; renderLaySug();
 }
 $('dClose').onclick = function () { $('tDrawer').hidden = true; };
@@ -329,8 +329,21 @@ $('dKeep').onclick = function () {
   var q = $('dQty').value === '' || !$('dQty').dataset.touched ? autoL : Math.max(0, Math.round(+$('dQty').value)), lay = $('dLay').value === '' ? null : Math.max(0, Math.round(+$('dLay').value)), dt = $('dDate').value;
   var layAct = lay != null && lay !== x.qtyB ? lay : null, autoQ = layAct != null ? Math.ceil(x.ratio * layAct - 1e-9) : x.prep;
   var nd = Math.max(1, Math.min(30, Math.round(+$('dDays').value || x.ruleDays)));
-  drawerSave({ decision: q !== autoQ ? 'ADJUST' : 'KEEP', qty: q !== autoQ ? q : null, qtyBActual: layAct, loadDateActual: dt && dt !== (x.loadActual || x.load) ? dt : null, prepDays: nd !== x.ruleDays ? nd : null, reason: '' });
+  drawerSave({ decision: q !== autoQ ? 'ADJUST' : 'KEEP', qty: q !== autoQ ? q : null, qtyBActual: layAct, loadDateActual: dt && dt !== (x.loadActual || x.load) ? dt : null, prepDays: nd !== x.ruleDays ? nd : null, prepPct: pctRead(x, nd), reason: '' });
 };
+// v7.21: prep percentage per day before loading (D-1, D-2, ...): inputs follow the number of prep days; extra days take the last percentage
+function pctDraw(x, n, keep) {
+  var base = prepPctList(x), box = $('dPct'); if (!box) return; var h = '';
+  for (var k = 1; k <= n; k++) { var v = keep && keep[k - 1] != null ? keep[k - 1] : base[Math.min(k, base.length) - 1]; h += '<label class="small" style="display:inline-flex;gap:4px;align-items:center;margin:0 10px 4px 0">D-' + k + '<input type="number" min="0" max="100" style="width:58px" data-pk="' + k + '" value="' + v + '">%</label>'; }
+  box.innerHTML = h;
+}
+function pctCurrent() { return [].map.call(document.querySelectorAll('#dPct [data-pk]'), function (i) { return Math.max(0, Math.min(100, Math.round(+i.value || 0))); }); }
+function pctRead(x, n) {                                              // null when it equals the default curve of the row (nothing to save)
+  var cur = pctCurrent().slice(0, n), base = x.pct && x.pct.length ? x.pct : PREP_PCT_DEFAULT, same = cur.length === n;
+  for (var k = 1; k <= n && same; k++) if (cur[k - 1] !== base[Math.min(k, base.length) - 1]) same = false;
+  return same ? null : cur;
+}
+$('dDays').oninput = function () { var x = TS.cur; if (!x) return; pctDraw(x, Math.max(1, Math.min(30, Math.round(+$('dDays').value || 1))), pctCurrent()); };
 $('dRemove').onclick = function () { drawerSave({ decision: 'REMOVE', reason: '' }); };
 $('dSame').onclick = function () {
   var x = TS.cur, me = $('tName').value.trim();

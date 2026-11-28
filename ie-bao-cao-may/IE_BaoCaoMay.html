@@ -433,7 +433,7 @@ table.rzw td,table.rzw th{white-space:normal!important;overflow-wrap:anywhere;wo
 <div id="busyBar" hidden></div><div id="busy" hidden role="status" aria-live="polite"><span class="spin"></span><span id="busyTx"></span></div>
 
 <header>
-  <h1 data-t="title"></h1><span class="tag t-info" id="verTag" title="Version">v7.20</span><span class="sub" data-t="subtitle"></span>
+  <h1 data-t="title"></h1><span class="tag t-info" id="verTag" title="Version">v7.21</span><span class="sub" data-t="subtitle"></span>
   <div role="group" aria-label="Role" id="roleSeg" style="margin-left:auto;display:flex;gap:4px"><button data-role="cons" data-t="roleCons"></button><button data-role="tech" data-t="roleTech"></button><button data-role="sup" data-t="roleSup"></button></div>
   <button id="bRefresh" data-t="hdrRefresh" style="margin-left:8px"></button>
   <a class="homebtn" id="btnHome" href="../index.html" data-t="homeLink"></a>
@@ -500,6 +500,7 @@ table.rzw td,table.rzw th{white-space:normal!important;overflow-wrap:anywhere;wo
     <label data-t="prThLay"></label><input type="number" min="0" id="dLay">
     <label data-t="dLoad"></label><input type="date" id="dDate">
     <label data-t="dDaysLbl"></label><input type="number" id="dDays" min="1" max="30">
+    <label data-t="dPctLbl"></label><div id="dPct"></div>
   </div>
   <div class="muted small" data-t="dHint" style="margin:6px 0 10px"></div>
   <div class="row">
@@ -654,6 +655,7 @@ table.rzw td,table.rzw th{white-space:normal!important;overflow-wrap:anywhere;wo
 <script>// ===================== TEXTS (VI / EN) =====================
 var I18N = {
   vi: {
+    pcPct: '% chuẩn bị theo ngày (D-1, D-2, …)', pcPctTip: 'Tỷ lệ số máy chuẩn bị theo ngày trước ngày vào chuyền: D-1, D-2, D-3… Ví dụ 100, 70, 30. Nhiều ngày hơn số tỷ lệ thì lấy tỷ lệ cuối.', dPctLbl: '% theo ngày',
     busyData: 'Đang tải dữ liệu…', busyExcel: 'Đang đọc file Excel…', busyScan: 'Đang quét layout…', busyXl: 'Đang tạo file Excel…', busySend: 'Đang gửi đề xuất…', busyPrep: 'Đang tính nhu cầu máy…',
     poolFollow: 'bộ gộp do IE Báo cáo máy quy định (chỉ xem; bạn vẫn tạo được bộ gộp riêng)', poolFromCons: 'IE Báo cáo máy', poolXl: '⬇ Excel', poolStep1: 'Chọn các loại máy dùng thay nhau (số = thứ tự mượn máy)', poolSearch: 'Tìm loại máy…', poolSelected: 'Đã chọn', poolStep2: 'Loại máy nào được mượn máy dư của loại nào', poolAllPairs: 'Mọi cặp', poolNoPairs: 'Bỏ hết', poolOrderHint: 'Bấm loại máy để bật / tắt. Thứ tự mượn theo số ở bước ①.', poolBorrow: '{0} thiếu → mượn máy dư từ:', poolSent: 'đã gửi kèm {0} bộ gộp đang bật', poolLost: 'IE Tech chỉ thấy bộ gộp khi mở chi tiết đủ các loại máy của nó, còn thiếu: {0}', poolShortRow: 'đang thiếu', poolSpareRow: 'máy dư', poolBtn: '🔗 Gộp loại máy', poolTitle: 'Gộp loại máy dùng thay nhau', poolIntro: 'Chọn các loại máy có thể dùng thay nhau (ví dụ máy zigzag có cắt chỉ và zigzag thường). Máy dư của loại này bù cho loại kia đang thiếu: 1 máy = 1 máy, chưa tính SAM tăng thêm. Các loại máy vẫn hiện riêng; bộ gộp chỉ hiện khi bạn bật.',
     poolMembers: 'Loại máy trong bộ gộp', poolCoverCap: 'Ai được dùng thay ai: hàng = loại máy đang thiếu, cột = loại máy cho mượn máy dư (thứ tự cột trái → phải).', poolShort: 'Đang thiếu ↓ / mượn từ →', poolSave: 'Lưu và hiện', poolClose: 'Đóng', poolDelete: 'Xóa bộ gộp', poolEdit: 'Sửa', poolNeed2: 'Chọn ít nhất 2 loại máy.', poolToggleTip: 'Bấm để hiện / ẩn bộ gộp',
@@ -851,6 +853,7 @@ var I18N = {
     c_Added: 'Mới', c_Changed: 'Thay đổi', c_Unchanged: 'Không đổi'
   },
   en: {
+    pcPct: 'Prep % by day (D-1, D-2, …)', pcPctTip: 'Share of the prep machines on each day before loading: D-1, D-2, D-3… for example 100, 70, 30. More days than percentages use the last percentage.', dPctLbl: '% by day',
     busyData: 'Loading data…', busyExcel: 'Reading the Excel file…', busyScan: 'Scanning layouts…', busyXl: 'Creating the Excel file…', busySend: 'Sending the proposal…', busyPrep: 'Calculating machine demand…',
     poolFollow: 'pools set by the Consolidator (view only; you can still build your own)', poolFromCons: 'Consolidator', poolXl: '⬇ Excel', poolStep1: 'Choose the machine types that can replace each other (number = borrowing order)', poolSearch: 'Search machine type…', poolSelected: 'Selected', poolStep2: 'Which machine type may borrow spare machines from which', poolAllPairs: 'All pairs', poolNoPairs: 'None', poolOrderHint: 'Click a machine type to switch it on / off. The borrowing order follows the numbers of step ①.', poolBorrow: '{0} short → borrows spare machines from:', poolSent: '{0} pool(s) that are on were sent with it', poolLost: 'IE Tech sees a pool only when all its machine types are opened in detail, missing: {0}', poolShortRow: 'short', poolSpareRow: 'spare', poolBtn: '🔗 Combine machine types', poolTitle: 'Combine machine types that can replace each other', poolIntro: 'Choose the machine types that can replace each other (for example a zigzag with trimmer and a normal zigzag). Spare machines of one type cover the shortage of another: 1 machine = 1 machine, the extra SAM is not counted yet. Every machine type is still shown separately; a pool is shown only when you switch it on.',
     poolMembers: 'Machine types in the pool', poolCoverCap: 'Who may replace whom: row = machine type that is short, column = machine type that lends spare machines (order left → right).', poolShort: 'Short ↓ / borrows from →', poolSave: 'Save and show', poolClose: 'Close', poolDelete: 'Delete pool', poolEdit: 'Edit', poolNeed2: 'Choose at least 2 machine types.', poolToggleTip: 'Click to show / hide the pool',
@@ -1682,6 +1685,14 @@ function sharedIndex(files, manual) {
     return null;
   };
 }
+// ---- v7.21 (decided with the user): the prep (changeover) machines are NOT the same on every prep day. The day before loading (D-1) uses 100 % of the prep quantity, D-2 70 %, D-3 30 %;
+// more prep days than percentages use the LAST percentage (30 %). The Consolidator sets the default per machine group, IE Tech can change it per row (review.prepPct).
+var PREP_PCT_DEFAULT = [100, 70, 30];
+function prepPctList(x) { var a = x.pctRow && x.pctRow.length ? x.pctRow : (x.pct && x.pct.length ? x.pct : PREP_PCT_DEFAULT); return a; }
+function prepPctAt(x, i) { var n = (x.days || []).length, a = prepPctList(x), k = n - i; return +a[Math.min(Math.max(k, 1), a.length) - 1]; }       // i = index in x.days (ascending), k = days before loading
+function prepQtyAt(x, i) { return x.eff ? Math.ceil(x.eff * prepPctAt(x, i) / 100 - 1e-9) : 0; }
+function prepQtyOn(x, d) { var i = (x.days || []).indexOf(d); return i < 0 ? 0 : prepQtyAt(x, i); }
+function pctOfRules(rules, g) { var a = (rules.pctBy || {})[g] || rules.pct; return a && a.length ? a.slice() : PREP_PCT_DEFAULT.slice(); }
 // prep rows for the chosen groups: every style that starts on a line (not running there the previous working day)
 function buildPrep(mbl, groups, rules, share, puMap, fromKey, toKey) {
   var rows = [], seen = {}, D = mbl.dates;
@@ -1698,7 +1709,7 @@ function buildPrep(mbl, groups, rules, share, puMap, fromKey, toKey) {
           var key = [line, before.join(' + '), B, g].join('|'); if (seen[key + '|' + d]) return; seen[key + '|' + d] = 1;
           var n = rules.daysBy && rules.daysBy[g] || rules.days, days = [];
           for (var t = d - 864e5, k = 0; days.length < n && k < 14; t -= 864e5, k++) if (new Date(t).getUTCDay() !== 0) days.unshift(t);   // prep on the N days before loading, Sundays skipped
-          rows.push({ key: key, line: line, pu: puOf(puMap, line), from: before.join(' + '), to: B, group: g, load: d, qtyB: q, ratio: r, days: days, prep: Math.ceil(r * q - 1e-9), same: same });
+          rows.push({ key: key, line: line, pu: puOf(puMap, line), from: before.join(' + '), to: B, group: g, load: d, qtyB: q, ratio: r, pct: pctOfRules(rules, g), days: days, prep: Math.ceil(r * q - 1e-9), same: same });
         });
       });
     });
@@ -1734,7 +1745,7 @@ function chgFor(chg, x, loadIso, r) {
 function applyReviews(rows, reviews) {
   var last = {}, chg = changeoverDates(reviews); (reviews || []).slice().sort(function (a, b) { return String(a.at).localeCompare(String(b.at)); }).forEach(function (r) { last[r.key] = r; });
   rows.forEach(function (x) {
-    var r = last[x.key], ch = chgFor(chg, x, new Date(x.load).toISOString().slice(0, 10), r); x.review = r || null; x.flags = []; x.dateAt = ch ? ch.at : null;
+    var r = last[x.key], ch = chgFor(chg, x, new Date(x.load).toISOString().slice(0, 10), r); x.review = r || null; x.flags = []; x.dateAt = ch ? ch.at : null; x.pctRow = r && Array.isArray(r.prepPct) ? r.prepPct : null;
     if ((r && r.prepDays) || ch) {                                            // IE Tech set the real loading date (any group of the changeover) and / or the number of prep days
       var L = ch ? Date.parse(ch.date + 'T00:00:00Z') : x.load;
       x.days = prepDaysBefore(L, (r && r.prepDays) || x.days.length);
@@ -1848,7 +1859,7 @@ function groupGrid(mbl, group, prepRows, avail, fromKey, toKey, puMap, ends) {
   });
   prepRows.filter(function (x) { return x.group === group; }).forEach(function (x) {
     var L = lines[x.line] = lines[x.line] || { styles: {}, prep: [] }; L.prep.push(x);
-    x.days.forEach(function (d) { if (x.eff) prepTot[d] = (prepTot[d] || 0) + x.eff; });
+    x.days.forEach(function (d, i) { var q = prepQtyAt(x, i); if (q) prepTot[d] = (prepTot[d] || 0) + q; });
   });
   var order = Object.keys(lines).sort(function (a, b) { return puOf(puMap, a).localeCompare(puOf(puMap, b)) || a.localeCompare(b); });
   var a = avail[group], tot = {}, bal = {};
@@ -1879,7 +1890,7 @@ function adjustLines(G0, rows, ends) {
 function totalsOf(G, rows, days, avail) {
   var prodPu = {}, prepPu = {}, prod = {}, prep = {}, total = {}, bal = {};
   Object.keys(G.lines).forEach(function (l) { var L = G.lines[l]; Object.keys(L.styles).forEach(function (s) { Object.keys(L.styles[s]).forEach(function (d) { var k = L.pu + '|' + d; prodPu[k] = (prodPu[k] || 0) + L.styles[s][d]; prod[d] = (prod[d] || 0) + L.styles[s][d]; }); }); });
-  rows.forEach(function (x) { if (!x.eff) return; (x.days || []).forEach(function (d) { var k = x.pu + '|' + d; prepPu[k] = (prepPu[k] || 0) + x.eff; prep[d] = (prep[d] || 0) + x.eff; }); });
+  rows.forEach(function (x) { if (!x.eff) return; (x.days || []).forEach(function (d, i) { var q = prepQtyAt(x, i); if (!q) return; var k = x.pu + '|' + d; prepPu[k] = (prepPu[k] || 0) + q; prep[d] = (prep[d] || 0) + q; }); });
   days.forEach(function (d) { total[d] = (prod[d] || 0) + (prep[d] || 0); bal[d] = avail == null ? null : avail - total[d]; });
   return { days: days, avail: avail, G: G, prodPu: prodPu, prepPu: prepPu, prod: prod, prep: prep, total: total, bal: bal };
 }
@@ -2534,13 +2545,14 @@ window.prepRender = function () {
   var M = SRC(), D = M.dates;
   $('pInfo').textContent = t('pInfo', [Object.keys(M.byGroup).length, Object.keys(M.lines).length, pDay(D[0]), pDay(D[D.length - 1])]);
   var rows = rankRows();
-  $('pRank').innerHTML = '<tr><th>' + t('pcSel') + '</th><th class="l">' + t('pcGroup') + '</th><th>' + t('pcAvail') + '</th><th>' + t('pcPeak') + '</th><th>' + t('pcBal') + '</th><th>' + t('pcFirst') + '</th><th>' + t('pcRatio') + '</th><th>' + t('pcDays') + '</th></tr>' +
+  $('pRank').innerHTML = '<tr><th>' + t('pcSel') + '</th><th class="l">' + t('pcGroup') + '</th><th>' + t('pcAvail') + '</th><th>' + t('pcPeak') + '</th><th>' + t('pcBal') + '</th><th>' + t('pcFirst') + '</th><th>' + t('pcRatio') + '</th><th>' + t('pcDays') + '</th><th>' + t('pcPct') + '</th></tr>' +
     rows.map(function (x) {
       var g = esc(x.group), ra = PS.rules.ratios[x.group], dy = (PS.rules.daysBy || {})[x.group] || PS.rules.days;
       return '<tr><td><input type="checkbox" data-pg="' + g + '"' + (PS.sel[x.group] ? ' checked' : '') + '></td><td><b>' + g + '</b></td><td>' + (x.avail == null ? '<span class="muted">' + t('pNoAvail') + '</span>' : x.avail) + '</td><td>' + x.peak + '</td>' +
         '<td class="' + (x.bal != null && x.bal < 0 ? 'st-bad' : '') + '"><b>' + (x.bal == null ? '' : x.bal) + '</b></td><td>' + (x.first ? pDay(x.first, true) : '') + '</td>' +
         '<td><input type="number" min="0" max="100" style="width:70px" data-pr="' + g + '" value="' + (ra != null ? Math.round(ra * 100) : '') + '"></td>' +
-        '<td><input type="number" min="1" max="10" style="width:56px" data-pd="' + g + '" value="' + dy + '"></td></tr>';
+        '<td><input type="number" min="1" max="10" style="width:56px" data-pd="' + g + '" value="' + dy + '"></td>' +
+        '<td><input type="text" style="width:110px;min-width:0" data-pp="' + g + '" value="' + esc(pctOfRules(PS.rules, x.group).join(', ')) + '" title="' + esc(t('pcPctTip')) + '"></td></tr>';
     }).join('');
   if (PS.rows) renderDetail();
 };
@@ -2550,6 +2562,7 @@ $('pRank').onchange = function (e) {
   var el = e.target;
   if (el.dataset.pg) PS.sel[el.dataset.pg] = el.checked;
   if (el.dataset.pr) { var v = el.value === '' ? null : Math.max(0, Math.min(100, +el.value)) / 100; if (v == null) delete PS.rules.ratios[el.dataset.pr]; else PS.rules.ratios[el.dataset.pr] = v; }
+  if (el.dataset.pp) { var arr = el.value.split(/[\s,;]+/).filter(function (z) { return z !== ''; }).map(function (z) { return Math.max(0, Math.min(100, Math.round(+z))); }).filter(function (z) { return !isNaN(z); }); PS.rules.pctBy = PS.rules.pctBy || {}; if (arr.length) PS.rules.pctBy[el.dataset.pp] = arr; else delete PS.rules.pctBy[el.dataset.pp]; el.value = pctOfRules(PS.rules, el.dataset.pp).join(', '); }
   if (el.dataset.pd) { PS.rules.daysBy = PS.rules.daysBy || {}; PS.rules.daysBy[el.dataset.pd] = Math.max(1, +el.value || PS.rules.days); }
 };
 $('pSaveRules').onclick = async function () {
@@ -2578,7 +2591,8 @@ $('pOpen').onclick = async function () {
 function prepCell(x, d) {
   if (x.days.indexOf(d) < 0) return '<td></td>';
   if (x.status === 'AUTO_SKIP' || x.status === 'REMOVED') return '<td class="sk">' + x.prep + '</td>';
-  return '<td class="pr"' + (x.status === 'ADJUSTED' ? ' title="' + x.prep + ' → ' + x.eff + '"' : '') + '>' + x.eff + '</td>';
+  var q = prepQtyOn(x, d);
+  return '<td class="pr"' + (x.status === 'ADJUSTED' ? ' title="' + x.prep + ' → ' + x.eff + '"' : '') + '>' + q + '</td>';
 }
 function statusTag(x) {
   var cls = psCls(x);
@@ -2591,7 +2605,7 @@ function puTotals(G) {
   G.order.forEach(function (l) {
     var p = puOf(REF.pu || {}, l), o = out[p] = out[p] || { prod: {}, prep: {} }, L = G.lines[l];
     Object.keys(L.styles).forEach(function (s) { Object.keys(L.styles[s]).forEach(function (d) { o.prod[d] = (o.prod[d] || 0) + L.styles[s][d]; }); });
-    L.prep.forEach(function (x) { if (x.eff) x.days.forEach(function (d) { o.prep[d] = (o.prep[d] || 0) + x.eff; }); });
+    L.prep.forEach(function (x) { x.days.forEach(function (d, i) { var q = prepQtyAt(x, i); if (q) o.prep[d] = (o.prep[d] || 0) + q; }); });
   });
   return out;
 }
@@ -2645,7 +2659,7 @@ async function prepSend() {
   var user = $('uName').value.trim(); if (!user) { $('uName').focus(); $('pMsg2').textContent = t('lcNeedName'); return; }
   var now = new Date(), p = function (x) { return String(x).padStart(2, '0'); };
   var st = now.getFullYear() + p(now.getMonth() + 1) + p(now.getDate()) + '-' + p(now.getHours()) + p(now.getMinutes()) + p(now.getSeconds());
-  var rows = PS.rows.map(function (x) { return { key: x.key, line: x.line, pu: x.pu, from: x.from, to: x.to, group: x.group, load: pIso(x.load), qtyB: x.qtyB, ratio: x.ratio, days: x.days.map(pIso), prep: x.prep, same: x.same,
+  var rows = PS.rows.map(function (x) { return { key: x.key, line: x.line, pu: x.pu, from: x.from, to: x.to, group: x.group, load: pIso(x.load), qtyB: x.qtyB, ratio: x.ratio, pct: prepPctList(x), days: x.days.map(pIso), prep: x.prep, same: x.same,
     files: ((PS.styleFiles || {})[baseKey(x.to)] || []).slice(0, 3) }; });
   var grid = {};
   PS.open.forEach(function (g) {
@@ -2709,13 +2723,13 @@ async function prepExport() {
   function addPrep(ws, G, pu, line, x) {
     var skip = x.status === 'AUTO_SKIP' || x.status === 'REMOVED';
     // skipped / removed prep = 0 in Excel (never a number that a SUM could pick up by mistake)
-    var row = ws.addRow([pu, line, t('pgPrepOf', [x.to]) + ' — ' + psLabel(x), 'PREP'].concat(G.days.map(function (d) { return x.days.indexOf(d) >= 0 ? (skip ? 0 : x.eff) : null; })));
+    var row = ws.addRow([pu, line, t('pgPrepOf', [x.to]) + ' — ' + psLabel(x), 'PREP'].concat(G.days.map(function (d) { return x.days.indexOf(d) >= 0 ? (skip ? 0 : prepQtyOn(x, d)) : null; })));
     row.eachCell(function (c, n) { if (n > 4 && c.value != null) { if (skip) c.font = { color: { argb: 'FF6B7280' } }; else { c.fill = Y; c.font = { bold: true, color: { argb: 'FF9A6700' } }; } } });
     row.getCell(3).font = { color: { argb: 'FF9A6700' } };
   }
   // PREP BY PU: same layout as TTL DEMAND BY PU (Combine.MACHINE | PU | dates)
   var allDays = {}, agg = {};
-  PS.rows.forEach(function (x) { if (!x.eff) return; x.days.forEach(function (d) { allDays[d] = 1; var k = x.group + '|' + x.pu; (agg[k] = agg[k] || {})[d] = (agg[k][d] || 0) + x.eff; }); });
+  PS.rows.forEach(function (x) { if (!x.eff) return; x.days.forEach(function (d, i) { var q = prepQtyAt(x, i); if (!q) return; allDays[d] = 1; var k = x.group + '|' + x.pu; (agg[k] = agg[k] || {})[d] = (agg[k][d] || 0) + q; }); });
   var dl = Object.keys(allDays).map(Number).sort(function (a, b) { return a - b; }), pb = wb.addWorksheet('PREP BY PU');
   pb.addRow(['Combine.MACHINE ', 'PU'].concat(dl.map(function (d) { var x = new Date(d); return String(x.getUTCDate()).padStart(2, '0') + '/' + String(x.getUTCMonth() + 1).padStart(2, '0') + '/' + x.getUTCFullYear(); }))).font = { bold: true };
   Object.keys(agg).sort().forEach(function (k) { var p = k.split('|'); pb.addRow([p[0], p[1]].concat(dl.map(function (d) { return agg[k][d] || null; }))); });
@@ -2909,7 +2923,7 @@ function techRows() {
   TS.reviews.slice().sort(function (a, b) { return String(a.at).localeCompare(String(b.at)); }).forEach(function (r) { last[r.key] = r; });
   var chg = changeoverDates(TS.reviews); CHG_DATES = chg;
   var list = Object.keys(rows).map(function (k) {
-    var x = rows[k], r = last[x.key], ch = chgFor(chg, x, x.load, r); x.review = r || null; x.flags = []; x.dateAt = ch ? ch.at : null; x.ruleDays = (x.days || []).length;   // decision key = line|from|to|group (no date)
+    var x = rows[k], r = last[x.key], ch = chgFor(chg, x, x.load, r); x.pctRow = r && Array.isArray(r.prepPct) ? r.prepPct : null; x.review = r || null; x.flags = []; x.dateAt = ch ? ch.at : null; x.ruleDays = (x.days || []).length;   // decision key = line|from|to|group (no date)
     if (!r) { var listed = x.same || (tIsShared(x.from, x.to) ? 'list' : null); if (listed && !x.same) x.same = listed; x.status = listed ? 'AUTO_SKIP' : 'PENDING'; x.eff = listed ? 0 : x.prep; }
     else {
       if (r.loadDate && r.loadDate !== x.load) x.flags.push('dateMoved');
@@ -3009,7 +3023,7 @@ function techRender() {
           ' <span class="tag ' + psCls(x) + '">' + esc(psLabel(x)) + (x.status === 'ADJUSTED' || (x.status === 'KEPT' && x.eff !== x.prep) ? ' ' + x.prep + '→' + x.eff : '') + '</span>' +
           (x.flags.indexOf('dateSet') >= 0 || x.flags.indexOf('endSet') >= 0 ? ' <span class="tag t-info">' + esc(d2(x.load)) + '→' + esc(d2(x.loadActual)) + '</span>' : '') + (x.overdue ? ' <span class="tag t-bad">' + esc(t('prOVERDUE')) + '</span>' : '') +
           '<button class="qa" data-qe="' + esc(x.key) + '" title="' + esc(t('dOpenEdit')) + '">✎</button><button class="qa" data-qk="' + esc(x.key) + '" title="' + esc(t('prKeep')) + '">✔</button><button class="qa" data-qr="' + esc(x.key) + '" title="' + esc(t('prRemove')) + '">✖</button></td>' +
-          days.map(function (d) { return (x.days || []).indexOf(d) < 0 ? '<td></td>' : (skip ? '<td class="sk">' + x.prep + '</td>' : '<td class="pr">' + x.eff + '</td>'); }).join('') + '</tr>';
+          days.map(function (d) { return (x.days || []).indexOf(d) < 0 ? '<td></td>' : (skip ? '<td class="sk">' + x.prep + '</td>' : '<td class="pr">' + prepQtyOn(x, d) + '</td>'); }).join('') + '</tr>';
         shown = true;
       });
       if (!L.styles[s] && !(runInfo[l] && runInfo[l].style === s)) return;
@@ -3099,7 +3113,7 @@ function techSetEnd(line) {
 async function writeReview(x, patch) {
   var me = $('tName').value.trim(); if (!TS.dir || !me) throw new Error(t('prNeedConn'));
   var p = x.review || {};
-  var rec = Object.assign({ key: x.key, decision: 'KEEP', qty: p.qty != null ? p.qty : null, qtyBActual: p.qtyBActual != null ? p.qtyBActual : null, loadDateActual: p.loadDateActual || null, prepDays: p.prepDays || null,
+  var rec = Object.assign({ key: x.key, decision: 'KEEP', qty: p.qty != null ? p.qty : null, qtyBActual: p.qtyBActual != null ? p.qtyBActual : null, loadDateActual: p.loadDateActual || null, prepDays: p.prepDays || null, prepPct: p.prepPct || null,
     reason: '', by: me, role: 'Tech', at: new Date().toISOString(), loadDate: x.load, qtyB: x.qtyB, proposedQty: x.prep, line: x.line, group: x.group, to: x.to }, patch);
   await tWrite(TS.dir, 'prep/reviews', tStamp() + '_' + me.replace(/[^\w\-]+/g, '_') + '.json', rec); TS.reviews.push(rec);
   if (rec.qtyBActual != null && rec.qtyBActual !== x.qtyB) await techNotify(x, rec.qtyBActual);
@@ -3117,7 +3131,7 @@ function openDrawer(key) {
   $('dTitle').textContent = x.line + ' · ' + x.group;
   $('dInfo').textContent = t('dInfoTxt', [x.line, x.from || t('prEmpty'), x.to, d2(x.loadActual || x.load), x.group, x.qtyB, Math.round(x.ratio * 100), x.prep]);
   $('dQty').value = x.eff; $('dQty').dataset.touched = ''; $('dLay').value = x.review && x.review.qtyBActual != null ? x.review.qtyBActual : ''; $('dLay').placeholder = x.qtyB;
-  $('dDate').value = x.loadActual || x.load; $('dDays').value = (x.days || []).length; $('dLayView').innerHTML = ''; $('dLayMsg').textContent = ''; $('dLayQ').value = '';
+  $('dDate').value = x.loadActual || x.load; $('dDays').value = (x.days || []).length; pctDraw(x, (x.days || []).length, null); $('dLayView').innerHTML = ''; $('dLayMsg').textContent = ''; $('dLayQ').value = '';
   $('tDrawer').hidden = false; renderLaySug();
 }
 $('dClose').onclick = function () { $('tDrawer').hidden = true; };
@@ -3133,8 +3147,21 @@ $('dKeep').onclick = function () {
   var q = $('dQty').value === '' || !$('dQty').dataset.touched ? autoL : Math.max(0, Math.round(+$('dQty').value)), lay = $('dLay').value === '' ? null : Math.max(0, Math.round(+$('dLay').value)), dt = $('dDate').value;
   var layAct = lay != null && lay !== x.qtyB ? lay : null, autoQ = layAct != null ? Math.ceil(x.ratio * layAct - 1e-9) : x.prep;
   var nd = Math.max(1, Math.min(30, Math.round(+$('dDays').value || x.ruleDays)));
-  drawerSave({ decision: q !== autoQ ? 'ADJUST' : 'KEEP', qty: q !== autoQ ? q : null, qtyBActual: layAct, loadDateActual: dt && dt !== (x.loadActual || x.load) ? dt : null, prepDays: nd !== x.ruleDays ? nd : null, reason: '' });
+  drawerSave({ decision: q !== autoQ ? 'ADJUST' : 'KEEP', qty: q !== autoQ ? q : null, qtyBActual: layAct, loadDateActual: dt && dt !== (x.loadActual || x.load) ? dt : null, prepDays: nd !== x.ruleDays ? nd : null, prepPct: pctRead(x, nd), reason: '' });
 };
+// v7.21: prep percentage per day before loading (D-1, D-2, ...): inputs follow the number of prep days; extra days take the last percentage
+function pctDraw(x, n, keep) {
+  var base = prepPctList(x), box = $('dPct'); if (!box) return; var h = '';
+  for (var k = 1; k <= n; k++) { var v = keep && keep[k - 1] != null ? keep[k - 1] : base[Math.min(k, base.length) - 1]; h += '<label class="small" style="display:inline-flex;gap:4px;align-items:center;margin:0 10px 4px 0">D-' + k + '<input type="number" min="0" max="100" style="width:58px" data-pk="' + k + '" value="' + v + '">%</label>'; }
+  box.innerHTML = h;
+}
+function pctCurrent() { return [].map.call(document.querySelectorAll('#dPct [data-pk]'), function (i) { return Math.max(0, Math.min(100, Math.round(+i.value || 0))); }); }
+function pctRead(x, n) {                                              // null when it equals the default curve of the row (nothing to save)
+  var cur = pctCurrent().slice(0, n), base = x.pct && x.pct.length ? x.pct : PREP_PCT_DEFAULT, same = cur.length === n;
+  for (var k = 1; k <= n && same; k++) if (cur[k - 1] !== base[Math.min(k, base.length) - 1]) same = false;
+  return same ? null : cur;
+}
+$('dDays').oninput = function () { var x = TS.cur; if (!x) return; pctDraw(x, Math.max(1, Math.min(30, Math.round(+$('dDays').value || 1))), pctCurrent()); };
 $('dRemove').onclick = function () { drawerSave({ decision: 'REMOVE', reason: '' }); };
 $('dSame').onclick = function () {
   var x = TS.cur, me = $('tName').value.trim();
@@ -3406,7 +3433,7 @@ function rsLineRows(X, p, days) {
       h += rsRow(esc(s) + ' <span class="muted small">' + esc(t('rsLoadsOn', [d2(first(s))])) + '</span>', v, days, { cls: 'part', c2: esc(l), attr: ' data-rs-r="style" data-line="' + esc(l) + '"' });
     });
     X.rows.filter(function (x) { return x.line === l && x.eff; }).forEach(function (x) {
-      var v = {}; days.forEach(function (d) { v[d] = (x.days || []).indexOf(d) >= 0 ? x.eff : ''; });
+      var v = {}; days.forEach(function (d) { v[d] = (x.days || []).indexOf(d) >= 0 ? prepQtyOn(x, d) : ''; });
       h += rsRow('↳ ' + esc(t('rsPrepOf', [x.to])), v, days, { cls: 'part', cellCls: 'pr', c2: esc(l), attr: ' data-rs-r="prepline" data-line="' + esc(l) + '"' });
     });
   });
@@ -3535,7 +3562,7 @@ function rsPuRows(X, conf, left) {
     var acts = conf.filter(function (a) { return a.type === 'DELAY' ? (X.G0.lines[a.line] && X.G0.lines[a.line].pu === p) : (a.group === X.g && a.pu === p); });
     var ls = lines.filter(function (l) { return X.M.G.lines[l].pu === p; }).map(function (l) {
       var prod = 0, st = ''; Object.keys(X.M.G.lines[l].styles).forEach(function (s) { var q = X.M.G.lines[l].styles[s][w] || 0; if (q) { prod += q; st = s; } });
-      var prep = 0; X.rows.forEach(function (x) { if (x.line === l && x.eff && x.days && x.days.indexOf(w) >= 0) prep += x.eff; });
+      var prep = 0; X.rows.forEach(function (x) { if (x.line === l && x.eff && x.days && x.days.indexOf(w) >= 0) prep += prepQtyOn(x, w); });
       return { l: l, style: st, prod: prod, prep: prep };
     }).filter(function (r) { return r.prod || r.prep; });
     return { pu: p, n: n, pct: tot ? Math.round(100 * n / tot) : 0, acts: acts, lines: ls, days: days, series: days.map(use), w: w, more: left.gap > 0 && !acts.length };
@@ -3600,7 +3627,7 @@ async function rsExportTable(g) {
     Object.keys(G.lines).filter(function (l) { return G.lines[l].pu === p; }).sort().forEach(function (l) {
       var Ln = G.lines[l], first = function (x) { return Object.keys(Ln.styles[x]).sort()[0] || ''; };
       Object.keys(Ln.styles).sort(function (a, b) { return first(a).localeCompare(first(b)); }).forEach(function (x) { styles.push({ l: l, lab: x + ' (' + t('rsLoadsOn', [d2(first(x))]) + ')', v: days.map(function (d) { return Ln.styles[x][d] || 0; }) }); });
-      X.rows.filter(function (x) { return x.line === l && x.eff; }).forEach(function (x) { preps.push({ l: l, lab: '↳ ' + t('rsPrepOf', [x.to]), v: days.map(function (d) { return (x.days || []).indexOf(d) >= 0 ? x.eff : 0; }) }); });
+      X.rows.filter(function (x) { return x.line === l && x.eff; }).forEach(function (x) { preps.push({ l: l, lab: '↳ ' + t('rsPrepOf', [x.to]), v: days.map(function (d) { return (x.days || []).indexOf(d) >= 0 ? prepQtyOn(x, d) : 0; }) }); });
     });
     var r0 = rowAt(), s1 = r0 + 3, s2 = s1 + styles.length - 1, p1 = s2 + 1, p2 = p1 + preps.length - 1;
     label(r0, puName(p), '', t('pgPuSum', [puName(p), t('rsRowProd')]), { bold: true }); label(r0 + 1, '', '', t('pgPuSum', [puName(p), t('rsRowPrep')]), { bold: true }); label(r0 + 2, '', '', t('pgPuSum', [puName(p), t('rsRowTot')]), { bold: true });

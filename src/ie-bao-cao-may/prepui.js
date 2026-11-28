@@ -52,13 +52,14 @@ window.prepRender = function () {
   var M = SRC(), D = M.dates;
   $('pInfo').textContent = t('pInfo', [Object.keys(M.byGroup).length, Object.keys(M.lines).length, pDay(D[0]), pDay(D[D.length - 1])]);
   var rows = rankRows();
-  $('pRank').innerHTML = '<tr><th>' + t('pcSel') + '</th><th class="l">' + t('pcGroup') + '</th><th>' + t('pcAvail') + '</th><th>' + t('pcPeak') + '</th><th>' + t('pcBal') + '</th><th>' + t('pcFirst') + '</th><th>' + t('pcRatio') + '</th><th>' + t('pcDays') + '</th></tr>' +
+  $('pRank').innerHTML = '<tr><th>' + t('pcSel') + '</th><th class="l">' + t('pcGroup') + '</th><th>' + t('pcAvail') + '</th><th>' + t('pcPeak') + '</th><th>' + t('pcBal') + '</th><th>' + t('pcFirst') + '</th><th>' + t('pcRatio') + '</th><th>' + t('pcDays') + '</th><th>' + t('pcPct') + '</th></tr>' +
     rows.map(function (x) {
       var g = esc(x.group), ra = PS.rules.ratios[x.group], dy = (PS.rules.daysBy || {})[x.group] || PS.rules.days;
       return '<tr><td><input type="checkbox" data-pg="' + g + '"' + (PS.sel[x.group] ? ' checked' : '') + '></td><td><b>' + g + '</b></td><td>' + (x.avail == null ? '<span class="muted">' + t('pNoAvail') + '</span>' : x.avail) + '</td><td>' + x.peak + '</td>' +
         '<td class="' + (x.bal != null && x.bal < 0 ? 'st-bad' : '') + '"><b>' + (x.bal == null ? '' : x.bal) + '</b></td><td>' + (x.first ? pDay(x.first, true) : '') + '</td>' +
         '<td><input type="number" min="0" max="100" style="width:70px" data-pr="' + g + '" value="' + (ra != null ? Math.round(ra * 100) : '') + '"></td>' +
-        '<td><input type="number" min="1" max="10" style="width:56px" data-pd="' + g + '" value="' + dy + '"></td></tr>';
+        '<td><input type="number" min="1" max="10" style="width:56px" data-pd="' + g + '" value="' + dy + '"></td>' +
+        '<td><input type="text" style="width:110px;min-width:0" data-pp="' + g + '" value="' + esc(pctOfRules(PS.rules, x.group).join(', ')) + '" title="' + esc(t('pcPctTip')) + '"></td></tr>';
     }).join('');
   if (PS.rows) renderDetail();
 };
@@ -68,6 +69,7 @@ $('pRank').onchange = function (e) {
   var el = e.target;
   if (el.dataset.pg) PS.sel[el.dataset.pg] = el.checked;
   if (el.dataset.pr) { var v = el.value === '' ? null : Math.max(0, Math.min(100, +el.value)) / 100; if (v == null) delete PS.rules.ratios[el.dataset.pr]; else PS.rules.ratios[el.dataset.pr] = v; }
+  if (el.dataset.pp) { var arr = el.value.split(/[\s,;]+/).filter(function (z) { return z !== ''; }).map(function (z) { return Math.max(0, Math.min(100, Math.round(+z))); }).filter(function (z) { return !isNaN(z); }); PS.rules.pctBy = PS.rules.pctBy || {}; if (arr.length) PS.rules.pctBy[el.dataset.pp] = arr; else delete PS.rules.pctBy[el.dataset.pp]; el.value = pctOfRules(PS.rules, el.dataset.pp).join(', '); }
   if (el.dataset.pd) { PS.rules.daysBy = PS.rules.daysBy || {}; PS.rules.daysBy[el.dataset.pd] = Math.max(1, +el.value || PS.rules.days); }
 };
 $('pSaveRules').onclick = async function () {
@@ -96,7 +98,8 @@ $('pOpen').onclick = async function () {
 function prepCell(x, d) {
   if (x.days.indexOf(d) < 0) return '<td></td>';
   if (x.status === 'AUTO_SKIP' || x.status === 'REMOVED') return '<td class="sk">' + x.prep + '</td>';
-  return '<td class="pr"' + (x.status === 'ADJUSTED' ? ' title="' + x.prep + ' → ' + x.eff + '"' : '') + '>' + x.eff + '</td>';
+  var q = prepQtyOn(x, d);
+  return '<td class="pr"' + (x.status === 'ADJUSTED' ? ' title="' + x.prep + ' → ' + x.eff + '"' : '') + '>' + q + '</td>';
 }
 function statusTag(x) {
   var cls = psCls(x);
@@ -109,7 +112,7 @@ function puTotals(G) {
   G.order.forEach(function (l) {
     var p = puOf(REF.pu || {}, l), o = out[p] = out[p] || { prod: {}, prep: {} }, L = G.lines[l];
     Object.keys(L.styles).forEach(function (s) { Object.keys(L.styles[s]).forEach(function (d) { o.prod[d] = (o.prod[d] || 0) + L.styles[s][d]; }); });
-    L.prep.forEach(function (x) { if (x.eff) x.days.forEach(function (d) { o.prep[d] = (o.prep[d] || 0) + x.eff; }); });
+    L.prep.forEach(function (x) { x.days.forEach(function (d, i) { var q = prepQtyAt(x, i); if (q) o.prep[d] = (o.prep[d] || 0) + q; }); });
   });
   return out;
 }
@@ -163,7 +166,7 @@ async function prepSend() {
   var user = $('uName').value.trim(); if (!user) { $('uName').focus(); $('pMsg2').textContent = t('lcNeedName'); return; }
   var now = new Date(), p = function (x) { return String(x).padStart(2, '0'); };
   var st = now.getFullYear() + p(now.getMonth() + 1) + p(now.getDate()) + '-' + p(now.getHours()) + p(now.getMinutes()) + p(now.getSeconds());
-  var rows = PS.rows.map(function (x) { return { key: x.key, line: x.line, pu: x.pu, from: x.from, to: x.to, group: x.group, load: pIso(x.load), qtyB: x.qtyB, ratio: x.ratio, days: x.days.map(pIso), prep: x.prep, same: x.same,
+  var rows = PS.rows.map(function (x) { return { key: x.key, line: x.line, pu: x.pu, from: x.from, to: x.to, group: x.group, load: pIso(x.load), qtyB: x.qtyB, ratio: x.ratio, pct: prepPctList(x), days: x.days.map(pIso), prep: x.prep, same: x.same,
     files: ((PS.styleFiles || {})[baseKey(x.to)] || []).slice(0, 3) }; });
   var grid = {};
   PS.open.forEach(function (g) {
@@ -227,13 +230,13 @@ async function prepExport() {
   function addPrep(ws, G, pu, line, x) {
     var skip = x.status === 'AUTO_SKIP' || x.status === 'REMOVED';
     // skipped / removed prep = 0 in Excel (never a number that a SUM could pick up by mistake)
-    var row = ws.addRow([pu, line, t('pgPrepOf', [x.to]) + ' — ' + psLabel(x), 'PREP'].concat(G.days.map(function (d) { return x.days.indexOf(d) >= 0 ? (skip ? 0 : x.eff) : null; })));
+    var row = ws.addRow([pu, line, t('pgPrepOf', [x.to]) + ' — ' + psLabel(x), 'PREP'].concat(G.days.map(function (d) { return x.days.indexOf(d) >= 0 ? (skip ? 0 : prepQtyOn(x, d)) : null; })));
     row.eachCell(function (c, n) { if (n > 4 && c.value != null) { if (skip) c.font = { color: { argb: 'FF6B7280' } }; else { c.fill = Y; c.font = { bold: true, color: { argb: 'FF9A6700' } }; } } });
     row.getCell(3).font = { color: { argb: 'FF9A6700' } };
   }
   // PREP BY PU: same layout as TTL DEMAND BY PU (Combine.MACHINE | PU | dates)
   var allDays = {}, agg = {};
-  PS.rows.forEach(function (x) { if (!x.eff) return; x.days.forEach(function (d) { allDays[d] = 1; var k = x.group + '|' + x.pu; (agg[k] = agg[k] || {})[d] = (agg[k][d] || 0) + x.eff; }); });
+  PS.rows.forEach(function (x) { if (!x.eff) return; x.days.forEach(function (d, i) { var q = prepQtyAt(x, i); if (!q) return; allDays[d] = 1; var k = x.group + '|' + x.pu; (agg[k] = agg[k] || {})[d] = (agg[k][d] || 0) + q; }); });
   var dl = Object.keys(allDays).map(Number).sort(function (a, b) { return a - b; }), pb = wb.addWorksheet('PREP BY PU');
   pb.addRow(['Combine.MACHINE ', 'PU'].concat(dl.map(function (d) { var x = new Date(d); return String(x.getUTCDate()).padStart(2, '0') + '/' + String(x.getUTCMonth() + 1).padStart(2, '0') + '/' + x.getUTCFullYear(); }))).font = { bold: true };
   Object.keys(agg).sort().forEach(function (k) { var p = k.split('|'); pb.addRow([p[0], p[1]].concat(dl.map(function (d) { return agg[k][d] || null; }))); });

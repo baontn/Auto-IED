@@ -129,6 +129,14 @@ function sharedIndex(files, manual) {
     return null;
   };
 }
+// ---- v7.21 (decided with the user): the prep (changeover) machines are NOT the same on every prep day. The day before loading (D-1) uses 100 % of the prep quantity, D-2 70 %, D-3 30 %;
+// more prep days than percentages use the LAST percentage (30 %). The Consolidator sets the default per machine group, IE Tech can change it per row (review.prepPct).
+var PREP_PCT_DEFAULT = [100, 70, 30];
+function prepPctList(x) { var a = x.pctRow && x.pctRow.length ? x.pctRow : (x.pct && x.pct.length ? x.pct : PREP_PCT_DEFAULT); return a; }
+function prepPctAt(x, i) { var n = (x.days || []).length, a = prepPctList(x), k = n - i; return +a[Math.min(Math.max(k, 1), a.length) - 1]; }       // i = index in x.days (ascending), k = days before loading
+function prepQtyAt(x, i) { return x.eff ? Math.ceil(x.eff * prepPctAt(x, i) / 100 - 1e-9) : 0; }
+function prepQtyOn(x, d) { var i = (x.days || []).indexOf(d); return i < 0 ? 0 : prepQtyAt(x, i); }
+function pctOfRules(rules, g) { var a = (rules.pctBy || {})[g] || rules.pct; return a && a.length ? a.slice() : PREP_PCT_DEFAULT.slice(); }
 // prep rows for the chosen groups: every style that starts on a line (not running there the previous working day)
 function buildPrep(mbl, groups, rules, share, puMap, fromKey, toKey) {
   var rows = [], seen = {}, D = mbl.dates;
@@ -145,7 +153,7 @@ function buildPrep(mbl, groups, rules, share, puMap, fromKey, toKey) {
           var key = [line, before.join(' + '), B, g].join('|'); if (seen[key + '|' + d]) return; seen[key + '|' + d] = 1;
           var n = rules.daysBy && rules.daysBy[g] || rules.days, days = [];
           for (var t = d - 864e5, k = 0; days.length < n && k < 14; t -= 864e5, k++) if (new Date(t).getUTCDay() !== 0) days.unshift(t);   // prep on the N days before loading, Sundays skipped
-          rows.push({ key: key, line: line, pu: puOf(puMap, line), from: before.join(' + '), to: B, group: g, load: d, qtyB: q, ratio: r, days: days, prep: Math.ceil(r * q - 1e-9), same: same });
+          rows.push({ key: key, line: line, pu: puOf(puMap, line), from: before.join(' + '), to: B, group: g, load: d, qtyB: q, ratio: r, pct: pctOfRules(rules, g), days: days, prep: Math.ceil(r * q - 1e-9), same: same });
         });
       });
     });
@@ -181,7 +189,7 @@ function chgFor(chg, x, loadIso, r) {
 function applyReviews(rows, reviews) {
   var last = {}, chg = changeoverDates(reviews); (reviews || []).slice().sort(function (a, b) { return String(a.at).localeCompare(String(b.at)); }).forEach(function (r) { last[r.key] = r; });
   rows.forEach(function (x) {
-    var r = last[x.key], ch = chgFor(chg, x, new Date(x.load).toISOString().slice(0, 10), r); x.review = r || null; x.flags = []; x.dateAt = ch ? ch.at : null;
+    var r = last[x.key], ch = chgFor(chg, x, new Date(x.load).toISOString().slice(0, 10), r); x.review = r || null; x.flags = []; x.dateAt = ch ? ch.at : null; x.pctRow = r && Array.isArray(r.prepPct) ? r.prepPct : null;
     if ((r && r.prepDays) || ch) {                                            // IE Tech set the real loading date (any group of the changeover) and / or the number of prep days
       var L = ch ? Date.parse(ch.date + 'T00:00:00Z') : x.load;
       x.days = prepDaysBefore(L, (r && r.prepDays) || x.days.length);
@@ -295,7 +303,7 @@ function groupGrid(mbl, group, prepRows, avail, fromKey, toKey, puMap, ends) {
   });
   prepRows.filter(function (x) { return x.group === group; }).forEach(function (x) {
     var L = lines[x.line] = lines[x.line] || { styles: {}, prep: [] }; L.prep.push(x);
-    x.days.forEach(function (d) { if (x.eff) prepTot[d] = (prepTot[d] || 0) + x.eff; });
+    x.days.forEach(function (d, i) { var q = prepQtyAt(x, i); if (q) prepTot[d] = (prepTot[d] || 0) + q; });
   });
   var order = Object.keys(lines).sort(function (a, b) { return puOf(puMap, a).localeCompare(puOf(puMap, b)) || a.localeCompare(b); });
   var a = avail[group], tot = {}, bal = {};
@@ -326,7 +334,7 @@ function adjustLines(G0, rows, ends) {
 function totalsOf(G, rows, days, avail) {
   var prodPu = {}, prepPu = {}, prod = {}, prep = {}, total = {}, bal = {};
   Object.keys(G.lines).forEach(function (l) { var L = G.lines[l]; Object.keys(L.styles).forEach(function (s) { Object.keys(L.styles[s]).forEach(function (d) { var k = L.pu + '|' + d; prodPu[k] = (prodPu[k] || 0) + L.styles[s][d]; prod[d] = (prod[d] || 0) + L.styles[s][d]; }); }); });
-  rows.forEach(function (x) { if (!x.eff) return; (x.days || []).forEach(function (d) { var k = x.pu + '|' + d; prepPu[k] = (prepPu[k] || 0) + x.eff; prep[d] = (prep[d] || 0) + x.eff; }); });
+  rows.forEach(function (x) { if (!x.eff) return; (x.days || []).forEach(function (d, i) { var q = prepQtyAt(x, i); if (!q) return; var k = x.pu + '|' + d; prepPu[k] = (prepPu[k] || 0) + q; prep[d] = (prep[d] || 0) + q; }); });
   days.forEach(function (d) { total[d] = (prod[d] || 0) + (prep[d] || 0); bal[d] = avail == null ? null : avail - total[d]; });
   return { days: days, avail: avail, G: G, prodPu: prodPu, prepPu: prepPu, prod: prod, prep: prep, total: total, bal: bal };
 }
