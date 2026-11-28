@@ -381,3 +381,23 @@ function actionStates(G0, rows, ends, base, actions, group) {
   all.forEach(function (a) { if (applied[a.id]) { var z = {}; days.forEach(function (d) { z[d] = 0; }); eff[a.id] = z; } });
   return { Mc: Mc, Ma: Ma, balC: balC, balA: balA, cov: cov, eff: eff, mine: mine, all: all, applied: applied };
 }
+
+// ===================== POOL of machine groups that can replace each other (v7.15) =====================
+// def = { members: [g1, g2, ...], cover: { g: [h1, h2] } }: cover[g] = the groups whose SPARE machines may cover a shortage of g, in this order.
+// 1 machine = 1 machine (the extra SAM of a replacement is not considered yet). Every group keeps its own numbers; the pool only moves spare machines to groups that are short.
+// models[g] = { bal: { day: balance after production + prep }, total: {...}, avail } (the same numbers as the group's own table)
+function poolModel(def, models, days) {
+  var M = def.members, out = { members: M, days: days, bal: {}, short: {}, take: {}, after: {}, pairs: [], tot: {}, shortAfter: {} }, seen = {};
+  M.forEach(function (g) { out.bal[g] = {}; out.short[g] = {}; out.after[g] = {}; (def.cover[g] || []).forEach(function (h) { if (h !== g && M.indexOf(h) >= 0 && !seen[g + '|' + h]) { seen[g + '|' + h] = 1; out.pairs.push([g, h]); out.take[g + '|' + h] = {}; } }); });
+  days.forEach(function (d) {
+    var spare = {}, left = {};
+    M.forEach(function (g) { var b = models[g] && models[g].bal ? models[g].bal[d] : null; b = b == null ? 0 : b; out.bal[g][d] = b; spare[g] = Math.max(0, b); left[g] = Math.max(0, -b); out.short[g][d] = left[g]; out.after[g][d] = b; });
+    out.pairs.forEach(function (pr) {
+      var g = pr[0], h = pr[1], n = Math.min(left[g], spare[h]); out.take[g + '|' + h][d] = n; if (!n) return;
+      left[g] -= n; spare[h] -= n; out.after[g][d] += n; out.after[h][d] -= n;
+    });
+    var tb = 0, sa = 0; M.forEach(function (g) { tb += out.bal[g][d]; sa += Math.max(0, -out.after[g][d]); });
+    out.tot[d] = tb; out.shortAfter[d] = sa;
+  });
+  return out;
+}

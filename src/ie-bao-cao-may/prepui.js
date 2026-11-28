@@ -150,9 +150,11 @@ function renderDetail() {
     html += tot(t('pgProd'), G.prod) + tot(t('pgPrep'), function (d) { return G.prep[d] || 0; }) + tot(t('pgTotal'), G.total) + tot(t('pgAvail'), function () { return G.avail; }) + partRows(g, G) + tot(t('pgBal'), G.bal, true);
     html += '</table></div></div>';
   });
+  html += '<div id="pPool"></div>';
   html += '<div class="row" style="margin-top:10px"><button class="primary" id="pSend">' + esc(t('pSend')) + '</button><button id="pExport">' + esc(t('pExport')) + '</button><span class="muted small" id="pMsg2"></span></div>';
   $('pDetail').innerHTML = html;
   $('pOnly').onchange = function (e) { PS.onlyPrep = e.target.checked; renderDetail(); };
+  poolMount($('pPool'), poolCtxPrep());
   $('pSend').onclick = function () { prepSend().catch(function (e) { $('pMsg2').textContent = e.message; }); };
   $('pExport').onclick = function () { prepExport().catch(function (e) { $('pMsg2').textContent = e.message; alert(t('xlErr', [e.message])); }); };
 }
@@ -180,6 +182,7 @@ async function prepSend() {
 }
 async function prepExport() {
   var wb = new ExcelJS.Workbook(), Y = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF5D6' } }, R = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFDE8E8' } }, T = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF3F4F6' } };
+  var SH = {};                                                                  // sheet, rows and grid of every exported group (the pool sheets link to them)
   PS.open.forEach(function (g) {
     var G = gridOf(g), ws = wb.addWorksheet(g.replace(/[\\\/\?\*\[\]:]/g, '_').slice(0, 31));
     // v7.14: the totals are live Excel formulas (SUMIFS on the PU / type columns, total = production + prep, balance = available - total); column D marks every row PROD or PREP
@@ -217,7 +220,9 @@ async function prepExport() {
     });
     if (G.days.length) ws.addConditionalFormatting({ ref: ws.getColumn(5).letter + FR.bal + ':' + ws.getColumn(4 + G.days.length).letter + FR.bal, rules: [{ type: 'cellIs', operator: 'lessThan', priority: 1, formulae: [0], style: { fill: { type: 'pattern', pattern: 'solid', bgColor: { argb: 'FFFDE8E8' } }, font: { bold: true, color: { argb: 'FFC4202B' } } } }] });
     ws.getColumn(3).width = 34; ws.getColumn(2).width = 9; ws.getColumn(4).width = 7;
+    SH[g] = { name: ws.name, bal: FR.bal, total: FR.total, avail: FR.avail, G: G };
   });
+  poolExportSheets(wb, SH);
   function addPrep(ws, G, pu, line, x) {
     var skip = x.status === 'AUTO_SKIP' || x.status === 'REMOVED';
     // skipped / removed prep = 0 in Excel (never a number that a SUM could pick up by mistake)
@@ -303,4 +308,44 @@ function renderDoneC() {
     return '<span class="tag ' + (c.pending ? 't-warn' : 't-ok') + '" style="margin:2px">' + esc(c.by + ' · ' + (c.pu || t('tAll')) + (c.lines ? ' · ' + c.lines : '') + ' · ' + String(c.at).slice(5, 16).replace('T', ' ') +
       ' · ' + c.groups.map(function (g) { return g.group + ' ' + g.rows; }).join(', ') + (c.pending ? ' · ' + t('pDonePend', [c.pending]) : '')) + '</span>';
   }).join('') : '';
+}
+
+// v7.15: one sheet per pool that is switched on (all its groups exported): every number is a formula linked to the group sheets
+function poolExportSheets(wb, SH) {
+  var cf = 0, red = { type: 'pattern', pattern: 'solid', bgColor: { argb: 'FFFDE8E8' } };
+  POOL.defs.filter(function (d) { return POOL.on[d.id] && d.members.every(function (g) { return SH[g]; }); }).forEach(function (def) {
+    var days = SH[def.members[0]].G.days, models = {}; def.members.forEach(function (g) { models[g] = SH[g].G; });
+    var R = poolModel(def, models, days), ws = wb.addWorksheet(('POOL ' + def.members.join('+')).replace(/[\\\/\?\*\[\]:]/g, '_').slice(0, 31)), RW = {}, takesInto = {}, takesFrom = {}, negRows = [];
+    ws.addRow([t('poolRows')].concat(days.map(function (d) { return pDay(d, true); }))).font = { bold: true };
+    ws.views = [{ state: 'frozen', xSplit: 1, ySplit: 1 }]; ws.getColumn(1).width = 44;
+    var L = function (j) { return ws.getColumn(2 + j).letter; }, link = function (g, row, j) { return "'" + SH[g].name.replace(/'/g, "''") + "'!" + ws.getColumn(5 + j).letter + row; };
+    var add = function (name, label, f, v, style) {
+      var row = ws.addRow([label].concat(days.map(function (d, j) { return { formula: f(j, L(j)), result: v(d) }; }))); RW[name] = row.number;
+      row.font = style === 'part' ? { italic: true, color: { argb: 'FF6B7280' } } : (style === 'bold' ? { bold: true } : {}); return row.number;
+    };
+    def.members.forEach(function (g) {
+      add('dem' + g, t('poolDem', [g]), function (j) { return link(g, SH[g].total, j); }, function (d) { return models[g].total[d] || 0; });
+      add('av' + g, t('poolAvail', [g]), function (j) { return link(g, SH[g].avail, j); }, function (d) { return models[g].avail == null ? 0 : models[g].avail; });
+      negRows.push(add('bal' + g, t('poolBal', [g]), function (j) { return link(g, SH[g].bal, j); }, function (d) { return R.bal[g][d]; }, 'bold'));
+    });
+    def.members.forEach(function (g) {
+      add('sh' + g, '   ' + g + ' — ' + t('poolShortRow'), function (j, c) { return 'MAX(0,-' + c + RW['bal' + g] + ')'; }, function (d) { return R.short[g][d]; }, 'part');
+      add('sp' + g, '   ' + g + ' — ' + t('poolSpareRow'), function (j, c) { return 'MAX(0,' + c + RW['bal' + g] + ')'; }, function (d) { return Math.max(0, R.bal[g][d]); }, 'part');
+    });
+    R.pairs.forEach(function (pr, i) {
+      var g = pr[0], h = pr[1], into = (takesInto[g] = takesInto[g] || []).slice(), from = (takesFrom[h] = takesFrom[h] || []).slice(), nm = 'tk' + i;
+      var sum = function (c, rows) { return rows.length ? '(' + rows.map(function (r) { return c + r; }).join('+') + ')' : '0'; };
+      add(nm, t('poolTake', [g, h]), function (j, c) { return 'MIN(' + c + RW['sh' + g] + '-' + sum(c, into) + ',' + c + RW['sp' + h] + '-' + sum(c, from) + ')'; }, function (d) { return R.take[g + '|' + h][d] || 0; });
+      takesInto[g].push(RW[nm]); takesFrom[h].push(RW[nm]);
+    });
+    var first = null, last = null;
+    def.members.forEach(function (g) {
+      var sum = function (c, rows) { return rows.length ? '+' + rows.map(function (r) { return c + r; }).join('+') : ''; }, sub = function (c, rows) { return rows.length ? '-' + rows.map(function (r) { return c + r; }).join('-') : ''; };
+      var r = add('af' + g, t('poolAfter', [g]), function (j, c) { return c + RW['bal' + g] + sum(c, takesInto[g] || []) + sub(c, takesFrom[g] || []); }, function (d) { return R.after[g][d]; }, 'bold');
+      if (first == null) first = r; last = r; negRows.push(r);
+    });
+    negRows.push(add('tot', t('poolTot'), function (j, c) { return 'SUM(' + c + first + ':' + c + last + ')'; }, function (d) { return R.tot[d]; }, 'bold'));
+    add('sa', t('poolShortAfter'), function (j, c) { return def.members.map(function (g) { return 'MAX(0,-' + c + RW['af' + g] + ')'; }).join('+'); }, function (d) { return R.shortAfter[d]; }, 'bold');
+    if (days.length) negRows.forEach(function (r) { ws.addConditionalFormatting({ ref: 'B' + r + ':' + L(days.length - 1) + r, rules: [{ type: 'cellIs', operator: 'lessThan', priority: ++cf, formulae: [0], style: { fill: red, font: { bold: true, color: { argb: 'FFC4202B' } } } }] }); });
+  });
 }

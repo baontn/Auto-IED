@@ -229,6 +229,7 @@ function techRender() {
   var basisNote = G0.basis && G0.basis.overlay ? '<div class="muted small" style="margin:0 0 6px;padding:6px 10px;border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:6px">' + esc(t('tBasis', [G0.basis.overlay, String(G0.basis.at || '').slice(0, 16).replace('T', ' '), G0.basis.by || '-'])) + '</div>' : '';
   $('tGrid').innerHTML = basisNote + h; TS.gridKey = gk;
   var tw1 = $('tGrid').querySelector('.tw'); if (tw1) { tw1.scrollTop = sT; tw1.scrollLeft = sL; }
+  poolMount($('tPool'), poolCtxTech());
   if (keep) window.scrollTo(pX, pY);
   [].forEach.call($('tGrid').querySelectorAll('[data-te]'), function (b) { b.onclick = function (e) { e.stopPropagation(); techSetEnd(b.dataset.te); }; });
   [].forEach.call($('tGrid').querySelectorAll('tr.prow'), function (tr) { tr.onclick = function () { openDrawer(tr.dataset.k); }; });

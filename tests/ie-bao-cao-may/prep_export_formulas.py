@@ -18,12 +18,13 @@ with sync_playwright() as p:
     pg.click('#mainTabs [data-tab="prep"]'); pg.wait_for_timeout(1500); pg.fill('#pFrom', MON.isoformat()); pg.dispatch_event('#pFrom', 'change'); pg.wait_for_timeout(700)
     for g in ('BT1M', 'ZZM'): pg.check(f'[data-pg="{g}"]'); pg.dispatch_event(f'[data-pg="{g}"]', 'change')
     pg.click('#pOpen'); pg.wait_for_timeout(2500)
+    pg.evaluate("POOL.defs = [{id: 't1', members: ['BT1M', 'ZZM'], cover: {BT1M: ['ZZM'], ZZM: ['BT1M']}}]; POOL.on = {t1: true}; 0")
     with pg.expect_download() as dl: pg.click('#pExport')
     out = S / 'export.xlsx'; dl.value.save_as(str(out)); br.close()
 wb = openpyxl.load_workbook(out); vals = openpyxl.load_workbook(out, data_only=True)
-sheets = [n for n in wb.sheetnames if n in ('BT1M', 'ZZM')]; check('one sheet per machine group', len(sheets) == 2, str(wb.sheetnames))
+sheets = [n for n in wb.sheetnames if n in ('BT1M', 'ZZM', 'POOL BT1M+ZZM')]; check('one sheet per machine group plus the pool sheet that is switched on', len(sheets) == 3, str(wb.sheetnames))
 nf = {n: sum(1 for r in wb[n].iter_rows() for c in r if isinstance(c.value, str) and c.value.startswith('=')) for n in sheets}
-check('summary rows are formulas', all(v > 10 for v in nf.values()), str(nf))
+check('summary rows and the pool sheet are formulas', all(v > 10 for v in nf.values()), str(nf))
 ws = wb['BT1M']; rows = {str(r[2].value).strip(): r for r in ws.iter_rows(min_row=2) if r[2].value}
 check('column D marks PROD / PREP rows', {str(r[3].value) for r in ws.iter_rows(min_row=2) if r[3].value} >= {'PROD', 'PREP'})
 bal = [r for k, r in rows.items() if k.lower().startswith(('còn lại', 'balance', 'remaining'))]

@@ -1,6 +1,9 @@
 // ===================== TEXTS (VI / EN) =====================
 var I18N = {
   vi: {
+    poolShortRow: 'đang thiếu', poolSpareRow: 'máy dư', poolBtn: '🔗 Gộp loại máy', poolTitle: 'Gộp loại máy dùng thay nhau', poolIntro: 'Chọn các loại máy có thể dùng thay nhau (ví dụ máy zigzag có cắt chỉ và zigzag thường). Máy dư của loại này bù cho loại kia đang thiếu: 1 máy = 1 máy, chưa tính SAM tăng thêm. Các loại máy vẫn hiện riêng; bộ gộp chỉ hiện khi bạn bật.',
+    poolMembers: 'Loại máy trong bộ gộp', poolCoverCap: 'Ai được dùng thay ai: hàng = loại máy đang thiếu, cột = loại máy cho mượn máy dư (thứ tự cột trái → phải).', poolShort: 'Đang thiếu ↓ / mượn từ →', poolSave: 'Lưu và hiện', poolClose: 'Đóng', poolDelete: 'Xóa bộ gộp', poolEdit: 'Sửa', poolNeed2: 'Chọn ít nhất 2 loại máy.', poolToggleTip: 'Bấm để hiện / ẩn bộ gộp',
+    poolRows: 'Loại máy', poolNote: '1 máy = 1 máy; máy dư của loại này bù cho loại thiếu', poolDem: '{0}: nhu cầu (sản xuất + chuẩn bị)', poolAvail: '{0}: máy sẵn có', poolBal: '{0}: còn lại', poolTake: '{0} dùng máy dư của {1}', poolAfter: '{0}: còn lại sau khi gộp', poolTot: 'Tổng còn lại (gộp)', poolShortAfter: 'Còn thiếu sau khi gộp', poolMissing: 'Chưa có dữ liệu của {0} ở màn hình này.',
     hdrRefresh: '🔄 Làm mới', hdrRefreshNone: 'Chưa có file nào được ghi nhớ. Chọn MC Report / Master plan ở tab Dữ liệu trước.', hdrRefreshDone: '✓ Đã đọc lại các file đã chọn lúc {0}.',
     errStrip: 'Lỗi trang (gửi nội dung này cho IE):',
     xlErr: 'Không xuất được file Excel: {0}',
@@ -194,6 +197,9 @@ var I18N = {
     c_Added: 'Mới', c_Changed: 'Thay đổi', c_Unchanged: 'Không đổi'
   },
   en: {
+    poolShortRow: 'short', poolSpareRow: 'spare', poolBtn: '🔗 Combine machine types', poolTitle: 'Combine machine types that can replace each other', poolIntro: 'Choose the machine types that can replace each other (for example a zigzag with trimmer and a normal zigzag). Spare machines of one type cover the shortage of another: 1 machine = 1 machine, the extra SAM is not counted yet. Every machine type is still shown separately; a pool is shown only when you switch it on.',
+    poolMembers: 'Machine types in the pool', poolCoverCap: 'Who may replace whom: row = machine type that is short, column = machine type that lends spare machines (order left → right).', poolShort: 'Short ↓ / borrows from →', poolSave: 'Save and show', poolClose: 'Close', poolDelete: 'Delete pool', poolEdit: 'Edit', poolNeed2: 'Choose at least 2 machine types.', poolToggleTip: 'Click to show / hide the pool',
+    poolRows: 'Machine type', poolNote: '1 machine = 1 machine; spare machines of one type cover the short type', poolDem: '{0}: demand (production + prep)', poolAvail: '{0}: machines available', poolBal: '{0}: remaining', poolTake: '{0} uses spare machines of {1}', poolAfter: '{0}: remaining after combining', poolTot: 'Total remaining (combined)', poolShortAfter: 'Still short after combining', poolMissing: 'No data of {0} on this screen yet.',
     hdrRefresh: '🔄 Refresh', hdrRefreshNone: 'No file remembered yet. Choose the MC Report / Master plan in the Data tab first.', hdrRefreshDone: '✓ The chosen files were read again at {0}.',
     errStrip: 'Page error (send this text to the IE team):',
     xlErr: 'Could not export the Excel file: {0}',
