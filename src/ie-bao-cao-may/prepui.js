@@ -146,9 +146,9 @@ function renderDetail() {
           html += '<tr><td class="s1"></td><td class="l s2">' + (first ? '<b>' + esc(line) + '</b>' : '') + '</td><td class="l s3" style="color:var(--warn)">' + esc(t('pgPrepOf', [s])) + ' <span class="muted small">' + esc(t('prLoad', [pDay(x.loadActual || x.load)])) + '</span> ' + statusTag(x) + '</td>' + G.days.map(function (d) { return prepCell(x, d); }).join('') + '</tr>'; first = false;
         });
         if (!L.styles[s]) return;
-        html += '<tr><td class="s1"></td><td class="l s2">' + (first ? '<b>' + esc(line) + '</b>' : '') + '</td><td class="l s3">' + esc(s) + '</td>' + G.days.map(function (d) { return '<td' + (L.est && L.est[d] && L.styles[s][d] ? ' class="est" title="' + esc(t('idleEstTip')) + '"' : '') + '>' + (L.styles[s][d] || '') + '</td>'; }).join('') + '</tr>'; first = false;
+        html += '<tr><td class="s1"></td><td class="l s2">' + (first ? '<b>' + esc(line) + '</b>' : '') + '</td><td class="l s3">' + esc(s) + '</td>' + G.days.map(function (d) { return '<td>' + (L.est && L.est[d] ? '' : (L.styles[s][d] || '')) + '</td>'; }).join('') + '</tr>'; first = false;
       });
-      html += idleRowHtml(line, first, G.days, function (d) { return (L.idle || {})[d]; });
+      html += idleRowHtml(line, first, G.days, function (d) { return (L.idle || {})[d]; }, function (d) { return estQtyOn(L, d); });
     });
     var tot = function (lbl, m, neg) { return '<tr class="tot"><td class="s1"></td><td class="s2"></td><td class="l s3">' + esc(lbl) + '</td>' + G.days.map(function (d) { var v = typeof m === 'function' ? m(d) : m[d]; return '<td class="' + (neg && v != null && v < 0 ? 'neg' : '') + '">' + (v == null ? '' : v) + '</td>'; }).join('') + '</tr>'; };
     var PT = puTotals(G);
@@ -158,7 +158,7 @@ function renderDetail() {
         '<tr class="pusum"><td class="s1"></td><td class="s2"></td><td class="l s3">' + esc(t('pgPuSum', [puNameC(p), t('pgPrep')])) + '</td>' + G.days.map(function (d) { return '<td>' + (o.prep[d] || 0) + '</td>'; }).join('') + '</tr>' +
         '<tr class="tot"><td class="s1"></td><td class="s2"></td><td class="l s3">' + esc(t('pgPuSum', [puNameC(p), t('pgTotal')])) + '</td>' + G.days.map(function (d) { return '<td>' + ((o.prod[d] || 0) + (o.prep[d] || 0)) + '</td>'; }).join('') + '</tr>';
     });
-    html += tot(t('pgProd'), G.prod) + tot(t('pgPrep'), function (d) { return G.prep[d] || 0; }) + tot(t('pgTotal'), G.total) + tot(t('pgAvail'), function () { return G.avail; }) + partRows(g, G) + tot(t('pgBal'), G.bal, true);
+    html += tot(t('pgProd'), G.prod) + estRowHtml(G, G.days) + tot(t('pgPrep'), function (d) { return G.prep[d] || 0; }) + tot(t('pgTotal'), G.total) + tot(t('pgAvail'), function () { return G.avail; }) + partRows(g, G) + tot(t('pgBal'), G.bal, true);
     html += '</table></div></div>';
   });
   html += idleCardHtml();
@@ -341,11 +341,14 @@ function idleCtlHtml() {
     '<span class="muted small">' + esc(t('idleLegend', [nGap])) + '</span></div>';
 }
 // one grey row under the styles of a line: gap / leading / trailing empty days; "≈" = filled by the estimate
-function idleRowHtml(line, first, days, get) {
+function estQtyOn(L, d) { if (!(L.est && L.est[d])) return 0; var s = 0; Object.keys(L.styles || {}).forEach(function (k) { s += L.styles[k][d] || 0; }); return s; }
+function estTotals(G, days) { var per = {}, all = 0; days.forEach(function (d) { var s = 0; Object.keys(G.lines).forEach(function (l) { s += estQtyOn(G.lines[l], d); }); per[d] = s; all += s; }); return { per: per, all: all }; }
+function estRowHtml(G, days) { var E = estTotals(G, days); if (!E.all) return ''; return '<tr class="estsum"><td class="s1"></td><td class="s2"></td><td class="l s3">' + esc(t('idleEstRow', [E.all])) + '</td>' + days.map(function (d) { return '<td>' + (E.per[d] || '') + '</td>'; }).join('') + '</tr>'; }
+function idleRowHtml(line, first, days, get, qty) {
   var any = days.some(function (d) { return get(d); }); if (!any) return '';
-  return '<tr class="idle"><td class="s1"></td><td class="l s2"></td><td class="l s3 muted">' + esc(t('idleRow')) + '</td>' + days.map(function (d) {
+  return '<tr class="idle"><td class="s1"></td><td class="l s2"></td><td class="l s3 idlab">' + esc(t('idleRow')) + '</td>' + days.map(function (d) {
     var c = get(d); if (!c) return '<td></td>';
-    return c.est ? '<td class="idl est" title="' + esc(t('idleEstTip')) + '">≈</td>' : '<td class="idl' + (c.kind === 'lead' ? ' lead' : '') + '" title="' + esc(t('idleK_' + c.kind)) + '">' + (c.kind === 'lead' ? '·' : '—') + '</td>';
+    return c.est ? '<td class="idl est" title="' + esc(t('idleEstTip')) + '">' + ((qty && qty(d)) || '≈') + '</td>' : '<td class="idl' + (c.kind === 'lead' ? ' lead' : '') + '" title="' + esc(t('idleK_' + c.kind)) + '">' + (c.kind === 'lead' ? '·' : '—') + '</td>';
   }).join('') + '</tr>';
 }
 function idleHow(r) { return r.src === 'B' ? t('idleSrcB') : r.src === 'A' ? t('idleSrcA') : r.src === 'drag' ? t('idleSrcDrag') : (r.kind === 'lead' ? t('idleNoLead') : (PS.fill.on ? t('idleNoLong', [PS.fill.cap]) : t('idleNoOff'))); }
@@ -357,8 +360,8 @@ function idleCardHtml() {
   var I = (SRC() || {}).idle; if (!I) return '';
   var pus = {}; I.list.forEach(function (r) { pus[puOf(REF.pu || {}, r.line)] = 1; }); var sel = PS.idlePU || '';
   var rows = idleRows().filter(function (r) { return !sel || puOf(REF.pu || {}, r.line) === sel; });
-  var tot = I.list.length, filled = I.list.filter(function (r) { return r.src !== 'none'; }).length;
-  var h = '<div class="gblock"><div class="row"><h3 style="margin:8px 0">' + esc(t('idleTitle')) + '</h3><span class="muted small">' + esc(t('idleSummary', [tot, filled])) + '</span><span style="margin-left:auto"></span>' +
+  var tot = I.list.length, filled = I.list.filter(function (r) { return r.src !== 'none'; }).length, estQ = I.list.reduce(function (a, r) { return a + (r.src !== 'none' ? (r.perDay || 0) * r.n : 0); }, 0);
+  var h = '<div class="gblock"><div class="row"><h3 style="margin:8px 0">' + esc(t('idleTitle')) + '</h3><span class="muted small">' + esc(t('idleSummary', [tot, filled]) + ' · ' + t('idleEstQty', [estQ])) + '</span><span style="margin-left:auto"></span>' +
     '<select id="pIdlePU"><option value="">' + esc(t('idleAllPU')) + '</option>' + Object.keys(pus).sort().map(function (p) { return '<option value="' + esc(p) + '"' + (p === sel ? ' selected' : '') + '>' + esc(puNameC(p)) + '</option>'; }).join('') + '</select>' +
     '<button id="pIdleX">' + esc(t('idleExport')) + '</button></div>' +
     '<div class="tw" style="max-height:44vh"><table class="pg"><tr><th class="l">PU</th><th class="l">' + esc(t('pgLine')) + '</th><th>' + esc(t('idleFrom')) + '</th><th>' + esc(t('idleTo')) + '</th><th>' + esc(t('idleN')) + '</th><th class="l">' + esc(t('idleKind')) + '</th><th class="l">' + esc(t('idleBefore')) + '</th><th class="l">' + esc(t('idleAfter')) + '</th><th class="l">' + esc(t('idleHow')) + '</th><th>' + esc(t('idlePer')) + '</th></tr>';

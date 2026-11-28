@@ -210,10 +210,10 @@ function techRender() {
       });
       if (!L.styles[s] && !(runInfo[l] && runInfo[l].style === s)) return;
       var Ls = L.styles[s] || {};
-      h += '<tr><td class="s1"></td><td class="l s2">' + (shown ? '' : '<b>' + esc(l) + '</b>') + '</td><td class="l s3">' + esc(s) + endTag(l, s) + '</td>' + days.map(function (d) { return '<td' + (L.est && L.est[d] && Ls[d] ? ' class="est" title="' + esc(t('idleEstTip')) + '"' : '') + '>' + (Ls[d] || '') + '</td>'; }).join('') + '</tr>';
+      h += '<tr><td class="s1"></td><td class="l s2">' + (shown ? '' : '<b>' + esc(l) + '</b>') + '</td><td class="l s3">' + esc(s) + endTag(l, s) + '</td>' + days.map(function (d) { return '<td>' + (L.est && L.est[d] ? '' : (Ls[d] || '')) + '</td>'; }).join('') + '</tr>';
       shown = true;
     });
-    h += idleRowHtml(l, shown, days, function (d) { return (L.idle || {})[d]; });
+    h += idleRowHtml(l, shown, days, function (d) { return (L.idle || {})[d]; }, function (d) { return estQtyOn(L, d); });
   });
   // totals per PU (all lines of the group), then total, available and balance
   var pus = {}; Object.keys(G.lines).forEach(function (l) { pus[G.lines[l].pu] = 1; });
@@ -223,7 +223,7 @@ function techRender() {
     h += trow(t('pgPuSum', [puName(p), t('pgProd')]), function (d) { return prod[p + '|' + d] || 0; }, 'pusum') + trow(t('pgPuSum', [puName(p), t('pgPrep')]), function (d) { return prep[p + '|' + d] || 0; }, 'pusum') +
       trow(t('pgPuSum', [puName(p), t('pgTotal')]), function (d) { return (prod[p + '|' + d] || 0) + (prep[p + '|' + d] || 0); }, 'tot');
   });
-  h += trow(t('pgTotal'), function (d) { return (totP[d] || 0) + (totR[d] || 0); }, 'tot') + trow(t('pgAvail'), function () { return G.avail; }, 'tot');
+  h += estRowHtml(G, days) + trow(t('pgTotal'), function (d) { return (totP[d] || 0) + (totR[d] || 0); }, 'tot') + trow(t('pgAvail'), function () { return G.avail; }, 'tot');
   (G.parts || []).forEach(function (p) { h += trow((p.sign > 0 ? '+ ' : '− ') + p.name, function () { return p.sign * p.qty; }, 'part'); });
   h += trow(t('pgBal'), function (d) { return G.avail == null ? null : G.avail - (totP[d] || 0) - (totR[d] || 0); }, 'tot', true) + '</table></div>';
   var tw0 = $('tGrid').querySelector('.tw'), gk = g + '|' + pu + '|' + $('tLines').value, keep = TS.gridKey === gk && !!tw0;

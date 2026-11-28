@@ -2,7 +2,7 @@
 var I18N = {
   vi: {
     idleFillOn: 'Ước tính cho ngày chưa xếp mã (Advance B)', idleCap: 'tối đa', idleLegend: '{0} khoảng trống giữa hai mã. Ngày làm việc; — chưa xếp mã (Not Set up), ≈ ước tính: mã sau bắt đầu sớm hơn (mã sau chưa có dữ liệu thì kéo mã trước; cuối kế hoạch kéo dài mã cuối), · đầu kế hoạch (bỏ qua).',
-    idleRow: 'Chưa xếp mã (Not Set up)', idleEstTip: 'Ngày ước tính (Advance B)', idleK_gap: 'Giữa hai mã', idleK_lead: 'Đầu kế hoạch', idleK_trail: 'Cuối kế hoạch',
+    idleRow: 'Chưa xếp mã (Not Set up)', idleEstRow: 'Trong đó số lượng ước tính (tổng {0} máy-ngày)', idleEstQty: 'tổng ước tính (mọi nhóm máy) {0} máy-ngày', idleEstTip: 'Ngày ước tính (Advance B)', idleK_gap: 'Giữa hai mã', idleK_lead: 'Đầu kế hoạch', idleK_trail: 'Cuối kế hoạch',
     idleTitle: 'Khoảng trống chưa xếp mã (Not Set up)', idleSummary: '{0} khoảng trống, {1} đã ước tính', idleExport: '⬇ Excel', idleFrom: 'Từ', idleTo: 'Đến', idleN: 'Ngày làm việc', idleKind: 'Loại', idleBefore: 'Mã trước', idleAfter: 'Mã sau', idleHow: 'Cách tính', idlePer: 'Máy / ngày',
     idleSrcB: 'Advance B: lấy máy của mã sau', idleSrcA: 'Mã sau chưa có dữ liệu: kéo mã trước', idleSrcDrag: 'Kéo dài mã cuối đến hết kế hoạch', idleNoLead: 'Đầu kế hoạch: bỏ qua', idleNoLong: 'Dài hơn {0} ngày: không điền, Planning quyết định', idleNoOff: 'Không ước tính (đang tắt)', idleNone: 'Không có khoảng trống.', idleAllPU: 'Tất cả PU',
     tFillNote: 'Gồm ước tính cho ngày chưa xếp mã (Advance B, tối đa {0} ngày làm việc). Ô gạch chéo / ≈ là ước tính.',
@@ -205,7 +205,7 @@ var I18N = {
   },
   en: {
     idleFillOn: 'Estimate the empty days (Advance B)', idleCap: 'up to', idleLegend: '{0} gaps between two styles. Working days; — empty (Not Set up), ≈ estimated: the next style starts earlier (next style without data: the previous style is dragged; after the last style the last style is dragged to the end of the plan), · before the first style (ignored).',
-    idleRow: 'Empty (Not Set up)', idleEstTip: 'Estimated day (Advance B)', idleK_gap: 'Between two styles', idleK_lead: 'Start of the plan', idleK_trail: 'End of the plan',
+    idleRow: 'Empty (Not Set up)', idleEstRow: 'Of which estimated quantity (total {0} machine-days)', idleEstQty: 'estimated total (all machine groups) {0} machine-days', idleEstTip: 'Estimated day (Advance B)', idleK_gap: 'Between two styles', idleK_lead: 'Start of the plan', idleK_trail: 'End of the plan',
     idleTitle: 'Empty line periods (Not Set up)', idleSummary: '{0} periods, {1} estimated', idleExport: '⬇ Excel', idleFrom: 'From', idleTo: 'To', idleN: 'Working days', idleKind: 'Kind', idleBefore: 'Style before', idleAfter: 'Style after', idleHow: 'How counted', idlePer: 'Machines / day',
     idleSrcB: 'Advance B: machines of the next style', idleSrcA: 'Next style has no data: previous style dragged', idleSrcDrag: 'Last style dragged to the end of the plan', idleNoLead: 'Start of the plan: ignored', idleNoLong: 'Longer than {0} days: not filled, Planning decides', idleNoOff: 'Not estimated (switched off)', idleNone: 'No empty periods.', idleAllPU: 'All PUs',
     tFillNote: 'Includes the estimate for the empty days (Advance B, up to {0} working days). Hatched cells / ≈ are estimates.',
