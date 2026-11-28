@@ -311,42 +311,11 @@ function renderDoneC() {
   }).join('') : '';
 }
 
-// v7.15: one sheet per pool that is switched on (all its groups exported): every number is a formula linked to the group sheets
+// v7.15: one sheet per pool that is switched on (all its groups exported): every number is a formula linked to the group sheets (poolFillSheet in poolui.js)
 function poolExportSheets(wb, SH) {
-  var cf = 0, red = { type: 'pattern', pattern: 'solid', bgColor: { argb: 'FFFDE8E8' } };
   POOL.defs.filter(function (d) { return POOL.on[d.id] && d.members.every(function (g) { return SH[g]; }); }).forEach(function (def) {
     var days = SH[def.members[0]].G.days, models = {}; def.members.forEach(function (g) { models[g] = SH[g].G; });
-    var R = poolModel(def, models, days), ws = wb.addWorksheet(('POOL ' + def.members.join('+')).replace(/[\\\/\?\*\[\]:]/g, '_').slice(0, 31)), RW = {}, takesInto = {}, takesFrom = {}, negRows = [];
-    ws.addRow([t('poolRows')].concat(days.map(function (d) { return pDay(d, true); }))).font = { bold: true };
-    ws.views = [{ state: 'frozen', xSplit: 1, ySplit: 1 }]; ws.getColumn(1).width = 44;
-    var L = function (j) { return ws.getColumn(2 + j).letter; }, link = function (g, row, j) { return "'" + SH[g].name.replace(/'/g, "''") + "'!" + ws.getColumn(5 + j).letter + row; };
-    var add = function (name, label, f, v, style) {
-      var row = ws.addRow([label].concat(days.map(function (d, j) { return { formula: f(j, L(j)), result: v(d) }; }))); RW[name] = row.number;
-      row.font = style === 'part' ? { italic: true, color: { argb: 'FF6B7280' } } : (style === 'bold' ? { bold: true } : {}); return row.number;
-    };
-    def.members.forEach(function (g) {
-      add('dem' + g, t('poolDem', [g]), function (j) { return link(g, SH[g].total, j); }, function (d) { return models[g].total[d] || 0; });
-      add('av' + g, t('poolAvail', [g]), function (j) { return link(g, SH[g].avail, j); }, function (d) { return models[g].avail == null ? 0 : models[g].avail; });
-      negRows.push(add('bal' + g, t('poolBal', [g]), function (j) { return link(g, SH[g].bal, j); }, function (d) { return R.bal[g][d]; }, 'bold'));
-    });
-    def.members.forEach(function (g) {
-      add('sh' + g, '   ' + g + ' — ' + t('poolShortRow'), function (j, c) { return 'MAX(0,-' + c + RW['bal' + g] + ')'; }, function (d) { return R.short[g][d]; }, 'part');
-      add('sp' + g, '   ' + g + ' — ' + t('poolSpareRow'), function (j, c) { return 'MAX(0,' + c + RW['bal' + g] + ')'; }, function (d) { return Math.max(0, R.bal[g][d]); }, 'part');
-    });
-    R.pairs.forEach(function (pr, i) {
-      var g = pr[0], h = pr[1], into = (takesInto[g] = takesInto[g] || []).slice(), from = (takesFrom[h] = takesFrom[h] || []).slice(), nm = 'tk' + i;
-      var sum = function (c, rows) { return rows.length ? '(' + rows.map(function (r) { return c + r; }).join('+') + ')' : '0'; };
-      add(nm, t('poolTake', [g, h]), function (j, c) { return 'MIN(' + c + RW['sh' + g] + '-' + sum(c, into) + ',' + c + RW['sp' + h] + '-' + sum(c, from) + ')'; }, function (d) { return R.take[g + '|' + h][d] || 0; });
-      takesInto[g].push(RW[nm]); takesFrom[h].push(RW[nm]);
-    });
-    var first = null, last = null;
-    def.members.forEach(function (g) {
-      var sum = function (c, rows) { return rows.length ? '+' + rows.map(function (r) { return c + r; }).join('+') : ''; }, sub = function (c, rows) { return rows.length ? '-' + rows.map(function (r) { return c + r; }).join('-') : ''; };
-      var r = add('af' + g, t('poolAfter', [g]), function (j, c) { return c + RW['bal' + g] + sum(c, takesInto[g] || []) + sub(c, takesFrom[g] || []); }, function (d) { return R.after[g][d]; }, 'bold');
-      if (first == null) first = r; last = r; negRows.push(r);
-    });
-    negRows.push(add('tot', t('poolTot'), function (j, c) { return 'SUM(' + c + first + ':' + c + last + ')'; }, function (d) { return R.tot[d]; }, 'bold'));
-    add('sa', t('poolShortAfter'), function (j, c) { return def.members.map(function (g) { return 'MAX(0,-' + c + RW['af' + g] + ')'; }).join('+'); }, function (d) { return R.shortAfter[d]; }, 'bold');
-    if (days.length) negRows.forEach(function (r) { ws.addConditionalFormatting({ ref: 'B' + r + ':' + L(days.length - 1) + r, rules: [{ type: 'cellIs', operator: 'lessThan', priority: ++cf, formulae: [0], style: { fill: red, font: { bold: true, color: { argb: 'FFC4202B' } } } }] }); });
+    var ws = wb.addWorksheet(('POOL ' + def.members.join('+')).replace(/[\\\/\?\*\[\]:]/g, '_').slice(0, 31));
+    poolFillSheet(ws, def, models, days, function (g, kind, j) { return "'" + SH[g].name.replace(/'/g, "''") + "'!" + ws.getColumn(5 + j).letter + SH[g][kind]; });
   });
 }

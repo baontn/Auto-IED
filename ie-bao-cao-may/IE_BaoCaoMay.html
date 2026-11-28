@@ -328,6 +328,16 @@ details summary{cursor:pointer;color:var(--accent)}
 .chips{display:flex;flex-wrap:wrap;gap:4px}
 .chips button{border:none;border-radius:8px}
 .chips button.on{background:var(--sel);color:var(--accent);font-weight:600}
+.pchips{display:flex;flex-wrap:wrap;gap:6px}
+.pchip{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:999px;padding:5px 14px;cursor:pointer}
+.pchip.on{background:var(--sel);border-color:var(--accent);color:var(--accent);font-weight:600}
+.pchip .n{display:inline-block;min-width:18px;height:18px;line-height:18px;border-radius:9px;background:var(--accent);color:var(--accent-tx);font-size:11px;text-align:center;margin-right:6px}
+.pdlg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:60;display:flex;align-items:center;justify-content:center}
+.pdlg .box{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(780px,94vw);max-height:90vh;display:flex;flex-direction:column;box-shadow:0 12px 40px rgba(0,0,0,.35)}
+.pdlg .hd,.pdlg .ft{padding:12px 18px;display:flex;gap:8px;align-items:center}.pdlg .hd{border-bottom:1px solid var(--line)}.pdlg .ft{border-top:1px solid var(--line)}
+.pdlg .bd{padding:14px 18px;overflow:auto}.pdlg h4{margin:14px 0 6px;font-size:14px}.pdlg h4:first-child{margin-top:0}
+.pdlg .scroll{max-height:200px;overflow:auto;padding:2px}
+.pdlg .lend{display:flex;gap:10px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:8px;margin:6px 0;flex-wrap:wrap}.pdlg .lend>b{min-width:150px}
 .tools{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0}
 input[type=text]{min-width:240px}
 .tw{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:auto;max-height:65vh}
@@ -416,7 +426,7 @@ table.rzw td,table.rzw th{white-space:normal!important;overflow-wrap:anywhere;wo
 </head>
 <body>
 <header>
-  <h1 data-t="title"></h1><span class="tag t-info" id="verTag" title="Version">v7.17</span><span class="sub" data-t="subtitle"></span>
+  <h1 data-t="title"></h1><span class="tag t-info" id="verTag" title="Version">v7.18</span><span class="sub" data-t="subtitle"></span>
   <div role="group" aria-label="Role" id="roleSeg" style="margin-left:auto;display:flex;gap:4px"><button data-role="cons" data-t="roleCons"></button><button data-role="tech" data-t="roleTech"></button><button data-role="sup" data-t="roleSup"></button></div>
   <button id="bRefresh" data-t="hdrRefresh" style="margin-left:8px"></button>
   <a class="homebtn" id="btnHome" href="../index.html" data-t="homeLink"></a>
@@ -637,7 +647,7 @@ table.rzw td,table.rzw th{white-space:normal!important;overflow-wrap:anywhere;wo
 <script>// ===================== TEXTS (VI / EN) =====================
 var I18N = {
   vi: {
-    poolFollow: 'Bộ gộp do IE Báo cáo máy quy định:', poolSent: 'đã gửi kèm {0} bộ gộp đang bật', poolLost: 'IE Tech chỉ thấy bộ gộp khi mở chi tiết đủ các loại máy của nó, còn thiếu: {0}', poolShortRow: 'đang thiếu', poolSpareRow: 'máy dư', poolBtn: '🔗 Gộp loại máy', poolTitle: 'Gộp loại máy dùng thay nhau', poolIntro: 'Chọn các loại máy có thể dùng thay nhau (ví dụ máy zigzag có cắt chỉ và zigzag thường). Máy dư của loại này bù cho loại kia đang thiếu: 1 máy = 1 máy, chưa tính SAM tăng thêm. Các loại máy vẫn hiện riêng; bộ gộp chỉ hiện khi bạn bật.',
+    poolFollow: 'bộ gộp do IE Báo cáo máy quy định (chỉ xem; bạn vẫn tạo được bộ gộp riêng)', poolFromCons: 'IE Báo cáo máy', poolXl: '⬇ Excel', poolStep1: 'Chọn các loại máy dùng thay nhau (số = thứ tự mượn máy)', poolSearch: 'Tìm loại máy…', poolSelected: 'Đã chọn', poolStep2: 'Loại máy nào được mượn máy dư của loại nào', poolAllPairs: 'Mọi cặp', poolNoPairs: 'Bỏ hết', poolOrderHint: 'Bấm loại máy để bật / tắt. Thứ tự mượn theo số ở bước ①.', poolBorrow: '{0} thiếu → mượn máy dư từ:', poolSent: 'đã gửi kèm {0} bộ gộp đang bật', poolLost: 'IE Tech chỉ thấy bộ gộp khi mở chi tiết đủ các loại máy của nó, còn thiếu: {0}', poolShortRow: 'đang thiếu', poolSpareRow: 'máy dư', poolBtn: '🔗 Gộp loại máy', poolTitle: 'Gộp loại máy dùng thay nhau', poolIntro: 'Chọn các loại máy có thể dùng thay nhau (ví dụ máy zigzag có cắt chỉ và zigzag thường). Máy dư của loại này bù cho loại kia đang thiếu: 1 máy = 1 máy, chưa tính SAM tăng thêm. Các loại máy vẫn hiện riêng; bộ gộp chỉ hiện khi bạn bật.',
     poolMembers: 'Loại máy trong bộ gộp', poolCoverCap: 'Ai được dùng thay ai: hàng = loại máy đang thiếu, cột = loại máy cho mượn máy dư (thứ tự cột trái → phải).', poolShort: 'Đang thiếu ↓ / mượn từ →', poolSave: 'Lưu và hiện', poolClose: 'Đóng', poolDelete: 'Xóa bộ gộp', poolEdit: 'Sửa', poolNeed2: 'Chọn ít nhất 2 loại máy.', poolToggleTip: 'Bấm để hiện / ẩn bộ gộp',
     poolRows: 'Loại máy', poolNote: '1 máy = 1 máy; máy dư của loại này bù cho loại thiếu', poolDem: '{0}: nhu cầu (sản xuất + chuẩn bị)', poolAvail: '{0}: máy sẵn có', poolBal: '{0}: còn lại', poolTake: '{0} dùng máy dư của {1}', poolAfter: '{0}: còn lại sau khi gộp', poolTot: 'Tổng còn lại (gộp)', poolShortAfter: 'Còn thiếu sau khi gộp', poolMissing: 'Chưa có dữ liệu của {0} ở màn hình này.',
     hdrRefresh: '🔄 Làm mới', hdrRefreshNone: 'Chưa có file nào được ghi nhớ. Chọn MC Report / Master plan ở tab Dữ liệu trước.', hdrRefreshDone: '✓ Đã đọc lại các file đã chọn lúc {0}.',
@@ -833,7 +843,7 @@ var I18N = {
     c_Added: 'Mới', c_Changed: 'Thay đổi', c_Unchanged: 'Không đổi'
   },
   en: {
-    poolFollow: 'Pools set by the Consolidator:', poolSent: '{0} pool(s) that are on were sent with it', poolLost: 'IE Tech sees a pool only when all its machine types are opened in detail, missing: {0}', poolShortRow: 'short', poolSpareRow: 'spare', poolBtn: '🔗 Combine machine types', poolTitle: 'Combine machine types that can replace each other', poolIntro: 'Choose the machine types that can replace each other (for example a zigzag with trimmer and a normal zigzag). Spare machines of one type cover the shortage of another: 1 machine = 1 machine, the extra SAM is not counted yet. Every machine type is still shown separately; a pool is shown only when you switch it on.',
+    poolFollow: 'pools set by the Consolidator (view only; you can still build your own)', poolFromCons: 'Consolidator', poolXl: '⬇ Excel', poolStep1: 'Choose the machine types that can replace each other (number = borrowing order)', poolSearch: 'Search machine type…', poolSelected: 'Selected', poolStep2: 'Which machine type may borrow spare machines from which', poolAllPairs: 'All pairs', poolNoPairs: 'None', poolOrderHint: 'Click a machine type to switch it on / off. The borrowing order follows the numbers of step ①.', poolBorrow: '{0} short → borrows spare machines from:', poolSent: '{0} pool(s) that are on were sent with it', poolLost: 'IE Tech sees a pool only when all its machine types are opened in detail, missing: {0}', poolShortRow: 'short', poolSpareRow: 'spare', poolBtn: '🔗 Combine machine types', poolTitle: 'Combine machine types that can replace each other', poolIntro: 'Choose the machine types that can replace each other (for example a zigzag with trimmer and a normal zigzag). Spare machines of one type cover the shortage of another: 1 machine = 1 machine, the extra SAM is not counted yet. Every machine type is still shown separately; a pool is shown only when you switch it on.',
     poolMembers: 'Machine types in the pool', poolCoverCap: 'Who may replace whom: row = machine type that is short, column = machine type that lends spare machines (order left → right).', poolShort: 'Short ↓ / borrows from →', poolSave: 'Save and show', poolClose: 'Close', poolDelete: 'Delete pool', poolEdit: 'Edit', poolNeed2: 'Choose at least 2 machine types.', poolToggleTip: 'Click to show / hide the pool',
     poolRows: 'Machine type', poolNote: '1 machine = 1 machine; spare machines of one type cover the short type', poolDem: '{0}: demand (production + prep)', poolAvail: '{0}: machines available', poolBal: '{0}: remaining', poolTake: '{0} uses spare machines of {1}', poolAfter: '{0}: remaining after combining', poolTot: 'Total remaining (combined)', poolShortAfter: 'Still short after combining', poolMissing: 'No data of {0} on this screen yet.',
     hdrRefresh: '🔄 Refresh', hdrRefreshNone: 'No file remembered yet. Choose the MC Report / Master plan in the Data tab first.', hdrRefreshDone: '✓ The chosen files were read again at {0}.',
@@ -2774,43 +2784,12 @@ function renderDoneC() {
   }).join('') : '';
 }
 
-// v7.15: one sheet per pool that is switched on (all its groups exported): every number is a formula linked to the group sheets
+// v7.15: one sheet per pool that is switched on (all its groups exported): every number is a formula linked to the group sheets (poolFillSheet in poolui.js)
 function poolExportSheets(wb, SH) {
-  var cf = 0, red = { type: 'pattern', pattern: 'solid', bgColor: { argb: 'FFFDE8E8' } };
   POOL.defs.filter(function (d) { return POOL.on[d.id] && d.members.every(function (g) { return SH[g]; }); }).forEach(function (def) {
     var days = SH[def.members[0]].G.days, models = {}; def.members.forEach(function (g) { models[g] = SH[g].G; });
-    var R = poolModel(def, models, days), ws = wb.addWorksheet(('POOL ' + def.members.join('+')).replace(/[\\\/\?\*\[\]:]/g, '_').slice(0, 31)), RW = {}, takesInto = {}, takesFrom = {}, negRows = [];
-    ws.addRow([t('poolRows')].concat(days.map(function (d) { return pDay(d, true); }))).font = { bold: true };
-    ws.views = [{ state: 'frozen', xSplit: 1, ySplit: 1 }]; ws.getColumn(1).width = 44;
-    var L = function (j) { return ws.getColumn(2 + j).letter; }, link = function (g, row, j) { return "'" + SH[g].name.replace(/'/g, "''") + "'!" + ws.getColumn(5 + j).letter + row; };
-    var add = function (name, label, f, v, style) {
-      var row = ws.addRow([label].concat(days.map(function (d, j) { return { formula: f(j, L(j)), result: v(d) }; }))); RW[name] = row.number;
-      row.font = style === 'part' ? { italic: true, color: { argb: 'FF6B7280' } } : (style === 'bold' ? { bold: true } : {}); return row.number;
-    };
-    def.members.forEach(function (g) {
-      add('dem' + g, t('poolDem', [g]), function (j) { return link(g, SH[g].total, j); }, function (d) { return models[g].total[d] || 0; });
-      add('av' + g, t('poolAvail', [g]), function (j) { return link(g, SH[g].avail, j); }, function (d) { return models[g].avail == null ? 0 : models[g].avail; });
-      negRows.push(add('bal' + g, t('poolBal', [g]), function (j) { return link(g, SH[g].bal, j); }, function (d) { return R.bal[g][d]; }, 'bold'));
-    });
-    def.members.forEach(function (g) {
-      add('sh' + g, '   ' + g + ' — ' + t('poolShortRow'), function (j, c) { return 'MAX(0,-' + c + RW['bal' + g] + ')'; }, function (d) { return R.short[g][d]; }, 'part');
-      add('sp' + g, '   ' + g + ' — ' + t('poolSpareRow'), function (j, c) { return 'MAX(0,' + c + RW['bal' + g] + ')'; }, function (d) { return Math.max(0, R.bal[g][d]); }, 'part');
-    });
-    R.pairs.forEach(function (pr, i) {
-      var g = pr[0], h = pr[1], into = (takesInto[g] = takesInto[g] || []).slice(), from = (takesFrom[h] = takesFrom[h] || []).slice(), nm = 'tk' + i;
-      var sum = function (c, rows) { return rows.length ? '(' + rows.map(function (r) { return c + r; }).join('+') + ')' : '0'; };
-      add(nm, t('poolTake', [g, h]), function (j, c) { return 'MIN(' + c + RW['sh' + g] + '-' + sum(c, into) + ',' + c + RW['sp' + h] + '-' + sum(c, from) + ')'; }, function (d) { return R.take[g + '|' + h][d] || 0; });
-      takesInto[g].push(RW[nm]); takesFrom[h].push(RW[nm]);
-    });
-    var first = null, last = null;
-    def.members.forEach(function (g) {
-      var sum = function (c, rows) { return rows.length ? '+' + rows.map(function (r) { return c + r; }).join('+') : ''; }, sub = function (c, rows) { return rows.length ? '-' + rows.map(function (r) { return c + r; }).join('-') : ''; };
-      var r = add('af' + g, t('poolAfter', [g]), function (j, c) { return c + RW['bal' + g] + sum(c, takesInto[g] || []) + sub(c, takesFrom[g] || []); }, function (d) { return R.after[g][d]; }, 'bold');
-      if (first == null) first = r; last = r; negRows.push(r);
-    });
-    negRows.push(add('tot', t('poolTot'), function (j, c) { return 'SUM(' + c + first + ':' + c + last + ')'; }, function (d) { return R.tot[d]; }, 'bold'));
-    add('sa', t('poolShortAfter'), function (j, c) { return def.members.map(function (g) { return 'MAX(0,-' + c + RW['af' + g] + ')'; }).join('+'); }, function (d) { return R.shortAfter[d]; }, 'bold');
-    if (days.length) negRows.forEach(function (r) { ws.addConditionalFormatting({ ref: 'B' + r + ':' + L(days.length - 1) + r, rules: [{ type: 'cellIs', operator: 'lessThan', priority: ++cf, formulae: [0], style: { fill: red, font: { bold: true, color: { argb: 'FFC4202B' } } } }] }); });
+    var ws = wb.addWorksheet(('POOL ' + def.members.join('+')).replace(/[\\\/\?\*\[\]:]/g, '_').slice(0, 31));
+    poolFillSheet(ws, def, models, days, function (g, kind, j) { return "'" + SH[g].name.replace(/'/g, "''") + "'!" + ws.getColumn(5 + j).letter + SH[g][kind]; });
   });
 }
 </script>
@@ -3762,28 +3741,31 @@ window.quietRole = async function () {
 };
 window.supRender = function () { if (RS.root && !$('supView').hidden) rsPaint('rsS', false); else if (!RS.root) $('rsS').innerHTML = '<div class="empty">' + esc(t('rsNeedConn')) + '</div>'; };
 </script>
-<script>// ===================== POOL OF MACHINE GROUPS (v7.15): "Gộp loại máy" =====================
-// Machine groups that can replace each other (e.g. a zigzag with trimmer by a normal zigzag) are combined in a pool the USER defines. Nothing is combined automatically:
-// a pool is shown only when it is switched on. Every group keeps its own rows; the pool adds the spare machines of one group to the shortage of another (poolModel in prep.js).
-// Definitions are personal (localStorage mdb_pools). The same bar and tables are used in the Shortage & prep tab, the IE Tech grid and the Remaining shortage tab.
-// v7.15 (decided with the user): the pools are dictated by the CONSOLIDATOR (she defines them here and the ones switched on are sent with the proposal); IE Tech and the Supervisor follow them read-only (they can only hide / show a pool for their own view).
+<script>// ===================== POOL OF MACHINE GROUPS (v7.15+): "Gộp loại máy" =====================
+// Machine groups that can replace each other (e.g. a zigzag with trimmer by a normal zigzag) are combined in a pool. Nothing is combined automatically: a pool is shown only when switched on.
+// Every group keeps its own rows; the pool adds the spare machines of one group to the shortage of another (poolModel in prep.js).
+// v7.16: the pools the CONSOLIDATOR switched on are sent with the proposal and followed (read-only) by IE Tech and the Supervisor.
+// v7.18: IE Tech and the Supervisor can ALSO build pools of their own (saved on their computer); every pool table can be exported to Excel (formulas).
 var POOL = { defs: [], on: {}, hide: {} };
 try { POOL.defs = JSON.parse(localStorage.getItem('mdb_pools') || '[]'); POOL.on = JSON.parse(localStorage.getItem('mdb_pools_on') || '{}'); POOL.hide = JSON.parse(localStorage.getItem('mdb_pools_hide') || '{}'); } catch (e) { POOL.defs = []; POOL.on = {}; POOL.hide = {}; }
 function poolStore() { try { localStorage.setItem('mdb_pools', JSON.stringify(POOL.defs)); localStorage.setItem('mdb_pools_on', JSON.stringify(POOL.on)); localStorage.setItem('mdb_pools_hide', JSON.stringify(POOL.hide)); } catch (e) { } }
-// pools sent by the Consolidator: the ones in the latest proposal
 function poolFromProposal() { var ps = (typeof TS !== 'undefined' && TS.props ? TS.props : []).slice().sort(function (a, b) { return String(b.at).localeCompare(String(a.at)); }); return ps.length && Array.isArray(ps[0].pools) ? ps[0].pools : []; }
 function poolToSend() { return POOL.defs.filter(function (d) { return POOL.on[d.id]; }).map(function (d) { return { id: d.id, members: d.members.slice(), cover: JSON.parse(JSON.stringify(d.cover)) }; }); }
 function poolName(d) { return d.members.join(' + '); }
-// ctx = { groups: function () -> [group], models: function (g) -> model or null, host: element }
-function poolDayLabel(d) { return pDay(d, true); }
-function poolBlock(def, ctx) {
-  var miss = def.members.filter(function (g) { return !ctx.models(g); });
-  if (miss.length) return '<div class="gblock"><h3 style="margin:8px 0">🔗 ' + esc(poolName(def)) + '</h3><div class="empty">' + esc(t('poolMissing', [miss.join(', ')])) + '</div></div>';
-  var m0 = ctx.models(def.members[0]), days = m0.days, models = {}; def.members.forEach(function (g) { models[g] = ctx.models(g); });
-  var R = poolModel(def, models, days), td = function (v, neg) { return '<td' + (neg && v < 0 ? ' class="neg"' : '') + '>' + (v === 0 ? '0' : v) + '</td>'; };
+// ---- the table of one pool (every group stays visible)
+function poolRowsOf(def, ctx) {
+  var miss = def.members.filter(function (g) { return !ctx.models(g); }); if (miss.length) return { miss: miss };
+  var models = {}; def.members.forEach(function (g) { models[g] = ctx.models(g); });
+  var days = models[def.members[0]].days; return { models: models, days: days, R: poolModel(def, models, days) };
+}
+function poolBlock(e, ctx) {
+  var def = e.def, P = poolRowsOf(def, ctx), tag = e.follow ? ' <span class="tag t-info">' + esc(t('poolFromCons')) + '</span>' : '';
+  var head = '<div class="row"><h3 style="margin:8px 0">🔗 ' + esc(poolName(def)) + tag + '</h3><span class="muted small">' + esc(t('poolNote')) + '</span><span style="margin-left:auto"></span>' +
+    (P.miss ? '' : '<button data-pool-xl="' + esc(e.sid) + '">' + esc(t('poolXl')) + '</button>') + (e.follow ? '' : '<button data-pool-edit="' + esc(def.id) + '">' + esc(t('poolEdit')) + '</button>') + '</div>';
+  if (P.miss) return '<div class="gblock">' + head + '<div class="empty">' + esc(t('poolMissing', [P.miss.join(', ')])) + '</div></div>';
+  var days = P.days, R = P.R, models = P.models, td = function (v, neg) { return '<td' + (neg && v < 0 ? ' class="neg"' : '') + '>' + v + '</td>'; };
   var row = function (lbl, f, cls, neg) { return '<tr' + (cls ? ' class="' + cls + '"' : '') + '><td class="l" style="white-space:nowrap' + (cls === 'tot' ? ';font-weight:600' : '') + '">' + esc(lbl) + '</td>' + days.map(function (d) { return td(f(d), neg); }).join('') + '</tr>'; };
-  var h = '<div class="gblock"><div class="row"><h3 style="margin:8px 0">🔗 ' + esc(poolName(def)) + '</h3><span class="muted small">' + esc(t('poolNote')) + '</span><span style="margin-left:auto"></span>' + (ctx.readonly ? '' : '<button data-pool-edit="' + esc(def.id) + '">' + esc(t('poolEdit')) + '</button>') + '</div>' +
-    '<div class="tw" style="max-height:60vh"><table class="pg"><tr><th class="l">' + esc(t('poolRows')) + '</th>' + days.map(function (d) { return '<th>' + esc(poolDayLabel(d)) + '</th>'; }).join('') + '</tr>';
+  var h = '<div class="gblock">' + head + '<div class="tw" style="max-height:60vh"><table class="pg"><tr><th class="l">' + esc(t('poolRows')) + '</th>' + days.map(function (d) { return '<th>' + esc(pDay(d, true)) + '</th>'; }).join('') + '</tr>';
   def.members.forEach(function (g) {
     h += row(t('poolDem', [g]), function (d) { return models[g].total && models[g].total[d] != null ? models[g].total[d] : 0; }, '') +
       row(t('poolAvail', [g]), function () { return models[g].avail == null ? 0 : models[g].avail; }, '') + row(t('poolBal', [g]), function (d) { return R.bal[g][d]; }, 'tot', true);
@@ -3793,49 +3775,67 @@ function poolBlock(def, ctx) {
   h += row(t('poolTot'), function (d) { return R.tot[d]; }, 'tot', true) + row(t('poolShortAfter'), function (d) { return R.shortAfter[d]; }, 'tot');
   return h + '</table></div></div>';
 }
+// the pools a screen shows: followed ones (sent by the Consolidator) first, then the user's own
+function poolEntries(ctx) {
+  var out = [];
+  if (ctx.follow) poolFromProposal().forEach(function (d) { out.push({ def: d, follow: true, sid: 'f:' + d.id, on: !POOL.hide['f:' + d.id] }); });
+  POOL.defs.forEach(function (d) { out.push({ def: d, follow: false, sid: d.id, on: !!POOL.on[d.id] }); });
+  return out;
+}
 function poolMount(host, ctx) {
   if (!host) return; ctx.host = host;
-  var ro = !!ctx.readonly, defs = ro ? poolFromProposal() : POOL.defs, shown = function (d) { return ro ? !POOL.hide[d.id] : !!POOL.on[d.id]; };
-  if (ro && !defs.length) { host.innerHTML = ''; host.onclick = null; return; }
-  var h = '<div class="row" style="margin:10px 0 4px">' + (ro ? '<span class="muted small">' + esc(t('poolFollow')) + '</span>' : '<button data-pool-new="1">' + esc(t('poolBtn')) + '</button>') + '<div class="chips">' +
-    defs.map(function (d) { return '<button data-pool-toggle="' + esc(d.id) + '" class="' + (shown(d) ? 'on' : '') + '" title="' + esc(t('poolToggleTip')) + '">🔗 ' + esc(poolName(d)) + '</button>'; }).join('') + '</div></div>';
-  defs.forEach(function (d) { if (shown(d)) h += poolBlock(d, ctx); });
+  var E = poolEntries(ctx);
+  var h = '<div class="row" style="margin:10px 0 4px"><button data-pool-new="1">' + esc(t('poolBtn')) + '</button><div class="chips">' +
+    E.map(function (e) { return '<button data-pool-toggle="' + esc(e.sid) + '" class="' + (e.on ? 'on' : '') + '" title="' + esc(t('poolToggleTip')) + '">🔗 ' + esc(poolName(e.def)) + (e.follow ? ' ★' : '') + '</button>'; }).join('') + '</div>' +
+    (E.some(function (e) { return e.follow; }) ? '<span class="muted small">★ ' + esc(t('poolFollow')) + '</span>' : '') + '</div>';
+  E.forEach(function (e) { if (e.on) h += poolBlock(e, ctx); });
   host.innerHTML = h;
-  host.onclick = function (e) {
-    var b = e.target.closest('[data-pool-new],[data-pool-toggle],[data-pool-edit]'); if (!b) return; e.stopPropagation();
-    if (b.dataset.poolNew && !ro) poolDialog(ctx, null);
-    else if (b.dataset.poolToggle) { var id = b.dataset.poolToggle; if (ro) POOL.hide[id] = !POOL.hide[id]; else POOL.on[id] = !POOL.on[id]; poolStore(); poolMount(host, ctx); }
-    else if (!ro) poolDialog(ctx, b.dataset.poolEdit);
+  host.onclick = function (ev) {
+    var b = ev.target.closest('[data-pool-new],[data-pool-toggle],[data-pool-edit],[data-pool-xl]'); if (!b) return; ev.stopPropagation();
+    if (b.dataset.poolNew) poolDialog(ctx, null);
+    else if (b.dataset.poolEdit) poolDialog(ctx, b.dataset.poolEdit);
+    else if (b.dataset.poolXl) { var en = poolEntries(ctx).filter(function (x) { return x.sid === b.dataset.poolXl; })[0]; if (en) poolExportXlsx(en.def, ctx).catch(function (er) { alert(t('xlErr', [er.message])); }); }
+    else { var id = b.dataset.poolToggle; if (id.indexOf('f:') === 0) POOL.hide[id] = !POOL.hide[id]; else POOL.on[id] = !POOL.on[id]; poolStore(); poolMount(host, ctx); }
   };
 }
+// ---- the picker: 1) tick the machine groups (numbered = borrowing order), 2) for each group say which others may lend it spare machines
 function poolDialog(ctx, id) {
   var groups = ctx.groups(), cur = id ? POOL.defs.filter(function (d) { return d.id === id; })[0] : null, old = document.getElementById('poolDlg'); if (old) old.remove();
-  var mem = cur ? cur.members.slice() : [], cover = cur ? JSON.parse(JSON.stringify(cur.cover)) : {};
-  var el = document.createElement('div'); el.id = 'poolDlg'; el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:60;display:flex;align-items:center;justify-content:center';
+  var mem = cur ? cur.members.slice() : [], cover = cur ? JSON.parse(JSON.stringify(cur.cover)) : {}, q = '';
+  var el = document.createElement('div'); el.id = 'poolDlg'; el.className = 'pdlg';
+  var allPairs = function () { cover = {}; mem.forEach(function (a) { cover[a] = mem.filter(function (b) { return b !== a; }); }); };
   function draw() {
-    var h = '<div class="card" style="max-width:640px;width:92%;max-height:90vh;overflow:auto"><div class="row"><b>' + esc(t('poolTitle')) + '</b><button id="pdX" style="margin-left:auto">✕</button></div><p class="muted small">' + esc(t('poolIntro')) + '</p>' +
-      '<div class="small"><b>' + esc(t('poolMembers')) + '</b></div><div class="chips" style="margin:6px 0">' + groups.map(function (g) { return '<label style="margin-right:10px"><input type="checkbox" data-pd-g="' + esc(g) + '"' + (mem.indexOf(g) >= 0 ? ' checked' : '') + '> ' + esc(g) + '</label>'; }).join('') + '</div>';
+    var shown = groups.filter(function (g) { return !q || g.toUpperCase().indexOf(q.toUpperCase()) >= 0 || mem.indexOf(g) >= 0; });
+    var h = '<div class="box"><div class="hd"><b style="font-size:16px">' + esc(t('poolTitle')) + '</b><button id="pdX" style="margin-left:auto">✕</button></div><div class="bd">' +
+      '<p class="muted small" style="margin:0 0 4px">' + esc(t('poolIntro')) + '</p>' +
+      '<h4>① ' + esc(t('poolStep1')) + '</h4><div class="row" style="margin-bottom:6px"><input type="text" id="pdQ" placeholder="' + esc(t('poolSearch')) + '" value="' + esc(q) + '" style="min-width:200px"><span class="muted small">' + esc(t('poolSelected')) + ': <b>' + (mem.length ? esc(mem.join(' → ')) : '—') + '</b></span></div>' +
+      '<div class="scroll"><div class="pchips">' + shown.map(function (g) { var i = mem.indexOf(g); return '<button class="pchip' + (i >= 0 ? ' on' : '') + '" data-pd-g="' + esc(g) + '">' + (i >= 0 ? '<span class="n">' + (i + 1) + '</span>' : '') + esc(g) + '</button>'; }).join('') + '</div></div>';
     if (mem.length >= 2) {
-      h += '<div class="small" style="margin-top:8px"><b>' + esc(t('poolCoverCap')) + '</b></div><table class="pg" style="margin:6px 0"><tr><th class="l">' + esc(t('poolShort')) + '</th>' + mem.map(function (c) { return '<th>' + esc(c) + '</th>'; }).join('') + '</tr>';
-      mem.forEach(function (g) { h += '<tr><td class="l"><b>' + esc(g) + '</b></td>' + mem.map(function (c) { return c === g ? '<td>—</td>' : '<td><input type="checkbox" data-pd-c="' + esc(g) + '|' + esc(c) + '"' + ((cover[g] || []).indexOf(c) >= 0 ? ' checked' : '') + '></td>'; }).join('') + '</tr>'; });
-      h += '</table>';
+      h += '<h4>② ' + esc(t('poolStep2')) + '</h4><div class="row" style="margin-bottom:4px"><button id="pdAll">' + esc(t('poolAllPairs')) + '</button><button id="pdNone">' + esc(t('poolNoPairs')) + '</button><span class="muted small">' + esc(t('poolOrderHint')) + '</span></div>';
+      mem.forEach(function (g) {
+        h += '<div class="lend"><b>' + esc(t('poolBorrow', [g])) + '</b><div class="pchips">' + mem.filter(function (c) { return c !== g; }).map(function (c) { return '<button class="pchip' + ((cover[g] || []).indexOf(c) >= 0 ? ' on' : '') + '" data-pd-c="' + esc(g) + '|' + esc(c) + '">' + esc(c) + '</button>'; }).join('') + '</div></div>';
+      });
     }
-    h += '<div class="row" style="margin-top:10px"><button class="primary" id="pdSave">' + esc(t('poolSave')) + '</button><button id="pdClose">' + esc(t('poolClose')) + '</button>' + (cur ? '<button id="pdDel" style="margin-left:auto">' + esc(t('poolDelete')) + '</button>' : '') + '<span class="muted small" id="pdMsg"></span></div></div>';
+    h += '</div><div class="ft"><button class="primary" id="pdSave">' + esc(t('poolSave')) + '</button><button id="pdClose">' + esc(t('poolClose')) + '</button>' + (cur ? '<button id="pdDel" style="margin-left:auto">' + esc(t('poolDelete')) + '</button>' : '') + '<span class="muted small" id="pdMsg" style="margin-left:8px"></span></div></div>';
     el.innerHTML = h;
     el.querySelector('#pdX').onclick = el.querySelector('#pdClose').onclick = function () { el.remove(); };
-    [].forEach.call(el.querySelectorAll('[data-pd-g]'), function (cb) {
-      cb.onchange = function () {
-        var g = cb.dataset.pdG; if (cb.checked) { if (mem.indexOf(g) < 0) { mem.push(g); mem.forEach(function (a) { cover[a] = cover[a] || []; mem.forEach(function (b) { if (a !== b && cover[a].indexOf(b) < 0 && (a === g || b === g)) cover[a].push(b); }); }); } }       // a new member can cover and be covered by default; the user unticks what is not allowed
+    var qi = el.querySelector('#pdQ'); qi.oninput = function () { q = qi.value; var pos = qi.selectionStart; draw(); var n = el.querySelector('#pdQ'); n.focus(); n.setSelectionRange(pos, pos); };
+    [].forEach.call(el.querySelectorAll('[data-pd-g]'), function (b) {
+      b.onclick = function () {
+        var g = b.dataset.pdG;
+        if (mem.indexOf(g) < 0) { mem.push(g); mem.forEach(function (a) { cover[a] = cover[a] || []; mem.forEach(function (c) { if (a !== c && cover[a].indexOf(c) < 0 && (a === g || c === g)) cover[a].push(c); }); }); }      // a new member may lend and borrow by default; untick what is not allowed
         else { mem = mem.filter(function (x) { return x !== g; }); delete cover[g]; Object.keys(cover).forEach(function (a) { cover[a] = cover[a].filter(function (x) { return x !== g; }); }); }
         draw();
       };
     });
-    [].forEach.call(el.querySelectorAll('[data-pd-c]'), function (cb) {
-      cb.onchange = function () { var p = cb.dataset.pdC.split('|'); cover[p[0]] = (cover[p[0]] || []).filter(function (x) { return x !== p[1]; }); if (cb.checked) cover[p[0]].push(p[1]); };
+    [].forEach.call(el.querySelectorAll('[data-pd-c]'), function (b) {
+      b.onclick = function () { var p = b.dataset.pdC.split('|'), l = cover[p[0]] = cover[p[0]] || [], i = l.indexOf(p[1]); if (i >= 0) l.splice(i, 1); else l.push(p[1]); draw(); };
     });
+    var all = el.querySelector('#pdAll'); if (all) { all.onclick = function () { allPairs(); draw(); }; el.querySelector('#pdNone').onclick = function () { cover = {}; mem.forEach(function (a) { cover[a] = []; }); draw(); }; }
     el.querySelector('#pdSave').onclick = function () {
       if (mem.length < 2) { el.querySelector('#pdMsg').textContent = t('poolNeed2'); return; }
-      var d = { id: cur ? cur.id : 'p' + Date.now().toString(36), members: mem.slice(), cover: {} }; mem.forEach(function (g) { d.cover[g] = (cover[g] || []).filter(function (x) { return mem.indexOf(x) >= 0; }); });
+      var d = { id: cur ? cur.id : 'p' + Date.now().toString(36), members: mem.slice(), cover: {} };
+      mem.forEach(function (g) { d.cover[g] = mem.filter(function (x) { return x !== g && (cover[g] || []).indexOf(x) >= 0; }); });      // borrowing order = the order of the members
       if (cur) POOL.defs = POOL.defs.map(function (x) { return x.id === cur.id ? d : x; }); else POOL.defs.push(d);
       POOL.on[d.id] = true; poolStore(); el.remove(); poolMount(ctx.host, ctx);
     };
@@ -3843,11 +3843,54 @@ function poolDialog(ctx, id) {
   }
   draw(); document.body.appendChild(el);
 }
+// ---- Excel: the same sheet for the Shortage & prep export (linked to the group sheets) and for the single-pool export of every screen (values + formulas)
+// link(g, kind, j) -> formula text of the group's total / avail / bal cell on another sheet, or null for plain values
+function poolFillSheet(ws, def, models, days, link) {
+  var R = poolModel(def, models, days), RW = {}, into = {}, from = {}, neg = [], cf = 0, red = { type: 'pattern', pattern: 'solid', bgColor: { argb: 'FFFDE8E8' } };
+  ws.addRow([t('poolRows')].concat(days.map(function (d) { return pDay(d, true); }))).font = { bold: true }; ws.views = [{ state: 'frozen', xSplit: 1, ySplit: 1 }]; ws.getColumn(1).width = 44;
+  var L = function (j) { return ws.getColumn(2 + j).letter; };
+  var add = function (name, label, f, v, style) {
+    var row = ws.addRow([label].concat(days.map(function (d, j) { var fx = f(j, L(j)); return fx == null ? v(d) : { formula: fx, result: v(d) }; }))); RW[name] = row.number;
+    row.font = style === 'part' ? { italic: true, color: { argb: 'FF6B7280' } } : (style === 'bold' ? { bold: true } : {}); return row.number;
+  };
+  def.members.forEach(function (g) {
+    add('dem' + g, t('poolDem', [g]), function (j) { return link ? link(g, 'total', j) : null; }, function (d) { return models[g].total && models[g].total[d] != null ? models[g].total[d] : 0; });
+    add('av' + g, t('poolAvail', [g]), function (j) { return link ? link(g, 'avail', j) : null; }, function () { return models[g].avail == null ? 0 : models[g].avail; });
+    neg.push(add('bal' + g, t('poolBal', [g]), function (j, c) { return link ? link(g, 'bal', j) : c + RW['av' + g] + '-' + c + RW['dem' + g]; }, function (d) { return R.bal[g][d]; }, 'bold'));
+  });
+  def.members.forEach(function (g) {
+    add('sh' + g, '   ' + g + ' — ' + t('poolShortRow'), function (j, c) { return 'MAX(0,-' + c + RW['bal' + g] + ')'; }, function (d) { return R.short[g][d]; }, 'part');
+    add('sp' + g, '   ' + g + ' — ' + t('poolSpareRow'), function (j, c) { return 'MAX(0,' + c + RW['bal' + g] + ')'; }, function (d) { return Math.max(0, R.bal[g][d]); }, 'part');
+  });
+  R.pairs.forEach(function (pr, i) {
+    var g = pr[0], h = pr[1], a = (into[g] = into[g] || []).slice(), b = (from[h] = from[h] || []).slice(), nm = 'tk' + i;
+    var sum = function (c, rows) { return rows.length ? '(' + rows.map(function (r) { return c + r; }).join('+') + ')' : '0'; };
+    add(nm, t('poolTake', [g, h]), function (j, c) { return 'MIN(' + c + RW['sh' + g] + '-' + sum(c, a) + ',' + c + RW['sp' + h] + '-' + sum(c, b) + ')'; }, function (d) { return R.take[g + '|' + h][d] || 0; });
+    into[g].push(RW[nm]); from[h].push(RW[nm]);
+  });
+  var first = null, last = null;
+  def.members.forEach(function (g) {
+    var plus = function (c, rows) { return rows.length ? '+' + rows.map(function (r) { return c + r; }).join('+') : ''; }, minus = function (c, rows) { return rows.length ? '-' + rows.map(function (r) { return c + r; }).join('-') : ''; };
+    var r = add('af' + g, t('poolAfter', [g]), function (j, c) { return c + RW['bal' + g] + plus(c, into[g] || []) + minus(c, from[g] || []); }, function (d) { return R.after[g][d]; }, 'bold');
+    if (first == null) first = r; last = r; neg.push(r);
+  });
+  neg.push(add('tot', t('poolTot'), function (j, c) { return 'SUM(' + c + first + ':' + c + last + ')'; }, function (d) { return R.tot[d]; }, 'bold'));
+  add('sa', t('poolShortAfter'), function (j, c) { return def.members.map(function (g) { return 'MAX(0,-' + c + RW['af' + g] + ')'; }).join('+'); }, function (d) { return R.shortAfter[d]; }, 'bold');
+  if (days.length) neg.forEach(function (r) { ws.addConditionalFormatting({ ref: 'B' + r + ':' + L(days.length - 1) + r, rules: [{ type: 'cellIs', operator: 'lessThan', priority: ++cf, formulae: [0], style: { fill: red, font: { bold: true, color: { argb: 'FFC4202B' } } } }] }); });
+}
+async function poolExportXlsx(def, ctx) {
+  var P = poolRowsOf(def, ctx); if (P.miss) throw new Error(t('poolMissing', [P.miss.join(', ')]));
+  var wb = new ExcelJS.Workbook(), ws = wb.addWorksheet(('POOL ' + def.members.join('+')).replace(/[\\\/\?\*\[\]:]/g, '_').slice(0, 31));
+  poolFillSheet(ws, def, P.models, P.days, null);
+  var buf = await wb.xlsx.writeBuffer(), a = document.createElement('a'), d0 = new Date(), p = function (x) { return String(x).padStart(2, '0'); };
+  a.href = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+  a.download = 'POOL_' + def.members.join('+').replace(/[^\w+\-]/g, '_') + '_' + d0.getFullYear() + p(d0.getMonth() + 1) + p(d0.getDate()) + '.xlsx'; document.body.appendChild(a); a.click(); a.remove();
+}
 // the three screens
-function poolCtxPrep() { return { groups: function () { var S = SRC(); return S ? Object.keys(S.byGroup || {}).sort() : []; }, models: function (g) { try { return gridOf(g); } catch (e) { return null; } } }; }
-function poolCtxTech() { return { readonly: true, groups: function () { var o = {}; TS.props.forEach(function (p) { (p.groups || []).forEach(function (g) { o[g] = 1; }); }); return Object.keys(o).sort(); },
+function poolCtxPrep() { return { follow: false, groups: function () { var S = SRC(); return S ? Object.keys(S.byGroup || {}).sort() : []; }, models: function (g) { try { return gridOf(g); } catch (e) { return null; } } }; }
+function poolCtxTech() { return { follow: true, groups: function () { var o = {}; TS.props.forEach(function (p) { (p.groups || []).forEach(function (g) { o[g] = 1; }); }); return Object.keys(o).sort(); },
   models: function (g) { var G0 = latestGrid(g); return G0 ? groupModel(G0, (TS.rows || []).filter(function (x) { return x.group === g; }), latestEnds(TS.ends)) : null; } }; }
-function poolCtxResid(edit) { return { readonly: !edit, groups: function () { return RS.cache.map(function (x) { return x.g; }); }, models: function (g) { var X = RS.cache.filter(function (x) { return x.g === g; })[0]; return X ? X.M : null; } }; }
+function poolCtxResid(edit) { return { follow: !edit, groups: function () { return RS.cache.map(function (x) { return x.g; }); }, models: function (g) { var X = RS.cache.filter(function (x) { return x.g === g; })[0]; return X ? X.M : null; } }; }
 </script>
 <script>// ===================== CLOSE REPORT + ACTIVITY (IE Báo cáo máy) =====================
 function stamp16(iso) { return String(iso || '').slice(5, 16).replace('T', ' '); }

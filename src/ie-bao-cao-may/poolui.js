@@ -1,25 +1,28 @@
-// ===================== POOL OF MACHINE GROUPS (v7.15): "Gộp loại máy" =====================
-// Machine groups that can replace each other (e.g. a zigzag with trimmer by a normal zigzag) are combined in a pool the USER defines. Nothing is combined automatically:
-// a pool is shown only when it is switched on. Every group keeps its own rows; the pool adds the spare machines of one group to the shortage of another (poolModel in prep.js).
-// Definitions are personal (localStorage mdb_pools). The same bar and tables are used in the Shortage & prep tab, the IE Tech grid and the Remaining shortage tab.
-// v7.15 (decided with the user): the pools are dictated by the CONSOLIDATOR (she defines them here and the ones switched on are sent with the proposal); IE Tech and the Supervisor follow them read-only (they can only hide / show a pool for their own view).
+// ===================== POOL OF MACHINE GROUPS (v7.15+): "Gộp loại máy" =====================
+// Machine groups that can replace each other (e.g. a zigzag with trimmer by a normal zigzag) are combined in a pool. Nothing is combined automatically: a pool is shown only when switched on.
+// Every group keeps its own rows; the pool adds the spare machines of one group to the shortage of another (poolModel in prep.js).
+// v7.16: the pools the CONSOLIDATOR switched on are sent with the proposal and followed (read-only) by IE Tech and the Supervisor.
+// v7.18: IE Tech and the Supervisor can ALSO build pools of their own (saved on their computer); every pool table can be exported to Excel (formulas).
 var POOL = { defs: [], on: {}, hide: {} };
 try { POOL.defs = JSON.parse(localStorage.getItem('mdb_pools') || '[]'); POOL.on = JSON.parse(localStorage.getItem('mdb_pools_on') || '{}'); POOL.hide = JSON.parse(localStorage.getItem('mdb_pools_hide') || '{}'); } catch (e) { POOL.defs = []; POOL.on = {}; POOL.hide = {}; }
 function poolStore() { try { localStorage.setItem('mdb_pools', JSON.stringify(POOL.defs)); localStorage.setItem('mdb_pools_on', JSON.stringify(POOL.on)); localStorage.setItem('mdb_pools_hide', JSON.stringify(POOL.hide)); } catch (e) { } }
-// pools sent by the Consolidator: the ones in the latest proposal
 function poolFromProposal() { var ps = (typeof TS !== 'undefined' && TS.props ? TS.props : []).slice().sort(function (a, b) { return String(b.at).localeCompare(String(a.at)); }); return ps.length && Array.isArray(ps[0].pools) ? ps[0].pools : []; }
 function poolToSend() { return POOL.defs.filter(function (d) { return POOL.on[d.id]; }).map(function (d) { return { id: d.id, members: d.members.slice(), cover: JSON.parse(JSON.stringify(d.cover)) }; }); }
 function poolName(d) { return d.members.join(' + '); }
-// ctx = { groups: function () -> [group], models: function (g) -> model or null, host: element }
-function poolDayLabel(d) { return pDay(d, true); }
-function poolBlock(def, ctx) {
-  var miss = def.members.filter(function (g) { return !ctx.models(g); });
-  if (miss.length) return '<div class="gblock"><h3 style="margin:8px 0">🔗 ' + esc(poolName(def)) + '</h3><div class="empty">' + esc(t('poolMissing', [miss.join(', ')])) + '</div></div>';
-  var m0 = ctx.models(def.members[0]), days = m0.days, models = {}; def.members.forEach(function (g) { models[g] = ctx.models(g); });
-  var R = poolModel(def, models, days), td = function (v, neg) { return '<td' + (neg && v < 0 ? ' class="neg"' : '') + '>' + (v === 0 ? '0' : v) + '</td>'; };
+// ---- the table of one pool (every group stays visible)
+function poolRowsOf(def, ctx) {
+  var miss = def.members.filter(function (g) { return !ctx.models(g); }); if (miss.length) return { miss: miss };
+  var models = {}; def.members.forEach(function (g) { models[g] = ctx.models(g); });
+  var days = models[def.members[0]].days; return { models: models, days: days, R: poolModel(def, models, days) };
+}
+function poolBlock(e, ctx) {
+  var def = e.def, P = poolRowsOf(def, ctx), tag = e.follow ? ' <span class="tag t-info">' + esc(t('poolFromCons')) + '</span>' : '';
+  var head = '<div class="row"><h3 style="margin:8px 0">🔗 ' + esc(poolName(def)) + tag + '</h3><span class="muted small">' + esc(t('poolNote')) + '</span><span style="margin-left:auto"></span>' +
+    (P.miss ? '' : '<button data-pool-xl="' + esc(e.sid) + '">' + esc(t('poolXl')) + '</button>') + (e.follow ? '' : '<button data-pool-edit="' + esc(def.id) + '">' + esc(t('poolEdit')) + '</button>') + '</div>';
+  if (P.miss) return '<div class="gblock">' + head + '<div class="empty">' + esc(t('poolMissing', [P.miss.join(', ')])) + '</div></div>';
+  var days = P.days, R = P.R, models = P.models, td = function (v, neg) { return '<td' + (neg && v < 0 ? ' class="neg"' : '') + '>' + v + '</td>'; };
   var row = function (lbl, f, cls, neg) { return '<tr' + (cls ? ' class="' + cls + '"' : '') + '><td class="l" style="white-space:nowrap' + (cls === 'tot' ? ';font-weight:600' : '') + '">' + esc(lbl) + '</td>' + days.map(function (d) { return td(f(d), neg); }).join('') + '</tr>'; };
-  var h = '<div class="gblock"><div class="row"><h3 style="margin:8px 0">🔗 ' + esc(poolName(def)) + '</h3><span class="muted small">' + esc(t('poolNote')) + '</span><span style="margin-left:auto"></span>' + (ctx.readonly ? '' : '<button data-pool-edit="' + esc(def.id) + '">' + esc(t('poolEdit')) + '</button>') + '</div>' +
-    '<div class="tw" style="max-height:60vh"><table class="pg"><tr><th class="l">' + esc(t('poolRows')) + '</th>' + days.map(function (d) { return '<th>' + esc(poolDayLabel(d)) + '</th>'; }).join('') + '</tr>';
+  var h = '<div class="gblock">' + head + '<div class="tw" style="max-height:60vh"><table class="pg"><tr><th class="l">' + esc(t('poolRows')) + '</th>' + days.map(function (d) { return '<th>' + esc(pDay(d, true)) + '</th>'; }).join('') + '</tr>';
   def.members.forEach(function (g) {
     h += row(t('poolDem', [g]), function (d) { return models[g].total && models[g].total[d] != null ? models[g].total[d] : 0; }, '') +
       row(t('poolAvail', [g]), function () { return models[g].avail == null ? 0 : models[g].avail; }, '') + row(t('poolBal', [g]), function (d) { return R.bal[g][d]; }, 'tot', true);
@@ -29,49 +32,67 @@ function poolBlock(def, ctx) {
   h += row(t('poolTot'), function (d) { return R.tot[d]; }, 'tot', true) + row(t('poolShortAfter'), function (d) { return R.shortAfter[d]; }, 'tot');
   return h + '</table></div></div>';
 }
+// the pools a screen shows: followed ones (sent by the Consolidator) first, then the user's own
+function poolEntries(ctx) {
+  var out = [];
+  if (ctx.follow) poolFromProposal().forEach(function (d) { out.push({ def: d, follow: true, sid: 'f:' + d.id, on: !POOL.hide['f:' + d.id] }); });
+  POOL.defs.forEach(function (d) { out.push({ def: d, follow: false, sid: d.id, on: !!POOL.on[d.id] }); });
+  return out;
+}
 function poolMount(host, ctx) {
   if (!host) return; ctx.host = host;
-  var ro = !!ctx.readonly, defs = ro ? poolFromProposal() : POOL.defs, shown = function (d) { return ro ? !POOL.hide[d.id] : !!POOL.on[d.id]; };
-  if (ro && !defs.length) { host.innerHTML = ''; host.onclick = null; return; }
-  var h = '<div class="row" style="margin:10px 0 4px">' + (ro ? '<span class="muted small">' + esc(t('poolFollow')) + '</span>' : '<button data-pool-new="1">' + esc(t('poolBtn')) + '</button>') + '<div class="chips">' +
-    defs.map(function (d) { return '<button data-pool-toggle="' + esc(d.id) + '" class="' + (shown(d) ? 'on' : '') + '" title="' + esc(t('poolToggleTip')) + '">🔗 ' + esc(poolName(d)) + '</button>'; }).join('') + '</div></div>';
-  defs.forEach(function (d) { if (shown(d)) h += poolBlock(d, ctx); });
+  var E = poolEntries(ctx);
+  var h = '<div class="row" style="margin:10px 0 4px"><button data-pool-new="1">' + esc(t('poolBtn')) + '</button><div class="chips">' +
+    E.map(function (e) { return '<button data-pool-toggle="' + esc(e.sid) + '" class="' + (e.on ? 'on' : '') + '" title="' + esc(t('poolToggleTip')) + '">🔗 ' + esc(poolName(e.def)) + (e.follow ? ' ★' : '') + '</button>'; }).join('') + '</div>' +
+    (E.some(function (e) { return e.follow; }) ? '<span class="muted small">★ ' + esc(t('poolFollow')) + '</span>' : '') + '</div>';
+  E.forEach(function (e) { if (e.on) h += poolBlock(e, ctx); });
   host.innerHTML = h;
-  host.onclick = function (e) {
-    var b = e.target.closest('[data-pool-new],[data-pool-toggle],[data-pool-edit]'); if (!b) return; e.stopPropagation();
-    if (b.dataset.poolNew && !ro) poolDialog(ctx, null);
-    else if (b.dataset.poolToggle) { var id = b.dataset.poolToggle; if (ro) POOL.hide[id] = !POOL.hide[id]; else POOL.on[id] = !POOL.on[id]; poolStore(); poolMount(host, ctx); }
-    else if (!ro) poolDialog(ctx, b.dataset.poolEdit);
+  host.onclick = function (ev) {
+    var b = ev.target.closest('[data-pool-new],[data-pool-toggle],[data-pool-edit],[data-pool-xl]'); if (!b) return; ev.stopPropagation();
+    if (b.dataset.poolNew) poolDialog(ctx, null);
+    else if (b.dataset.poolEdit) poolDialog(ctx, b.dataset.poolEdit);
+    else if (b.dataset.poolXl) { var en = poolEntries(ctx).filter(function (x) { return x.sid === b.dataset.poolXl; })[0]; if (en) poolExportXlsx(en.def, ctx).catch(function (er) { alert(t('xlErr', [er.message])); }); }
+    else { var id = b.dataset.poolToggle; if (id.indexOf('f:') === 0) POOL.hide[id] = !POOL.hide[id]; else POOL.on[id] = !POOL.on[id]; poolStore(); poolMount(host, ctx); }
   };
 }
+// ---- the picker: 1) tick the machine groups (numbered = borrowing order), 2) for each group say which others may lend it spare machines
 function poolDialog(ctx, id) {
   var groups = ctx.groups(), cur = id ? POOL.defs.filter(function (d) { return d.id === id; })[0] : null, old = document.getElementById('poolDlg'); if (old) old.remove();
-  var mem = cur ? cur.members.slice() : [], cover = cur ? JSON.parse(JSON.stringify(cur.cover)) : {};
-  var el = document.createElement('div'); el.id = 'poolDlg'; el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:60;display:flex;align-items:center;justify-content:center';
+  var mem = cur ? cur.members.slice() : [], cover = cur ? JSON.parse(JSON.stringify(cur.cover)) : {}, q = '';
+  var el = document.createElement('div'); el.id = 'poolDlg'; el.className = 'pdlg';
+  var allPairs = function () { cover = {}; mem.forEach(function (a) { cover[a] = mem.filter(function (b) { return b !== a; }); }); };
   function draw() {
-    var h = '<div class="card" style="max-width:640px;width:92%;max-height:90vh;overflow:auto"><div class="row"><b>' + esc(t('poolTitle')) + '</b><button id="pdX" style="margin-left:auto">✕</button></div><p class="muted small">' + esc(t('poolIntro')) + '</p>' +
-      '<div class="small"><b>' + esc(t('poolMembers')) + '</b></div><div class="chips" style="margin:6px 0">' + groups.map(function (g) { return '<label style="margin-right:10px"><input type="checkbox" data-pd-g="' + esc(g) + '"' + (mem.indexOf(g) >= 0 ? ' checked' : '') + '> ' + esc(g) + '</label>'; }).join('') + '</div>';
+    var shown = groups.filter(function (g) { return !q || g.toUpperCase().indexOf(q.toUpperCase()) >= 0 || mem.indexOf(g) >= 0; });
+    var h = '<div class="box"><div class="hd"><b style="font-size:16px">' + esc(t('poolTitle')) + '</b><button id="pdX" style="margin-left:auto">✕</button></div><div class="bd">' +
+      '<p class="muted small" style="margin:0 0 4px">' + esc(t('poolIntro')) + '</p>' +
+      '<h4>① ' + esc(t('poolStep1')) + '</h4><div class="row" style="margin-bottom:6px"><input type="text" id="pdQ" placeholder="' + esc(t('poolSearch')) + '" value="' + esc(q) + '" style="min-width:200px"><span class="muted small">' + esc(t('poolSelected')) + ': <b>' + (mem.length ? esc(mem.join(' → ')) : '—') + '</b></span></div>' +
+      '<div class="scroll"><div class="pchips">' + shown.map(function (g) { var i = mem.indexOf(g); return '<button class="pchip' + (i >= 0 ? ' on' : '') + '" data-pd-g="' + esc(g) + '">' + (i >= 0 ? '<span class="n">' + (i + 1) + '</span>' : '') + esc(g) + '</button>'; }).join('') + '</div></div>';
     if (mem.length >= 2) {
-      h += '<div class="small" style="margin-top:8px"><b>' + esc(t('poolCoverCap')) + '</b></div><table class="pg" style="margin:6px 0"><tr><th class="l">' + esc(t('poolShort')) + '</th>' + mem.map(function (c) { return '<th>' + esc(c) + '</th>'; }).join('') + '</tr>';
-      mem.forEach(function (g) { h += '<tr><td class="l"><b>' + esc(g) + '</b></td>' + mem.map(function (c) { return c === g ? '<td>—</td>' : '<td><input type="checkbox" data-pd-c="' + esc(g) + '|' + esc(c) + '"' + ((cover[g] || []).indexOf(c) >= 0 ? ' checked' : '') + '></td>'; }).join('') + '</tr>'; });
-      h += '</table>';
+      h += '<h4>② ' + esc(t('poolStep2')) + '</h4><div class="row" style="margin-bottom:4px"><button id="pdAll">' + esc(t('poolAllPairs')) + '</button><button id="pdNone">' + esc(t('poolNoPairs')) + '</button><span class="muted small">' + esc(t('poolOrderHint')) + '</span></div>';
+      mem.forEach(function (g) {
+        h += '<div class="lend"><b>' + esc(t('poolBorrow', [g])) + '</b><div class="pchips">' + mem.filter(function (c) { return c !== g; }).map(function (c) { return '<button class="pchip' + ((cover[g] || []).indexOf(c) >= 0 ? ' on' : '') + '" data-pd-c="' + esc(g) + '|' + esc(c) + '">' + esc(c) + '</button>'; }).join('') + '</div></div>';
+      });
     }
-    h += '<div class="row" style="margin-top:10px"><button class="primary" id="pdSave">' + esc(t('poolSave')) + '</button><button id="pdClose">' + esc(t('poolClose')) + '</button>' + (cur ? '<button id="pdDel" style="margin-left:auto">' + esc(t('poolDelete')) + '</button>' : '') + '<span class="muted small" id="pdMsg"></span></div></div>';
+    h += '</div><div class="ft"><button class="primary" id="pdSave">' + esc(t('poolSave')) + '</button><button id="pdClose">' + esc(t('poolClose')) + '</button>' + (cur ? '<button id="pdDel" style="margin-left:auto">' + esc(t('poolDelete')) + '</button>' : '') + '<span class="muted small" id="pdMsg" style="margin-left:8px"></span></div></div>';
     el.innerHTML = h;
     el.querySelector('#pdX').onclick = el.querySelector('#pdClose').onclick = function () { el.remove(); };
-    [].forEach.call(el.querySelectorAll('[data-pd-g]'), function (cb) {
-      cb.onchange = function () {
-        var g = cb.dataset.pdG; if (cb.checked) { if (mem.indexOf(g) < 0) { mem.push(g); mem.forEach(function (a) { cover[a] = cover[a] || []; mem.forEach(function (b) { if (a !== b && cover[a].indexOf(b) < 0 && (a === g || b === g)) cover[a].push(b); }); }); } }       // a new member can cover and be covered by default; the user unticks what is not allowed
+    var qi = el.querySelector('#pdQ'); qi.oninput = function () { q = qi.value; var pos = qi.selectionStart; draw(); var n = el.querySelector('#pdQ'); n.focus(); n.setSelectionRange(pos, pos); };
+    [].forEach.call(el.querySelectorAll('[data-pd-g]'), function (b) {
+      b.onclick = function () {
+        var g = b.dataset.pdG;
+        if (mem.indexOf(g) < 0) { mem.push(g); mem.forEach(function (a) { cover[a] = cover[a] || []; mem.forEach(function (c) { if (a !== c && cover[a].indexOf(c) < 0 && (a === g || c === g)) cover[a].push(c); }); }); }      // a new member may lend and borrow by default; untick what is not allowed
         else { mem = mem.filter(function (x) { return x !== g; }); delete cover[g]; Object.keys(cover).forEach(function (a) { cover[a] = cover[a].filter(function (x) { return x !== g; }); }); }
         draw();
       };
     });
-    [].forEach.call(el.querySelectorAll('[data-pd-c]'), function (cb) {
-      cb.onchange = function () { var p = cb.dataset.pdC.split('|'); cover[p[0]] = (cover[p[0]] || []).filter(function (x) { return x !== p[1]; }); if (cb.checked) cover[p[0]].push(p[1]); };
+    [].forEach.call(el.querySelectorAll('[data-pd-c]'), function (b) {
+      b.onclick = function () { var p = b.dataset.pdC.split('|'), l = cover[p[0]] = cover[p[0]] || [], i = l.indexOf(p[1]); if (i >= 0) l.splice(i, 1); else l.push(p[1]); draw(); };
     });
+    var all = el.querySelector('#pdAll'); if (all) { all.onclick = function () { allPairs(); draw(); }; el.querySelector('#pdNone').onclick = function () { cover = {}; mem.forEach(function (a) { cover[a] = []; }); draw(); }; }
     el.querySelector('#pdSave').onclick = function () {
       if (mem.length < 2) { el.querySelector('#pdMsg').textContent = t('poolNeed2'); return; }
-      var d = { id: cur ? cur.id : 'p' + Date.now().toString(36), members: mem.slice(), cover: {} }; mem.forEach(function (g) { d.cover[g] = (cover[g] || []).filter(function (x) { return mem.indexOf(x) >= 0; }); });
+      var d = { id: cur ? cur.id : 'p' + Date.now().toString(36), members: mem.slice(), cover: {} };
+      mem.forEach(function (g) { d.cover[g] = mem.filter(function (x) { return x !== g && (cover[g] || []).indexOf(x) >= 0; }); });      // borrowing order = the order of the members
       if (cur) POOL.defs = POOL.defs.map(function (x) { return x.id === cur.id ? d : x; }); else POOL.defs.push(d);
       POOL.on[d.id] = true; poolStore(); el.remove(); poolMount(ctx.host, ctx);
     };
@@ -79,8 +100,51 @@ function poolDialog(ctx, id) {
   }
   draw(); document.body.appendChild(el);
 }
+// ---- Excel: the same sheet for the Shortage & prep export (linked to the group sheets) and for the single-pool export of every screen (values + formulas)
+// link(g, kind, j) -> formula text of the group's total / avail / bal cell on another sheet, or null for plain values
+function poolFillSheet(ws, def, models, days, link) {
+  var R = poolModel(def, models, days), RW = {}, into = {}, from = {}, neg = [], cf = 0, red = { type: 'pattern', pattern: 'solid', bgColor: { argb: 'FFFDE8E8' } };
+  ws.addRow([t('poolRows')].concat(days.map(function (d) { return pDay(d, true); }))).font = { bold: true }; ws.views = [{ state: 'frozen', xSplit: 1, ySplit: 1 }]; ws.getColumn(1).width = 44;
+  var L = function (j) { return ws.getColumn(2 + j).letter; };
+  var add = function (name, label, f, v, style) {
+    var row = ws.addRow([label].concat(days.map(function (d, j) { var fx = f(j, L(j)); return fx == null ? v(d) : { formula: fx, result: v(d) }; }))); RW[name] = row.number;
+    row.font = style === 'part' ? { italic: true, color: { argb: 'FF6B7280' } } : (style === 'bold' ? { bold: true } : {}); return row.number;
+  };
+  def.members.forEach(function (g) {
+    add('dem' + g, t('poolDem', [g]), function (j) { return link ? link(g, 'total', j) : null; }, function (d) { return models[g].total && models[g].total[d] != null ? models[g].total[d] : 0; });
+    add('av' + g, t('poolAvail', [g]), function (j) { return link ? link(g, 'avail', j) : null; }, function () { return models[g].avail == null ? 0 : models[g].avail; });
+    neg.push(add('bal' + g, t('poolBal', [g]), function (j, c) { return link ? link(g, 'bal', j) : c + RW['av' + g] + '-' + c + RW['dem' + g]; }, function (d) { return R.bal[g][d]; }, 'bold'));
+  });
+  def.members.forEach(function (g) {
+    add('sh' + g, '   ' + g + ' — ' + t('poolShortRow'), function (j, c) { return 'MAX(0,-' + c + RW['bal' + g] + ')'; }, function (d) { return R.short[g][d]; }, 'part');
+    add('sp' + g, '   ' + g + ' — ' + t('poolSpareRow'), function (j, c) { return 'MAX(0,' + c + RW['bal' + g] + ')'; }, function (d) { return Math.max(0, R.bal[g][d]); }, 'part');
+  });
+  R.pairs.forEach(function (pr, i) {
+    var g = pr[0], h = pr[1], a = (into[g] = into[g] || []).slice(), b = (from[h] = from[h] || []).slice(), nm = 'tk' + i;
+    var sum = function (c, rows) { return rows.length ? '(' + rows.map(function (r) { return c + r; }).join('+') + ')' : '0'; };
+    add(nm, t('poolTake', [g, h]), function (j, c) { return 'MIN(' + c + RW['sh' + g] + '-' + sum(c, a) + ',' + c + RW['sp' + h] + '-' + sum(c, b) + ')'; }, function (d) { return R.take[g + '|' + h][d] || 0; });
+    into[g].push(RW[nm]); from[h].push(RW[nm]);
+  });
+  var first = null, last = null;
+  def.members.forEach(function (g) {
+    var plus = function (c, rows) { return rows.length ? '+' + rows.map(function (r) { return c + r; }).join('+') : ''; }, minus = function (c, rows) { return rows.length ? '-' + rows.map(function (r) { return c + r; }).join('-') : ''; };
+    var r = add('af' + g, t('poolAfter', [g]), function (j, c) { return c + RW['bal' + g] + plus(c, into[g] || []) + minus(c, from[g] || []); }, function (d) { return R.after[g][d]; }, 'bold');
+    if (first == null) first = r; last = r; neg.push(r);
+  });
+  neg.push(add('tot', t('poolTot'), function (j, c) { return 'SUM(' + c + first + ':' + c + last + ')'; }, function (d) { return R.tot[d]; }, 'bold'));
+  add('sa', t('poolShortAfter'), function (j, c) { return def.members.map(function (g) { return 'MAX(0,-' + c + RW['af' + g] + ')'; }).join('+'); }, function (d) { return R.shortAfter[d]; }, 'bold');
+  if (days.length) neg.forEach(function (r) { ws.addConditionalFormatting({ ref: 'B' + r + ':' + L(days.length - 1) + r, rules: [{ type: 'cellIs', operator: 'lessThan', priority: ++cf, formulae: [0], style: { fill: red, font: { bold: true, color: { argb: 'FFC4202B' } } } }] }); });
+}
+async function poolExportXlsx(def, ctx) {
+  var P = poolRowsOf(def, ctx); if (P.miss) throw new Error(t('poolMissing', [P.miss.join(', ')]));
+  var wb = new ExcelJS.Workbook(), ws = wb.addWorksheet(('POOL ' + def.members.join('+')).replace(/[\\\/\?\*\[\]:]/g, '_').slice(0, 31));
+  poolFillSheet(ws, def, P.models, P.days, null);
+  var buf = await wb.xlsx.writeBuffer(), a = document.createElement('a'), d0 = new Date(), p = function (x) { return String(x).padStart(2, '0'); };
+  a.href = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+  a.download = 'POOL_' + def.members.join('+').replace(/[^\w+\-]/g, '_') + '_' + d0.getFullYear() + p(d0.getMonth() + 1) + p(d0.getDate()) + '.xlsx'; document.body.appendChild(a); a.click(); a.remove();
+}
 // the three screens
-function poolCtxPrep() { return { groups: function () { var S = SRC(); return S ? Object.keys(S.byGroup || {}).sort() : []; }, models: function (g) { try { return gridOf(g); } catch (e) { return null; } } }; }
-function poolCtxTech() { return { readonly: true, groups: function () { var o = {}; TS.props.forEach(function (p) { (p.groups || []).forEach(function (g) { o[g] = 1; }); }); return Object.keys(o).sort(); },
+function poolCtxPrep() { return { follow: false, groups: function () { var S = SRC(); return S ? Object.keys(S.byGroup || {}).sort() : []; }, models: function (g) { try { return gridOf(g); } catch (e) { return null; } } }; }
+function poolCtxTech() { return { follow: true, groups: function () { var o = {}; TS.props.forEach(function (p) { (p.groups || []).forEach(function (g) { o[g] = 1; }); }); return Object.keys(o).sort(); },
   models: function (g) { var G0 = latestGrid(g); return G0 ? groupModel(G0, (TS.rows || []).filter(function (x) { return x.group === g; }), latestEnds(TS.ends)) : null; } }; }
-function poolCtxResid(edit) { return { readonly: !edit, groups: function () { return RS.cache.map(function (x) { return x.g; }); }, models: function (g) { var X = RS.cache.filter(function (x) { return x.g === g; })[0]; return X ? X.M : null; } }; }
+function poolCtxResid(edit) { return { follow: !edit, groups: function () { return RS.cache.map(function (x) { return x.g; }); }, models: function (g) { var X = RS.cache.filter(function (x) { return x.g === g; })[0]; return X ? X.M : null; } }; }
