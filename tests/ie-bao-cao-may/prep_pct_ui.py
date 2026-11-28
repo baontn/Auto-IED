@@ -40,5 +40,15 @@ with sync_playwright() as p:
     check('IE Tech percentages saved with the decision and applied per day', after['n'] == 5 and after['pct'] == [100, 40, 30, 30, 10] and after['q'] == exp, f"{after['pct']} {after['q']} vs {exp}")
     hp.click(f'[data-qe="{t0["k"]}"]'); hp.wait_for_timeout(400)
     again = hp.evaluate("[...document.querySelectorAll('#dPct [data-pk]')].map(i=>+i.value)"); check('reopening shows the saved percentages', again == [100, 40, 30, 30, 10], str(again))
+    # the layout quantity changes the prep quantity, so every day of the curve changes with it
+    trs2 = hp.evaluate("techRows().filter(x=>x.group==='BT1M' && x.key!=='%s' && x.ratio>0 && x.qtyB>0).map(x=>({k:x.key,qtyB:x.qtyB,ratio:x.ratio,n:x.days.length}))" % t0['k']); t1 = trs2[0]; newL = t1['qtyB'] + 6
+    before = hp.evaluate(f"(()=>{{const x=techRows().filter(r=>r.key==='{t1['k']}')[0];return {{eff:x.eff,q:x.days.map((d,i)=>prepQtyAt(x,i))}}}})()")
+    hp.click(f'[data-qe="{t1["k"]}"]'); hp.wait_for_timeout(500); hp.fill('#dLay', str(newL)); hp.dispatch_event('#dLay', 'input'); hp.click('#dKeep'); hp.wait_for_timeout(1500)
+    after = hp.evaluate(f"(()=>{{const x=techRows().filter(r=>r.key==='{t1['k']}')[0];return {{eff:x.eff,n:x.days.length,pct:x.pctRow,q:x.days.map((d,i)=>prepQtyAt(x,i)),qa:x.qtyAct}}}})()")
+    effExp = math.ceil(t1['ratio'] * newL - 1e-9); pc = [100, 70, 30]; expq = [math.ceil(effExp * pc[min(after['n'] - i, 3) - 1] / 100 - 1e-9) for i in range(after['n'])]
+    check('layout quantity entered by IE Tech: the prep quantity is recalculated from it ...', after['eff'] == effExp and after['eff'] > before['eff'], f"{before['eff']} -> {after['eff']} (expected {effExp})")
+    check('... and every day of the curve follows (D-1 100 %, D-2 70 %, D-3 30 % of the NEW quantity)', after['q'] == expq and after['q'] != before['q'], f"{before['q']} -> {after['q']} vs {expq}")
+    totals = hp.evaluate("(()=>{const rows=techRows().filter(x=>x.group==='BT1M');const M=groupModel(latestGrid('BT1M'),rows,latestEnds(TS.ends));let s=0;rows.forEach(x=>{x.days.forEach((d,i)=>{s+=prepQtyAt(x,i)})});return {prepSum:Object.values(M.prep).reduce((a,b)=>a+b,0),rowsSum:s}})()")
+    check('the grid / total prep line uses the new per-day numbers', totals['prepSum'] == totals['rowsSum'], str(totals))
     check('no page errors', not errs, str(errs)); br.close()
 print('RESULT', 'ALL PASS' if all(ok) else f'{ok.count(False)} FAILED'); sys.exit(0 if all(ok) else 1)
