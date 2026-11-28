@@ -153,10 +153,9 @@ function fillTechPus() {
 }
 function techRender() {
   if (ROLE !== 'tech') return;
-  fillTechPus();
   $('tLines').placeholder = t('tLinesPh');
   if (!TS.dir) { $('tConn').textContent = ''; $('tGrid').innerHTML = '<div class="empty">' + esc(t('prNeedConn')) + '</div>'; $('tKpis').innerHTML = ''; $('tNotices').innerHTML = ''; return; }
-  TS.rows = techRows();
+  TS.rows = techRows(); fillTechPus();                                                  // PU choices come from the rows just read (before v7.22 they were built from the previous render, so the first screen after connecting had none)
   $('tConn').textContent = '✓ ' + t('tConnected', [TS.rows.length, TS.reviews.length]); $('tConn').className = 'st-ok small';
   var pu = $('tPU').value;
   var groups = {}; TS.props.forEach(function (p) { (p.groups || []).forEach(function (g) { groups[g] = 1; }); });
