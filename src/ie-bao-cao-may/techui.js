@@ -134,7 +134,7 @@ function latestGrid(g) {
   var ps = TS.props.filter(function (p) { return p.grid && p.grid[g]; }).sort(function (a, b) { return String(b.at).localeCompare(String(a.at)); });
   if (!ps.length) return null;
   var G = ps[0].grid[g], sun = function (d) { return new Date(typeof d === 'number' ? d : d + 'T00:00:00Z').getUTCDay() === 0; };
-  return Object.assign({}, G, { days: (G.days || []).filter(function (d) { return !sun(d); }), basis: ps[0].dbBasis || null });      // no Sundays (also in proposals sent before this version)
+  return Object.assign({}, G, { days: (G.days || []).filter(function (d) { return !sun(d); }), basis: ps[0].dbBasis || null, fill: ps[0].fill || null });      // no Sundays (also in proposals sent before this version)
 }
 function noticeStatus(n) { var r = TS.res.concat(PS.noticeRes || []).filter(function (x) { return x.id === n.id; }).sort(function (a, b) { return String(a.at).localeCompare(String(b.at)); }).pop(); return r || null; }
 function puSort(p) { return !p || p === '?' ? 1 : 0; }
@@ -210,9 +210,10 @@ function techRender() {
       });
       if (!L.styles[s] && !(runInfo[l] && runInfo[l].style === s)) return;
       var Ls = L.styles[s] || {};
-      h += '<tr><td class="s1"></td><td class="l s2">' + (shown ? '' : '<b>' + esc(l) + '</b>') + '</td><td class="l s3">' + esc(s) + endTag(l, s) + '</td>' + days.map(function (d) { return '<td>' + (Ls[d] || '') + '</td>'; }).join('') + '</tr>';
+      h += '<tr><td class="s1"></td><td class="l s2">' + (shown ? '' : '<b>' + esc(l) + '</b>') + '</td><td class="l s3">' + esc(s) + endTag(l, s) + '</td>' + days.map(function (d) { return '<td' + (L.est && L.est[d] && Ls[d] ? ' class="est" title="' + esc(t('idleEstTip')) + '"' : '') + '>' + (Ls[d] || '') + '</td>'; }).join('') + '</tr>';
       shown = true;
     });
+    h += idleRowHtml(l, shown, days, function (d) { return (L.idle || {})[d]; });
   });
   // totals per PU (all lines of the group), then total, available and balance
   var pus = {}; Object.keys(G.lines).forEach(function (l) { pus[G.lines[l].pu] = 1; });
@@ -228,7 +229,8 @@ function techRender() {
   var tw0 = $('tGrid').querySelector('.tw'), gk = g + '|' + pu + '|' + $('tLines').value, keep = TS.gridKey === gk && !!tw0;
   var sT = keep ? tw0.scrollTop : 0, sL = keep ? tw0.scrollLeft : 0, pY = window.scrollY, pX = window.scrollX;     // approving a row must not throw the user back to the top
   var basisNote = G0.basis && G0.basis.overlay ? '<div class="muted small" style="margin:0 0 6px;padding:6px 10px;border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:6px">' + esc(t('tBasis', [G0.basis.overlay, String(G0.basis.at || '').slice(0, 16).replace('T', ' '), G0.basis.by || '-'])) + '</div>' : '';
-  $('tGrid').innerHTML = basisNote + h; TS.gridKey = gk;
+  var fillNote = G0.fill && G0.fill.on ? '<div class="muted small" style="margin:0 0 6px">' + esc(t('tFillNote', [G0.fill.cap])) + '</div>' : '';
+  $('tGrid').innerHTML = basisNote + fillNote + h; TS.gridKey = gk;
   var tw1 = $('tGrid').querySelector('.tw'); if (tw1) { tw1.scrollTop = sT; tw1.scrollLeft = sL; }
   poolMount($('tPool'), poolCtxTech());
   if (keep) window.scrollTo(pX, pY);

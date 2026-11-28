@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>IE Báo cáo máy: User guide</title><link rel="icon" href="../icon.png"><link rel="stylesheet" href="manual.css"></head><body>
-<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>IE Báo cáo máy v7.21: User guide</b><a href="ie-bao-cao-may.html" title="Tiếng Việt" onclick="try{localStorage.setItem('ie_site_lang','vi')}catch(e){}">VI</a><a href="layout-check.en.html">Layout Check ›</a><a href="../index.html">‹ Home</a></header>
+<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>IE Báo cáo máy v7.22: User guide</b><a href="ie-bao-cao-may.html" title="Tiếng Việt" onclick="try{localStorage.setItem('ie_site_lang','vi')}catch(e){}">VI</a><a href="layout-check.en.html">Layout Check ›</a><a href="../index.html">‹ Home</a></header>
 <div class="wrap">
 <nav class="toc"><b>Contents</b>
 <a href="#intro">1. Introduction</a>
@@ -130,7 +130,7 @@
 <ul>
 <li>A new style that loads on a line (it did not run on the previous working day) needs <b>ROUNDUP(ratio × machines of that style)</b> during <b>N working days</b> before the loading date (Sundays skipped).</li>
 <li>No prep when the two styles share a layout file, or are in the "Same layout" list, or IE Tech removes it.</li>
-<li><b>Prep percentage by day (from v7.21):</b> the prep machines are not the same on every day. With D = the loading date: <b>D-1 = 100 %</b> of the prep quantity, <b>D-2 = 70 %</b>, <b>D-3 = 30 %</b>; if there are more prep days, D-4, D-5… automatically use the last percentage (30 %). Every day is rounded up. The Consolidator changes the default per machine type in the column <b>Prep % by day</b> of the machine-type table (type it like <code>100, 70, 30</code>); IE Tech changes it per row in the right-hand panel, field <b>% by day</b> (boxes D-1, D-2… follow the number of prep days typed). The day grids, totals, Remaining shortage and Excel all use the machines by day.</li>
+<li><b>Prep percentage by day (from v7.22):</b> the prep machines are not the same on every day. With D = the loading date: <b>D-1 = 100 %</b> of the prep quantity, <b>D-2 = 70 %</b>, <b>D-3 = 30 %</b>; if there are more prep days, D-4, D-5… automatically use the last percentage (30 %). Every day is rounded up. The Consolidator changes the default per machine type in the column <b>Prep % by day</b> of the machine-type table (type it like <code>100, 70, 30</code>); IE Tech changes it per row in the right-hand panel, field <b>% by day</b> (boxes D-1, D-2… follow the number of prep days typed). The day grids, totals, Remaining shortage and Excel all use the machines by day.</li>
 <li>The first day of the plan has no prep (the style is already running). Sunday is not a working day: a style that starts on a Sunday is counted from the Monday (it is never lost), the Sundays of a style that is already running are ignored, and prep is counted back from the Saturday before (N working days before the Monday, for example Thursday, Friday, Saturday). Every changeover has only one prep row.</li>
 <li>Prep is counted only for the selected machine groups.</li></ul>
 <h3>4.4 Send to IE Tech</h3>
@@ -229,6 +229,12 @@
 <ul>
 <li>Closing does <b>not lock</b> the data. If IE Tech or the Consolidator changes something afterwards, the row shows "N changes after closing"; then close again.</li>
 <li>The closing record is stored in <code>data\prep\closed</code>.</li></ul>
+<h3>Empty line days (Not Set up)</h3>
+<p>The plan has days when a line is empty ("Not Set up"). From v7.22 the tool shows them in the <b>Shortage &amp; prep</b> tab (after "Open detail") and in the IE Tech screen:</p>
+<ul><li><b>A grey row "Empty (Not Set up)"</b> under every line: <b>—</b> an empty day between two styles that is not estimated, <b>≈</b> an estimated day, <b>·</b> an empty day at the start of the plan (ignored). Estimated machine cells are hatched and in italics.</li>
+<li><b>Advance B estimate</b> (switch "Estimate the empty days", on by default, up to 14 working days): a gap between two styles takes the <b>machines of the next style</b> (the next style starts earlier; its loading date and prep days move with it). If the next style has no machine data, the previous style is dragged. After the last style of a line, the last style is <b>dragged to the end of the plan</b>. Gaps longer than the maximum and the days at the start of the plan are <b>not filled</b> (Planning decides). Switch it off to get the numbers as in the MC Report.</li>
+<li><b>The card "Empty line periods"</b> below the tables: one row per period (PU, line, from, to, working days, kind, style before, style after, how counted, machines/day), filter by PU, button <span class="btn">⬇ Excel</span>. The Excel of the tab also has a sheet <code>NOT SET UP</code>.</li>
+<li>The proposal sent to IE Tech carries the estimate (IE Tech sees a note and the ≈ cells), so both screens show the same numbers.</li></ul>
 <h3>Combine machine types that can replace each other</h3>
 <p>Some machine types can replace each other (for example a zigzag with trimmer and a normal zigzag: with no trimmer machine the job can still run on a normal one, but it needs more SAM). Click <span class="btn">🔗 Combine machine types</span> (in the <b>Shortage &amp; prep</b> tab below the tables, in the <b>IE Tech screen</b> and in the <b>Remaining shortage</b> tab of the Consolidator and the Supervisor). Every role can create pools:</p>
 <ol><li><b>① Choose the machine types:</b> click the machine-type buttons (there is a search box). The number on a button is the <b>borrowing order</b>. A machine type can be in several pools.</li>

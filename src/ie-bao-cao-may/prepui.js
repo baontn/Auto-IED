@@ -1,5 +1,11 @@
 // ===================== STEP 4 UI: machine group analysis + prep =====================
-function SRC() { if (!REF.demand && REF.planRows && REF.db) REF.demand = buildDemand(REF.planRows, effDb(), REF.groups || {}); return REF.demand || REF.mbl; }
+// v7.22: the demand with the empty line days ("Not Set up") found, and estimated by Advance B when the switch is on (see idleInfo / withFill in prep.js)
+function SRC() {
+  if (!REF.demand && REF.planRows && REF.db) REF.demand = buildDemand(REF.planRows, effDb(), REF.groups || {});
+  var base = REF.demand || REF.mbl; if (!base) return base;
+  var f = PS.fill, v = REF.fv; if (v && v.base === base && v.on === f.on && v.cap === f.cap) return v.out;
+  var out = withFill(base, idleInfo(base, f.on, f.cap)); REF.fv = { base: base, on: f.on, cap: f.cap, out: out }; return out;
+}
 // Database used for the demand: the MC Report's MACHINE DATABASE plus the changes approved and saved in this session (not yet pasted into Table1 / refreshed in the MC Report).
 function effDb() {
   var O = REF.dbOver; if (!O || !Object.keys(O.items).length) return REF.db;
@@ -15,7 +21,8 @@ function addDbOverlay(items, user) {
   if (PS.rows) { PS.rows = null; PS.open = []; $('pDetail').innerHTML = ''; $('pMsg').textContent = t('ovRecalc'); }
   if (window.prepRender && !$('step4').hidden) prepRender();
 }
-var PS = { rules: JSON.parse(JSON.stringify(PREP_DEFAULT)), shared: [], reviews: [], sel: {}, rows: null, onlyPrep: true, groups: [] };
+var PS = { rules: JSON.parse(JSON.stringify(PREP_DEFAULT)), shared: [], reviews: [], sel: {}, rows: null, onlyPrep: true, groups: [], fill: { on: true, cap: 14 } };
+try { var _f = JSON.parse(localStorage.getItem('mdb_fill') || 'null'); if (_f && typeof _f.on === 'boolean') PS.fill = { on: _f.on, cap: Math.max(1, Math.min(60, +_f.cap || 14)) }; } catch (e) { }
 function pDay(k, wd) { var d = new Date(k), p = function (x) { return String(x).padStart(2, '0'); }; return (wd ? ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'][d.getUTCDay()] + ' ' : '') + p(d.getUTCDate()) + '/' + p(d.getUTCMonth() + 1); }
 function pIso(k) { var d = new Date(k); return d.toISOString().slice(0, 10); }
 async function pReadDir(root, path) {
@@ -119,7 +126,7 @@ function puTotals(G) {
 function puNameC(p) { return !p || p === '?' ? t('noPu') : p; }
 function gridOf(g) { CHG_DATES = changeoverDates(PS.reviews); var r = pRange(); return groupGrid(SRC(), g, PS.rows, REF.avail || {}, r.from, r.to, REF.pu || {}, latestEnds(PS.ends)); }
 function renderDetail() {
-  var html = '<label class="small"><input type="checkbox" id="pOnly"' + (PS.onlyPrep ? ' checked' : '') + '> ' + esc(t('pgOnlyPrep')) + '</label>';
+  var html = idleCtlHtml() + '<label class="small"><input type="checkbox" id="pOnly"' + (PS.onlyPrep ? ' checked' : '') + '> ' + esc(t('pgOnlyPrep')) + '</label>';
   PS.open.forEach(function (g) {
     var G = gridOf(g), mine = PS.rows.filter(function (x) { return x.group === g; });
     var shortDays = G.days.filter(function (d) { return G.bal[d] != null && G.bal[d] < 0; }).map(function (d) { return pDay(d); });
@@ -139,8 +146,9 @@ function renderDetail() {
           html += '<tr><td class="s1"></td><td class="l s2">' + (first ? '<b>' + esc(line) + '</b>' : '') + '</td><td class="l s3" style="color:var(--warn)">' + esc(t('pgPrepOf', [s])) + ' <span class="muted small">' + esc(t('prLoad', [pDay(x.loadActual || x.load)])) + '</span> ' + statusTag(x) + '</td>' + G.days.map(function (d) { return prepCell(x, d); }).join('') + '</tr>'; first = false;
         });
         if (!L.styles[s]) return;
-        html += '<tr><td class="s1"></td><td class="l s2">' + (first ? '<b>' + esc(line) + '</b>' : '') + '</td><td class="l s3">' + esc(s) + '</td>' + G.days.map(function (d) { return '<td>' + (L.styles[s][d] || '') + '</td>'; }).join('') + '</tr>'; first = false;
+        html += '<tr><td class="s1"></td><td class="l s2">' + (first ? '<b>' + esc(line) + '</b>' : '') + '</td><td class="l s3">' + esc(s) + '</td>' + G.days.map(function (d) { return '<td' + (L.est && L.est[d] && L.styles[s][d] ? ' class="est" title="' + esc(t('idleEstTip')) + '"' : '') + '>' + (L.styles[s][d] || '') + '</td>'; }).join('') + '</tr>'; first = false;
       });
+      html += idleRowHtml(line, first, G.days, function (d) { return (L.idle || {})[d]; });
     });
     var tot = function (lbl, m, neg) { return '<tr class="tot"><td class="s1"></td><td class="s2"></td><td class="l s3">' + esc(lbl) + '</td>' + G.days.map(function (d) { var v = typeof m === 'function' ? m(d) : m[d]; return '<td class="' + (neg && v != null && v < 0 ? 'neg' : '') + '">' + (v == null ? '' : v) + '</td>'; }).join('') + '</tr>'; };
     var PT = puTotals(G);
@@ -153,11 +161,12 @@ function renderDetail() {
     html += tot(t('pgProd'), G.prod) + tot(t('pgPrep'), function (d) { return G.prep[d] || 0; }) + tot(t('pgTotal'), G.total) + tot(t('pgAvail'), function () { return G.avail; }) + partRows(g, G) + tot(t('pgBal'), G.bal, true);
     html += '</table></div></div>';
   });
+  html += idleCardHtml();
   html += '<div id="pPool"></div>';
   html += '<div class="row" style="margin-top:10px"><button class="primary" id="pSend">' + esc(t('pSend')) + '</button><button id="pExport">' + esc(t('pExport')) + '</button><span class="muted small" id="pMsg2"></span></div>';
   $('pDetail').innerHTML = html;
   $('pOnly').onchange = function (e) { PS.onlyPrep = e.target.checked; renderDetail(); };
-  poolMount($('pPool'), poolCtxPrep());
+  poolMount($('pPool'), poolCtxPrep()); idleBind();
   $('pSend').onclick = function () { prepSend().catch(function (e) { $('pMsg2').textContent = e.message; }); };
   $('pExport').onclick = function () { prepExport().catch(function (e) { $('pMsg2').textContent = e.message; alert(t('xlErr', [e.message])); }); };
 }
@@ -173,13 +182,14 @@ async function prepSend() {
     var G = gridOf(g), lines = {};
     Object.keys(G.lines).forEach(function (l) {
       var st = {}; Object.keys(G.lines[l].styles).forEach(function (s) { var m = {}; Object.keys(G.lines[l].styles[s]).forEach(function (d) { m[pIso(+d)] = G.lines[l].styles[s][d]; }); st[s] = m; });
-      lines[l] = { pu: puOf(REF.pu || {}, l), styles: st };
+      var idl = {}, estm = {}; Object.keys(G.lines[l].idle || {}).forEach(function (d) { if (G.days.indexOf(+d) >= 0) idl[pIso(+d)] = G.lines[l].idle[d]; }); Object.keys(G.lines[l].est || {}).forEach(function (d) { if (G.days.indexOf(+d) >= 0) estm[pIso(+d)] = 1; });
+      lines[l] = { pu: puOf(REF.pu || {}, l), styles: st, idle: idl, est: estm };
     });
     grid[g] = { days: G.days.map(pIso), avail: G.avail == null ? null : G.avail, parts: availParts(g), lines: lines };
   });
   var d = await (await LCDIR.getDirectoryHandle('prep', { create: true })).getDirectoryHandle('proposals', { create: true });
   var h = await d.getFileHandle(st + '_' + user.replace(/[^\w\-]+/g, '_') + '.json', { create: true }), w = await h.createWritable();
-  await w.write(JSON.stringify({ at: now.toISOString(), by: user, groups: PS.open, from: pIso(pRange().from), rows: rows, grid: grid, groupMap: REF.groups || {},
+  await w.write(JSON.stringify({ at: now.toISOString(), by: user, groups: PS.open, fill: { on: PS.fill.on, cap: PS.fill.cap }, from: pIso(pRange().from), rows: rows, grid: grid, groupMap: REF.groups || {},
     pools: poolToSend(), dbBasis: REF.dbOver && Object.keys(REF.dbOver.items).length ? { overlay: Object.keys(REF.dbOver.items).length, at: REF.dbOver.at, by: REF.dbOver.by, styles: Object.keys(REF.dbOver.names).map(function (k) { return REF.dbOver.names[k]; }).slice(0, 40) } : null })); await w.close();
   var pl = poolToSend(), lost = []; pl.forEach(function (d) { d.members.forEach(function (g) { if (PS.open.indexOf(g) < 0 && lost.indexOf(g) < 0) lost.push(g); }); });
   $('pMsg2').textContent = t('pSent', [rows.filter(function (x) { return !x.same; }).length]) + (pl.length ? ' · ' + t('poolSent', [pl.length]) : '') + (lost.length ? ' · ' + t('poolLost', [lost.join(', ')]) : '');
@@ -226,7 +236,7 @@ async function prepExport() {
     ws.getColumn(3).width = 34; ws.getColumn(2).width = 9; ws.getColumn(4).width = 7;
     SH[g] = { name: ws.name, bal: FR.bal, total: FR.total, avail: FR.avail, G: G };
   });
-  poolExportSheets(wb, SH);
+  poolExportSheets(wb, SH); idleSheet(wb);
   function addPrep(ws, G, pu, line, x) {
     var skip = x.status === 'AUTO_SKIP' || x.status === 'REMOVED';
     // skipped / removed prep = 0 in Excel (never a number that a SUM could pick up by mistake)
@@ -321,4 +331,60 @@ function poolExportSheets(wb, SH) {
     var ws = wb.addWorksheet(('POOL ' + def.members.join('+')).replace(/[\\\/\?\*\[\]:]/g, '_').slice(0, 31));
     poolFillSheet(ws, def, models, days, function (g, kind, j) { return "'" + SH[g].name.replace(/'/g, "''") + "'!" + ws.getColumn(5 + j).letter + SH[g][kind]; });
   });
+}
+
+// ---------- v7.22: empty line days ("Not Set up"): grey row in the grids, switch + list card + Excel ----------
+function idleCtlHtml() {
+  var f = PS.fill, I = (SRC() || {}).idle || { list: [] }, nGap = I.list.filter(function (r) { return r.kind === 'gap'; }).length;
+  return '<div class="row" id="pFillBar" style="margin:6px 0"><label class="small"><input type="checkbox" id="pFillOn"' + (f.on ? ' checked' : '') + '> <b>' + esc(t('idleFillOn')) + '</b></label>' +
+    '<label class="small">' + esc(t('idleCap')) + ' <input type="number" id="pFillCap" min="1" max="60" style="width:62px" value="' + f.cap + '"></label>' +
+    '<span class="muted small">' + esc(t('idleLegend', [nGap])) + '</span></div>';
+}
+// one grey row under the styles of a line: gap / leading / trailing empty days; "≈" = filled by the estimate
+function idleRowHtml(line, first, days, get) {
+  var any = days.some(function (d) { return get(d); }); if (!any) return '';
+  return '<tr class="idle"><td class="s1"></td><td class="l s2"></td><td class="l s3 muted">' + esc(t('idleRow')) + '</td>' + days.map(function (d) {
+    var c = get(d); if (!c) return '<td></td>';
+    return c.est ? '<td class="idl est" title="' + esc(t('idleEstTip')) + '">≈</td>' : '<td class="idl' + (c.kind === 'lead' ? ' lead' : '') + '" title="' + esc(t('idleK_' + c.kind)) + '">' + (c.kind === 'lead' ? '·' : '—') + '</td>';
+  }).join('') + '</tr>';
+}
+function idleHow(r) { return r.src === 'B' ? t('idleSrcB') : r.src === 'A' ? t('idleSrcA') : r.src === 'drag' ? t('idleSrcDrag') : (r.kind === 'lead' ? t('idleNoLead') : (PS.fill.on ? t('idleNoLong', [PS.fill.cap]) : t('idleNoOff'))); }
+function idleRows() {
+  var I = (SRC() || {}).idle || { list: [] }, pu = ($('pIdlePU') || {}).value || '';
+  return I.list.filter(function (r) { return !pu || puOf(REF.pu || {}, r.line) === pu; });
+}
+function idleCardHtml() {
+  var I = (SRC() || {}).idle; if (!I) return '';
+  var pus = {}; I.list.forEach(function (r) { pus[puOf(REF.pu || {}, r.line)] = 1; }); var sel = PS.idlePU || '';
+  var rows = idleRows().filter(function (r) { return !sel || puOf(REF.pu || {}, r.line) === sel; });
+  var tot = I.list.length, filled = I.list.filter(function (r) { return r.src !== 'none'; }).length;
+  var h = '<div class="gblock"><div class="row"><h3 style="margin:8px 0">' + esc(t('idleTitle')) + '</h3><span class="muted small">' + esc(t('idleSummary', [tot, filled])) + '</span><span style="margin-left:auto"></span>' +
+    '<select id="pIdlePU"><option value="">' + esc(t('idleAllPU')) + '</option>' + Object.keys(pus).sort().map(function (p) { return '<option value="' + esc(p) + '"' + (p === sel ? ' selected' : '') + '>' + esc(puNameC(p)) + '</option>'; }).join('') + '</select>' +
+    '<button id="pIdleX">' + esc(t('idleExport')) + '</button></div>' +
+    '<div class="tw" style="max-height:44vh"><table class="pg"><tr><th class="l">PU</th><th class="l">' + esc(t('pgLine')) + '</th><th>' + esc(t('idleFrom')) + '</th><th>' + esc(t('idleTo')) + '</th><th>' + esc(t('idleN')) + '</th><th class="l">' + esc(t('idleKind')) + '</th><th class="l">' + esc(t('idleBefore')) + '</th><th class="l">' + esc(t('idleAfter')) + '</th><th class="l">' + esc(t('idleHow')) + '</th><th>' + esc(t('idlePer')) + '</th></tr>';
+  rows.slice(0, 400).forEach(function (r) {
+    h += '<tr><td class="l">' + esc(puNameC(puOf(REF.pu || {}, r.line))) + '</td><td class="l"><b>' + esc(r.line) + '</b></td><td>' + pDay(r.from, true) + '</td><td>' + pDay(r.to, true) + '</td><td>' + r.n + '</td><td class="l">' + esc(t('idleK_' + r.kind)) + '</td><td class="l">' + esc(r.A.join(' + ')) + '</td><td class="l">' + esc(r.B.join(' + ')) + '</td><td class="l' + (r.src === 'none' ? ' muted' : '') + '">' + esc(idleHow(r)) + '</td><td>' + (r.perDay || '') + '</td></tr>';
+  });
+  if (!rows.length) h += '<tr><td class="l muted" colspan="10">' + esc(t('idleNone')) + '</td></tr>';
+  if (rows.length > 400) h += '<tr><td class="l muted" colspan="10">… ' + (rows.length - 400) + '</td></tr>';
+  return h + '</table></div></div>';
+}
+function idleBind() {
+  var on = $('pFillOn'), cap = $('pFillCap'); if (!on) return;
+  var apply = function () { PS.fill = { on: on.checked, cap: Math.max(1, Math.min(60, +cap.value || 14)) }; try { localStorage.setItem('mdb_fill', JSON.stringify(PS.fill)); } catch (e) { } $('pOpen').onclick(); };
+  on.onchange = apply; cap.onchange = apply;
+  var sel = $('pIdlePU'); if (sel) sel.onchange = function () { PS.idlePU = sel.value; renderDetail(); };
+  var x = $('pIdleX'); if (x) x.onclick = function () { idleExport().catch(function (e) { alert(t('xlErr', [e.message])); }); };
+}
+function idleSheet(wb) {
+  var ws = wb.addWorksheet('NOT SET UP');
+  ws.addRow(['PU', t('pgLine'), t('idleFrom'), t('idleTo'), t('idleN'), t('idleKind'), t('idleBefore'), t('idleAfter'), t('idleHow'), t('idlePer')]).font = { bold: true };
+  idleRows().forEach(function (r) { ws.addRow([puOf(REF.pu || {}, r.line), r.line, new Date(r.from), new Date(r.to), r.n, t('idleK_' + r.kind), r.A.join(' + '), r.B.join(' + '), idleHow(r), r.perDay || null]); });
+  ws.getColumn(3).numFmt = 'dd/mm/yyyy'; ws.getColumn(4).numFmt = 'dd/mm/yyyy'; [1, 2, 3, 4, 5, 6].forEach(function (c) { ws.getColumn(c).width = c === 6 ? 22 : 12; }); ws.getColumn(7).width = 28; ws.getColumn(8).width = 28; ws.getColumn(9).width = 40;
+  ws.views = [{ state: 'frozen', ySplit: 1 }]; ws.autoFilter = { from: 'A1', to: 'J1' };
+}
+async function idleExport() {
+  var wb = new ExcelJS.Workbook(); idleSheet(wb);
+  var buf = await wb.xlsx.writeBuffer(), a = document.createElement('a'), d0 = new Date(), p = function (x) { return String(x).padStart(2, '0'); };
+  a.href = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })); a.download = 'NOT_SET_UP_' + d0.getFullYear() + p(d0.getMonth() + 1) + p(d0.getDate()) + '.xlsx'; document.body.appendChild(a); a.click(); a.remove();
 }

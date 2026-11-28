@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>IE Báo cáo máy: Hướng dẫn sử dụng</title><link rel="icon" href="../icon.png"><link rel="stylesheet" href="manual.css"></head><body>
-<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>IE Báo cáo máy v7.21: Hướng dẫn sử dụng</b><a href="ie-bao-cao-may.en.html" title="English" onclick="try{localStorage.setItem('ie_site_lang','en')}catch(e){}">EN</a><a href="layout-check.html">Layout Check ›</a><a href="../index.html">‹ Trang chủ</a></header>
+<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>IE Báo cáo máy v7.22: Hướng dẫn sử dụng</b><a href="ie-bao-cao-may.en.html" title="English" onclick="try{localStorage.setItem('ie_site_lang','en')}catch(e){}">EN</a><a href="layout-check.html">Layout Check ›</a><a href="../index.html">‹ Trang chủ</a></header>
 <div class="wrap">
 <nav class="toc"><b>Nội dung</b>
 <a href="#gioi-thieu">1. Giới thiệu</a>
@@ -130,7 +130,7 @@
 <ul>
 <li>Mã hàng mới vào chuyền (không chạy ở ngày làm việc trước) cần <b>ROUNDUP(tỷ lệ × số máy của mã đó)</b> trong <b>N ngày làm việc</b> trước ngày vào chuyền (bỏ Chủ nhật).</li>
 <li>Không chuẩn bị khi hai mã dùng chung một file layout, hoặc nằm trong danh sách “Cùng layout”, hoặc IE Tech bỏ.</li>
-<li><b>Tỷ lệ chuẩn bị theo ngày (từ v7.21):</b> số máy chuẩn bị không giống nhau mọi ngày. Gọi ngày vào chuyền là D: <b>D-1 = 100 %</b> số máy chuẩn bị, <b>D-2 = 70 %</b>, <b>D-3 = 30 %</b>; nếu có nhiều ngày chuẩn bị hơn thì các ngày D-4, D-5… tự lấy tỷ lệ cuối (30 %). Mỗi ngày làm tròn lên. IE Báo cáo máy đổi tỷ lệ mặc định của từng loại máy ở cột <b>% chuẩn bị theo ngày</b> trong bảng chọn loại máy (nhập dạng <code>100, 70, 30</code>); IE Tech đổi riêng cho từng dòng trong bảng bên phải, mục <b>% theo ngày</b> (ô D-1, D-2… theo đúng số ngày chuẩn bị đang nhập). Bảng ngày, tổng, Thiếu máy còn lại và Excel đều dùng số máy theo ngày.</li>
+<li><b>Tỷ lệ chuẩn bị theo ngày (từ v7.22):</b> số máy chuẩn bị không giống nhau mọi ngày. Gọi ngày vào chuyền là D: <b>D-1 = 100 %</b> số máy chuẩn bị, <b>D-2 = 70 %</b>, <b>D-3 = 30 %</b>; nếu có nhiều ngày chuẩn bị hơn thì các ngày D-4, D-5… tự lấy tỷ lệ cuối (30 %). Mỗi ngày làm tròn lên. IE Báo cáo máy đổi tỷ lệ mặc định của từng loại máy ở cột <b>% chuẩn bị theo ngày</b> trong bảng chọn loại máy (nhập dạng <code>100, 70, 30</code>); IE Tech đổi riêng cho từng dòng trong bảng bên phải, mục <b>% theo ngày</b> (ô D-1, D-2… theo đúng số ngày chuẩn bị đang nhập). Bảng ngày, tổng, Thiếu máy còn lại và Excel đều dùng số máy theo ngày.</li>
 <li>Ngày đầu tiên của kế hoạch không tính chuẩn bị (mã đang chạy). Chủ nhật không tính là ngày làm việc: mã hàng bắt đầu vào Chủ nhật được tính bắt đầu từ thứ Hai (không bị mất), các ngày Chủ nhật của mã đang chạy bị bỏ qua, và chuẩn bị tính lùi từ thứ Bảy trước đó (N ngày làm việc trước thứ Hai: ví dụ thứ Năm, thứ Sáu, thứ Bảy). Mỗi lần đổi mã chỉ có một dòng chuẩn bị.</li>
 <li>Chuẩn bị chỉ tính cho loại máy được chọn.</li></ul>
 <h3>4.4 Gửi IE Tech</h3>
@@ -229,6 +229,12 @@
 <ul>
 <li>Chốt <b>không khóa</b> dữ liệu. Nếu IE Tech hoặc IE Báo cáo máy thay đổi sau đó, dòng hiển thị “có N thay đổi sau khi chốt”; khi đó chốt lại.</li>
 <li>Bản ghi chốt lưu trong <code>data\prep\closed</code>.</li></ul>
+<h3>Ngày chuyền chưa xếp mã (Not Set up)</h3>
+<p>Kế hoạch có những ngày chuyền trống (“Not Set up”). Từ v7.22 công cụ hiện chúng ở tab <b>Thiếu máy &amp; chuẩn bị</b> (sau “Mở chi tiết”) và ở màn hình IE Tech:</p>
+<ul><li><b>Dòng xám “Chưa xếp mã (Not Set up)”</b> dưới mỗi chuyền: <b>—</b> ngày trống giữa hai mã chưa ước tính, <b>≈</b> ngày đã ước tính, <b>·</b> ngày trống đầu kế hoạch (bỏ qua). Ô máy ước tính có nền gạch chéo, chữ nghiêng.</li>
+<li><b>Ước tính Advance B</b> (công tắc “Ước tính cho ngày chưa xếp mã”, mặc định bật, tối đa 14 ngày làm việc): khoảng trống giữa hai mã lấy <b>số máy của mã sau</b> (mã sau bắt đầu sớm hơn; ngày vào chuyền và ngày chuẩn bị của nó dời theo). Nếu mã sau chưa có dữ liệu máy thì kéo mã trước. Sau mã cuối của chuyền, mã cuối được <b>kéo dài đến hết kế hoạch</b>. Khoảng trống dài hơn số ngày tối đa và ngày đầu kế hoạch <b>không điền</b> (để Planning quyết định). Tắt công tắc để trở lại số liệu như MC Report.</li>
+<li><b>Thẻ “Khoảng trống chưa xếp mã”</b> dưới các bảng: mỗi dòng là một khoảng trống (PU, chuyền, từ, đến, số ngày làm việc, loại, mã trước, mã sau, cách tính, máy/ngày), lọc theo PU, nút <span class="btn">⬇ Excel</span>. File Excel của tab cũng có sheet <code>NOT SET UP</code>.</li>
+<li>Đề xuất gửi IE Tech mang theo ước tính này (IE Tech thấy ghi chú và các ô ≈), nên số liệu hai màn hình giống nhau.</li></ul>
 <h3>Gộp loại máy dùng thay nhau</h3>
 <p>Có những loại máy dùng thay nhau được (ví dụ máy zigzag có cắt chỉ và zigzag thường: thiếu máy có cắt chỉ vẫn làm được trên máy thường nhưng tốn thêm SAM). Bấm <span class="btn">🔗 Gộp loại máy</span> (ở tab <b>Thiếu máy &amp; chuẩn bị</b> dưới các bảng, ở <b>màn hình IE Tech</b> và ở tab <b>Thiếu máy còn lại</b> của IE Báo cáo máy và Giám sát). Mọi vai trò đều tạo được bộ gộp:</p>
 <ol><li><b>① Chọn loại máy:</b> bấm các nút loại máy (có ô tìm). Số trên nút là <b>thứ tự mượn máy</b>. Một loại máy có thể nằm trong nhiều bộ gộp.</li>

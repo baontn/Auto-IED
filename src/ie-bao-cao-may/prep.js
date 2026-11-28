@@ -298,11 +298,11 @@ function groupGrid(mbl, group, prepRows, avail, fromKey, toKey, puMap, ends) {
     prepRows.forEach(function (x) { if (x.group === group && x.line === line && x.loadActual) shiftProduction(styles, x, x.load, x.loadActual, days, function (d) { return d; }); });
     prepRows.forEach(function (x) { if (x.group === group && x.line === line && x.qtyAct != null) applyLayoutQty(styles, x, days, function (d) { return d; }); });
     var e0 = run0 && ends[line + '|' + run0]; if (e0 && e0.endDate) adjustRunningEnd(styles, run0, Date.parse(e0.endDate + 'T00:00:00Z'), days, function (d) { return d; });
-    if (Object.keys(styles).length) lines[line] = { styles: styles, prep: [] };
+    if (Object.keys(styles).length) lines[line] = { styles: styles, prep: [], idle: (mbl.idleBy || {})[line] || {}, est: (mbl.est || {})[line] || {} };
     Object.keys(styles).forEach(function (s) { Object.keys(styles[s]).forEach(function (d) { prodTot[d] = (prodTot[d] || 0) + styles[s][d]; }); });
   });
   prepRows.filter(function (x) { return x.group === group; }).forEach(function (x) {
-    var L = lines[x.line] = lines[x.line] || { styles: {}, prep: [] }; L.prep.push(x);
+    var L = lines[x.line] = lines[x.line] || { styles: {}, prep: [], idle: (mbl.idleBy || {})[x.line] || {}, est: (mbl.est || {})[x.line] || {} }; L.prep.push(x);
     x.days.forEach(function (d, i) { var q = prepQtyAt(x, i); if (q) prepTot[d] = (prepTot[d] || 0) + q; });
   });
   var order = Object.keys(lines).sort(function (a, b) { return puOf(puMap, a).localeCompare(puOf(puMap, b)) || a.localeCompare(b); });
@@ -435,4 +435,41 @@ function poolModel(def, models, days) {
     out.tot[d] = tb; out.shortAfter[d] = sa;
   });
   return out;
+}
+
+// ===================== EMPTY LINE DAYS ("Not Set up") + ADVANCE B (v7.22) =====================
+// The MC Report / plan drop the "Not Set up" rows, so a line is EMPTY on a working day when it has no entry that day but has entries before and / or after.
+// kind: gap = between two styles, lead = before the first style (ignored), trail = after the last style of the plan.
+// Estimate (decided with the user): a gap of up to `cap` working days takes the machines of the style AFTER it ("Advance B"; the next style then starts earlier and its changeover prep follows);
+// if that style has no machine data the style BEFORE it is dragged; after the last style the last style is dragged to the end of the plan; longer gaps and leading days stay empty (listed for Planning).
+function entryQty(e) { var n = 0; if (e) Object.keys(e).forEach(function (s) { Object.keys(e[s]).forEach(function (g) { n += e[s][g] || 0; }); }); return n; }
+function idleInfo(mbl, on, cap) {
+  var D = mbl.dates, out = { list: [], by: {}, on: !!on, cap: cap };
+  Object.keys(mbl.lines).forEach(function (line) {
+    var L = mbl.lines[line], own = D.filter(function (d) { return L[d]; }); if (!own.length) return;
+    var firstOwn = own[0], lastOwn = own[own.length - 1], i = 0;
+    while (i < D.length) {
+      if (L[D[i]]) { i++; continue; }
+      var j = i; while (j + 1 < D.length && !L[D[j + 1]]) j++;
+      var days = D.slice(i, j + 1), kind = D[i] < firstOwn ? 'lead' : (D[i] > lastOwn ? 'trail' : 'gap'), a = i > 0 ? D[i - 1] : null, b = j + 1 < D.length ? D[j + 1] : null;
+      var src = 'none', srcDay = null;
+      if (on) {
+        if (kind === 'gap' && days.length <= cap) { if (entryQty(L[b]) > 0) { src = 'B'; srcDay = b; } else if (entryQty(L[a]) > 0) { src = 'A'; srcDay = a; } }
+        else if (kind === 'trail' && entryQty(L[a]) > 0) { src = 'drag'; srcDay = a; }
+      }
+      var r = { line: line, kind: kind, days: days, n: days.length, from: days[0], to: days[days.length - 1], A: a != null && L[a] ? Object.keys(L[a]) : [], B: b != null && L[b] ? Object.keys(L[b]) : [], src: src, srcDay: srcDay, perDay: src === 'none' ? 0 : entryQty(L[srcDay]) };
+      out.list.push(r); var m = out.by[line] = out.by[line] || {}; days.forEach(function (d) { m[d] = { kind: kind, est: src !== 'none' }; });
+      i = j + 1;
+    }
+  });
+  out.list.sort(function (x, y) { return x.line.localeCompare(y.line) || x.from - y.from; });
+  return out;
+}
+// the same data with the estimated days added (est[line][day] marks them); the grids draw those cells differently
+function withFill(mbl, info) {
+  var lines = {}, est = {}, byGroup = {};
+  Object.keys(mbl.lines).forEach(function (l) { lines[l] = Object.assign({}, mbl.lines[l]); });
+  info.list.forEach(function (r) { if (r.src === 'none') return; var entry = mbl.lines[r.line][r.srcDay]; r.days.forEach(function (d) { lines[r.line][d] = entry; (est[r.line] = est[r.line] || {})[d] = true; }); });
+  Object.keys(lines).forEach(function (l) { Object.keys(lines[l]).forEach(function (d) { var D = lines[l][d]; Object.keys(D).forEach(function (st) { Object.keys(D[st]).forEach(function (g) { var B = byGroup[g] = byGroup[g] || {}; B[d] = (B[d] || 0) + D[st][g]; }); }); }); });
+  return Object.assign({}, mbl, { lines: lines, byGroup: byGroup, est: est, idleBy: info.by, idle: info });
 }
