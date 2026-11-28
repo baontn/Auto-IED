@@ -177,8 +177,9 @@ async function prepSend() {
   var d = await (await LCDIR.getDirectoryHandle('prep', { create: true })).getDirectoryHandle('proposals', { create: true });
   var h = await d.getFileHandle(st + '_' + user.replace(/[^\w\-]+/g, '_') + '.json', { create: true }), w = await h.createWritable();
   await w.write(JSON.stringify({ at: now.toISOString(), by: user, groups: PS.open, from: pIso(pRange().from), rows: rows, grid: grid, groupMap: REF.groups || {},
-    dbBasis: REF.dbOver && Object.keys(REF.dbOver.items).length ? { overlay: Object.keys(REF.dbOver.items).length, at: REF.dbOver.at, by: REF.dbOver.by, styles: Object.keys(REF.dbOver.names).map(function (k) { return REF.dbOver.names[k]; }).slice(0, 40) } : null })); await w.close();
-  $('pMsg2').textContent = t('pSent', [rows.filter(function (x) { return !x.same; }).length]);
+    pools: poolToSend(), dbBasis: REF.dbOver && Object.keys(REF.dbOver.items).length ? { overlay: Object.keys(REF.dbOver.items).length, at: REF.dbOver.at, by: REF.dbOver.by, styles: Object.keys(REF.dbOver.names).map(function (k) { return REF.dbOver.names[k]; }).slice(0, 40) } : null })); await w.close();
+  var pl = poolToSend(), lost = []; pl.forEach(function (d) { d.members.forEach(function (g) { if (PS.open.indexOf(g) < 0 && lost.indexOf(g) < 0) lost.push(g); }); });
+  $('pMsg2').textContent = t('pSent', [rows.filter(function (x) { return !x.same; }).length]) + (pl.length ? ' · ' + t('poolSent', [pl.length]) : '') + (lost.length ? ' · ' + t('poolLost', [lost.join(', ')]) : '');
 }
 async function prepExport() {
   var wb = new ExcelJS.Workbook(), Y = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF5D6' } }, R = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFDE8E8' } }, T = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF3F4F6' } };

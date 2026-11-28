@@ -354,7 +354,7 @@ function rsPaint(cid, edit) {
   var c = $(cid); if (!c) return;
   c.innerHTML = '<div class="card"><div class="row"><b>' + esc(t('rsTitle')) + '</b><button data-rs-refresh="1" style="margin-left:auto">' + esc(t('cRefresh')) + '</button><span class="muted small">' + esc(RS.at ? RS.at.toLocaleString() : '') + '</span></div><div class="muted small">' + esc(t('rsHint')) + '</div><div id="' + cid + 'A">' + rsHtml(edit) + '</div></div>' +
     (RS.cache.length ? '<div class="card" id="' + cid + 'S">' + rsCardHtml() + '</div>' : '');
-  var pd = document.createElement('div'); pd.id = cid + 'P'; pd.className = 'card'; c.appendChild(pd); if (RS.cache.length) poolMount(pd, poolCtxResid()); else pd.remove();
+  var pd = document.createElement('div'); pd.id = cid + 'P'; pd.className = 'card'; c.appendChild(pd); if (RS.cache.length) poolMount(pd, poolCtxResid(edit)); else pd.remove();
   c.onclick = function (e) { rsClick(e, cid, edit); };
   c.onchange = function (e) { rsInput(e, cid, edit, true); };
   c.oninput = function (e) { rsInput(e, cid, edit, false); };

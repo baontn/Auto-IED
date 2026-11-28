@@ -2,9 +2,13 @@
 // Machine groups that can replace each other (e.g. a zigzag with trimmer by a normal zigzag) are combined in a pool the USER defines. Nothing is combined automatically:
 // a pool is shown only when it is switched on. Every group keeps its own rows; the pool adds the spare machines of one group to the shortage of another (poolModel in prep.js).
 // Definitions are personal (localStorage mdb_pools). The same bar and tables are used in the Shortage & prep tab, the IE Tech grid and the Remaining shortage tab.
-var POOL = { defs: [], on: {} };
-try { POOL.defs = JSON.parse(localStorage.getItem('mdb_pools') || '[]'); POOL.on = JSON.parse(localStorage.getItem('mdb_pools_on') || '{}'); } catch (e) { POOL.defs = []; POOL.on = {}; }
-function poolStore() { try { localStorage.setItem('mdb_pools', JSON.stringify(POOL.defs)); localStorage.setItem('mdb_pools_on', JSON.stringify(POOL.on)); } catch (e) { } }
+// v7.15 (decided with the user): the pools are dictated by the CONSOLIDATOR (she defines them here and the ones switched on are sent with the proposal); IE Tech and the Supervisor follow them read-only (they can only hide / show a pool for their own view).
+var POOL = { defs: [], on: {}, hide: {} };
+try { POOL.defs = JSON.parse(localStorage.getItem('mdb_pools') || '[]'); POOL.on = JSON.parse(localStorage.getItem('mdb_pools_on') || '{}'); POOL.hide = JSON.parse(localStorage.getItem('mdb_pools_hide') || '{}'); } catch (e) { POOL.defs = []; POOL.on = {}; POOL.hide = {}; }
+function poolStore() { try { localStorage.setItem('mdb_pools', JSON.stringify(POOL.defs)); localStorage.setItem('mdb_pools_on', JSON.stringify(POOL.on)); localStorage.setItem('mdb_pools_hide', JSON.stringify(POOL.hide)); } catch (e) { } }
+// pools sent by the Consolidator: the ones in the latest proposal
+function poolFromProposal() { var ps = (typeof TS !== 'undefined' && TS.props ? TS.props : []).slice().sort(function (a, b) { return String(b.at).localeCompare(String(a.at)); }); return ps.length && Array.isArray(ps[0].pools) ? ps[0].pools : []; }
+function poolToSend() { return POOL.defs.filter(function (d) { return POOL.on[d.id]; }).map(function (d) { return { id: d.id, members: d.members.slice(), cover: JSON.parse(JSON.stringify(d.cover)) }; }); }
 function poolName(d) { return d.members.join(' + '); }
 // ctx = { groups: function () -> [group], models: function (g) -> model or null, host: element }
 function poolDayLabel(d) { return pDay(d, true); }
@@ -14,7 +18,7 @@ function poolBlock(def, ctx) {
   var m0 = ctx.models(def.members[0]), days = m0.days, models = {}; def.members.forEach(function (g) { models[g] = ctx.models(g); });
   var R = poolModel(def, models, days), td = function (v, neg) { return '<td' + (neg && v < 0 ? ' class="neg"' : '') + '>' + (v === 0 ? '0' : v) + '</td>'; };
   var row = function (lbl, f, cls, neg) { return '<tr' + (cls ? ' class="' + cls + '"' : '') + '><td class="l" style="white-space:nowrap' + (cls === 'tot' ? ';font-weight:600' : '') + '">' + esc(lbl) + '</td>' + days.map(function (d) { return td(f(d), neg); }).join('') + '</tr>'; };
-  var h = '<div class="gblock"><div class="row"><h3 style="margin:8px 0">🔗 ' + esc(poolName(def)) + '</h3><span class="muted small">' + esc(t('poolNote')) + '</span><span style="margin-left:auto"></span><button data-pool-edit="' + esc(def.id) + '">' + esc(t('poolEdit')) + '</button></div>' +
+  var h = '<div class="gblock"><div class="row"><h3 style="margin:8px 0">🔗 ' + esc(poolName(def)) + '</h3><span class="muted small">' + esc(t('poolNote')) + '</span><span style="margin-left:auto"></span>' + (ctx.readonly ? '' : '<button data-pool-edit="' + esc(def.id) + '">' + esc(t('poolEdit')) + '</button>') + '</div>' +
     '<div class="tw" style="max-height:60vh"><table class="pg"><tr><th class="l">' + esc(t('poolRows')) + '</th>' + days.map(function (d) { return '<th>' + esc(poolDayLabel(d)) + '</th>'; }).join('') + '</tr>';
   def.members.forEach(function (g) {
     h += row(t('poolDem', [g]), function (d) { return models[g].total && models[g].total[d] != null ? models[g].total[d] : 0; }, '') +
@@ -27,16 +31,17 @@ function poolBlock(def, ctx) {
 }
 function poolMount(host, ctx) {
   if (!host) return; ctx.host = host;
-  var groups = ctx.groups();
-  var h = '<div class="row" style="margin:10px 0 4px"><button data-pool-new="1">' + esc(t('poolBtn')) + '</button><div class="chips">' +
-    POOL.defs.map(function (d) { return '<button data-pool-toggle="' + esc(d.id) + '" class="' + (POOL.on[d.id] ? 'on' : '') + '" title="' + esc(t('poolToggleTip')) + '">🔗 ' + esc(poolName(d)) + '</button>'; }).join('') + '</div></div>';
-  POOL.defs.forEach(function (d) { if (POOL.on[d.id]) h += poolBlock(d, ctx); });
+  var ro = !!ctx.readonly, defs = ro ? poolFromProposal() : POOL.defs, shown = function (d) { return ro ? !POOL.hide[d.id] : !!POOL.on[d.id]; };
+  if (ro && !defs.length) { host.innerHTML = ''; host.onclick = null; return; }
+  var h = '<div class="row" style="margin:10px 0 4px">' + (ro ? '<span class="muted small">' + esc(t('poolFollow')) + '</span>' : '<button data-pool-new="1">' + esc(t('poolBtn')) + '</button>') + '<div class="chips">' +
+    defs.map(function (d) { return '<button data-pool-toggle="' + esc(d.id) + '" class="' + (shown(d) ? 'on' : '') + '" title="' + esc(t('poolToggleTip')) + '">🔗 ' + esc(poolName(d)) + '</button>'; }).join('') + '</div></div>';
+  defs.forEach(function (d) { if (shown(d)) h += poolBlock(d, ctx); });
   host.innerHTML = h;
   host.onclick = function (e) {
     var b = e.target.closest('[data-pool-new],[data-pool-toggle],[data-pool-edit]'); if (!b) return; e.stopPropagation();
-    if (b.dataset.poolNew) poolDialog(ctx, null);
-    else if (b.dataset.poolToggle) { POOL.on[b.dataset.poolToggle] = !POOL.on[b.dataset.poolToggle]; poolStore(); poolMount(host, ctx); }
-    else poolDialog(ctx, b.dataset.poolEdit);
+    if (b.dataset.poolNew && !ro) poolDialog(ctx, null);
+    else if (b.dataset.poolToggle) { var id = b.dataset.poolToggle; if (ro) POOL.hide[id] = !POOL.hide[id]; else POOL.on[id] = !POOL.on[id]; poolStore(); poolMount(host, ctx); }
+    else if (!ro) poolDialog(ctx, b.dataset.poolEdit);
   };
 }
 function poolDialog(ctx, id) {
@@ -76,6 +81,6 @@ function poolDialog(ctx, id) {
 }
 // the three screens
 function poolCtxPrep() { return { groups: function () { var S = SRC(); return S ? Object.keys(S.byGroup || {}).sort() : []; }, models: function (g) { try { return gridOf(g); } catch (e) { return null; } } }; }
-function poolCtxTech() { return { groups: function () { var o = {}; TS.props.forEach(function (p) { (p.groups || []).forEach(function (g) { o[g] = 1; }); }); return Object.keys(o).sort(); },
+function poolCtxTech() { return { readonly: true, groups: function () { var o = {}; TS.props.forEach(function (p) { (p.groups || []).forEach(function (g) { o[g] = 1; }); }); return Object.keys(o).sort(); },
   models: function (g) { var G0 = latestGrid(g); return G0 ? groupModel(G0, (TS.rows || []).filter(function (x) { return x.group === g; }), latestEnds(TS.ends)) : null; } }; }
-function poolCtxResid() { return { groups: function () { return RS.cache.map(function (x) { return x.g; }); }, models: function (g) { var X = RS.cache.filter(function (x) { return x.g === g; })[0]; return X ? X.M : null; } }; }
+function poolCtxResid(edit) { return { readonly: !edit, groups: function () { return RS.cache.map(function (x) { return x.g; }); }, models: function (g) { var X = RS.cache.filter(function (x) { return x.g === g; })[0]; return X ? X.M : null; } }; }
