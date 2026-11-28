@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>IE Báo cáo máy: User guide</title><link rel="icon" href="../icon.png"><link rel="stylesheet" href="manual.css"></head><body>
-<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>IE Báo cáo máy v7.16: User guide</b><a href="ie-bao-cao-may.html" title="Tiếng Việt" onclick="try{localStorage.setItem('ie_site_lang','vi')}catch(e){}">VI</a><a href="layout-check.en.html">Layout Check ›</a><a href="../index.html">‹ Home</a></header>
+<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>IE Báo cáo máy v7.17: User guide</b><a href="ie-bao-cao-may.html" title="Tiếng Việt" onclick="try{localStorage.setItem('ie_site_lang','vi')}catch(e){}">VI</a><a href="layout-check.en.html">Layout Check ›</a><a href="../index.html">‹ Home</a></header>
 <div class="wrap">
 <nav class="toc"><b>Contents</b>
 <a href="#intro">1. Introduction</a>
@@ -155,7 +155,7 @@
 <ul>
 <li><b>Prep machines</b>: the number IE Tech decides.</li>
 <li><b>Layout quantity</b>: if different from the database, the prep number is recalculated from it, <b>the machines of that style on the line also change to this number from the loading day</b> (to the end of that style's run on that line; the grid, "Remaining shortage" and the Consolidator's grid all use the new number) and <b>the Consolidator automatically receives a notice</b> in the Variation notices tab. Once the database / MC Report has the same number the adjustment has no further effect.</li>
-<li><b>Loading date</b>: the real date; the prep days move back with it (N working days before, Sundays skipped) and the production on the line moves too. The card shows "loads 15/11 → 18/11". A row not reviewed yet counts as "Keep" when you change the date.</li>
+<li><b>Loading date</b>: the real date, <b>applied to every machine type of the same changeover (line + previous style + next style)</b>: change it in BT1M and ZZM, ZZF… follow (also machine types that have no prep row; the other types' rows still wait for their own decision); enter the planned date again to cancel; it only counts while the plan still shows that style on the old date. The prep days move back with it (N working days before, Sundays skipped) and the production on the line moves too. The card shows "loads 15/11 → 18/11". A row not reviewed yet counts as "Keep" when you change the date.</li>
 <li><b>Prep days</b>.</li>
 <li><span class="btn">Save</span>, <span class="btn">✖ Remove prep</span>, <span class="btn">Same layout (remove and remember)</span>: remembered by <b>style pair</b> (previous style → next style) and applied at once to every machine group and every line with the same pair; when the Consolidator clicks "Open detail" it is read again. To prep one specific row again: click Keep or Adjust on that row (it has priority).</li></ul>
 <h3>5.4 Find and view the layout</h3>

@@ -153,15 +153,40 @@ function buildPrep(mbl, groups, rules, share, puMap, fromKey, toKey) {
   return rows.sort(function (a, b) { return a.days[0] - b.days[0] || a.line.localeCompare(b.line); });
 }
 // IE Tech decisions: KEEP / ADJUST / REMOVE, latest per key
+// v7.17 (decided with the user): the loading date is per CHANGEOVER (line | previous style | next style), not per machine group. The latest date set by IE Tech in ANY group
+// (ZZM, ZZF ...) applies to every group of that changeover; setting the planned date again cancels it. Prep days stay per group.
+function chgKey(key) { var i = String(key).lastIndexOf('|'); return i < 0 ? String(key) : String(key).slice(0, i); }
+function changeoverDates(reviews) {
+  var m = {}; (reviews || []).slice().sort(function (a, b) { return String(a.at).localeCompare(String(b.at)); }).forEach(function (r) { if (r && r.key && r.loadDateActual) m[chgKey(r.key)] = { date: r.loadDateActual, at: r.at, planned: r.loadDate || null, own: r.key }; });
+  return m;
+}
+var CHG_DATES = {};      // changeover dates set by IE Tech (changeoverDates), set by the screen before it builds a grid
+// groups WITHOUT prep rows (ratio 0, e.g. ZZF) have no row to carry the date: the production of their next style follows the changeover date too (pseudo rows from the grid itself)
+function ghostRows(styles, realRows, line, chg) {
+  var toMs = function (k) { return isNaN(+k) ? Date.parse(k + 'T00:00:00Z') : +k; }, iso = function (ms) { return new Date(ms).toISOString().slice(0, 10); };
+  var first = {}, names = Object.keys(styles).filter(function (s) { var ks = Object.keys(styles[s]); if (!ks.length) return false; first[s] = Math.min.apply(null, ks.map(toMs)); return true; }).sort(function (a, b) { return first[a] - first[b]; }), out = [];
+  for (var i = 1; i < names.length; i++) {
+    var A = names[i - 1], B = names[i], c = chg[[line, A, B].join('|')]; if (!c || (c.planned != null && c.planned !== iso(first[B]))) continue;
+    if (realRows.some(function (r) { return r.line === line && r.to === B && String(r.from || '').split(' + ').indexOf(A) >= 0; })) continue;
+    var q = null; Object.keys(styles[B]).forEach(function (k) { if (toMs(k) === first[B]) q = styles[B][k]; });
+    out.push({ line: line, from: A, to: B, load: iso(first[B]), loadActual: c.date, qtyB: q });
+  }
+  return out;
+}
+// the date set in ANOTHER group only counts while the plan still shows the changeover on the date it had when IE Tech set it (a changed plan = a new changeover); a group's own saved date always counts (as before)
+function chgFor(chg, x, loadIso, r) {
+  var c = chg[chgKey(x.key)]; if (!c) return null;
+  return c.own === x.key || (r && r.loadDateActual) || c.planned == null || c.planned === loadIso ? c : null;
+}
 function applyReviews(rows, reviews) {
-  var last = {}; (reviews || []).slice().sort(function (a, b) { return String(a.at).localeCompare(String(b.at)); }).forEach(function (r) { last[r.key] = r; });
+  var last = {}, chg = changeoverDates(reviews); (reviews || []).slice().sort(function (a, b) { return String(a.at).localeCompare(String(b.at)); }).forEach(function (r) { last[r.key] = r; });
   rows.forEach(function (x) {
-    var r = last[x.key]; x.review = r || null; x.flags = [];
-    if (r && (r.loadDateActual || r.prepDays)) {                              // IE Tech set the real loading date and / or the number of prep days
-      var L = r.loadDateActual ? Date.parse(r.loadDateActual + 'T00:00:00Z') : x.load;
-      x.days = prepDaysBefore(L, r.prepDays || x.days.length);
-      if (r.loadDateActual && L !== x.load) { x.loadActual = L; x.flags.push('dateSet'); }
-      if (r.prepDays) x.flags.push('daysSet');
+    var r = last[x.key], ch = chgFor(chg, x, new Date(x.load).toISOString().slice(0, 10), r); x.review = r || null; x.flags = []; x.dateAt = ch ? ch.at : null;
+    if ((r && r.prepDays) || ch) {                                            // IE Tech set the real loading date (any group of the changeover) and / or the number of prep days
+      var L = ch ? Date.parse(ch.date + 'T00:00:00Z') : x.load;
+      x.days = prepDaysBefore(L, (r && r.prepDays) || x.days.length);
+      if (ch && L !== x.load) { x.loadActual = L; x.flags.push('dateSet'); }
+      if (r && r.prepDays) x.flags.push('daysSet');
     }
     if (!r) { x.status = x.same ? 'AUTO_SKIP' : 'PENDING'; x.eff = x.same ? 0 : x.prep; return; }
     if (r.loadDate && r.loadDate !== new Date(x.load).toISOString().slice(0, 10)) x.flags.push('dateMoved');
@@ -213,7 +238,7 @@ function applyEndsToRows(rows, ends, asIso) {
     if (!x.from) return;
     x.from.split(' + ').forEach(function (A) {
       var k = x.line + '|' + A, e = ends[k]; if (!e || !e.endDate || toMs(x.load) !== firstLoad[k]) return;
-      if (x.review && x.review.loadDateActual && String(x.review.at) > String(e.at)) return;      // a later explicit loading date wins
+      if (x.dateAt && String(x.dateAt) > String(e.at)) return;      // a later explicit loading date wins
       var L = nextWorkDayMs(Date.parse(e.endDate + 'T00:00:00Z')); if (L === toMs(x.load)) return;
       x.days = prepDaysBefore(L, (x.days || []).length || 3).map(out); x.loadActual = out(L); x.flags = x.flags || []; if (x.flags.indexOf('endSet') < 0) x.flags.push('endSet');
     });
@@ -261,6 +286,7 @@ function groupGrid(mbl, group, prepRows, avail, fromKey, toKey, puMap, ends) {
     var L = mbl.lines[line], styles = {};
     days.forEach(function (d) { Object.keys(L[d] || {}).forEach(function (s) { var q = L[d][s][group] || 0; if (q) (styles[s] = styles[s] || {})[d] = q; }); });
     var run0 = ends ? runningStyle(styles, days) : null;
+    ghostRows(styles, prepRows.filter(function (x) { return x.group === group && x.line === line; }), line, CHG_DATES).forEach(function (x) { shiftProduction(styles, x, Date.parse(x.load + 'T00:00:00Z'), Date.parse(x.loadActual + 'T00:00:00Z'), days, function (d) { return d; }); });
     prepRows.forEach(function (x) { if (x.group === group && x.line === line && x.loadActual) shiftProduction(styles, x, x.load, x.loadActual, days, function (d) { return d; }); });
     prepRows.forEach(function (x) { if (x.group === group && x.line === line && x.qtyAct != null) applyLayoutQty(styles, x, days, function (d) { return d; }); });
     var e0 = run0 && ends[line + '|' + run0]; if (e0 && e0.endDate) adjustRunningEnd(styles, run0, Date.parse(e0.endDate + 'T00:00:00Z'), days, function (d) { return d; });
@@ -285,6 +311,7 @@ function msIso(ms) { return new Date(ms).toISOString().slice(0, 10); }
 function adjustLines(G0, rows, ends) {
   var days = G0.days, dms = days.map(isoMs), G = { lines: {} }, runInfo = {};
   Object.keys(G0.lines).forEach(function (l) { var st = {}; Object.keys(G0.lines[l].styles).forEach(function (s) { st[s] = Object.assign({}, G0.lines[l].styles[s]); }); G.lines[l] = Object.assign({}, G0.lines[l], { styles: st }); });
+  Object.keys(G.lines).forEach(function (l) { ghostRows(G.lines[l].styles, rows.filter(function (x) { return x.line === l; }), l, CHG_DATES).forEach(function (x) { shiftProduction(G.lines[l].styles, x, isoMs(x.load), isoMs(x.loadActual), dms, msIso); }); });
   rows.forEach(function (x) { if (x.loadActual && G.lines[x.line]) shiftProduction(G.lines[x.line].styles, x, isoMs(x.load), isoMs(x.loadActual), dms, msIso); });
   rows.forEach(function (x) { if (x.qtyAct != null && G.lines[x.line]) applyLayoutQty(G.lines[x.line].styles, x, dms, msIso); });
   Object.keys(G0.lines).forEach(function (l) {

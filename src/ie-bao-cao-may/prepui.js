@@ -114,7 +114,7 @@ function puTotals(G) {
   return out;
 }
 function puNameC(p) { return !p || p === '?' ? t('noPu') : p; }
-function gridOf(g) { var r = pRange(); return groupGrid(SRC(), g, PS.rows, REF.avail || {}, r.from, r.to, REF.pu || {}, latestEnds(PS.ends)); }
+function gridOf(g) { CHG_DATES = changeoverDates(PS.reviews); var r = pRange(); return groupGrid(SRC(), g, PS.rows, REF.avail || {}, r.from, r.to, REF.pu || {}, latestEnds(PS.ends)); }
 function renderDetail() {
   var html = '<label class="small"><input type="checkbox" id="pOnly"' + (PS.onlyPrep ? ' checked' : '') + '> ' + esc(t('pgOnlyPrep')) + '</label>';
   PS.open.forEach(function (g) {

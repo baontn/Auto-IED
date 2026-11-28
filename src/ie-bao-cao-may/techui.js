@@ -103,8 +103,9 @@ function techRows() {
   TS.props.forEach(function (p) { (p.groups || []).forEach(function (g) { if (!latestFor[g] || String(p.at) > String(latestFor[g].at)) latestFor[g] = p; }); });
   TS.props.forEach(function (p) { (p.rows || []).forEach(function (r) { var L = latestFor[r.group]; if (!L || L === p) rows[r.key + '@' + r.load] = Object.assign({}, r); }); });
   TS.reviews.slice().sort(function (a, b) { return String(a.at).localeCompare(String(b.at)); }).forEach(function (r) { last[r.key] = r; });
+  var chg = changeoverDates(TS.reviews); CHG_DATES = chg;
   var list = Object.keys(rows).map(function (k) {
-    var x = rows[k], r = last[x.key]; x.review = r || null; x.flags = []; x.ruleDays = (x.days || []).length;   // decision key = line|from|to|group (no date)
+    var x = rows[k], r = last[x.key], ch = chgFor(chg, x, x.load, r); x.review = r || null; x.flags = []; x.dateAt = ch ? ch.at : null; x.ruleDays = (x.days || []).length;   // decision key = line|from|to|group (no date)
     if (!r) { var listed = x.same || (tIsShared(x.from, x.to) ? 'list' : null); if (listed && !x.same) x.same = listed; x.status = listed ? 'AUTO_SKIP' : 'PENDING'; x.eff = listed ? 0 : x.prep; }
     else {
       if (r.loadDate && r.loadDate !== x.load) x.flags.push('dateMoved');
@@ -113,12 +114,12 @@ function techRows() {
       else if (r.decision === 'ADJUST') { x.status = 'ADJUSTED'; x.eff = +r.qty || 0; }
       else { x.status = 'KEPT'; x.eff = r.qtyBActual != null ? Math.ceil(x.ratio * r.qtyBActual - 1e-9) : x.prep; }
       if (r.decision !== 'REMOVE' && !(r.qtyB != null && r.qtyB !== x.qtyB) && r.qtyBActual != null) { x.flags.push('layoutQty'); if (r.qtyBActual !== x.qtyB) x.qtyAct = +r.qtyBActual; }     // production of the style on the line follows the layout quantity too
-      if (r.loadDateActual || r.prepDays) {                                     // IE Tech's loading date / number of prep days move the prep days
-        var L = Date.parse((r.loadDateActual || x.load) + 'T00:00:00Z');
-        x.days = prepDaysBefore(L, r.prepDays || (x.days || []).length).map(function (d) { return new Date(d).toISOString().slice(0, 10); });
-        if (r.loadDateActual && r.loadDateActual !== x.load) { x.loadActual = r.loadDateActual; x.flags.push('dateSet'); }
-        if (r.prepDays) x.flags.push('daysSet');
-      }
+    }
+    if ((r && r.prepDays) || ch) {                                              // IE Tech's loading date (set in ANY group of this changeover) / number of prep days move the prep days
+      var L = Date.parse((ch ? ch.date : x.load) + 'T00:00:00Z');
+      x.days = prepDaysBefore(L, (r && r.prepDays) || (x.days || []).length).map(function (d) { return new Date(d).toISOString().slice(0, 10); });
+      if (ch && ch.date !== x.load) { x.loadActual = ch.date; x.flags.push('dateSet'); }
+      if (r && r.prepDays) x.flags.push('daysSet');
     }
     x.overdue = x.status === 'PENDING' && (x.days || [])[0] <= today;
     return x;
@@ -328,7 +329,7 @@ $('dKeep').onclick = function () {
   var q = $('dQty').value === '' || !$('dQty').dataset.touched ? autoL : Math.max(0, Math.round(+$('dQty').value)), lay = $('dLay').value === '' ? null : Math.max(0, Math.round(+$('dLay').value)), dt = $('dDate').value;
   var layAct = lay != null && lay !== x.qtyB ? lay : null, autoQ = layAct != null ? Math.ceil(x.ratio * layAct - 1e-9) : x.prep;
   var nd = Math.max(1, Math.min(30, Math.round(+$('dDays').value || x.ruleDays)));
-  drawerSave({ decision: q !== autoQ ? 'ADJUST' : 'KEEP', qty: q !== autoQ ? q : null, qtyBActual: layAct, loadDateActual: dt && dt !== x.load ? dt : null, prepDays: nd !== x.ruleDays ? nd : null, reason: '' });
+  drawerSave({ decision: q !== autoQ ? 'ADJUST' : 'KEEP', qty: q !== autoQ ? q : null, qtyBActual: layAct, loadDateActual: dt && dt !== (x.loadActual || x.load) ? dt : null, prepDays: nd !== x.ruleDays ? nd : null, reason: '' });
 };
 $('dRemove').onclick = function () { drawerSave({ decision: 'REMOVE', reason: '' }); };
 $('dSame').onclick = function () {
