@@ -26,6 +26,10 @@ with sync_playwright() as p:
     pg.click('#pOpen'); pg.wait_for_timeout(2500)
     check('Shortage & prep: the pool button is there, no pool is shown by itself', pg.is_visible('#pPool [data-pool-new]') and pg.query_selector('#pPool .gblock') is None)
     make_pool(pg, '#pPool', ['BT1M', 'ZZM'])
+    make_pool(pg, '#pPool', ['BT1M', 'ZZM'])
+    check('saving the same combination again does not create a second pool (one chip, one table)', len(pg.query_selector_all('#pPool [data-pool-toggle]')) == 1 and len(pg.query_selector_all('#pPool .gblock')) == 1)
+    pg.evaluate("POOL.defs.push({id: 'dup1', members: ['ZZM', 'BT1M'], cover: {ZZM: ['BT1M'], BT1M: []}}); POOL.on.dup1 = true; poolDedupe(); poolMount(document.getElementById('pPool'), poolCtxPrep()); 0"); pg.wait_for_timeout(300)
+    check('a duplicate saved before (same machine types in another order) is merged into one', len(pg.query_selector_all('#pPool [data-pool-toggle]')) == 1)
     rows = pool_rows(pg, '#pPool'); labels = [r[0] for r in rows]; print('  pool rows:', labels)
     check('the pool shows each group separately (demand, available, remaining) and the combined total', any('BT1M: nhu cầu' in l for l in labels) and any('ZZM: máy sẵn có' in l for l in labels) and any('Tổng còn lại' in l for l in labels))
     num = lambda c: int(c) if c.lstrip('-−').isdigit() else 0

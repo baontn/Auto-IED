@@ -5,6 +5,14 @@
 // v7.18: IE Tech and the Supervisor can ALSO build pools of their own (saved on their computer); every pool table can be exported to Excel (formulas).
 var POOL = { defs: [], on: {}, hide: {} };
 try { POOL.defs = JSON.parse(localStorage.getItem('mdb_pools') || '[]'); POOL.on = JSON.parse(localStorage.getItem('mdb_pools_on') || '{}'); POOL.hide = JSON.parse(localStorage.getItem('mdb_pools_hide') || '{}'); } catch (e) { POOL.defs = []; POOL.on = {}; POOL.hide = {}; }
+// v7.20: the same combination of machine groups is ONE pool (saving it again replaces the old one; duplicates saved before are merged, the latest wins)
+function poolKey(d) { return d.members.slice().sort().join('+'); }
+function poolDedupe() {
+  var seen = {}, out = [];
+  POOL.defs.forEach(function (d) { var k = poolKey(d), i = seen[k]; if (i != null) { var was = !!(POOL.on[out[i].id] || POOL.on[d.id]); delete POOL.on[out[i].id]; out[i] = d; POOL.on[d.id] = was; } else { seen[k] = out.length; out.push(d); } });
+  POOL.defs = out;
+}
+poolDedupe();
 function poolStore() { try { localStorage.setItem('mdb_pools', JSON.stringify(POOL.defs)); localStorage.setItem('mdb_pools_on', JSON.stringify(POOL.on)); localStorage.setItem('mdb_pools_hide', JSON.stringify(POOL.hide)); } catch (e) { } }
 function poolFromProposal() { var ps = (typeof TS !== 'undefined' && TS.props ? TS.props : []).slice().sort(function (a, b) { return String(b.at).localeCompare(String(a.at)); }); return ps.length && Array.isArray(ps[0].pools) ? ps[0].pools : []; }
 function poolToSend() { return POOL.defs.filter(function (d) { return POOL.on[d.id]; }).map(function (d) { return { id: d.id, members: d.members.slice(), cover: JSON.parse(JSON.stringify(d.cover)) }; }); }
@@ -93,8 +101,9 @@ function poolDialog(ctx, id) {
       if (mem.length < 2) { el.querySelector('#pdMsg').textContent = t('poolNeed2'); return; }
       var d = { id: cur ? cur.id : 'p' + Date.now().toString(36), members: mem.slice(), cover: {} };
       mem.forEach(function (g) { d.cover[g] = mem.filter(function (x) { return x !== g && (cover[g] || []).indexOf(x) >= 0; }); });      // borrowing order = the order of the members
-      if (cur) POOL.defs = POOL.defs.map(function (x) { return x.id === cur.id ? d : x; }); else POOL.defs.push(d);
-      POOL.on[d.id] = true; poolStore(); el.remove(); poolMount(ctx.host, ctx);
+      if (cur) POOL.defs = POOL.defs.map(function (x) { return x.id === cur.id ? d : x; });
+      else { var same = POOL.defs.filter(function (x) { return poolKey(x) === poolKey(d); })[0]; if (same) { d.id = same.id; POOL.defs = POOL.defs.map(function (x) { return x.id === same.id ? d : x; }); } else POOL.defs.push(d); }
+      poolDedupe(); POOL.on[d.id] = true; poolStore(); el.remove(); poolMount(ctx.host, ctx);
     };
     var del = el.querySelector('#pdDel'); if (del) del.onclick = function () { POOL.defs = POOL.defs.filter(function (x) { return x.id !== cur.id; }); delete POOL.on[cur.id]; poolStore(); el.remove(); poolMount(ctx.host, ctx); };
   }
