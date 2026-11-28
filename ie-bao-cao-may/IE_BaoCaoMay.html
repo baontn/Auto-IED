@@ -416,6 +416,11 @@ input.lq.diff{border-color:var(--warn);background:var(--warnbg);color:var(--warn
 .sheets label{white-space:nowrap}
 .sheets label.mt{font-weight:600}
 [hidden]{display:none!important}
+#busy{position:fixed;right:16px;bottom:16px;z-index:80;display:flex;gap:10px;align-items:center;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:999px;padding:8px 16px 8px 12px;box-shadow:0 6px 24px rgba(0,0,0,.28);font-weight:600;max-width:70vw}
+#busy .spin{flex:none;width:16px;height:16px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:busysp .8s linear infinite}
+@keyframes busysp{to{transform:rotate(360deg)}}
+#busyBar{position:fixed;left:0;top:0;height:3px;width:100%;z-index:90;background:linear-gradient(90deg,transparent,var(--accent),transparent) no-repeat;background-size:40% 100%;animation:busybar 1.1s ease-in-out infinite}
+@keyframes busybar{0%{background-position:-40% 0}100%{background-position:140% 0}}
 th .rzh{position:absolute;right:0;top:0;bottom:0;width:7px;cursor:col-resize;user-select:none}th .rzh:hover,body.rzing th .rzh{background:var(--accent);opacity:.45}
 body.rzing{cursor:col-resize;user-select:none}
 table.rzw td,table.rzw th{white-space:normal!important;overflow-wrap:anywhere;word-break:break-word}
@@ -425,8 +430,10 @@ table.rzw td,table.rzw th{white-space:normal!important;overflow-wrap:anywhere;wo
 </style>
 </head>
 <body>
+<div id="busyBar" hidden></div><div id="busy" hidden role="status" aria-live="polite"><span class="spin"></span><span id="busyTx"></span></div>
+
 <header>
-  <h1 data-t="title"></h1><span class="tag t-info" id="verTag" title="Version">v7.18</span><span class="sub" data-t="subtitle"></span>
+  <h1 data-t="title"></h1><span class="tag t-info" id="verTag" title="Version">v7.19</span><span class="sub" data-t="subtitle"></span>
   <div role="group" aria-label="Role" id="roleSeg" style="margin-left:auto;display:flex;gap:4px"><button data-role="cons" data-t="roleCons"></button><button data-role="tech" data-t="roleTech"></button><button data-role="sup" data-t="roleSup"></button></div>
   <button id="bRefresh" data-t="hdrRefresh" style="margin-left:8px"></button>
   <a class="homebtn" id="btnHome" href="../index.html" data-t="homeLink"></a>
@@ -647,6 +654,7 @@ table.rzw td,table.rzw th{white-space:normal!important;overflow-wrap:anywhere;wo
 <script>// ===================== TEXTS (VI / EN) =====================
 var I18N = {
   vi: {
+    busyData: 'Đang tải dữ liệu…', busyExcel: 'Đang đọc file Excel…', busyScan: 'Đang quét layout…', busyXl: 'Đang tạo file Excel…', busySend: 'Đang gửi đề xuất…', busyPrep: 'Đang tính nhu cầu máy…',
     poolFollow: 'bộ gộp do IE Báo cáo máy quy định (chỉ xem; bạn vẫn tạo được bộ gộp riêng)', poolFromCons: 'IE Báo cáo máy', poolXl: '⬇ Excel', poolStep1: 'Chọn các loại máy dùng thay nhau (số = thứ tự mượn máy)', poolSearch: 'Tìm loại máy…', poolSelected: 'Đã chọn', poolStep2: 'Loại máy nào được mượn máy dư của loại nào', poolAllPairs: 'Mọi cặp', poolNoPairs: 'Bỏ hết', poolOrderHint: 'Bấm loại máy để bật / tắt. Thứ tự mượn theo số ở bước ①.', poolBorrow: '{0} thiếu → mượn máy dư từ:', poolSent: 'đã gửi kèm {0} bộ gộp đang bật', poolLost: 'IE Tech chỉ thấy bộ gộp khi mở chi tiết đủ các loại máy của nó, còn thiếu: {0}', poolShortRow: 'đang thiếu', poolSpareRow: 'máy dư', poolBtn: '🔗 Gộp loại máy', poolTitle: 'Gộp loại máy dùng thay nhau', poolIntro: 'Chọn các loại máy có thể dùng thay nhau (ví dụ máy zigzag có cắt chỉ và zigzag thường). Máy dư của loại này bù cho loại kia đang thiếu: 1 máy = 1 máy, chưa tính SAM tăng thêm. Các loại máy vẫn hiện riêng; bộ gộp chỉ hiện khi bạn bật.',
     poolMembers: 'Loại máy trong bộ gộp', poolCoverCap: 'Ai được dùng thay ai: hàng = loại máy đang thiếu, cột = loại máy cho mượn máy dư (thứ tự cột trái → phải).', poolShort: 'Đang thiếu ↓ / mượn từ →', poolSave: 'Lưu và hiện', poolClose: 'Đóng', poolDelete: 'Xóa bộ gộp', poolEdit: 'Sửa', poolNeed2: 'Chọn ít nhất 2 loại máy.', poolToggleTip: 'Bấm để hiện / ẩn bộ gộp',
     poolRows: 'Loại máy', poolNote: '1 máy = 1 máy; máy dư của loại này bù cho loại thiếu', poolDem: '{0}: nhu cầu (sản xuất + chuẩn bị)', poolAvail: '{0}: máy sẵn có', poolBal: '{0}: còn lại', poolTake: '{0} dùng máy dư của {1}', poolAfter: '{0}: còn lại sau khi gộp', poolTot: 'Tổng còn lại (gộp)', poolShortAfter: 'Còn thiếu sau khi gộp', poolMissing: 'Chưa có dữ liệu của {0} ở màn hình này.',
@@ -843,6 +851,7 @@ var I18N = {
     c_Added: 'Mới', c_Changed: 'Thay đổi', c_Unchanged: 'Không đổi'
   },
   en: {
+    busyData: 'Loading data…', busyExcel: 'Reading the Excel file…', busyScan: 'Scanning layouts…', busyXl: 'Creating the Excel file…', busySend: 'Sending the proposal…', busyPrep: 'Calculating machine demand…',
     poolFollow: 'pools set by the Consolidator (view only; you can still build your own)', poolFromCons: 'Consolidator', poolXl: '⬇ Excel', poolStep1: 'Choose the machine types that can replace each other (number = borrowing order)', poolSearch: 'Search machine type…', poolSelected: 'Selected', poolStep2: 'Which machine type may borrow spare machines from which', poolAllPairs: 'All pairs', poolNoPairs: 'None', poolOrderHint: 'Click a machine type to switch it on / off. The borrowing order follows the numbers of step ①.', poolBorrow: '{0} short → borrows spare machines from:', poolSent: '{0} pool(s) that are on were sent with it', poolLost: 'IE Tech sees a pool only when all its machine types are opened in detail, missing: {0}', poolShortRow: 'short', poolSpareRow: 'spare', poolBtn: '🔗 Combine machine types', poolTitle: 'Combine machine types that can replace each other', poolIntro: 'Choose the machine types that can replace each other (for example a zigzag with trimmer and a normal zigzag). Spare machines of one type cover the shortage of another: 1 machine = 1 machine, the extra SAM is not counted yet. Every machine type is still shown separately; a pool is shown only when you switch it on.',
     poolMembers: 'Machine types in the pool', poolCoverCap: 'Who may replace whom: row = machine type that is short, column = machine type that lends spare machines (order left → right).', poolShort: 'Short ↓ / borrows from →', poolSave: 'Save and show', poolClose: 'Close', poolDelete: 'Delete pool', poolEdit: 'Edit', poolNeed2: 'Choose at least 2 machine types.', poolToggleTip: 'Click to show / hide the pool',
     poolRows: 'Machine type', poolNote: '1 machine = 1 machine; spare machines of one type cover the short type', poolDem: '{0}: demand (production + prep)', poolAvail: '{0}: machines available', poolBal: '{0}: remaining', poolTake: '{0} uses spare machines of {1}', poolAfter: '{0}: remaining after combining', poolTot: 'Total remaining (combined)', poolShortAfter: 'Still short after combining', poolMissing: 'No data of {0} on this screen yet.',
@@ -2189,7 +2198,7 @@ $('nw').value = Math.min(4, Math.max(1, (navigator.hardwareConcurrency || 4) - 1
 
 // ---- 2. scan, then costing for gaps ----
 $('go').onclick = function () {
-  cancel = false; SAVED = null; $('go').disabled = true; $('stop').disabled = false; $('step3').hidden = true; $('savebar').hidden = true;
+  busyOn('scan', t('busyScan')); cancel = false; SAVED = null; $('go').disabled = true; $('stop').disabled = false; $('step3').hidden = true; $('savebar').hidden = true;
   var t0 = performance.now(), src = $('xlsxlib').textContent + '\n;\n' + $('coresrc').textContent + '\n;\n' + $('wsrc').textContent;
   var url = URL.createObjectURL(new Blob([src], { type: 'text/javascript' }));
   var n = Math.max(1, Math.min(8, +$('nw').value || 1)), next = 0, done = 0, active = n, recs = new Array(FILES.length), reused = 0;
@@ -2226,7 +2235,7 @@ $('go').onclick = function () {
   function finish() {
     URL.revokeObjectURL(url);
     DONE = recs.filter(Boolean); PROG.end = cancel ? 'cancelled' : 'done'; renderProg();
-    $('stop').disabled = true; $('go').disabled = false;
+    busyOff('scan'); $('stop').disabled = true; $('go').disabled = false;
     RV = buildReview(DONE, REF); applyLayoutCheck(RV, LC, DONE);
     var staleKeeps = applyKeeps(RV, KEEPS);                                  // layout or database changed since the confirmation: clear it (the style is listed again)
     if (staleKeeps.length) { staleKeeps.forEach(function (k) { delete KEEPS[k]; }); persistKeeps().catch(function () { }); }
@@ -2237,7 +2246,7 @@ $('go').onclick = function () {
 $('stop').onclick = function () { cancel = true; $('stop').disabled = true; };
 function renderProg() {
   if (!PROG) return;
-  $('pb').style.width = (PROG.total ? PROG.done / PROG.total * 100 : 0) + '%';
+  $('pb').style.width = (PROG.total ? PROG.done / PROG.total * 100 : 0) + '%'; busyLabel('scan', t('busyScan') + ' ' + PROG.done + ' / ' + PROG.total);
   var s = t('progress', [PROG.done, PROG.total, PROG.sec.toFixed(1)]);
   if (PROG.reused) s += ' · ' + t('skipped', [PROG.reused]);
   if (PROG.end) s += ' · ' + t(PROG.end);
@@ -4163,6 +4172,40 @@ $('bRefresh').onclick = async function () {
   try { await reconnect(true); REF.demand = null; setTab(TAB); } finally { b.disabled = false; b.textContent = old; }
   $('remMsg').textContent = t('hdrRefreshDone', [new Date().toLocaleTimeString()]);
 };
+// ===== busy indicator (corner pill + thin top bar): shown while a file is read, a folder scanned, data loaded or an Excel file is made =====
+var BUSY = { c: {}, lab: {}, order: [], since: 0, until: 0 };
+function busyActive() { return BUSY.order.filter(function (k) { return BUSY.c[k] > 0; }); }
+function busyPaint() {
+  var act = busyActive(), on = act.length > 0 || Date.now() < BUSY.until;
+  if ($('busy')) { $('busy').hidden = !on; $('busyBar').hidden = !on; if (act.length) $('busyTx').textContent = BUSY.lab[act[act.length - 1]]; }
+}
+function busyOn(k, label) {
+  if (!busyActive().length) BUSY.since = Date.now();
+  BUSY.c[k] = (BUSY.c[k] || 0) + 1; BUSY.lab[k] = label; BUSY.order = BUSY.order.filter(function (x) { return x !== k; }).concat([k]); busyPaint();
+}
+function busyLabel(k, label) { if (BUSY.c[k] > 0) { BUSY.lab[k] = label; busyPaint(); } }
+function busyOff(k) {
+  BUSY.c[k] = Math.max(0, (BUSY.c[k] || 0) - 1);
+  if (!busyActive().length) { BUSY.until = Date.now() - BUSY.since < 250 ? 0 : BUSY.since + 700; setTimeout(busyPaint, Math.max(0, BUSY.until - Date.now()) + 5); }       // quick tasks hide at once, a real wait stays visible at least 0.7 s
+  busyPaint();
+}
+// wrap the functions that take time; "delay" lets the browser draw the indicator before heavy synchronous work starts
+function busyWrap(name, key, delay) {
+  var f = window[name]; if (typeof f !== 'function') return;
+  window[name] = async function () {
+    busyOn(name, t(key)); try { if (delay) await new Promise(function (r) { setTimeout(r, 30); }); return await f.apply(this, arguments); } finally { busyOff(name); }
+  };
+}
+[['reconnect', 'busyData'], ['useMcHandle', 'busyExcel'], ['useFileHandle', 'busyExcel'], ['useLayoutDir', 'busyScan'], ['buildLayIndex', 'busyScan'], ['prepExport', 'busyXl'], ['srcExportXlsx', 'busyXl'], ['rsExportTable', 'busyXl'], ['poolExportXlsx', 'busyXl'],
+ ['prepSend', 'busySend'], ['tLoadAll', 'busyData'], ['rsLoad', 'busyData'], ['connectLc', 'busyData'], ['useDataDir', 'busyData'], ['supUse', 'busyData'], ['refreshPrepData', 'busyData'], ['actLoad', 'busyData'], ['openClose', 'busyData'], ['closeCollect', 'busyData'], ['previewFiles', 'busyExcel']]
+  .forEach(function (x) { busyWrap(x[0], x[1], true); });
+// handlers: the long ones get the indicator too
+[['pOpen', 'busyPrep', true], ['bFiles', 'busyExcel', false], ['bMc', 'busyExcel', false]].forEach(function (x) {
+  var el = $(x[0]); if (!el || typeof el.onclick !== 'function') return; var h = el.onclick;
+  el.onclick = async function (ev) { busyOn('h:' + x[0], t(x[1])); try { if (x[2]) await new Promise(function (r) { setTimeout(r, 30); }); return await h.call(this, ev); } finally { busyOff('h:' + x[0]); } };
+});
+// files read by processExcel (it counts PENDING itself)
+var _ready = ready; ready = function () { _ready(); if (PENDING > 0 && !BUSY.c.xl) { BUSY.c.xl = 0; busyOn('xl', t('busyExcel')); } else if (PENDING <= 0 && BUSY.c.xl > 0) busyOff('xl'); };
 if (window.paintRemember) paintRemember().then(function () { return reconnect(false); });
 
 // any script error is shown in a red strip (so a failing export / save is never silent) and can be copied to the IE team
