@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>IE Báo cáo máy: Hướng dẫn sử dụng</title><link rel="icon" href="../icon.png"><link rel="stylesheet" href="manual.css"></head><body>
-<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>IE Báo cáo máy v7.13: Hướng dẫn sử dụng</b><a href="ie-bao-cao-may.en.html" title="English" onclick="try{localStorage.setItem('ie_site_lang','en')}catch(e){}">EN</a><a href="layout-check.html">Layout Check ›</a><a href="../index.html">‹ Trang chủ</a></header>
+<header><img src="../logo.png" alt="Crystal" onerror="this.remove()"><b>IE Báo cáo máy v7.21: Hướng dẫn sử dụng</b><a href="ie-bao-cao-may.en.html" title="English" onclick="try{localStorage.setItem('ie_site_lang','en')}catch(e){}">EN</a><a href="layout-check.html">Layout Check ›</a><a href="../index.html">‹ Trang chủ</a></header>
 <div class="wrap">
 <nav class="toc"><b>Nội dung</b>
 <a href="#gioi-thieu">1. Giới thiệu</a>
@@ -130,6 +130,7 @@
 <ul>
 <li>Mã hàng mới vào chuyền (không chạy ở ngày làm việc trước) cần <b>ROUNDUP(tỷ lệ × số máy của mã đó)</b> trong <b>N ngày làm việc</b> trước ngày vào chuyền (bỏ Chủ nhật).</li>
 <li>Không chuẩn bị khi hai mã dùng chung một file layout, hoặc nằm trong danh sách “Cùng layout”, hoặc IE Tech bỏ.</li>
+<li><b>Tỷ lệ chuẩn bị theo ngày (từ v7.21):</b> số máy chuẩn bị không giống nhau mọi ngày. Gọi ngày vào chuyền là D: <b>D-1 = 100 %</b> số máy chuẩn bị, <b>D-2 = 70 %</b>, <b>D-3 = 30 %</b>; nếu có nhiều ngày chuẩn bị hơn thì các ngày D-4, D-5… tự lấy tỷ lệ cuối (30 %). Mỗi ngày làm tròn lên. IE Báo cáo máy đổi tỷ lệ mặc định của từng loại máy ở cột <b>% chuẩn bị theo ngày</b> trong bảng chọn loại máy (nhập dạng <code>100, 70, 30</code>); IE Tech đổi riêng cho từng dòng trong bảng bên phải, mục <b>% theo ngày</b> (ô D-1, D-2… theo đúng số ngày chuẩn bị đang nhập). Bảng ngày, tổng, Thiếu máy còn lại và Excel đều dùng số máy theo ngày.</li>
 <li>Ngày đầu tiên của kế hoạch không tính chuẩn bị (mã đang chạy). Chủ nhật không tính là ngày làm việc: mã hàng bắt đầu vào Chủ nhật được tính bắt đầu từ thứ Hai (không bị mất), các ngày Chủ nhật của mã đang chạy bị bỏ qua, và chuẩn bị tính lùi từ thứ Bảy trước đó (N ngày làm việc trước thứ Hai: ví dụ thứ Năm, thứ Sáu, thứ Bảy). Mỗi lần đổi mã chỉ có một dòng chuẩn bị.</li>
 <li>Chuẩn bị chỉ tính cho loại máy được chọn.</li></ul>
 <h3>4.4 Gửi IE Tech</h3>
@@ -155,7 +156,7 @@
 <ul>
 <li><b>Số máy chuẩn bị</b>: số máy IE Tech quyết định.</li>
 <li><b>SL theo layout</b>: nếu khác CSDL, số chuẩn bị tự tính lại theo số này, <b>số máy của mã đó trên chuyền cũng đổi theo số này từ ngày vào chuyền</b> (đến hết đợt chạy của mã đó trên chuyền đó; lưới, “Thiếu máy còn lại” và lưới của IE Báo cáo máy đều dùng số mới) và <b>IE Báo cáo máy tự nhận thông báo</b> ở tab Báo sai lệch. Khi CSDL / MC Report đã có đúng số này thì điều chỉnh không còn tác dụng thêm.</li>
-<li><b>Ngày vào chuyền</b>: ngày thực tế; ngày chuẩn bị tự lùi theo (N ngày làm việc trước, bỏ Chủ nhật) và sản xuất trên chuyền dời theo. Thẻ hiển thị “vào chuyền 15/11 → 18/11”. Dòng chưa duyệt được coi là “Giữ” khi chỉnh ngày.</li>
+<li><b>Ngày vào chuyền</b>: ngày thực tế, <b>áp dụng cho mọi loại máy của cùng đợt đổi mã (chuyền + mã trước + mã sau)</b>: đổi ở BT1M thì ZZM, ZZF… tự đổi theo (kể cả loại máy chưa có dòng chuẩn bị; dòng của loại máy khác vẫn chờ IE Tech quyết định riêng); nhập lại đúng ngày kế hoạch để hủy; chỉ tính khi kế hoạch vẫn để mã đó ở đúng ngày cũ. Ngày chuẩn bị tự lùi theo (N ngày làm việc trước, bỏ Chủ nhật) và sản xuất trên chuyền dời theo. Thẻ hiển thị “vào chuyền 15/11 → 18/11”. Dòng chưa duyệt được coi là “Giữ” khi chỉnh ngày.</li>
 <li><b>Số ngày chuẩn bị</b>.</li>
 <li><span class="btn">Lưu</span>, <span class="btn">✖ Bỏ chuẩn bị</span>, <span class="btn">Cùng layout (bỏ và ghi nhớ)</span>: ghi nhớ theo <b>cặp mã hàng</b> (mã trước → mã sau), áp dụng ngay cho mọi loại máy và mọi chuyền có cùng cặp mã; IE Báo cáo máy bấm “Mở chi tiết” sẽ đọc lại. Muốn chuẩn bị lại một dòng cụ thể: bấm Giữ hoặc Chỉnh trên dòng đó (ưu tiên hơn).</li></ul>
 <h3>5.4 Tìm và xem layout</h3>
@@ -228,8 +229,16 @@
 <ul>
 <li>Chốt <b>không khóa</b> dữ liệu. Nếu IE Tech hoặc IE Báo cáo máy thay đổi sau đó, dòng hiển thị “có N thay đổi sau khi chốt”; khi đó chốt lại.</li>
 <li>Bản ghi chốt lưu trong <code>data\prep\closed</code>.</li></ul>
+<h3>Gộp loại máy dùng thay nhau</h3>
+<p>Có những loại máy dùng thay nhau được (ví dụ máy zigzag có cắt chỉ và zigzag thường: thiếu máy có cắt chỉ vẫn làm được trên máy thường nhưng tốn thêm SAM). Bấm <span class="btn">🔗 Gộp loại máy</span> (ở tab <b>Thiếu máy &amp; chuẩn bị</b> dưới các bảng, ở <b>màn hình IE Tech</b> và ở tab <b>Thiếu máy còn lại</b> của IE Báo cáo máy và Giám sát). Mọi vai trò đều tạo được bộ gộp:</p>
+<ol><li><b>① Chọn loại máy:</b> bấm các nút loại máy (có ô tìm). Số trên nút là <b>thứ tự mượn máy</b>. Một loại máy có thể nằm trong nhiều bộ gộp.</li>
+<li><b>② Ai mượn máy dư của ai:</b> mỗi loại máy đã chọn có một dòng “thiếu → mượn máy dư từ:”, bấm nút loại máy để bật / tắt. Nút <span class="btn">Mọi cặp</span> / <span class="btn">Bỏ hết</span> chọn nhanh. Mặc định mọi cặp đều được phép.</li>
+<li>Bấm <span class="btn">Lưu và hiện</span>. Bộ gộp chỉ hiện khi bạn bật (bấm nút 🔗 trên thanh); công cụ không tự gộp.</li></ol>
+<p>Bảng gộp vẫn hiện <b>từng loại máy riêng</b> (nhu cầu = sản xuất + chuẩn bị, máy sẵn có, còn lại), rồi các dòng “A dùng máy dư của B”, “còn lại sau khi gộp”, <b>Tổng còn lại (gộp)</b> và <b>Còn thiếu sau khi gộp</b>. Mỗi ngày máy dư của loại này bù cho loại thiếu theo thứ tự đã chọn; 1 máy = 1 máy (chưa tính SAM tăng thêm).</p>
+<p><b>Bộ gộp của IE Báo cáo máy (Consolidator) được IE Tech và Giám sát tự thấy:</b> khi bấm <span class="btn">Gửi đề xuất</span>, các bộ gộp <b>đang bật</b> được gửi kèm; IE Tech và Giám sát thấy chúng (dấu ★, chỉ xem, chỉ ẩn / hiện cho riêng mình) và vẫn tạo thêm bộ gộp riêng (lưu trên máy của mình). Muốn IE Tech thấy bộ gộp thì phải mở chi tiết đủ các loại máy của nó trước khi gửi (công cụ báo nếu thiếu).</p>
+<p><b>Xuất Excel:</b> mỗi bảng gộp có nút <span class="btn">⬇ Excel</span> (mọi vai trò): file một sheet <code>POOL …</code> với số nhu cầu / máy sẵn có của từng loại máy và các dòng còn lại là công thức. Khi xuất Excel ở tab Thiếu máy &amp; chuẩn bị, mỗi bộ gộp đang bật mà đủ các loại máy trong file có thêm một sheet <code>POOL …</code> toàn công thức liên kết tới sheet của từng loại máy.</p>
 <h3>Xuất Excel</h3>
-<p>Bấm <span class="btn">Xuất Excel</span> (sau “Mở chi tiết”): mỗi loại máy một sheet có tô màu như sheet chi tiết hiện tại; sheet <code>PREP BY PU</code> đúng dạng TTL DEMAND BY PU (Combine.MACHINE | PU | ngày) để cộng vào báo cáo; sheet <code>CHƯA DUYỆT</code> liệt kê các dòng IE Tech chưa duyệt; sheet <code>TRẠNG THÁI</code> (người chốt, thời điểm, ghi chú, bảng theo PU). Tên file có <code>CHOT</code> (<code>PREP_DEMAND_CHOT_…</code>) chỉ khi đã chốt và chưa có thay đổi sau đó. Dòng chuẩn bị bị bỏ được xuất là 0.</p>
+<p>Bấm <span class="btn">Xuất Excel</span> (sau “Mở chi tiết”): mỗi loại máy một sheet có tô màu như sheet chi tiết hiện tại, <b>các dòng tổng là công thức Excel</b> (tổng sản xuất và chuẩn bị theo PU = SUMIFS theo cột PU và cột Loại <code>PROD</code>/<code>PREP</code>, Tổng = sản xuất + chuẩn bị, Máy sẵn có = tổng các dòng thành phần MC STATUS, Còn lại = Máy sẵn có − Tổng; sửa số ở dòng mã hàng hoặc dòng chuẩn bị thì các dòng tổng tự tính lại); sheet <code>PREP BY PU</code> đúng dạng TTL DEMAND BY PU (Combine.MACHINE | PU | ngày) để cộng vào báo cáo; sheet <code>CHƯA DUYỆT</code> liệt kê các dòng IE Tech chưa duyệt; sheet <code>TRẠNG THÁI</code> (người chốt, thời điểm, ghi chú, bảng theo PU). Tên file có <code>CHOT</code> (<code>PREP_DEMAND_CHOT_…</code>) chỉ khi đã chốt và chưa có thay đổi sau đó. Dòng chuẩn bị bị bỏ được xuất là 0.</p>
 </section>
 
 <section id="bao-sai-lech"><h2>8. Báo sai lệch và Nhật ký</h2>
@@ -278,6 +287,7 @@
 <tr><td>Tab Thiếu máy báo thiếu dữ liệu</td><td>MC Report cần có <code>MACHINE BY LINE</code>, <code>MC STATUS</code>, <code>PU LIST</code> và đã nạp Master plan.</td></tr>
 <tr><td>IE Tech không thấy PU / dòng chuẩn bị</td><td>Kiểm tra đã kết nối đúng thư mục data, PU có trong PU LIST (tên giống <code>Linemapping.xlsx</code>), IE Báo cáo máy đã “Gửi IE Tech”.</td></tr>
 <tr><td>Trình duyệt hỏi lại quyền thư mục</td><td>Bấm “🔁 Kết nối lại” hoặc Cho phép / Allow.</td></tr>
+<tr><td>Công cụ đang chạy lâu, không biết còn làm việc không</td><td>Khi công cụ đang đọc file, quét layout, tải dữ liệu hay tạo file Excel sẽ có <b>vòng tròn xoay kèm dòng chữ ở góc dưới bên phải</b> (ví dụ “Đang quét layout… 120 / 800”) và một vạch chạy mỏng trên cùng trang. Chờ đến khi biến mất.</td></tr>
 <tr><td>MC Report / Master plan vừa được lưu lại</td><td>Bấm <b>🔄 Làm mới</b> ở đầu trang (mọi tab, mọi vai trò): công cụ đọc lại MC Report, Master plan, thư mục layout và thư mục data đã chọn, không cần chọn lại, rồi vẽ lại tab đang mở.</td></tr>
 <tr><td>Sau khi cập nhật phiên bản trang web, giao diện cũ</td><td>Nhấn Ctrl+F5. Lần đầu mở bằng địa chỉ mới, chọn lại các thư mục (trình duyệt ghi nhớ theo địa chỉ trang).</td></tr></table>
 </section>

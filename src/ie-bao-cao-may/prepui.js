@@ -52,13 +52,14 @@ window.prepRender = function () {
   var M = SRC(), D = M.dates;
   $('pInfo').textContent = t('pInfo', [Object.keys(M.byGroup).length, Object.keys(M.lines).length, pDay(D[0]), pDay(D[D.length - 1])]);
   var rows = rankRows();
-  $('pRank').innerHTML = '<tr><th>' + t('pcSel') + '</th><th class="l">' + t('pcGroup') + '</th><th>' + t('pcAvail') + '</th><th>' + t('pcPeak') + '</th><th>' + t('pcBal') + '</th><th>' + t('pcFirst') + '</th><th>' + t('pcRatio') + '</th><th>' + t('pcDays') + '</th></tr>' +
+  $('pRank').innerHTML = '<tr><th>' + t('pcSel') + '</th><th class="l">' + t('pcGroup') + '</th><th>' + t('pcAvail') + '</th><th>' + t('pcPeak') + '</th><th>' + t('pcBal') + '</th><th>' + t('pcFirst') + '</th><th>' + t('pcRatio') + '</th><th>' + t('pcDays') + '</th><th>' + t('pcPct') + '</th></tr>' +
     rows.map(function (x) {
       var g = esc(x.group), ra = PS.rules.ratios[x.group], dy = (PS.rules.daysBy || {})[x.group] || PS.rules.days;
       return '<tr><td><input type="checkbox" data-pg="' + g + '"' + (PS.sel[x.group] ? ' checked' : '') + '></td><td><b>' + g + '</b></td><td>' + (x.avail == null ? '<span class="muted">' + t('pNoAvail') + '</span>' : x.avail) + '</td><td>' + x.peak + '</td>' +
         '<td class="' + (x.bal != null && x.bal < 0 ? 'st-bad' : '') + '"><b>' + (x.bal == null ? '' : x.bal) + '</b></td><td>' + (x.first ? pDay(x.first, true) : '') + '</td>' +
         '<td><input type="number" min="0" max="100" style="width:70px" data-pr="' + g + '" value="' + (ra != null ? Math.round(ra * 100) : '') + '"></td>' +
-        '<td><input type="number" min="1" max="10" style="width:56px" data-pd="' + g + '" value="' + dy + '"></td></tr>';
+        '<td><input type="number" min="1" max="10" style="width:56px" data-pd="' + g + '" value="' + dy + '"></td>' +
+        '<td><input type="text" style="width:110px;min-width:0" data-pp="' + g + '" value="' + esc(pctOfRules(PS.rules, x.group).join(', ')) + '" title="' + esc(t('pcPctTip')) + '"></td></tr>';
     }).join('');
   if (PS.rows) renderDetail();
 };
@@ -68,6 +69,7 @@ $('pRank').onchange = function (e) {
   var el = e.target;
   if (el.dataset.pg) PS.sel[el.dataset.pg] = el.checked;
   if (el.dataset.pr) { var v = el.value === '' ? null : Math.max(0, Math.min(100, +el.value)) / 100; if (v == null) delete PS.rules.ratios[el.dataset.pr]; else PS.rules.ratios[el.dataset.pr] = v; }
+  if (el.dataset.pp) { var arr = el.value.split(/[\s,;]+/).filter(function (z) { return z !== ''; }).map(function (z) { return Math.max(0, Math.min(100, Math.round(+z))); }).filter(function (z) { return !isNaN(z); }); PS.rules.pctBy = PS.rules.pctBy || {}; if (arr.length) PS.rules.pctBy[el.dataset.pp] = arr; else delete PS.rules.pctBy[el.dataset.pp]; el.value = pctOfRules(PS.rules, el.dataset.pp).join(', '); }
   if (el.dataset.pd) { PS.rules.daysBy = PS.rules.daysBy || {}; PS.rules.daysBy[el.dataset.pd] = Math.max(1, +el.value || PS.rules.days); }
 };
 $('pSaveRules').onclick = async function () {
@@ -96,7 +98,8 @@ $('pOpen').onclick = async function () {
 function prepCell(x, d) {
   if (x.days.indexOf(d) < 0) return '<td></td>';
   if (x.status === 'AUTO_SKIP' || x.status === 'REMOVED') return '<td class="sk">' + x.prep + '</td>';
-  return '<td class="pr"' + (x.status === 'ADJUSTED' ? ' title="' + x.prep + ' → ' + x.eff + '"' : '') + '>' + x.eff + '</td>';
+  var q = prepQtyOn(x, d);
+  return '<td class="pr"' + (x.status === 'ADJUSTED' ? ' title="' + x.prep + ' → ' + x.eff + '"' : '') + '>' + q + '</td>';
 }
 function statusTag(x) {
   var cls = psCls(x);
@@ -109,12 +112,12 @@ function puTotals(G) {
   G.order.forEach(function (l) {
     var p = puOf(REF.pu || {}, l), o = out[p] = out[p] || { prod: {}, prep: {} }, L = G.lines[l];
     Object.keys(L.styles).forEach(function (s) { Object.keys(L.styles[s]).forEach(function (d) { o.prod[d] = (o.prod[d] || 0) + L.styles[s][d]; }); });
-    L.prep.forEach(function (x) { if (x.eff) x.days.forEach(function (d) { o.prep[d] = (o.prep[d] || 0) + x.eff; }); });
+    L.prep.forEach(function (x) { x.days.forEach(function (d, i) { var q = prepQtyAt(x, i); if (q) o.prep[d] = (o.prep[d] || 0) + q; }); });
   });
   return out;
 }
 function puNameC(p) { return !p || p === '?' ? t('noPu') : p; }
-function gridOf(g) { var r = pRange(); return groupGrid(SRC(), g, PS.rows, REF.avail || {}, r.from, r.to, REF.pu || {}, latestEnds(PS.ends)); }
+function gridOf(g) { CHG_DATES = changeoverDates(PS.reviews); var r = pRange(); return groupGrid(SRC(), g, PS.rows, REF.avail || {}, r.from, r.to, REF.pu || {}, latestEnds(PS.ends)); }
 function renderDetail() {
   var html = '<label class="small"><input type="checkbox" id="pOnly"' + (PS.onlyPrep ? ' checked' : '') + '> ' + esc(t('pgOnlyPrep')) + '</label>';
   PS.open.forEach(function (g) {
@@ -150,9 +153,11 @@ function renderDetail() {
     html += tot(t('pgProd'), G.prod) + tot(t('pgPrep'), function (d) { return G.prep[d] || 0; }) + tot(t('pgTotal'), G.total) + tot(t('pgAvail'), function () { return G.avail; }) + partRows(g, G) + tot(t('pgBal'), G.bal, true);
     html += '</table></div></div>';
   });
+  html += '<div id="pPool"></div>';
   html += '<div class="row" style="margin-top:10px"><button class="primary" id="pSend">' + esc(t('pSend')) + '</button><button id="pExport">' + esc(t('pExport')) + '</button><span class="muted small" id="pMsg2"></span></div>';
   $('pDetail').innerHTML = html;
   $('pOnly').onchange = function (e) { PS.onlyPrep = e.target.checked; renderDetail(); };
+  poolMount($('pPool'), poolCtxPrep());
   $('pSend').onclick = function () { prepSend().catch(function (e) { $('pMsg2').textContent = e.message; }); };
   $('pExport').onclick = function () { prepExport().catch(function (e) { $('pMsg2').textContent = e.message; alert(t('xlErr', [e.message])); }); };
 }
@@ -161,7 +166,7 @@ async function prepSend() {
   var user = $('uName').value.trim(); if (!user) { $('uName').focus(); $('pMsg2').textContent = t('lcNeedName'); return; }
   var now = new Date(), p = function (x) { return String(x).padStart(2, '0'); };
   var st = now.getFullYear() + p(now.getMonth() + 1) + p(now.getDate()) + '-' + p(now.getHours()) + p(now.getMinutes()) + p(now.getSeconds());
-  var rows = PS.rows.map(function (x) { return { key: x.key, line: x.line, pu: x.pu, from: x.from, to: x.to, group: x.group, load: pIso(x.load), qtyB: x.qtyB, ratio: x.ratio, days: x.days.map(pIso), prep: x.prep, same: x.same,
+  var rows = PS.rows.map(function (x) { return { key: x.key, line: x.line, pu: x.pu, from: x.from, to: x.to, group: x.group, load: pIso(x.load), qtyB: x.qtyB, ratio: x.ratio, pct: prepPctList(x), days: x.days.map(pIso), prep: x.prep, same: x.same,
     files: ((PS.styleFiles || {})[baseKey(x.to)] || []).slice(0, 3) }; });
   var grid = {};
   PS.open.forEach(function (g) {
@@ -175,52 +180,70 @@ async function prepSend() {
   var d = await (await LCDIR.getDirectoryHandle('prep', { create: true })).getDirectoryHandle('proposals', { create: true });
   var h = await d.getFileHandle(st + '_' + user.replace(/[^\w\-]+/g, '_') + '.json', { create: true }), w = await h.createWritable();
   await w.write(JSON.stringify({ at: now.toISOString(), by: user, groups: PS.open, from: pIso(pRange().from), rows: rows, grid: grid, groupMap: REF.groups || {},
-    dbBasis: REF.dbOver && Object.keys(REF.dbOver.items).length ? { overlay: Object.keys(REF.dbOver.items).length, at: REF.dbOver.at, by: REF.dbOver.by, styles: Object.keys(REF.dbOver.names).map(function (k) { return REF.dbOver.names[k]; }).slice(0, 40) } : null })); await w.close();
-  $('pMsg2').textContent = t('pSent', [rows.filter(function (x) { return !x.same; }).length]);
+    pools: poolToSend(), dbBasis: REF.dbOver && Object.keys(REF.dbOver.items).length ? { overlay: Object.keys(REF.dbOver.items).length, at: REF.dbOver.at, by: REF.dbOver.by, styles: Object.keys(REF.dbOver.names).map(function (k) { return REF.dbOver.names[k]; }).slice(0, 40) } : null })); await w.close();
+  var pl = poolToSend(), lost = []; pl.forEach(function (d) { d.members.forEach(function (g) { if (PS.open.indexOf(g) < 0 && lost.indexOf(g) < 0) lost.push(g); }); });
+  $('pMsg2').textContent = t('pSent', [rows.filter(function (x) { return !x.same; }).length]) + (pl.length ? ' · ' + t('poolSent', [pl.length]) : '') + (lost.length ? ' · ' + t('poolLost', [lost.join(', ')]) : '');
 }
 async function prepExport() {
   var wb = new ExcelJS.Workbook(), Y = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF5D6' } }, R = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFDE8E8' } }, T = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF3F4F6' } };
+  var SH = {};                                                                  // sheet, rows and grid of every exported group (the pool sheets link to them)
   PS.open.forEach(function (g) {
     var G = gridOf(g), ws = wb.addWorksheet(g.replace(/[\\\/\?\*\[\]:]/g, '_').slice(0, 31));
-    ws.addRow(['PU', t('pgLine'), t('pgStyle')].concat(G.days.map(function (d) { return pDay(d, true); }))).font = { bold: true };
-    ws.views = [{ state: 'frozen', xSplit: 3, ySplit: 1 }];
+    // v7.14: the totals are live Excel formulas (SUMIFS on the PU / type columns, total = production + prep, balance = available - total); column D marks every row PROD or PREP
+    ws.addRow(['PU', t('pgLine'), t('pgStyle'), 'Type'].concat(G.days.map(function (d) { return pDay(d, true); }))).font = { bold: true };
+    ws.views = [{ state: 'frozen', xSplit: 4, ySplit: 1 }];
     G.order.forEach(function (line) {
       var L = G.lines[line], pu = puOf(REF.pu || {}, line);
       Object.keys(L.styles).forEach(function (s) {
         L.prep.filter(function (x) { return x.to === s; }).forEach(function (x) { addPrep(ws, G, pu, line, x); });
-        ws.addRow([pu, line, s].concat(G.days.map(function (d) { return L.styles[s][d] || null; })));
+        ws.addRow([pu, line, s, 'PROD'].concat(G.days.map(function (d) { return L.styles[s][d] || null; })));
       });
       L.prep.filter(function (x) { return !L.styles[x.to]; }).forEach(function (x) { addPrep(ws, G, pu, line, x); });
     });
-    var PT = puTotals(G), sumRows = [];
+    var first = 2, last = ws.rowCount, PT = puTotals(G), ent = [], FR = {}, q = function (x) { return '"' + String(x).replace(/"/g, '""') + '"'; };
+    var sif = function (c, type, pu) { return 'SUMIFS(' + c + '$' + first + ':' + c + '$' + last + ',$D$' + first + ':$D$' + last + ',' + q(type) + (pu != null ? ',$A$' + first + ':$A$' + last + ',' + q(pu) : '') + ')'; };
     Object.keys(PT).sort().forEach(function (p) { var o = PT[p];
-      sumRows.push([t('pgPuSum', [puNameC(p), t('pgProd')]), function (d) { return o.prod[d] || 0; }, 'part'], [t('pgPuSum', [puNameC(p), t('pgPrep')]), function (d) { return o.prep[d] || 0; }, 'part'],
-        [t('pgPuSum', [puNameC(p), t('pgTotal')]), function (d) { return (o.prod[d] || 0) + (o.prep[d] || 0); }]); });
-    sumRows = sumRows.concat([[t('pgProd'), function (d) { return G.prod[d] || 0; }], [t('pgPrep'), function (d) { return G.prep[d] || 0; }], [t('pgTotal'), function (d) { return G.total[d]; }], [t('pgAvail'), function () { return G.avail; }]]);
-    availParts(g).forEach(function (p) { sumRows.push(['   ' + (p.sign > 0 ? '+ ' : '− ') + p.name, function () { return p.sign * p.qty; }, 'part']); });
-    sumRows.push([t('pgBal'), function (d) { return G.bal[d]; }, 'bal']);
-    sumRows.forEach(function (x) {
-      var row = ws.addRow(['', '', x[0]].concat(G.days.map(x[1]))); row.font = x[2] === 'part' ? { italic: true, color: { argb: 'FF6B7280' } } : { bold: true };
-      row.eachCell(function (c, n) { c.fill = T; if (x[2] === 'bal' && n > 3 && c.value < 0) { c.fill = R; c.font = { bold: true, color: { argb: 'FFC4202B' } }; } });
+      ent.push([t('pgPuSum', [puNameC(p), t('pgProd')]), 'part', function (c) { return sif(c, 'PROD', p); }, function (d) { return o.prod[d] || 0; }, 'pp' + p],
+        [t('pgPuSum', [puNameC(p), t('pgPrep')]), 'part', function (c) { return sif(c, 'PREP', p); }, function (d) { return o.prep[d] || 0; }, 'pr' + p],
+        [t('pgPuSum', [puNameC(p), t('pgTotal')]), '', function (c) { return c + FR['pp' + p] + '+' + c + FR['pr' + p]; }, function (d) { return (o.prod[d] || 0) + (o.prep[d] || 0); }, 'pt' + p]); });
+    var parts = availParts(g), partSum = parts.reduce(function (n, x) { return n + x.sign * x.qty; }, 0), useParts = parts.length > 0 && partSum === G.avail;
+    ent.push([t('pgProd'), '', function (c) { return sif(c, 'PROD'); }, function (d) { return G.prod[d] || 0; }, 'prod'],
+      [t('pgPrep'), '', function (c) { return sif(c, 'PREP'); }, function (d) { return G.prep[d] || 0; }, 'prep'],
+      [t('pgTotal'), '', function (c) { return c + FR.prod + '+' + c + FR.prep; }, function (d) { return G.total[d]; }, 'total'],
+      [t('pgAvail'), '', useParts ? function (c) { return 'SUM(' + c + (FR.avail + 1) + ':' + c + (FR.avail + parts.length) + ')'; } : null, function () { return G.avail; }, 'avail']);
+    parts.forEach(function (pp) { ent.push(['   ' + (pp.sign > 0 ? '+ ' : '− ') + pp.name, 'part', null, function () { return pp.sign * pp.qty; }, 'x']); });
+    ent.push([t('pgBal'), 'bal', function (c) { return G.avail == null ? null : c + FR.avail + '-' + c + FR.total; }, function (d) { return G.bal[d]; }, 'bal']);
+    ent.forEach(function (x, i) { FR[x[4] === 'x' ? 'x' + i : x[4]] = last + 1 + i; });                 // row numbers are known before the rows are written
+    ent.forEach(function (x) {
+      var row = ws.addRow(['', '', x[0], ''].concat(G.days.map(function (d, i) {
+        var f = x[2] ? x[2](ws.getColumn(5 + i).letter) : null, v = x[3](d);
+        return f ? { formula: f, result: v == null ? 0 : v } : v;
+      })));
+      row.font = x[1] === 'part' ? { italic: true, color: { argb: 'FF6B7280' } } : { bold: true };
+      row.eachCell(function (c) { c.fill = T; });
     });
-    ws.getColumn(3).width = 34; ws.getColumn(2).width = 9;
+    if (G.days.length) ws.addConditionalFormatting({ ref: ws.getColumn(5).letter + FR.bal + ':' + ws.getColumn(4 + G.days.length).letter + FR.bal, rules: [{ type: 'cellIs', operator: 'lessThan', priority: 1, formulae: [0], style: { fill: { type: 'pattern', pattern: 'solid', bgColor: { argb: 'FFFDE8E8' } }, font: { bold: true, color: { argb: 'FFC4202B' } } } }] });
+    ws.getColumn(3).width = 34; ws.getColumn(2).width = 9; ws.getColumn(4).width = 7;
+    SH[g] = { name: ws.name, bal: FR.bal, total: FR.total, avail: FR.avail, G: G };
   });
+  poolExportSheets(wb, SH);
   function addPrep(ws, G, pu, line, x) {
     var skip = x.status === 'AUTO_SKIP' || x.status === 'REMOVED';
     // skipped / removed prep = 0 in Excel (never a number that a SUM could pick up by mistake)
-    var row = ws.addRow([pu, line, t('pgPrepOf', [x.to]) + ' — ' + psLabel(x)].concat(G.days.map(function (d) { return x.days.indexOf(d) >= 0 ? (skip ? 0 : x.eff) : null; })));
-    row.eachCell(function (c, n) { if (n > 3 && c.value != null) { if (skip) c.font = { color: { argb: 'FF6B7280' } }; else { c.fill = Y; c.font = { bold: true, color: { argb: 'FF9A6700' } }; } } });
+    var row = ws.addRow([pu, line, t('pgPrepOf', [x.to]) + ' — ' + psLabel(x), 'PREP'].concat(G.days.map(function (d) { return x.days.indexOf(d) >= 0 ? (skip ? 0 : prepQtyOn(x, d)) : null; })));
+    row.eachCell(function (c, n) { if (n > 4 && c.value != null) { if (skip) c.font = { color: { argb: 'FF6B7280' } }; else { c.fill = Y; c.font = { bold: true, color: { argb: 'FF9A6700' } }; } } });
     row.getCell(3).font = { color: { argb: 'FF9A6700' } };
   }
   // PREP BY PU: same layout as TTL DEMAND BY PU (Combine.MACHINE | PU | dates)
   var allDays = {}, agg = {};
-  PS.rows.forEach(function (x) { if (!x.eff) return; x.days.forEach(function (d) { allDays[d] = 1; var k = x.group + '|' + x.pu; (agg[k] = agg[k] || {})[d] = (agg[k][d] || 0) + x.eff; }); });
+  PS.rows.forEach(function (x) { if (!x.eff) return; x.days.forEach(function (d, i) { var q = prepQtyAt(x, i); if (!q) return; allDays[d] = 1; var k = x.group + '|' + x.pu; (agg[k] = agg[k] || {})[d] = (agg[k][d] || 0) + q; }); });
   var dl = Object.keys(allDays).map(Number).sort(function (a, b) { return a - b; }), pb = wb.addWorksheet('PREP BY PU');
   pb.addRow(['Combine.MACHINE ', 'PU'].concat(dl.map(function (d) { var x = new Date(d); return String(x.getUTCDate()).padStart(2, '0') + '/' + String(x.getUTCMonth() + 1).padStart(2, '0') + '/' + x.getUTCFullYear(); }))).font = { bold: true };
   Object.keys(agg).sort().forEach(function (k) { var p = k.split('|'); pb.addRow([p[0], p[1]].concat(dl.map(function (d) { return agg[k][d] || null; }))); });
+  if (Object.keys(agg).length) { var pr0 = pb.rowCount, tr = pb.addRow(['TOTAL', '']); tr.font = { bold: true }; dl.forEach(function (d, i) { var c = pb.getColumn(3 + i).letter, v = Object.keys(agg).reduce(function (n, k) { return n + (agg[k][d] || 0); }, 0); tr.getCell(3 + i).value = { formula: 'SUM(' + c + '2:' + c + pr0 + ')', result: v }; }); }
   var nd = wb.addWorksheet('CHƯA DUYỆT');
   nd.addRow(['PU', 'Line', 'From', 'To', 'Group', 'Load date', 'Qty next style', 'Ratio', 'Prep', 'Prep days']).font = { bold: true };
-  PS.rows.filter(function (x) { return x.status === 'PENDING'; }).forEach(function (x) { nd.addRow([x.pu, x.line, x.from || '(empty line)', x.to, x.group, pIso(x.load), x.qtyB, x.ratio, x.prep, x.days.map(function (d) { return pDay(d); }).join(', ')]); });
+  PS.rows.filter(function (x) { return x.status === 'PENDING'; }).forEach(function (x) { nd.addRow([x.pu, x.line, x.from || '(empty line)', x.to, x.group, pIso(x.load), x.qtyB, x.ratio, { formula: 'ROUNDUP(ROUND(G' + (nd.rowCount + 1) + '*H' + (nd.rowCount + 1) + ',6),0)', result: x.prep }, x.days.map(function (d) { return pDay(d); }).join(', ')]); });
   var cs = await closedState().catch(function () { return { rec: null, changes: 0, final: false }; }), st = wb.addWorksheet(t('cStatusSheet'));     // an unreadable data folder must not stop the export         // closing status goes with every export
   st.addRow([t('cStatus'), cs.rec ? (cs.final ? t('cStFinal') : t('cStChanged', [cs.changes])) : t('cNone')]).font = { bold: true };
   if (cs.rec) {
@@ -289,4 +312,13 @@ function renderDoneC() {
     return '<span class="tag ' + (c.pending ? 't-warn' : 't-ok') + '" style="margin:2px">' + esc(c.by + ' · ' + (c.pu || t('tAll')) + (c.lines ? ' · ' + c.lines : '') + ' · ' + String(c.at).slice(5, 16).replace('T', ' ') +
       ' · ' + c.groups.map(function (g) { return g.group + ' ' + g.rows; }).join(', ') + (c.pending ? ' · ' + t('pDonePend', [c.pending]) : '')) + '</span>';
   }).join('') : '';
+}
+
+// v7.15: one sheet per pool that is switched on (all its groups exported): every number is a formula linked to the group sheets (poolFillSheet in poolui.js)
+function poolExportSheets(wb, SH) {
+  POOL.defs.filter(function (d) { return POOL.on[d.id] && d.members.every(function (g) { return SH[g]; }); }).forEach(function (def) {
+    var days = SH[def.members[0]].G.days, models = {}; def.members.forEach(function (g) { models[g] = SH[g].G; });
+    var ws = wb.addWorksheet(('POOL ' + def.members.join('+')).replace(/[\\\/\?\*\[\]:]/g, '_').slice(0, 31));
+    poolFillSheet(ws, def, models, days, function (g, kind, j) { return "'" + SH[g].name.replace(/'/g, "''") + "'!" + ws.getColumn(5 + j).letter + SH[g][kind]; });
+  });
 }

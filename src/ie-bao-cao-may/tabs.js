@@ -44,6 +44,40 @@ $('bRefresh').onclick = async function () {
   try { await reconnect(true); REF.demand = null; setTab(TAB); } finally { b.disabled = false; b.textContent = old; }
   $('remMsg').textContent = t('hdrRefreshDone', [new Date().toLocaleTimeString()]);
 };
+// ===== busy indicator (corner pill + thin top bar): shown while a file is read, a folder scanned, data loaded or an Excel file is made =====
+var BUSY = { c: {}, lab: {}, order: [], since: 0, until: 0 };
+function busyActive() { return BUSY.order.filter(function (k) { return BUSY.c[k] > 0; }); }
+function busyPaint() {
+  var act = busyActive(), on = act.length > 0 || Date.now() < BUSY.until;
+  if ($('busy')) { $('busy').hidden = !on; $('busyBar').hidden = !on; if (act.length) $('busyTx').textContent = BUSY.lab[act[act.length - 1]]; }
+}
+function busyOn(k, label) {
+  if (!busyActive().length) BUSY.since = Date.now();
+  BUSY.c[k] = (BUSY.c[k] || 0) + 1; BUSY.lab[k] = label; BUSY.order = BUSY.order.filter(function (x) { return x !== k; }).concat([k]); busyPaint();
+}
+function busyLabel(k, label) { if (BUSY.c[k] > 0) { BUSY.lab[k] = label; busyPaint(); } }
+function busyOff(k) {
+  BUSY.c[k] = Math.max(0, (BUSY.c[k] || 0) - 1);
+  if (!busyActive().length) { BUSY.until = Date.now() - BUSY.since < 250 ? 0 : BUSY.since + 700; setTimeout(busyPaint, Math.max(0, BUSY.until - Date.now()) + 5); }       // quick tasks hide at once, a real wait stays visible at least 0.7 s
+  busyPaint();
+}
+// wrap the functions that take time; "delay" lets the browser draw the indicator before heavy synchronous work starts
+function busyWrap(name, key, delay) {
+  var f = window[name]; if (typeof f !== 'function') return;
+  window[name] = async function () {
+    busyOn(name, t(key)); try { if (delay) await new Promise(function (r) { setTimeout(r, 30); }); return await f.apply(this, arguments); } finally { busyOff(name); }
+  };
+}
+[['reconnect', 'busyData'], ['useMcHandle', 'busyExcel'], ['useFileHandle', 'busyExcel'], ['useLayoutDir', 'busyScan'], ['buildLayIndex', 'busyScan'], ['prepExport', 'busyXl'], ['srcExportXlsx', 'busyXl'], ['rsExportTable', 'busyXl'], ['poolExportXlsx', 'busyXl'],
+ ['prepSend', 'busySend'], ['tLoadAll', 'busyData'], ['rsLoad', 'busyData'], ['connectLc', 'busyData'], ['useDataDir', 'busyData'], ['supUse', 'busyData'], ['refreshPrepData', 'busyData'], ['actLoad', 'busyData'], ['openClose', 'busyData'], ['closeCollect', 'busyData'], ['previewFiles', 'busyExcel']]
+  .forEach(function (x) { busyWrap(x[0], x[1], true); });
+// handlers: the long ones get the indicator too
+[['pOpen', 'busyPrep', true], ['bFiles', 'busyExcel', false], ['bMc', 'busyExcel', false]].forEach(function (x) {
+  var el = $(x[0]); if (!el || typeof el.onclick !== 'function') return; var h = el.onclick;
+  el.onclick = async function (ev) { busyOn('h:' + x[0], t(x[1])); try { if (x[2]) await new Promise(function (r) { setTimeout(r, 30); }); return await h.call(this, ev); } finally { busyOff('h:' + x[0]); } };
+});
+// files read by processExcel (it counts PENDING itself)
+var _ready = ready; ready = function () { _ready(); if (PENDING > 0 && !BUSY.c.xl) { BUSY.c.xl = 0; busyOn('xl', t('busyExcel')); } else if (PENDING <= 0 && BUSY.c.xl > 0) busyOff('xl'); };
 if (window.paintRemember) paintRemember().then(function () { return reconnect(false); });
 
 // any script error is shown in a red strip (so a failing export / save is never silent) and can be copied to the IE team

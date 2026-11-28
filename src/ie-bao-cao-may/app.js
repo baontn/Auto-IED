@@ -214,7 +214,7 @@ $('nw').value = Math.min(4, Math.max(1, (navigator.hardwareConcurrency || 4) - 1
 
 // ---- 2. scan, then costing for gaps ----
 $('go').onclick = function () {
-  cancel = false; SAVED = null; $('go').disabled = true; $('stop').disabled = false; $('step3').hidden = true; $('savebar').hidden = true;
+  busyOn('scan', t('busyScan')); cancel = false; SAVED = null; $('go').disabled = true; $('stop').disabled = false; $('step3').hidden = true; $('savebar').hidden = true;
   var t0 = performance.now(), src = $('xlsxlib').textContent + '\n;\n' + $('coresrc').textContent + '\n;\n' + $('wsrc').textContent;
   var url = URL.createObjectURL(new Blob([src], { type: 'text/javascript' }));
   var n = Math.max(1, Math.min(8, +$('nw').value || 1)), next = 0, done = 0, active = n, recs = new Array(FILES.length), reused = 0;
@@ -251,7 +251,7 @@ $('go').onclick = function () {
   function finish() {
     URL.revokeObjectURL(url);
     DONE = recs.filter(Boolean); PROG.end = cancel ? 'cancelled' : 'done'; renderProg();
-    $('stop').disabled = true; $('go').disabled = false;
+    busyOff('scan'); $('stop').disabled = true; $('go').disabled = false;
     RV = buildReview(DONE, REF); applyLayoutCheck(RV, LC, DONE);
     var staleKeeps = applyKeeps(RV, KEEPS);                                  // layout or database changed since the confirmation: clear it (the style is listed again)
     if (staleKeeps.length) { staleKeeps.forEach(function (k) { delete KEEPS[k]; }); persistKeeps().catch(function () { }); }
@@ -262,7 +262,7 @@ $('go').onclick = function () {
 $('stop').onclick = function () { cancel = true; $('stop').disabled = true; };
 function renderProg() {
   if (!PROG) return;
-  $('pb').style.width = (PROG.total ? PROG.done / PROG.total * 100 : 0) + '%';
+  $('pb').style.width = (PROG.total ? PROG.done / PROG.total * 100 : 0) + '%'; busyLabel('scan', t('busyScan') + ' ' + PROG.done + ' / ' + PROG.total);
   var s = t('progress', [PROG.done, PROG.total, PROG.sec.toFixed(1)]);
   if (PROG.reused) s += ' · ' + t('skipped', [PROG.reused]);
   if (PROG.end) s += ' · ' + t(PROG.end);
